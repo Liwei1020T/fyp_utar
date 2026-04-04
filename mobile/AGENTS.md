@@ -17,19 +17,20 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 ## Canonical Commands
 
-- Required Node version: `22.x`
+- Required Node line: `25.x`
+- Pinned project version in `.nvmrc`: `25.9.0`
 - Setup: `nvm use` then `npm install`
 - Run web: `npm run web`
 - Run iOS: `npm run ios`
 - Run Android: `npm run android`
 - Typecheck: `npx tsc --noEmit`
-  Run this only under Node 22.x. Do not treat Node 25 output as authoritative for this repo.
+  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `25.9.0`.
 
 ## Validation Reality
 
 - There is no `npm run build`, `npm run lint`, or `npm test` script in this repo today. Do not invent them.
 - For UI or flow changes, use the smallest truthful validation available:
-  - `npx tsc --noEmit` under Node 22.x when possible
+  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `25.9.0` when possible
   - `npm run web` for runtime smoke validation
   - targeted manual route checks for touched flows
 - If a check cannot be run, mark it `unverified` and explain why.

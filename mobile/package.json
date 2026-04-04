@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "engines": {
-    "node": "22.x"
+    "node": "25.x"
   },
   "scripts": {
     "start": "expo start",

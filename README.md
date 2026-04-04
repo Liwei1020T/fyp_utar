@@ -30,6 +30,8 @@ npm install
 EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api/v1 npm run web
 ```
 
+The mobile workspace pins Node `25.9.0` via `mobile/.nvmrc`.
+
 ### 3. Run the NLP workbench when you need fresh recommendation artifacts
 
 ```bash

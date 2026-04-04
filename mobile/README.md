@@ -42,6 +42,8 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
    nvm use
    ```
 
+   The project now pins Node `25.9.0` in `.nvmrc` and allows the `25.x` line in `package.json`.
+
 2. **Install Dependencies:**
    ```bash
    npm install
