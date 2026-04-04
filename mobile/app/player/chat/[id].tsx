@@ -19,7 +19,7 @@ export default function PlayerChatDetailScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const conversations = useConversations();
   const appendChatMessage = useAppStore((state) => state.appendChatMessage);
-  const requestVendorSupport = useAppStore((state) => state.requestVendorSupport);
+  const requestAdminSupport = useAppStore((state) => state.requestAdminSupport);
   const resolveConversation = useAppStore((state) => state.resolveConversation);
   const [draft, setDraft] = useState('');
   const conversation = useMemo(
@@ -43,13 +43,13 @@ export default function PlayerChatDetailScreen() {
     });
 
     const responder =
-      conversation.mode === 'vendor_joined'
+      conversation.mode === 'admin_joined'
         ? {
-            role: 'vendor' as const,
+            role: 'admin' as const,
             senderName: 'Daniel Tan',
             body: 'Admin note received. We can adjust timing, service notes, or drop-off details directly from the shop desk.',
           }
-        : conversation.mode === 'waiting_vendor'
+        : conversation.mode === 'waiting_admin'
           ? {
               role: 'system' as const,
               senderName: 'System',
@@ -68,7 +68,7 @@ export default function PlayerChatDetailScreen() {
   return (
     <AppScreen
       title={conversation.title}
-      subtitle="Conversation modes show whether AI or the vendor is currently leading the thread."
+      subtitle="Conversation modes show whether AI or the admin desk is currently leading the thread."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}
@@ -105,23 +105,23 @@ export default function PlayerChatDetailScreen() {
         </View>
       </AppSection>
 
-      {conversation.mode !== 'vendor_joined' && conversation.mode !== 'resolved' ? (
+      {conversation.mode !== 'admin_joined' && conversation.mode !== 'resolved' ? (
         <AppSection eyebrow="Handoff" title="Need the shop to take over?" variant="compact">
           <View className="gap-3">
             <AppCard variant="subtle" padding="md">
               <HeroText className="text-sm leading-6 text-neutral-600">
-                AI replies first by default. Tap below when the thread needs a real vendor response for booking, timing, or after-sales support.
+                AI replies first by default. Tap below when the thread needs a real admin response for booking, timing, or after-sales support.
               </HeroText>
             </AppCard>
             <AppButton
               label={
-                conversation.mode === 'waiting_vendor'
+                conversation.mode === 'waiting_admin'
                   ? 'Admin request sent'
                   : 'Request Admin Support'
               }
-              variant={conversation.mode === 'waiting_vendor' ? 'outline' : 'secondary'}
+              variant={conversation.mode === 'waiting_admin' ? 'outline' : 'secondary'}
               size="lg"
-              onPress={() => requestVendorSupport(conversation.id)}
+              onPress={() => requestAdminSupport(conversation.id)}
             />
           </View>
         </AppSection>
@@ -138,7 +138,7 @@ export default function PlayerChatDetailScreen() {
       <AppSection eyebrow="Composer" title="Reply in this thread" className="mb-8">
         <AppInput
           className="mb-2"
-          placeholder="Type a message to AI or the vendor..."
+          placeholder="Type a message to AI or the admin desk..."
           value={draft}
           onChangeText={setDraft}
           multiline

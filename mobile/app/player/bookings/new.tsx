@@ -22,7 +22,7 @@ import {
   useStrings,
 } from '../../../store/appStore';
 import { MOCK_BOOKING_SLOTS } from '../../../mocks';
-import { getStringById, getVendorById } from '../../../services/mockAppService';
+import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatDateLabel } from '../../../lib/formatters';
 
 const bookingSchema = z.object({
@@ -52,11 +52,11 @@ export default function NewBookingScreen() {
     getStringById(params.stringId) ??
     (params.stringId ? undefined : strings[0]) ??
     getStringById('string-001');
-  const vendorId = user.preferredVendorId;
+  const adminId = user.preferredAdminId;
   const [selectedDate, setSelectedDate] = useState('2026-04-05');
   const playerRackets = rackets.filter((item) => item.playerId === user.id);
   const [selectedRacketId, setSelectedRacketId] = useState<string | null>(playerRackets[0]?.id ?? null);
-  const slots = MOCK_BOOKING_SLOTS.filter((item) => item.vendorId === vendorId && item.date === selectedDate);
+  const slots = MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId && item.date === selectedDate);
   const availableSlots = useMemo(
     () => slots.filter((item) => item.availableSpots > 0),
     [slots]
@@ -66,13 +66,13 @@ export default function NewBookingScreen() {
   );
   const [slotError, setSlotError] = useState<string | null>(null);
   const availableDates = Array.from(
-    new Set(MOCK_BOOKING_SLOTS.filter((item) => item.vendorId === vendorId).map((item) => item.date))
+    new Set(MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId).map((item) => item.date))
   );
   const selectedSlot = slots.find(
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
-  const selectedVendor = getVendorById(vendorId);
-  const vendorHours = businessHours.find((item) => item.vendorId === vendorId);
+  const selectedAdmin = getAdminById(adminId);
+  const adminHours = businessHours.find((item) => item.adminId === adminId);
   const selectedRacket = playerRackets.find((item) => item.id === selectedRacketId);
 
   const {
@@ -109,7 +109,7 @@ export default function NewBookingScreen() {
   }, [availableSlots, selectedSlotId, slotError, slots]);
 
   const onSubmit = async (data: BookingForm) => {
-    if (!selectedString || !selectedVendor || !selectedSlot || selectedSlot.availableSpots < 1) {
+    if (!selectedString || !selectedAdmin || !selectedSlot || selectedSlot.availableSpots < 1) {
       setSlotError('Select an available drop-off slot before continuing.');
       return;
     }
@@ -117,7 +117,7 @@ export default function NewBookingScreen() {
     await new Promise((resolve) => setTimeout(resolve, 350));
     setBookingDraft({
       stringId: selectedString.id,
-      vendorId: selectedVendor.id,
+      adminId: selectedAdmin.id,
       racketId: selectedRacketId,
       racketBrand: data.racketBrand,
       racketModel: data.racketModel,
@@ -170,10 +170,10 @@ export default function NewBookingScreen() {
             </View>
             <View className="flex-1">
               <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
-                {selectedVendor?.businessName}
+                {selectedAdmin?.businessName}
               </HeroText>
               <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
-                {selectedVendor?.city} • Avg turnaround {selectedVendor?.averageTurnaroundHours} hours
+                {selectedAdmin?.city} • Avg turnaround {selectedAdmin?.averageTurnaroundHours} hours
               </HeroText>
               <HeroText className="mt-2 text-xs uppercase tracking-[0.18em] text-primary-700">
                 Single-store prototype
@@ -286,7 +286,7 @@ export default function NewBookingScreen() {
                   setSelectedSlotId(
                     MOCK_BOOKING_SLOTS.find(
                       (item) =>
-                        item.vendorId === vendorId
+                        item.adminId === adminId
                         && item.date === date
                         && item.availableSpots > 0
                     )?.id
@@ -315,7 +315,7 @@ export default function NewBookingScreen() {
             <View className="flex-row items-center gap-3">
               <CalendarClock size={18} color="#2F64B6" />
               <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                Available times are shown as if driven by vendor business hours. Current schedule: {vendorHours?.days.find((day) => day.day === selectedSlot?.dayLabel)?.openTime} to {vendorHours?.days.find((day) => day.day === selectedSlot?.dayLabel)?.closeTime} on {selectedSlot?.dayLabel}.
+                Available times are shown as if driven by admin business hours. Current schedule: {adminHours?.days.find((day) => day.day === selectedSlot?.dayLabel)?.openTime} to {adminHours?.days.find((day) => day.day === selectedSlot?.dayLabel)?.closeTime} on {selectedSlot?.dayLabel}.
               </HeroText>
             </View>
           </AppCard>

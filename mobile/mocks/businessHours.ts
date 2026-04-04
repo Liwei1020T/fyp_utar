@@ -2,7 +2,7 @@ import type { BusinessHours } from '../types/domain';
 
 export const MOCK_BUSINESS_HOURS: BusinessHours[] = [
   {
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     days: [
       { day: 'Monday', isOpen: true, openTime: '11:00', closeTime: '20:00', breakStart: '15:00', breakEnd: '16:00', slotDurationMinutes: 30, maxBookingsPerSlot: 3 },
       { day: 'Tuesday', isOpen: true, openTime: '11:00', closeTime: '20:00', breakStart: '15:00', breakEnd: '16:00', slotDurationMinutes: 30, maxBookingsPerSlot: 3 },

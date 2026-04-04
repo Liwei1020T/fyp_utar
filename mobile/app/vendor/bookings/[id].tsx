@@ -15,7 +15,7 @@ import type { BookingStatus } from '../../../types/domain';
 import { formatBookingStatus, formatCurrency, formatPaymentStatus } from '../../../lib/formatters';
 import { getStringById, getUserById } from '../../../services/mockAppService';
 
-export default function VendorBookingDetailScreen() {
+export default function AdminBookingDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const bookings = useBookings();
@@ -32,7 +32,7 @@ export default function VendorBookingDetailScreen() {
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title={`Booking ${booking.id}`}
       subtitle="Admin detail view for service status, payment, customer summary, and quick actions."
       headerLeft={

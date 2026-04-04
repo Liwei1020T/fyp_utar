@@ -8,7 +8,7 @@ import { AppScreen, useBottomContentInset } from '../../../components/shared/App
 import { formatAvailability } from '../../../lib/formatters';
 import { useStrings } from '../../../store/appStore';
 
-export default function VendorInventoryScreen() {
+export default function AdminInventoryScreen() {
   const router = useRouter();
   const bottomContentInset = useBottomContentInset(16);
   const strings = useStrings();

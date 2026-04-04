@@ -14,7 +14,7 @@ import { ChatBubble } from '../../../components/chat/ChatBubble';
 import { getBookingById, getPlayerById, getStringById } from '../../../services/mockAppService';
 import { useAppStore, useConversations } from '../../../store/appStore';
 
-export default function VendorChatDetailScreen() {
+export default function AdminChatDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const conversations = useConversations();
@@ -35,7 +35,7 @@ export default function VendorChatDetailScreen() {
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title="Admin chat detail"
       subtitle="Reply as the shop, review linked booking context, and close the conversation when it is resolved."
       headerLeft={
@@ -74,7 +74,7 @@ export default function VendorChatDetailScreen() {
             label="Send admin reply"
             onPress={() =>
               appendChatMessage(conversation.id, {
-                role: 'vendor',
+                role: 'admin',
                 senderName: 'Daniel Tan',
                 body: draft,
               })

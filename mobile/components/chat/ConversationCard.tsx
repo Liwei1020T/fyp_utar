@@ -14,9 +14,9 @@ interface ConversationCardProps {
 
 export function ConversationCard({ conversation, onPress }: ConversationCardProps) {
   const statusVariant =
-    conversation.mode === 'vendor_joined'
+    conversation.mode === 'admin_joined'
       ? 'success'
-      : conversation.mode === 'waiting_vendor'
+      : conversation.mode === 'waiting_admin'
         ? 'warning'
         : conversation.mode === 'resolved'
           ? 'info'

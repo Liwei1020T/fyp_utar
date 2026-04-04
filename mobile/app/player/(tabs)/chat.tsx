@@ -42,7 +42,7 @@ export default function PlayerChatThreadsScreen() {
                     Ask setup questions, then escalate only when you need a human.
                   </HeroText>
                   <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-                    The prototype now flows from AI guidance into vendor handoff, booking support, and after-sales follow-up in one clean chat experience.
+                    The prototype now flows from AI guidance into admin handoff, booking support, and after-sales follow-up in one clean chat experience.
                   </HeroText>
                 </View>
                 <View className="h-12 w-12 items-center justify-center rounded-2xl bg-white/12">
@@ -60,7 +60,7 @@ export default function PlayerChatThreadsScreen() {
 
             <AppSection eyebrow="Quick start" title="Prompt ideas" variant="compact" className="mt-0">
               <View className="flex-row flex-wrap gap-2">
-                {['Explain my recommendation', 'Ask vendor about pickup', 'Need help with payment'].map((item) => (
+                {['Explain my recommendation', 'Ask admin about pickup', 'Need help with payment'].map((item) => (
                   <Pressable key={item} onPress={() => router.push(`/player/chat/${playerConversations[0]?.id ?? 'chat-001'}`)}>
                     <AppCard variant="subtle" padding="sm">
                       <View className="flex-row items-center gap-2">

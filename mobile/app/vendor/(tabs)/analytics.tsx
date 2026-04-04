@@ -8,19 +8,19 @@ import { AppCard } from '../../../components/ui/AppCard';
 import { HeroText } from '../../../components/ui/heroui';
 import { useCurrentUser } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
-import { getVendorAnalytics, getStringById } from '../../../services/mockAppService';
+import { getAdminAnalytics, getStringById } from '../../../services/mockAppService';
 
-export default function VendorAnalyticsScreen() {
+export default function AdminAnalyticsScreen() {
   const user = useCurrentUser();
 
   if (!user || user.role !== 'admin') {
     return null;
   }
 
-  const analytics = getVendorAnalytics(user.id);
+  const analytics = getAdminAnalytics(user.id);
 
   return (
-    <AppScreen tone="vendor" title="Admin analytics" subtitle="Admin operations analytics UI for trends, busy slots, popular strings, payments, and workload." >
+    <AppScreen tone="admin" title="Admin analytics" subtitle="Admin operations analytics UI for trends, busy slots, popular strings, payments, and workload." >
       <AppSection eyebrow="Metrics" title="Shop performance">
         <View className="flex-row flex-wrap gap-3">
           <MetricStatCard title="Weekly bookings" value={String(analytics?.weeklyBookings ?? 0)} icon={<BarChart3 size={20} color="#2F64B6" />} />

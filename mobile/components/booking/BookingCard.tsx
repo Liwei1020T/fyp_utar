@@ -11,11 +11,11 @@ import type { Booking } from '../../types/domain';
 interface BookingCardProps {
   booking: Booking;
   stringLabel: string;
-  vendorLabel?: string;
+  adminLabel?: string;
   onPress?: () => void;
 }
 
-export function BookingCard({ booking, stringLabel, vendorLabel, onPress }: BookingCardProps) {
+export function BookingCard({ booking, stringLabel, adminLabel, onPress }: BookingCardProps) {
   const content = (
     <AppCard variant="elevated" padding="md">
       <View className="gap-4">
@@ -30,9 +30,9 @@ export function BookingCard({ booking, stringLabel, vendorLabel, onPress }: Book
             <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
               {stringLabel} at {booking.requestedTension} lbs
             </HeroText>
-            {vendorLabel ? (
+            {adminLabel ? (
               <HeroText className="mt-1 text-sm text-neutral-500">
-                {vendorLabel}
+                {adminLabel}
               </HeroText>
             ) : null}
           </View>

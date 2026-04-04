@@ -4,7 +4,7 @@ import type { AppChipVariant } from './AppChip';
 export const appChromeColors = {
   page: '#F4F7FB',
   pageAuth: '#F7FAFD',
-  pageVendor: '#F2F8F8',
+  pageAdmin: '#F2F8F8',
   surface: '#FFFFFF',
   surfaceElevated: '#FBFDFF',
   surfaceMuted: '#EEF4FA',

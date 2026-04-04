@@ -12,7 +12,7 @@ import { AppSection } from '../../components/shared/AppSection';
 import { useAppStore, useBusinessHoursState, useCurrentUser } from '../../store/appStore';
 import { MOCK_BOOKING_SLOTS } from '../../mocks';
 
-export default function VendorBusinessHoursScreen() {
+export default function AdminBusinessHoursScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const businessHours = useBusinessHoursState();
@@ -22,8 +22,8 @@ export default function VendorBusinessHoursScreen() {
     return null;
   }
 
-  const hours = businessHours.find((item) => item.vendorId === user.id);
-  const slotPreview = MOCK_BOOKING_SLOTS.filter((item) => item.vendorId === user.id).slice(0, 5);
+  const hours = businessHours.find((item) => item.adminId === user.id);
+  const slotPreview = MOCK_BOOKING_SLOTS.filter((item) => item.adminId === user.id).slice(0, 5);
 
   if (!hours) {
     return null;
@@ -31,7 +31,7 @@ export default function VendorBusinessHoursScreen() {
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title="Business hours"
       subtitle="Frontend-only editing for weekday hours, break windows, slot duration, and capacity."
       headerLeft={

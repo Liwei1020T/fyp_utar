@@ -9,7 +9,7 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { useAppStore, useBookings, usePayments } from '../../../store/appStore';
-import { getStringById, getVendorById } from '../../../services/mockAppService';
+import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
   formatBookingStatus,
   formatCurrency,
@@ -44,7 +44,7 @@ export default function PlayerBookingDetailScreen() {
   }
 
   const stringItem = getStringById(booking.stringId);
-  const vendor = getVendorById(booking.vendorId);
+  const admin = getAdminById(booking.adminId);
   const bookingPayments = payments.filter((item) => item.bookingId === booking.id);
   const canEditBeforePayment = booking.paymentStatus !== 'paid';
 
@@ -125,7 +125,7 @@ export default function PlayerBookingDetailScreen() {
           </View>
           <View className="p-4 flex-row justify-between">
             <HeroText className="text-neutral-500">Admin desk</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{vendor?.businessName}</HeroText>
+            <HeroText className="font-semibold text-neutral-950">{admin?.businessName}</HeroText>
           </View>
         </AppCard>
       </AppSection>
@@ -144,7 +144,7 @@ export default function PlayerBookingDetailScreen() {
             <View className="flex-row items-center gap-3">
               <TimerReset size={18} color="#22766D" />
               <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                Queue position is currently #{booking.queuePosition}. Service updates appear on the tracking timeline as the vendor updates your order.
+                Queue position is currently #{booking.queuePosition}. Service updates appear on the tracking timeline as the admin desk updates your order.
               </HeroText>
             </View>
           </AppCard>

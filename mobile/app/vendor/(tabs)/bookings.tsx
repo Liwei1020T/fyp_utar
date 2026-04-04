@@ -10,7 +10,7 @@ import { getStringById, getUserById } from '../../../services/mockAppService';
 import type { BookingStatus } from '../../../types/domain';
 import { formatBookingStatus } from '../../../lib/formatters';
 
-export default function VendorBookingsScreen() {
+export default function AdminBookingsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
@@ -25,7 +25,7 @@ export default function VendorBookingsScreen() {
   const filtered = useMemo(
     () =>
       bookings.filter((item) => {
-        if (item.vendorId !== user.id) {
+        if (item.adminId !== user.id) {
           return false;
         }
         const matchesFilter = filter === 'all' || item.status === filter;
@@ -73,7 +73,7 @@ export default function VendorBookingsScreen() {
               <BookingCard
                 booking={item}
                 stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
-                vendorLabel={player?.name}
+                adminLabel={player?.name}
                 onPress={() => router.push(`/admin/bookings/${item.id}`)}
               />
             </View>

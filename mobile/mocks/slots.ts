@@ -22,6 +22,6 @@ const SLOT_DATA: Array<{
 ];
 
 export const MOCK_BOOKING_SLOTS: BookingSlot[] = SLOT_DATA.map((slot) => ({
-  vendorId: 'admin-001',
+  adminId: 'admin-001',
   ...slot,
 }));

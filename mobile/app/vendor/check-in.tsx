@@ -10,7 +10,7 @@ import { HeroText } from '../../components/ui/heroui';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { useBookings, useCurrentUser } from '../../store/appStore';
 
-export default function VendorCheckInScreen() {
+export default function AdminCheckInScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
@@ -23,19 +23,19 @@ export default function VendorCheckInScreen() {
 
   const match = bookings.find(
     (item) =>
-      item.vendorId === user.id
+      item.adminId === user.id
       && (
         item.checkInReference.includes(submittedReference)
         || item.id.includes(submittedReference)
       )
   );
   const suggestedReference = bookings.find(
-    (item) => item.vendorId === user.id && item.status === 'awaiting_dropoff'
-  )?.checkInReference ?? bookings.find((item) => item.vendorId === user.id)?.checkInReference ?? reference;
+    (item) => item.adminId === user.id && item.status === 'awaiting_dropoff'
+  )?.checkInReference ?? bookings.find((item) => item.adminId === user.id)?.checkInReference ?? reference;
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title="Check-in"
       subtitle="Manual booking reference entry and fake QR scan flow for admin use."
       headerLeft={

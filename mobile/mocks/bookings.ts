@@ -4,7 +4,7 @@ export const MOCK_BOOKINGS: Booking[] = [
   {
     id: 'BK-2401',
     playerId: 'player-001',
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     stringId: 'string-004',
     status: 'in_progress',
     paymentStatus: 'paid',
@@ -35,7 +35,7 @@ export const MOCK_BOOKINGS: Booking[] = [
   {
     id: 'BK-2402',
     playerId: 'player-001',
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     stringId: 'string-001',
     status: 'pending_payment',
     paymentStatus: 'unpaid',
@@ -63,7 +63,7 @@ export const MOCK_BOOKINGS: Booking[] = [
   {
     id: 'BK-2398',
     playerId: 'player-002',
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     stringId: 'string-003',
     status: 'ready_for_collection',
     paymentStatus: 'paid',
@@ -93,7 +93,7 @@ export const MOCK_BOOKINGS: Booking[] = [
   {
     id: 'BK-2392',
     playerId: 'player-003',
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     stringId: 'string-006',
     status: 'completed',
     paymentStatus: 'paid',
@@ -125,7 +125,7 @@ export const MOCK_BOOKINGS: Booking[] = [
   {
     id: 'BK-2387',
     playerId: 'player-002',
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     stringId: 'string-005',
     status: 'cancelled',
     paymentStatus: 'cancelled',

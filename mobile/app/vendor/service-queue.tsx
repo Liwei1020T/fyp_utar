@@ -9,7 +9,7 @@ import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { useBookings, useCurrentUser } from '../../store/appStore';
 
-export default function VendorServiceQueueScreen() {
+export default function AdminServiceQueueScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
@@ -18,16 +18,16 @@ export default function VendorServiceQueueScreen() {
     return null;
   }
 
-  const vendorBookings = bookings.filter((item) => item.vendorId === user.id);
+  const adminBookings = bookings.filter((item) => item.adminId === user.id);
   const lanes = [
-    { title: 'Awaiting drop-off', items: vendorBookings.filter((item) => item.status === 'awaiting_dropoff') },
-    { title: 'In progress', items: vendorBookings.filter((item) => item.status === 'in_progress') },
-    { title: 'Ready collection', items: vendorBookings.filter((item) => item.status === 'ready_for_collection') },
+    { title: 'Awaiting drop-off', items: adminBookings.filter((item) => item.status === 'awaiting_dropoff') },
+    { title: 'In progress', items: adminBookings.filter((item) => item.status === 'in_progress') },
+    { title: 'Ready collection', items: adminBookings.filter((item) => item.status === 'ready_for_collection') },
   ];
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title="Service queue"
       subtitle="Visual board of active service jobs."
       headerLeft={

@@ -20,7 +20,7 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
       sound: 8,
     },
     homeVenue: 'Bukit Jalil Badminton Arena',
-    preferredVendorId: 'admin-001',
+    preferredAdminId: 'admin-001',
     recentGoal: 'More punch on back-court clears without losing net feel.',
   },
   {
@@ -42,7 +42,7 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
       sound: 6,
     },
     homeVenue: 'Petaling Smash Hall',
-    preferredVendorId: 'admin-001',
+    preferredAdminId: 'admin-001',
     recentGoal: 'Keep touch on slices while reducing frequent restrings.',
   },
   {
@@ -64,7 +64,7 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
       sound: 4,
     },
     homeVenue: 'PJ Community Sports Hub',
-    preferredVendorId: 'admin-001',
+    preferredAdminId: 'admin-001',
     recentGoal: 'More forgiving feel for longer weekend sessions.',
   },
 ];

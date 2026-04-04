@@ -16,7 +16,7 @@ import {
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
-import { getStringById, getVendorById } from '../../../services/mockAppService';
+import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
 
 export default function BookingSummaryScreen() {
@@ -48,7 +48,7 @@ export default function BookingSummaryScreen() {
   }
 
   const stringItem = getStringById(bookingDraft.stringId);
-  const vendor = getVendorById(bookingDraft.vendorId);
+  const admin = getAdminById(bookingDraft.adminId);
   const wallet = wallets.find((item) => item.userId === user.id);
   const stringFee = stringItem?.price ?? 36;
   const serviceFee = 18;
@@ -107,7 +107,7 @@ export default function BookingSummaryScreen() {
         <AppCard variant="highlighted" padding="lg">
           <View className="gap-3">
             <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-              {vendor?.businessName}
+              {admin?.businessName}
             </HeroText>
             <HeroText className="text-[24px] font-bold tracking-tight text-neutral-950">
               {stringItem?.brand} {stringItem?.model}

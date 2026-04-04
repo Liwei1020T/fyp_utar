@@ -16,7 +16,7 @@ import {
 import { getPaymentStatusVariant } from '../../components/ui/theme';
 import { useCurrentUser, usePayments } from '../../store/appStore';
 
-export default function VendorPaymentsScreen() {
+export default function AdminPaymentsScreen() {
   const router = useRouter();
   const bottomContentInset = useBottomContentInset(16);
   const user = useCurrentUser();
@@ -26,11 +26,11 @@ export default function VendorPaymentsScreen() {
     return null;
   }
 
-  const vendorPayments = payments.filter((item) => item.vendorId === user.id || item.type === 'wallet_top_up');
+  const adminPayments = payments.filter((item) => item.adminId === user.id || item.type === 'wallet_top_up');
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title="Payments monitor"
       subtitle="Frontend-only view for successful, failed, and wallet-related payment activity."
       headerLeft={
@@ -44,7 +44,7 @@ export default function VendorPaymentsScreen() {
     >
       <FlatList
         className="flex-1"
-        data={vendorPayments}
+        data={adminPayments}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
         renderItem={({ item }) => (

@@ -69,7 +69,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Admin core journey:
   auth -> dashboard -> bookings/chat/inventory -> booking or inventory detail -> operational updates
 - Shared state mutation hotspots:
-  `submitBookingPayment`, `updateBookingStatus`, `appendChatMessage`, `requestVendorSupport`, `topUpWallet`, `updateBusinessHours`, `updateStringItem`
+  `submitBookingPayment`, `updateBookingStatus`, `appendChatMessage`, `requestAdminSupport`, `topUpWallet`, `updateBusinessHours`, `updateStringItem`
 
 ## Structure Rules
 

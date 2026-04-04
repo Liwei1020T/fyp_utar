@@ -22,7 +22,7 @@ export interface PlayerProfile extends UserIdentity {
   preferredTension: number;
   priorities: Record<PriorityKey, number>;
   homeVenue: string;
-  preferredVendorId: string;
+  preferredAdminId: string;
   recentGoal: string;
 }
 
@@ -37,8 +37,6 @@ export interface AdminProfile extends UserIdentity {
   specialties: string[];
   escalationEmail: string;
 }
-
-export type VendorProfile = AdminProfile;
 
 export type AppUser = PlayerProfile | AdminProfile;
 
@@ -69,7 +67,7 @@ export interface StringItem {
   inventoryTags: string[];
   stockLevel: number;
   availability: InventoryAvailability;
-  vendorNote?: string;
+  adminNote?: string;
 }
 
 export type BookingStatus =
@@ -100,7 +98,7 @@ export interface BookingStatusEntry {
 export interface Booking {
   id: string;
   playerId: string;
-  vendorId: string;
+  adminId: string;
   stringId: string;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
@@ -141,7 +139,7 @@ export interface Payment {
   id: string;
   bookingId?: string;
   playerId: string;
-  vendorId?: string;
+  adminId?: string;
   method: PaymentMethod;
   status: PaymentStatus;
   amount: number;
@@ -151,12 +149,12 @@ export interface Payment {
   note?: string;
 }
 
-export type ChatMessageRole = 'user' | 'ai' | 'vendor' | 'system';
+export type ChatMessageRole = 'user' | 'ai' | 'admin' | 'system';
 
 export type ConversationMode =
   | 'ai_only'
-  | 'waiting_vendor'
-  | 'vendor_joined'
+  | 'waiting_admin'
+  | 'admin_joined'
   | 'resolved'
   | 'closed';
 
@@ -171,7 +169,7 @@ export interface ChatMessage {
 export interface ChatConversation {
   id: string;
   playerId: string;
-  vendorId?: string;
+  adminId?: string;
   bookingId?: string;
   stringId?: string;
   title: string;
@@ -242,14 +240,14 @@ export interface BusinessHoursDay {
 }
 
 export interface BusinessHours {
-  vendorId: string;
+  adminId: string;
   days: BusinessHoursDay[];
   specialClosedDates: string[];
 }
 
 export interface BookingSlot {
   id: string;
-  vendorId: string;
+  adminId: string;
   date: string;
   time: string;
   capacity: number;
@@ -258,8 +256,8 @@ export interface BookingSlot {
   dayLabel: string;
 }
 
-export interface VendorAnalyticsSummary {
-  vendorId: string;
+export interface AdminAnalyticsSummary {
+  adminId: string;
   weeklyBookings: number;
   pendingPaymentCount: number;
   awaitingDropoffCount: number;
@@ -303,8 +301,8 @@ export interface NotificationPreferences {
   recommendation: boolean;
 }
 
-export interface VendorSettings {
-  vendorId: string;
+export interface AdminSettings {
+  adminId: string;
   storeName: string;
   storeContact: string;
   supportText: string;
@@ -316,7 +314,7 @@ export interface VendorSettings {
 
 export interface BookingDraft {
   stringId: string;
-  vendorId: string;
+  adminId: string;
   racketId?: string | null;
   racketBrand: string;
   racketModel: string;

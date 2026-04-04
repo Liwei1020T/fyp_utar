@@ -158,7 +158,7 @@ export function mapBackendUserToPlayerProfile(
       sound: toTenScale(profile?.pref_sound),
     },
     homeVenue: 'Klang Valley',
-    preferredVendorId: 'admin-001',
+    preferredAdminId: 'admin-001',
     recentGoal:
       'Use your saved profile to generate a grounded shortlist for the next restring.',
   };
@@ -250,7 +250,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     inventoryTags: [titleCase(category), ...strengths.slice(0, 2)],
     stockLevel: item.is_active ? 8 : 0,
     availability: item.is_active ? 'in_stock' : 'out_of_stock',
-    vendorNote: item.source_url ?? undefined,
+    adminNote: item.source_url ?? undefined,
   };
 }
 
@@ -324,7 +324,7 @@ export function mapBackendBookingToBooking(
   return {
     id: booking.id,
     playerId: booking.user_id,
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     stringId: booking.string_id,
     status,
     paymentStatus: 'paid',

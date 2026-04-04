@@ -10,7 +10,7 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { BookingCard } from '../../../components/booking/BookingCard';
 import { useBookings, useCurrentUser } from '../../../store/appStore';
-import { getStringById, getVendorById } from '../../../services/mockAppService';
+import { getAdminById, getStringById } from '../../../services/mockAppService';
 import type { BookingStatus } from '../../../types/domain';
 import { formatBookingStatus } from '../../../lib/formatters';
 
@@ -110,14 +110,14 @@ export default function BookingsListScreen() {
         }
         renderItem={({ item }) => {
           const stringItem = getStringById(item.stringId);
-          const vendor = getVendorById(item.vendorId);
+          const admin = getAdminById(item.adminId);
 
           return (
             <View className="mb-4">
               <BookingCard
                 booking={item}
                 stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
-                vendorLabel={vendor?.businessName}
+                adminLabel={admin?.businessName}
                 onPress={() => router.push(`/player/bookings/${item.id}`)}
               />
             </View>

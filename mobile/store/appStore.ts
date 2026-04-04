@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import {
+  MOCK_ADMIN_SETTINGS,
   MOCK_BOOKINGS,
   MOCK_BUSINESS_HOURS,
   MOCK_CHAT_CONVERSATIONS,
@@ -10,7 +11,6 @@ import {
   MOCK_RACKETS,
   MOCK_STRINGS,
   MOCK_USERS,
-  MOCK_VENDOR_SETTINGS,
   MOCK_WALLETS,
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks';
@@ -33,7 +33,7 @@ import type {
   RacketPassport,
   StringItem,
   UserRole,
-  VendorSettings,
+  AdminSettings,
   WalletBalance,
   WalletTransaction,
 } from '../types/domain';
@@ -90,7 +90,7 @@ function buildTimeline(status: BookingStatus, dropOffDate: string, dropOffTime: 
     steps.push({
       status: 'in_progress',
       title: 'Stringing in progress',
-      note: 'The vendor has started the live service work.',
+      note: 'The admin desk has started the live service work.',
       at: now,
     });
   }
@@ -118,9 +118,9 @@ function buildTimeline(status: BookingStatus, dropOffDate: string, dropOffTime: 
 
 function buildConversationMeta(mode: ChatConversation['mode']) {
   switch (mode) {
-    case 'waiting_vendor':
+    case 'waiting_admin':
       return 'Waiting for Admin';
-    case 'vendor_joined':
+    case 'admin_joined':
       return 'Admin Joined';
     case 'resolved':
       return 'Resolved';
@@ -155,7 +155,7 @@ interface AppStoreState {
   rackets: RacketPassport[];
   wallets: WalletBalance[];
   walletTransactions: WalletTransaction[];
-  vendorSettings: VendorSettings[];
+  adminSettings: AdminSettings[];
   notificationPreferences: NotificationPreferences[];
   compareSelection: string[];
   bookingDraft: BookingDraft | null;
@@ -186,9 +186,9 @@ interface AppStoreState {
   toggleCompareSelection: (stringId: string) => void;
   clearCompareSelection: () => void;
   appendChatMessage: (conversationId: string, message: Omit<ChatMessage, 'id' | 'sentAt'>) => void;
-  requestVendorSupport: (conversationId: string) => void;
+  requestAdminSupport: (conversationId: string) => void;
   resolveConversation: (conversationId: string) => void;
-  updateBusinessHours: (vendorId: string, nextHours: BusinessHours) => void;
+  updateBusinessHours: (adminId: string, nextHours: BusinessHours) => void;
   updateStringItem: (stringId: string, patch: Partial<StringItem>) => void;
   markNotificationRead: (notificationId: string) => void;
   topUpWallet: (userId: string, amount: number, methodLabel: string) => string;
@@ -196,7 +196,7 @@ interface AppStoreState {
     userId: string,
     patch: Partial<NotificationPreferences>
   ) => void;
-  updateVendorSettings: (vendorId: string, patch: Partial<VendorSettings>) => void;
+  updateAdminSettings: (adminId: string, patch: Partial<AdminSettings>) => void;
 }
 
 export const useAppStore = create<AppStoreState>((set, get) => ({
@@ -217,7 +217,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   rackets: MOCK_RACKETS,
   wallets: MOCK_WALLETS,
   walletTransactions: MOCK_WALLET_TRANSACTIONS,
-  vendorSettings: MOCK_VENDOR_SETTINGS,
+  adminSettings: MOCK_ADMIN_SETTINGS,
   notificationPreferences: MOCK_NOTIFICATION_PREFERENCES,
   compareSelection: [],
   bookingDraft: null,
@@ -287,7 +287,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         sound: 5,
       },
       homeVenue: 'Klang Valley',
-      preferredVendorId: 'admin-001',
+      preferredAdminId: 'admin-001',
       recentGoal: 'Dial in a setup that feels balanced and confidence-building.',
     };
 
@@ -437,7 +437,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         id: nextPaymentId,
         bookingId: existingBooking.id,
         playerId: existingBooking.playerId,
-        vendorId: existingBooking.vendorId,
+        adminId: existingBooking.adminId,
         method,
         status,
         amount: existingBooking.totalAmount,
@@ -517,7 +517,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     const booking: Booking = {
       id: nextBookingId,
       playerId: userId,
-      vendorId: draft.vendorId,
+      adminId: draft.adminId,
       stringId: draft.stringId,
       status: bookingStatus,
       paymentStatus: status === 'paid' ? 'paid' : status,
@@ -546,7 +546,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       id: nextPaymentId,
       bookingId: nextBookingId,
       playerId: userId,
-      vendorId: draft.vendorId,
+      adminId: draft.adminId,
       method,
       status,
       amount: totalAmount,
@@ -651,7 +651,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
                 {
                   status,
                   title: titleize(status),
-                  note: 'Updated from the frontend-only vendor operations workspace.',
+                  note: 'Updated from the frontend-only admin operations workspace.',
                   at: new Date().toISOString(),
                 },
               ],
@@ -681,12 +681,12 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
               ...conversation,
               updatedAt: new Date().toISOString(),
               mode:
-                message.role === 'vendor'
-                  ? 'vendor_joined'
+                message.role === 'admin'
+                  ? 'admin_joined'
                   : conversation.mode,
               statusLabel:
-                message.role === 'vendor'
-                  ? buildConversationMeta('vendor_joined')
+                message.role === 'admin'
+                  ? buildConversationMeta('admin_joined')
                   : conversation.statusLabel,
               messages: [
                 ...conversation.messages,
@@ -700,14 +700,14 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
           : conversation
       ),
     })),
-  requestVendorSupport: (conversationId) =>
+  requestAdminSupport: (conversationId) =>
     set((state) => ({
       conversations: state.conversations.map((conversation) =>
         conversation.id === conversationId
           ? {
               ...conversation,
-              mode: 'waiting_vendor',
-              statusLabel: buildConversationMeta('waiting_vendor'),
+              mode: 'waiting_admin',
+              statusLabel: buildConversationMeta('waiting_admin'),
               updatedAt: new Date().toISOString(),
               messages: [
                 ...conversation.messages,
@@ -736,10 +736,10 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
           : conversation
       ),
     })),
-  updateBusinessHours: (vendorId, nextHours) =>
+  updateBusinessHours: (adminId, nextHours) =>
     set((state) => ({
       businessHours: state.businessHours.map((item) =>
-        item.vendorId === vendorId ? nextHours : item
+        item.adminId === adminId ? nextHours : item
       ),
     })),
   updateStringItem: (stringId, patch) =>
@@ -789,10 +789,10 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         item.userId === userId ? { ...item, ...patch } : item
       ),
     })),
-  updateVendorSettings: (vendorId, patch) =>
+  updateAdminSettings: (adminId, patch) =>
     set((state) => ({
-      vendorSettings: state.vendorSettings.map((item) =>
-        item.vendorId === vendorId ? { ...item, ...patch } : item
+      adminSettings: state.adminSettings.map((item) =>
+        item.adminId === adminId ? { ...item, ...patch } : item
       ),
     })),
 }));

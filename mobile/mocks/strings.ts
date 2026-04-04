@@ -21,7 +21,7 @@ export const MOCK_STRINGS: StringItem[] = [
     inventoryTags: ['Fast seller', 'Premium', 'High repulsion'],
     stockLevel: 18,
     availability: 'in_stock',
-    vendorNote: 'Displayed near the counter because it pairs well with attacking profiles.',
+    adminNote: 'Displayed near the counter because it pairs well with attacking profiles.',
   },
   {
     id: 'string-002',
@@ -43,7 +43,7 @@ export const MOCK_STRINGS: StringItem[] = [
     inventoryTags: ['Balanced', 'Good durability'],
     stockLevel: 14,
     availability: 'in_stock',
-    vendorNote: 'Default recommendation for players who want fewer restrings.',
+    adminNote: 'Default recommendation for players who want fewer restrings.',
   },
   {
     id: 'string-003',
@@ -65,7 +65,7 @@ export const MOCK_STRINGS: StringItem[] = [
     inventoryTags: ['Tournament', 'Top tier'],
     stockLevel: 9,
     availability: 'in_stock',
-    vendorNote: 'Frequently recommended during tournament weeks and league nights.',
+    adminNote: 'Frequently recommended during tournament weeks and league nights.',
   },
   {
     id: 'string-004',
@@ -87,7 +87,7 @@ export const MOCK_STRINGS: StringItem[] = [
     inventoryTags: ['Elite', 'Ultra thin'],
     stockLevel: 5,
     availability: 'low_stock',
-    vendorNote: 'Low stock because it is currently the most booked premium string.',
+    adminNote: 'Low stock because it is currently the most booked premium string.',
   },
   {
     id: 'string-005',
@@ -109,7 +109,7 @@ export const MOCK_STRINGS: StringItem[] = [
     inventoryTags: ['Control', 'Popular'],
     stockLevel: 11,
     availability: 'in_stock',
-    vendorNote: 'Staff usually suggest this when players mention net feel and touch.',
+    adminNote: 'Staff usually suggest this when players mention net feel and touch.',
   },
   {
     id: 'string-006',
@@ -131,6 +131,6 @@ export const MOCK_STRINGS: StringItem[] = [
     inventoryTags: ['Comfort', 'Durable'],
     stockLevel: 3,
     availability: 'low_stock',
-    vendorNote: 'Reserve packs are running low, so the vendor is watching this closely.',
+    adminNote: 'Reserve packs are running low, so the admin desk is watching this closely.',
   },
 ];

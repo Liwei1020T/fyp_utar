@@ -11,9 +11,9 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { useAppStore, useBookings, useCurrentUser } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
-import { getVendorAnalytics } from '../../../services/mockAppService';
+import { getAdminAnalytics } from '../../../services/mockAppService';
 
-export default function VendorDashboardScreen() {
+export default function AdminDashboardScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
@@ -23,12 +23,12 @@ export default function VendorDashboardScreen() {
     return null;
   }
 
-  const vendorBookings = bookings.filter((item) => item.vendorId === user.id);
-  const analytics = getVendorAnalytics(user.id);
+  const adminBookings = bookings.filter((item) => item.adminId === user.id);
+  const analytics = getAdminAnalytics(user.id);
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       headerLeft={
         <View className="flex-row items-center gap-3">
           <View className="h-11 w-11 items-center justify-center rounded-[18px] bg-[#E4F2F0]">
@@ -67,7 +67,7 @@ export default function VendorDashboardScreen() {
 
       <AppSection eyebrow="Today" title="Operational snapshot">
         <View className="flex-row flex-wrap gap-3">
-          <MetricStatCard title="Today bookings" value={String(vendorBookings.length)} icon={<CalendarRange size={20} color="#2F64B6" />} />
+          <MetricStatCard title="Today bookings" value={String(adminBookings.length)} icon={<CalendarRange size={20} color="#2F64B6" />} />
           <MetricStatCard title="Pending payment" value={String(analytics?.pendingPaymentCount ?? 0)} icon={<Clock3 size={20} color="#C98A2E" />} accentClassName="bg-secondary-50" />
           <MetricStatCard title="Awaiting drop-off" value={String(analytics?.awaitingDropoffCount ?? 0)} icon={<QrCode size={20} color="#2F64B6" />} />
           <MetricStatCard title="In progress" value={String(analytics?.inProgressCount ?? 0)} icon={<TimerReset size={20} color="#22766D" />} accentClassName="bg-[#E4F2F0]" />
@@ -100,7 +100,7 @@ export default function VendorDashboardScreen() {
             <View className="flex-row items-center gap-3">
               <QrCode size={18} color="#2F64B6" />
               <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                {vendorBookings.filter((item) => item.status === 'awaiting_dropoff').length} bookings are waiting for counter drop-off today.
+                {adminBookings.filter((item) => item.status === 'awaiting_dropoff').length} bookings are waiting for counter drop-off today.
               </HeroText>
             </View>
           </AppCard>

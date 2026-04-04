@@ -12,7 +12,7 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { formatAvailability } from '../../../lib/formatters';
 import { useAppStore, useStrings } from '../../../store/appStore';
 
-export default function VendorInventoryDetailScreen() {
+export default function AdminInventoryDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const strings = useStrings();
@@ -20,7 +20,7 @@ export default function VendorInventoryDetailScreen() {
   const stringItem = strings.find((item) => item.id === params.id);
   const [price, setPrice] = useState(String(stringItem?.price ?? 0));
   const [stockLevel, setStockLevel] = useState(String(stringItem?.stockLevel ?? 0));
-  const [notes, setNotes] = useState(stringItem?.vendorNote ?? '');
+  const [notes, setNotes] = useState(stringItem?.adminNote ?? '');
 
   if (!stringItem) {
     return null;
@@ -28,7 +28,7 @@ export default function VendorInventoryDetailScreen() {
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title={`${stringItem.brand} ${stringItem.model}`}
       subtitle="Frontend-only inventory edit flow for price, stock-like indicator, availability, and notes."
       headerLeft={
@@ -62,7 +62,7 @@ export default function VendorInventoryDetailScreen() {
             updateStringItem(stringItem.id, {
               price: Number(price) || stringItem.price,
               stockLevel: Number(stockLevel) || stringItem.stockLevel,
-              vendorNote: notes,
+              adminNote: notes,
               availability:
                 Number(stockLevel) <= 0
                   ? 'out_of_stock'

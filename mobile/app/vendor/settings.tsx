@@ -8,13 +8,13 @@ import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { useAppStore, useCurrentUser } from '../../store/appStore';
 
-export default function VendorSettingsScreen() {
+export default function AdminSettingsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const settings = useAppStore((state) =>
-    state.vendorSettings.find((item) => item.vendorId === user?.id)
+    state.adminSettings.find((item) => item.adminId === user?.id)
   );
-  const updateVendorSettings = useAppStore((state) => state.updateVendorSettings);
+  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
   const [storeName, setStoreName] = useState(settings?.storeName ?? '');
   const [storeContact, setStoreContact] = useState(settings?.storeContact ?? '');
   const [supportText, setSupportText] = useState(settings?.supportText ?? '');
@@ -28,7 +28,7 @@ export default function VendorSettingsScreen() {
 
   return (
     <AppScreen
-      tone="vendor"
+      tone="admin"
       title="Store settings"
       subtitle="Single-store settings for contact info, support copy, payment notes, and booking policy text."
       headerLeft={
@@ -55,7 +55,7 @@ export default function VendorSettingsScreen() {
         label="Save mock settings"
         className="mt-6"
         onPress={() =>
-          updateVendorSettings(user.id, {
+          updateAdminSettings(user.id, {
             storeName,
             storeContact,
             supportText,

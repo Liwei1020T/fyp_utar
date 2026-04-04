@@ -6,7 +6,7 @@ import { HeroText } from '../ui/heroui';
 import { cn } from '../ui/heroui';
 import { appChromeColors, appLayoutMetrics } from '../ui/theme';
 
-type AppScreenTone = 'default' | 'auth' | 'player' | 'vendor';
+type AppScreenTone = 'default' | 'auth' | 'player' | 'admin';
 
 interface AppScreenProps extends ViewProps {
   children: React.ReactNode;
@@ -45,21 +45,21 @@ export function AppScreen({
     default: appChromeColors.page,
     auth: appChromeColors.pageAuth,
     player: appChromeColors.page,
-    vendor: appChromeColors.pageVendor,
+    admin: appChromeColors.pageAdmin,
   };
 
   const headerStyles = {
     default: 'border-white/90 bg-white/70',
     auth: 'border-[#DDE9F4] bg-[#ECF2F8]',
     player: 'border-white/90 bg-white/70',
-    vendor: 'border-white/90 bg-[#E8F3F2]',
+    admin: 'border-white/90 bg-[#E8F3F2]',
   };
 
   const headerCoreStyles = {
     default: 'bg-app-surface border-[#E8EEF6]',
     auth: 'bg-app-surface border-[#E1EAF3]',
     player: 'bg-app-surface border-[#E8EEF6]',
-    vendor: 'bg-app-surface border-[#D9ECE8]',
+    admin: 'bg-app-surface border-[#D9ECE8]',
   };
 
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);

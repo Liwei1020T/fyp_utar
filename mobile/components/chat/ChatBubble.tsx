@@ -33,7 +33,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             variant={
               message.role === 'user'
                 ? 'secondary'
-                : message.role === 'vendor'
+                : message.role === 'admin'
                   ? 'success'
                   : message.role === 'system'
                     ? 'neutral'

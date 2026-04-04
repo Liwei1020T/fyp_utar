@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
 
-function VendorTabIcon({
+function AdminTabIcon({
   icon: Icon,
   color,
   size,
@@ -29,7 +29,7 @@ function VendorTabIcon({
   );
 }
 
-export default function VendorTabsLayout() {
+export default function AdminTabsLayout() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = 74 + Math.max(insets.bottom, 10);
 
@@ -37,7 +37,7 @@ export default function VendorTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: appChromeColors.pageVendor },
+        sceneStyle: { backgroundColor: appChromeColors.pageAdmin },
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: '#22766D',
         tabBarInactiveTintColor: appChromeColors.inactive,
@@ -72,7 +72,7 @@ export default function VendorTabsLayout() {
         options={{
           title: 'Overview',
           tabBarIcon: ({ color, size, focused }) => (
-            <VendorTabIcon icon={LayoutDashboard} color={color} size={size} focused={focused} />
+            <AdminTabIcon icon={LayoutDashboard} color={color} size={size} focused={focused} />
           ),
         }}
       />
@@ -81,7 +81,7 @@ export default function VendorTabsLayout() {
         options={{
           title: 'Bookings',
           tabBarIcon: ({ color, size, focused }) => (
-            <VendorTabIcon icon={CalendarRange} color={color} size={size} focused={focused} />
+            <AdminTabIcon icon={CalendarRange} color={color} size={size} focused={focused} />
           ),
         }}
       />
@@ -90,7 +90,7 @@ export default function VendorTabsLayout() {
         options={{
           title: 'Inventory',
           tabBarIcon: ({ color, size, focused }) => (
-            <VendorTabIcon icon={Boxes} color={color} size={size} focused={focused} />
+            <AdminTabIcon icon={Boxes} color={color} size={size} focused={focused} />
           ),
         }}
       />
@@ -99,7 +99,7 @@ export default function VendorTabsLayout() {
         options={{
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
-            <VendorTabIcon icon={MessageCircleMore} color={color} size={size} focused={focused} />
+            <AdminTabIcon icon={MessageCircleMore} color={color} size={size} focused={focused} />
           ),
         }}
       />
@@ -108,7 +108,7 @@ export default function VendorTabsLayout() {
         options={{
           title: 'Analytics',
           tabBarIcon: ({ color, size, focused }) => (
-            <VendorTabIcon icon={BarChart3} color={color} size={size} focused={focused} />
+            <AdminTabIcon icon={BarChart3} color={color} size={size} focused={focused} />
           ),
         }}
       />

@@ -1,4 +1,4 @@
-import type { NotificationPreferences, VendorSettings } from '../types/domain';
+import type { AdminSettings, NotificationPreferences } from '../types/domain';
 
 export const MOCK_NOTIFICATION_PREFERENCES: NotificationPreferences[] = [
   {
@@ -27,9 +27,9 @@ export const MOCK_NOTIFICATION_PREFERENCES: NotificationPreferences[] = [
   },
 ];
 
-export const MOCK_VENDOR_SETTINGS: VendorSettings[] = [
+export const MOCK_ADMIN_SETTINGS: AdminSettings[] = [
   {
-    vendorId: 'admin-001',
+    adminId: 'admin-001',
     storeName: 'Apex String Lab',
     storeContact: '+60 12-999 4421',
     supportText: 'Ask us about tension pairing, string feel, or drop-off timing and we will reply from the admin operations desk.',
@@ -39,3 +39,5 @@ export const MOCK_VENDOR_SETTINGS: VendorSettings[] = [
     address: 'Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur',
   },
 ];
+
+export const MOCK_VENDOR_SETTINGS = MOCK_ADMIN_SETTINGS;

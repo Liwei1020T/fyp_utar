@@ -1,4 +1,7 @@
 import {
+  MOCK_ADMINS,
+  MOCK_ADMIN_ANALYTICS,
+  MOCK_ADMIN_SETTINGS,
   MOCK_BOOKINGS,
   MOCK_BOOKING_SLOTS,
   MOCK_BUSINESS_HOURS,
@@ -10,15 +13,15 @@ import {
   MOCK_RACKETS,
   MOCK_STRINGS,
   MOCK_USERS,
-  MOCK_VENDOR_ANALYTICS,
-  MOCK_VENDOR_SETTINGS,
-  MOCK_VENDORS,
   MOCK_WALLETS,
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks';
 import { useAppStore } from '../store/appStore';
 import type {
   AppUser,
+  AdminAnalyticsSummary,
+  AdminProfile,
+  AdminSettings,
   Booking,
   BookingSlot,
   BusinessHours,
@@ -29,9 +32,6 @@ import type {
   PlayerProfile,
   RacketPassport,
   StringItem,
-  VendorAnalyticsSummary,
-  VendorProfile,
-  VendorSettings,
   WalletBalance,
   WalletTransaction,
 } from '../types/domain';
@@ -64,8 +64,8 @@ export function getPlayerById(id?: string | null): PlayerProfile | undefined {
   return MOCK_PLAYERS.find((item) => item.id === id);
 }
 
-export function getVendorById(id?: string | null): VendorProfile | undefined {
-  return MOCK_VENDORS.find((item) => item.id === id);
+export function getAdminById(id?: string | null): AdminProfile | undefined {
+  return MOCK_ADMINS.find((item) => item.id === id);
 }
 
 export function getStringById(id?: string | null): StringItem | undefined {
@@ -96,8 +96,8 @@ export function getBookingsForPlayer(playerId: string): Booking[] {
   return MOCK_BOOKINGS.filter((item) => item.playerId === playerId);
 }
 
-export function getBookingsForVendor(vendorId: string): Booking[] {
-  return MOCK_BOOKINGS.filter((item) => item.vendorId === vendorId);
+export function getBookingsForAdmin(adminId: string): Booking[] {
+  return MOCK_BOOKINGS.filter((item) => item.adminId === adminId);
 }
 
 export function getNotificationsForUser(userId: string): NotificationItem[] {
@@ -108,13 +108,13 @@ export function getRacketsForPlayer(playerId: string): RacketPassport[] {
   return MOCK_RACKETS.filter((item) => item.playerId === playerId);
 }
 
-export function getBusinessHoursForVendor(vendorId: string): BusinessHours | undefined {
-  return MOCK_BUSINESS_HOURS.find((item) => item.vendorId === vendorId);
+export function getBusinessHoursForAdmin(adminId: string): BusinessHours | undefined {
+  return MOCK_BUSINESS_HOURS.find((item) => item.adminId === adminId);
 }
 
-export function getSlotsForVendor(vendorId: string, date?: string): BookingSlot[] {
+export function getSlotsForAdmin(adminId: string, date?: string): BookingSlot[] {
   return MOCK_BOOKING_SLOTS.filter(
-    (item) => item.vendorId === vendorId && (!date || item.date === date)
+    (item) => item.adminId === adminId && (!date || item.date === date)
   );
 }
 
@@ -122,16 +122,16 @@ export function getConversationsForPlayer(playerId: string): ChatConversation[] 
   return MOCK_CHAT_CONVERSATIONS.filter((item) => item.playerId === playerId);
 }
 
-export function getConversationsForVendor(vendorId: string): ChatConversation[] {
-  return MOCK_CHAT_CONVERSATIONS.filter((item) => item.vendorId === vendorId);
+export function getConversationsForAdmin(adminId: string): ChatConversation[] {
+  return MOCK_CHAT_CONVERSATIONS.filter((item) => item.adminId === adminId);
 }
 
 export function getConversationById(id?: string | null) {
   return MOCK_CHAT_CONVERSATIONS.find((item) => item.id === id);
 }
 
-export function getVendorAnalytics(vendorId: string): VendorAnalyticsSummary | undefined {
-  return MOCK_VENDOR_ANALYTICS.find((item) => item.vendorId === vendorId);
+export function getAdminAnalytics(adminId: string): AdminAnalyticsSummary | undefined {
+  return MOCK_ADMIN_ANALYTICS.find((item) => item.adminId === adminId);
 }
 
 export function getWalletByUserId(userId: string): WalletBalance | undefined {
@@ -146,8 +146,8 @@ export function getNotificationPreferences(userId: string): NotificationPreferen
   return MOCK_NOTIFICATION_PREFERENCES.find((item) => item.userId === userId);
 }
 
-export function getVendorSettings(vendorId: string): VendorSettings | undefined {
-  return MOCK_VENDOR_SETTINGS.find((item) => item.vendorId === vendorId);
+export function getAdminSettings(adminId: string): AdminSettings | undefined {
+  return MOCK_ADMIN_SETTINGS.find((item) => item.adminId === adminId);
 }
 
 export function getRecommendedStringsForPlayer(playerId: string) {
