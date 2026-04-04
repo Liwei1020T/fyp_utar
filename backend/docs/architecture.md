@@ -23,6 +23,7 @@ The unified backend owns:
 - authentication and JWT issuance
 - users and profiles
 - strings catalog seeding and admin maintenance
+- single-store inventory fields and admin inventory adjustments
 - bookings and booking status transitions
 - recommendation generation and logging
 - admin reporting endpoints

@@ -106,8 +106,17 @@ Example profile request:
 - `POST /api/admin/strings`
 - `PUT /api/admin/strings/{id}`
 - `DELETE /api/admin/strings/{id}`
+- `GET /api/admin/inventory/strings`
+- `GET /api/admin/inventory/strings/{id}`
+- `PATCH /api/admin/inventory/strings/{id}`
 
 Only approved catalog strings can be created or updated.
+
+Inventory responses extend the base string shape with:
+
+- `stock_level`
+- `availability` (`in_stock`, `low_stock`, `out_of_stock`)
+- `admin_note`
 
 ### Recommendations
 

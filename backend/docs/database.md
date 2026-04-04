@@ -41,6 +41,11 @@ Stores the canonical recommendation and profile fields:
 ### `string_catalog_items`
 
 Stores approved catalog string entries plus their normalized recommendation aspect scores.
+Also carries single-store inventory fields:
+
+- `stock_level`
+- `admin_note`
+- `is_active` as the public availability gate
 
 ### `bookings`
 

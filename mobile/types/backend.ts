@@ -71,6 +71,17 @@ export interface BackendString {
   updated_at: string | null;
 }
 
+export type BackendInventoryAvailability =
+  | 'in_stock'
+  | 'low_stock'
+  | 'out_of_stock';
+
+export interface BackendAdminInventoryString extends BackendString {
+  stock_level: number;
+  availability: BackendInventoryAvailability;
+  admin_note: string | null;
+}
+
 export interface BackendPage<T> {
   items: T[];
   total: number;

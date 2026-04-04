@@ -42,6 +42,7 @@ SortField = Literal[
     "updated_at",
 ]
 SortOrder = Literal["asc", "desc"]
+InventoryAvailability = Literal["in_stock", "low_stock", "out_of_stock"]
 
 STRING_SORT_FIELDS: dict[str, object] = {
     "brand": StringCatalogItem.brand,
@@ -85,6 +86,12 @@ class StringOut(BaseModel):
     updated_at: str | None = None
 
 
+class AdminInventoryStringOut(StringOut):
+    stock_level: int
+    availability: InventoryAvailability
+    admin_note: str | None = None
+
+
 class StringWritePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -106,6 +113,14 @@ class StringWritePayload(BaseModel):
     source_item_id: str | None = None
     source_url: str | None = None
     is_active: bool | None = None
+
+
+class InventoryUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    price_rm: float | None = Field(default=None, ge=0, le=999)
+    stock_level: int | None = Field(default=None, ge=0, le=9999)
+    admin_note: str | None = Field(default=None, max_length=500)
 
 
 def serialize_string(item: StringCatalogItem) -> StringOut:
@@ -132,6 +147,24 @@ def serialize_string(item: StringCatalogItem) -> StringOut:
         is_active=item.is_active,
         created_at=isoformat_or_none(item.created_at),
         updated_at=isoformat_or_none(item.updated_at),
+    )
+
+
+def inventory_availability(item: StringCatalogItem) -> InventoryAvailability:
+    if not item.is_active or item.stock_level <= 0:
+        return "out_of_stock"
+    if item.stock_level <= 5:
+        return "low_stock"
+    return "in_stock"
+
+
+def serialize_inventory_string(item: StringCatalogItem) -> AdminInventoryStringOut:
+    base = serialize_string(item)
+    return AdminInventoryStringOut(
+        **base.model_dump(),
+        stock_level=item.stock_level,
+        availability=inventory_availability(item),
+        admin_note=item.admin_note,
     )
 
 
@@ -192,6 +225,73 @@ def list_strings(
     items = db.execute(query).scalars().all()
     return page_response(
         items=[serialize_string(item).model_dump() for item in items],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+def list_inventory_strings(
+    db: Session,
+    *,
+    brand: str | None,
+    search: str | None,
+    availability: InventoryAvailability | None,
+    limit: int | None,
+    offset: int,
+) -> dict[str, object]:
+    query = select(StringCatalogItem)
+    count_query = select(func.count()).select_from(StringCatalogItem)
+
+    if brand:
+        condition = StringCatalogItem.brand.ilike(f"%{brand.strip()}%")
+        query = query.where(condition)
+        count_query = count_query.where(condition)
+
+    if search:
+        term = f"%{search.strip()}%"
+        condition = or_(
+            StringCatalogItem.brand.ilike(term),
+            StringCatalogItem.model_name.ilike(term),
+            StringCatalogItem.normalized_name.ilike(term),
+            StringCatalogItem.admin_note.ilike(term),
+        )
+        query = query.where(condition)
+        count_query = count_query.where(condition)
+
+    if availability == "in_stock":
+        condition = StringCatalogItem.is_active.is_(True) & (
+            StringCatalogItem.stock_level > 5
+        )
+        query = query.where(condition)
+        count_query = count_query.where(condition)
+    elif availability == "low_stock":
+        condition = (
+            StringCatalogItem.is_active.is_(True)
+            & (StringCatalogItem.stock_level > 0)
+            & (StringCatalogItem.stock_level <= 5)
+        )
+        query = query.where(condition)
+        count_query = count_query.where(condition)
+    elif availability == "out_of_stock":
+        condition = StringCatalogItem.is_active.is_(False) | (
+            StringCatalogItem.stock_level <= 0
+        )
+        query = query.where(condition)
+        count_query = count_query.where(condition)
+
+    total = db.execute(count_query).scalar_one()
+    query = query.order_by(
+        StringCatalogItem.brand.asc(),
+        StringCatalogItem.model_name.asc(),
+    )
+
+    if limit is not None:
+        query = query.limit(limit).offset(offset)
+
+    items = db.execute(query).scalars().all()
+    return page_response(
+        items=[serialize_inventory_string(item).model_dump() for item in items],
         total=total,
         limit=limit,
         offset=offset,

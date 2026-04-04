@@ -1,4 +1,5 @@
 import type {
+  BackendAdminInventoryString,
   BackendAuthResponse,
   BackendBooking,
   BackendForgotPasswordRequestResponse,
@@ -159,6 +160,66 @@ export const backendApi = {
       body: payload,
       token,
     });
+  },
+  adminListInventoryStrings(
+    token: string,
+    params?: {
+      availability?: 'in_stock' | 'low_stock' | 'out_of_stock';
+      brand?: string;
+      search?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.availability) {
+      searchParams.set('availability', params.availability);
+    }
+    if (params?.brand) {
+      searchParams.set('brand', params.brand);
+    }
+    if (params?.search) {
+      searchParams.set('search', params.search);
+    }
+    if (params?.limit != null) {
+      searchParams.set('limit', String(params.limit));
+    }
+    if (params?.offset != null) {
+      searchParams.set('offset', String(params.offset));
+    }
+    const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
+    return requestJson<{
+      items: BackendAdminInventoryString[];
+      total: number;
+      limit: number | null;
+      offset: number;
+    }>(`/admin/inventory/strings${suffix}`, {
+      token,
+    });
+  },
+  adminFetchInventoryString(token: string, stringId: string) {
+    return requestJson<BackendAdminInventoryString>(
+      `/admin/inventory/strings/${stringId}`,
+      { token },
+    );
+  },
+  adminUpdateInventoryString(
+    token: string,
+    stringId: string,
+    payload: {
+      price_rm?: number | null;
+      stock_level?: number | null;
+      admin_note?: string | null;
+    },
+  ) {
+    return requestJson<BackendAdminInventoryString>(
+      `/admin/inventory/strings/${stringId}`,
+      {
+        method: 'PATCH',
+        body: payload,
+        token,
+      },
+    );
   },
   createBooking(
     token: string,

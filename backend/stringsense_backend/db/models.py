@@ -121,6 +121,8 @@ class StringCatalogItem(Base):
     all_round_score: Mapped[float] = mapped_column(Numeric(4, 2), default=0.5)
     source_item_id: Mapped[str | None] = mapped_column(SAString(64), nullable=True)
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stock_level: Mapped[int] = mapped_column(Integer, default=8)
+    admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

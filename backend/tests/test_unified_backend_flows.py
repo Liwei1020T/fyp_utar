@@ -225,6 +225,57 @@ def test_recommendations_logs_and_admin_string_controls():
     assert deactivate_string.json()["is_active"] is False
 
 
+def test_admin_inventory_string_update_controls_public_availability():
+    customer_token = register_customer(phone_number="+60127774444")
+    admin_token = login_admin()
+    string_id = first_string_id(customer_token)
+
+    inventory_response = client.get(
+        "/api/admin/inventory/strings",
+        headers=headers(admin_token),
+    )
+    assert inventory_response.status_code == 200
+    matching_item = next(
+        item for item in inventory_response.json()["items"] if item["id"] == string_id
+    )
+    assert matching_item["stock_level"] == 8
+    assert matching_item["availability"] == "in_stock"
+
+    low_stock_response = client.patch(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+        json={
+            "price_rm": 48,
+            "stock_level": 3,
+            "admin_note": "Reserve 2 packs for walk-in customers.",
+        },
+    )
+    assert low_stock_response.status_code == 200
+    assert low_stock_response.json()["price_rm"] == 48
+    assert low_stock_response.json()["stock_level"] == 3
+    assert low_stock_response.json()["availability"] == "low_stock"
+    assert (
+        low_stock_response.json()["admin_note"]
+        == "Reserve 2 packs for walk-in customers."
+    )
+
+    out_of_stock_response = client.patch(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+        json={"stock_level": 0},
+    )
+    assert out_of_stock_response.status_code == 200
+    assert out_of_stock_response.json()["stock_level"] == 0
+    assert out_of_stock_response.json()["availability"] == "out_of_stock"
+    assert out_of_stock_response.json()["is_active"] is False
+
+    public_lookup = client.get(
+        f"/api/strings/{string_id}",
+        headers=headers(customer_token),
+    )
+    assert public_lookup.status_code == 404
+
+
 def test_request_password_reset_is_generic_for_unknown_phone(monkeypatch):
     enable_password_reset_preview(monkeypatch)
 
