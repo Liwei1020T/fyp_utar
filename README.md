@@ -4,7 +4,7 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 
 ## Workspace Layout
 
-- `mobile/`: Expo Router React Native app for player and vendor flows
+- `mobile/`: Expo Router React Native app for player and admin flows
 - `backend/`: FastAPI + SQLAlchemy backend and in-process AI/recommendation modules
 - `ml/nlp-workbench/`: Jupyter notebook, datasets, and generated CSV outputs
 - `docs/`: workspace-level documentation index

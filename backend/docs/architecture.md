@@ -46,7 +46,7 @@ The active public API does not require `x-internal-api-key`.
 - Relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root.
 - `DATABASE_URL` now uses SQLAlchemy semantics; the default example points to a local SQLite file in `/tmp`.
 - `AUTO_CREATE_SCHEMA=true` is intended for local development and tests. Production should use Alembic migrations explicitly.
-- Privileged seed users remain opt-in. If `SEED_ADMIN_ENABLED` or `SEED_VENDOR_ENABLED` is true, the matching username, phone number, and password must all be provided.
+- Privileged seed users remain opt-in. If `SEED_ADMIN_ENABLED` is true, the matching username, phone number, and password must all be provided.
 
 ## Core Flows
 

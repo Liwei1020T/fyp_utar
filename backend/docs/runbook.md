@@ -37,7 +37,7 @@ cd backend
 - Recommendation scoring now uses the active DB-backed string catalog in process.
 - Admin string write operations still require approved catalog membership.
 - `AUTO_CREATE_SCHEMA=true` is meant for local development and tests; use Alembic migrations explicitly for controlled environments.
-- Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` or `SEED_VENDOR_ENABLED=true` is configured with companion credentials.
+- Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is configured with companion credentials.
 
 ## 5. Legacy Components
 

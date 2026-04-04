@@ -30,7 +30,6 @@ Key variables:
 - `JWT_SECRET_KEY`: signing key for bearer tokens
 - `APPROVED_STRINGS_SOURCE_PATH`: approved real catalog source; relative paths resolve from the backend root
 - `SEED_ADMIN_*`: optional admin seed controls
-- `SEED_VENDOR_*`: optional vendor seed controls
 - `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
 
 In this unified workspace, `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` should normally point at `../ml/nlp-workbench/outputs/`.
@@ -80,6 +79,8 @@ Public unified Python endpoints:
 - `GET /api/health`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/forgot-password/request-code`
+- `POST /api/auth/forgot-password/reset`
 - `GET /api/auth/me`
 - `GET /api/profile`
 - `PUT /api/profile`
@@ -94,9 +95,23 @@ Public unified Python endpoints:
 - `POST /api/admin/strings`
 - `PUT /api/admin/strings/{id}`
 - `DELETE /api/admin/strings/{id}`
+- `GET /api/admin/inventory/strings`
+- `GET /api/admin/inventory/strings/{id}`
+- `PATCH /api/admin/inventory/strings/{id}`
 - `GET /api/admin/bookings`
 - `GET /api/admin/bookings/{id}`
 - `PATCH /api/admin/bookings/{id}/status`
+- `GET /api/admin/business-hours`
+- `PUT /api/admin/business-hours`
+- `GET /api/slots`
+- `GET /api/admin/slots`
+- `GET /api/admin/check-in/lookup`
+- `POST /api/admin/check-in`
+- `GET /api/admin/service-queue`
+- `GET /api/admin/store-settings`
+- `PUT /api/admin/store-settings`
+- `GET /api/admin/analytics/summary`
+- `GET /api/admin/analytics/popular-strings`
 - `GET /api/admin/recommendations/logs`
 
 More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-contract.md](./docs/api-contract.md), and [docs/database.md](./docs/database.md).

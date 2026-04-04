@@ -8,7 +8,7 @@
 ## Project Context
 
 - Mission: keep StringSence as one delivery workspace that integrates the Expo mobile app, the unified Python backend, and the notebook-based NLP pipeline.
-- Primary users: the FYP team building the demo, badminton players using the mobile flow, and the single shop vendor/admin managing operations.
+- Primary users: the FYP team building the demo, badminton players using the mobile flow, and the single shop admin managing operations.
 - Non-goals: splitting the project back into separate repos, rewriting the NLP notebook into a production service by default, or introducing production infrastructure beyond FYP needs.
 
 ## Validation Commands
@@ -29,17 +29,17 @@
   - Public backend: `backend/stringsense_backend/main.py`
   - NLP workbench: `ml/nlp-workbench/stringsense_complete_absa_pipeline_notebook.ipynb`
 - Core modules:
-  - `mobile/`: Expo Router app for player and vendor flows
+  - `mobile/`: Expo Router app for player and admin flows
   - `backend/`: FastAPI + SQLAlchemy backend plus in-process AI logic
   - `ml/nlp-workbench/`: notebook, datasets, and generated CSV artifacts for recommendation signals
   - `docs/`: workspace-level orientation docs
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
-  - admin catalog and booking operations: `mobile` vendor screens -> `backend`
+  - admin catalog and booking operations: `mobile` admin screens -> `backend`
   - NLP artifact handoff: notebook outputs in `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
 - State/data boundaries:
   - `backend/` owns runtime data, auth, bookings, and recommendation logs
-  - `mobile/` stays hybrid: live player core flow plus mock-first vendor/non-core domains
+  - `mobile/` stays hybrid: live player core flow plus mock-first admin/non-core domains
   - `ml/nlp-workbench/` is offline experimentation and artifact generation, not a public service
 
 ## Change Rules

@@ -50,7 +50,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
 - State and mutation boundary: `store/appStore.ts`
-  Mutable runtime source of truth for session, bookings, payments, chat, notifications, wallet, rackets, vendor settings, and drafts.
+  Mutable runtime source of truth for session, bookings, payments, chat, notifications, wallet, rackets, admin settings, and drafts.
 - Read helpers: `services/mockAppService.ts`, `services/backendApi.ts`, `services/backendMappers.ts`
   Mock lookups stay available, while the player core flow can map live backend data into the app domain.
 - Data contracts: `types/domain.ts`

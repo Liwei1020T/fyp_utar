@@ -193,7 +193,7 @@ The store owns:
 - business hours
 - rackets
 - wallets and wallet transactions
-- vendor settings
+- admin settings
 - notification preferences
 - compare selection
 - booking draft
@@ -209,15 +209,15 @@ The store handles all user-visible prototype mutations:
 - booking draft creation and clearing
 - full booking payment flow
 - booking cancellation
-- vendor booking status updates
+- admin booking status updates
 - string compare selection
-- chat message append, vendor handoff request, and resolution
+- chat message append, admin handoff request, and resolution
 - business hours updates
 - inventory updates
 - notification read state
 - wallet top-up
 - notification preference updates
-- vendor settings updates
+- admin settings updates
 
 ### Derived accessors
 
@@ -270,8 +270,8 @@ This file exposes synchronous helper functions such as:
 
 - `getStringById`
 - `getBookingsForPlayer`
-- `getVendorAnalytics`
-- `getConversationsForVendor`
+- `getAdminAnalytics`
+- `getConversationsForAdmin`
 
 These helpers read from `MOCK_*` constants and are mostly used for lookup convenience and screen composition.
 
@@ -311,7 +311,7 @@ Core shared interfaces are defined in `types/domain.ts`.
 ### Main entities
 
 - `PlayerProfile`
-- `VendorProfile`
+- `AdminProfile`
 - `StringItem`
 - `Booking`
 - `Payment`
@@ -321,7 +321,7 @@ Core shared interfaces are defined in `types/domain.ts`.
 - `RacketPassport`
 - `BusinessHours`
 - `BookingSlot`
-- `VendorAnalyticsSummary`
+- `AdminAnalyticsSummary`
 
 ### Important enums and unions
 
@@ -518,7 +518,7 @@ The current theme intentionally separates:
 
 - auth tone
 - player tone
-- vendor tone
+- admin tone
 
 That separation is reinforced by route-group layouts and screen-level hero cards.
 
@@ -536,7 +536,7 @@ This pattern makes the app easy to extend because new screens can remain visuall
 
 ## 14. Current Architectural Strengths
 
-- Clear role separation between player and vendor experiences
+- Clear role separation between player and admin experiences
 - Good domain typing in `types/domain.ts`
 - Reusable layout and UI primitives reduce visual drift
 - Mock-first architecture allows rapid demo iteration
@@ -613,6 +613,6 @@ The current frontend is a role-based Expo Router application with:
 - a centralized Zustand mock-state store
 - a mock service helper layer
 - a reusable HeroUI-based design system
-- feature modules covering the full player and vendor demo journeys
+- feature modules covering the full player and admin demo journeys
 
 It is best understood as a production-shaped prototype with a hybrid transition layer: the player MVP is now close to a real backend-connected product flow, while admin and advanced product areas remain intentionally local and mock-driven.
