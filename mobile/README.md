@@ -67,7 +67,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 
 6. **Optional live backend override:**
    ```bash
-   EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api/v1 npm run web
+   EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
    ```
 
 ## Styling Runtime

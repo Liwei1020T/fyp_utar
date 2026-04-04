@@ -32,13 +32,13 @@ Error responses use:
 ### Health
 
 - `GET /health`
-- `GET /api/v1/health`
+- `GET /api/health`
 
 ### Auth
 
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 
 Example register request:
 
@@ -72,8 +72,8 @@ Example login response:
 
 ### Profile
 
-- `GET /api/v1/profile`
-- `PUT /api/v1/profile`
+- `GET /api/profile`
+- `PUT /api/profile`
 
 Example profile request:
 
@@ -100,20 +100,20 @@ Example profile request:
 
 ### Strings
 
-- `GET /api/v1/strings`
-- `GET /api/v1/strings/{id}`
-- `GET /api/v1/admin/strings`
-- `POST /api/v1/admin/strings`
-- `PUT /api/v1/admin/strings/{id}`
-- `DELETE /api/v1/admin/strings/{id}`
+- `GET /api/strings`
+- `GET /api/strings/{id}`
+- `GET /api/admin/strings`
+- `POST /api/admin/strings`
+- `PUT /api/admin/strings/{id}`
+- `DELETE /api/admin/strings/{id}`
 
 Only approved catalog strings can be created or updated.
 
 ### Recommendations
 
-- `POST /api/v1/recommendations/preview`
-- `POST /api/v1/recommendations/profile`
-- `GET /api/v1/admin/recommendations/logs`
+- `POST /api/recommendations/preview`
+- `POST /api/recommendations/profile`
+- `GET /api/admin/recommendations/logs`
 
 Direct preview request:
 
@@ -182,12 +182,12 @@ Recommendation response:
 
 ### Bookings
 
-- `POST /api/v1/bookings`
-- `GET /api/v1/bookings`
-- `GET /api/v1/bookings/{id}`
-- `GET /api/v1/admin/bookings`
-- `GET /api/v1/admin/bookings/{id}`
-- `PATCH /api/v1/admin/bookings/{id}/status`
+- `POST /api/bookings`
+- `GET /api/bookings`
+- `GET /api/bookings/{id}`
+- `GET /api/admin/bookings`
+- `GET /api/admin/bookings/{id}`
+- `PATCH /api/admin/bookings/{id}/status`
 
 Example booking request:
 

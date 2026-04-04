@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = Field(default="StringSense Backend", alias="APP_NAME")
-    api_v1_prefix: str = "/api/v1"
+    api_prefix: str = "/api"
     environment: Literal["development", "testing", "production"] = Field(
         default="development",
         alias="APP_ENV",

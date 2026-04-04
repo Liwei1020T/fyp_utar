@@ -123,7 +123,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 - Use `nvm use`
 - Install with `npm install`
-- Start with `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api/v1 npm run web`
+- Start with `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - Start the sibling backend in `../backend` when testing live player flows
 - Use `+60123456789` / `password` for the player flow
 - Use `vendor@example.com` / `password` for the vendor flow

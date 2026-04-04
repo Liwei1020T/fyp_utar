@@ -15,7 +15,7 @@
 
 - Mobile setup: `cd mobile && nvm use && npm install`
 - Mobile typecheck: `cd mobile && npx tsc --noEmit`
-- Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api/v1 npm run web`
+- Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - Backend setup: `cd backend && uv sync --extra dev`
 - Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
 - Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`
@@ -73,7 +73,7 @@
 - Mobile:
   - `cd mobile && nvm use`
   - `cd mobile && npm install`
-  - `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api/v1 npm run web`
+  - `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - NLP:
   - `cd ml/nlp-workbench && python3 -m pip install -r requirements.txt`
   - Run the notebook top-to-bottom to populate `ml/nlp-workbench/outputs/`

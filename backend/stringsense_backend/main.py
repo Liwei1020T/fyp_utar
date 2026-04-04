@@ -105,4 +105,4 @@ def root_health(db: Session = Depends(get_db)) -> dict[str, object]:
     return health_payload(db)
 
 
-app.include_router(api_router, prefix=settings.api_v1_prefix)
+app.include_router(api_router, prefix=settings.api_prefix)

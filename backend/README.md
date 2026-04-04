@@ -60,7 +60,7 @@ cd backend
 ./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload
 ```
 
-The API base URL is `http://127.0.0.1:3001/api/v1`.
+The API base URL is `http://127.0.0.1:3001/api`.
 FastAPI docs are available at `http://127.0.0.1:3001/docs`.
 
 ## Verify
@@ -77,26 +77,26 @@ cd backend
 Public unified Python endpoints:
 
 - `GET /health`
-- `GET /api/v1/health`
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
-- `GET /api/v1/profile`
-- `PUT /api/v1/profile`
-- `GET /api/v1/strings`
-- `GET /api/v1/strings/{id}`
-- `POST /api/v1/bookings`
-- `GET /api/v1/bookings`
-- `GET /api/v1/bookings/{id}`
-- `POST /api/v1/recommendations/preview`
-- `POST /api/v1/recommendations/profile`
-- `GET /api/v1/admin/strings`
-- `POST /api/v1/admin/strings`
-- `PUT /api/v1/admin/strings/{id}`
-- `DELETE /api/v1/admin/strings/{id}`
-- `GET /api/v1/admin/bookings`
-- `GET /api/v1/admin/bookings/{id}`
-- `PATCH /api/v1/admin/bookings/{id}/status`
-- `GET /api/v1/admin/recommendations/logs`
+- `GET /api/health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/profile`
+- `PUT /api/profile`
+- `GET /api/strings`
+- `GET /api/strings/{id}`
+- `POST /api/bookings`
+- `GET /api/bookings`
+- `GET /api/bookings/{id}`
+- `POST /api/recommendations/preview`
+- `POST /api/recommendations/profile`
+- `GET /api/admin/strings`
+- `POST /api/admin/strings`
+- `PUT /api/admin/strings/{id}`
+- `DELETE /api/admin/strings/{id}`
+- `GET /api/admin/bookings`
+- `GET /api/admin/bookings/{id}`
+- `PATCH /api/admin/bookings/{id}/status`
+- `GET /api/admin/recommendations/logs`
 
 More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-contract.md](./docs/api-contract.md), and [docs/database.md](./docs/database.md).
