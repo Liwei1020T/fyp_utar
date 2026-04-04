@@ -82,6 +82,123 @@ export interface BackendAdminInventoryString extends BackendString {
   admin_note: string | null;
 }
 
+export interface BackendStoreBusinessHoursDay {
+  day:
+    | 'Monday'
+    | 'Tuesday'
+    | 'Wednesday'
+    | 'Thursday'
+    | 'Friday'
+    | 'Saturday'
+    | 'Sunday';
+  is_open: boolean;
+  open_time: string;
+  close_time: string;
+  break_start: string | null;
+  break_end: string | null;
+  slot_duration_minutes: number;
+  max_bookings_per_slot: number;
+}
+
+export interface BackendStoreBusinessHours {
+  id: string;
+  days: BackendStoreBusinessHoursDay[];
+  special_closed_dates: string[];
+  updated_at: string | null;
+}
+
+export interface BackendStoreBusinessHoursPayload {
+  days: BackendStoreBusinessHoursDay[];
+  special_closed_dates: string[];
+}
+
+export interface BackendSlot {
+  id: string;
+  date: string;
+  time: string;
+  capacity: number;
+  booked_count: number;
+  available_spots: number;
+  label: string;
+  day_label: string;
+}
+
+export interface BackendCheckInLookupResponse {
+  matched_by: 'booking_id' | 'check_in_reference';
+  booking: BackendBooking;
+}
+
+export interface BackendCheckInRequest {
+  booking_id?: string | null;
+  reference?: string | null;
+  note?: string | null;
+}
+
+export interface BackendServiceQueueItem {
+  queue_position: number;
+  booking: BackendBooking;
+}
+
+export interface BackendServiceQueueLane {
+  status: string;
+  title: string;
+  items: BackendServiceQueueItem[];
+}
+
+export interface BackendServiceQueue {
+  generated_at: string;
+  lanes: BackendServiceQueueLane[];
+}
+
+export interface BackendStoreSettings {
+  id: string;
+  store_name: string;
+  store_contact: string;
+  support_text: string;
+  payment_notes: string;
+  booking_notes: string;
+  store_policy_text: string;
+  address: string;
+  updated_at: string | null;
+}
+
+export interface BackendStoreSettingsPayload {
+  store_name: string;
+  store_contact: string;
+  support_text: string;
+  payment_notes: string;
+  booking_notes: string;
+  store_policy_text: string;
+  address: string;
+}
+
+export interface BackendAnalyticsWorkloadEntry {
+  label: string;
+  value: number;
+}
+
+export interface BackendAnalyticsSummary {
+  weekly_bookings: number;
+  pending_payment_count: number;
+  awaiting_dropoff_count: number;
+  in_progress_count: number;
+  ready_for_collection_count: number;
+  completed_today: number;
+  low_stock_count: number;
+  unread_chats: number;
+  today_revenue: number;
+  busy_slots: string[];
+  popular_string_ids: string[];
+  workload_mix: BackendAnalyticsWorkloadEntry[];
+}
+
+export interface BackendPopularString {
+  string_id: string;
+  brand: string;
+  model_name: string;
+  booking_count: number;
+}
+
 export interface BackendPage<T> {
   items: T[];
   total: number;

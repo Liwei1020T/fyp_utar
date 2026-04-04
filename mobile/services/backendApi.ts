@@ -1,14 +1,24 @@
 import type {
   BackendAdminInventoryString,
+  BackendAnalyticsSummary,
   BackendAuthResponse,
+  BackendCheckInLookupResponse,
+  BackendCheckInRequest,
   BackendBooking,
   BackendForgotPasswordRequestResponse,
   BackendMessageResponse,
   BackendPage,
+  BackendPopularString,
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
   BackendRecommendationResponse,
+  BackendServiceQueue,
+  BackendSlot,
+  BackendStoreBusinessHours,
+  BackendStoreBusinessHoursPayload,
+  BackendStoreSettings,
+  BackendStoreSettingsPayload,
   BackendString,
 } from '../types/backend';
 
@@ -196,6 +206,108 @@ export const backendApi = {
     }>(`/admin/inventory/strings${suffix}`, {
       token,
     });
+  },
+  fetchBusinessHours(token: string) {
+    return requestJson<BackendStoreBusinessHours>('/admin/business-hours', {
+      token,
+    });
+  },
+  updateBusinessHours(token: string, payload: BackendStoreBusinessHoursPayload) {
+    return requestJson<BackendStoreBusinessHours>('/admin/business-hours', {
+      method: 'PUT',
+      body: payload,
+      token,
+    });
+  },
+  listSlots(
+    token: string,
+    params?: {
+      date?: string;
+      date_from?: string;
+      days?: number;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.date) {
+      searchParams.set('date', params.date);
+    }
+    if (params?.date_from) {
+      searchParams.set('date_from', params.date_from);
+    }
+    if (params?.days != null) {
+      searchParams.set('days', String(params.days));
+    }
+    const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
+    return requestJson<BackendPage<BackendSlot>>(`/slots${suffix}`, { token });
+  },
+  adminListSlots(
+    token: string,
+    params?: {
+      date?: string;
+      date_from?: string;
+      days?: number;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.date) {
+      searchParams.set('date', params.date);
+    }
+    if (params?.date_from) {
+      searchParams.set('date_from', params.date_from);
+    }
+    if (params?.days != null) {
+      searchParams.set('days', String(params.days));
+    }
+    const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
+    return requestJson<BackendPage<BackendSlot>>(`/admin/slots${suffix}`, {
+      token,
+    });
+  },
+  adminLookupCheckIn(token: string, reference: string) {
+    const searchParams = new URLSearchParams({ reference });
+    return requestJson<BackendCheckInLookupResponse>(
+      `/admin/check-in/lookup?${searchParams.toString()}`,
+      { token },
+    );
+  },
+  adminCheckIn(token: string, payload: BackendCheckInRequest) {
+    return requestJson<BackendBooking>('/admin/check-in', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  adminFetchServiceQueue(token: string) {
+    return requestJson<BackendServiceQueue>('/admin/service-queue', {
+      token,
+    });
+  },
+  adminFetchStoreSettings(token: string) {
+    return requestJson<BackendStoreSettings>('/admin/store-settings', {
+      token,
+    });
+  },
+  adminUpdateStoreSettings(
+    token: string,
+    payload: BackendStoreSettingsPayload,
+  ) {
+    return requestJson<BackendStoreSettings>('/admin/store-settings', {
+      method: 'PUT',
+      body: payload,
+      token,
+    });
+  },
+  adminAnalyticsSummary(token: string) {
+    return requestJson<BackendAnalyticsSummary>('/admin/analytics/summary', {
+      token,
+    });
+  },
+  adminPopularStrings(token: string, limit = 5) {
+    const searchParams = new URLSearchParams({ limit: String(limit) });
+    return requestJson<BackendPopularString[]>(
+      `/admin/analytics/popular-strings?${searchParams.toString()}`,
+      { token },
+    );
   },
   adminFetchInventoryString(token: string, stringId: string) {
     return requestJson<BackendAdminInventoryString>(
