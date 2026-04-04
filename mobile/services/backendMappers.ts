@@ -256,21 +256,23 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
 
 function mapBackendStatus(value: string): BookingStatus {
   switch (value) {
+    case 'awaiting_dropoff':
     case 'pending':
-      return 'pending';
     case 'confirmed':
-      return 'confirmed';
+      return 'awaiting_dropoff';
     case 'in_progress':
       return 'in_progress';
+    case 'ready_for_collection':
     case 'ready_for_pickup':
       return 'ready_for_collection';
+    case 'completed':
     case 'picked_up':
       return 'completed';
     case 'cancelled':
     case 'rejected':
       return 'cancelled';
     default:
-      return 'confirmed';
+      return 'awaiting_dropoff';
   }
 }
 
@@ -299,7 +301,9 @@ function historyToTimeline(
           ? 'Booking created'
           : `Moved to ${titleCase(status)}`,
       note:
-        entry.old_status == null
+        entry.note && entry.note.trim()
+          ? entry.note
+          : entry.old_status == null
           ? 'Initial booking submitted through the live backend.'
           : `Status updated from ${titleCase(mapBackendStatus(entry.old_status))}.`,
       at: entry.changed_at ?? createdAt,

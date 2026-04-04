@@ -20,7 +20,6 @@ os.environ.setdefault("SEED_ADMIN_ENABLED", "true")
 os.environ.setdefault("SEED_ADMIN_USERNAME", "system-admin")
 os.environ.setdefault("SEED_ADMIN_PHONE_NUMBER", "+60190000000")
 os.environ.setdefault("SEED_ADMIN_PASSWORD", "admin1234")
-os.environ.setdefault("SEED_VENDOR_ENABLED", "false")
 os.environ.setdefault("AI_INTERNAL_API_KEY", "test-ai-internal-key")
 
 

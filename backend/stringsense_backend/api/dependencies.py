@@ -42,7 +42,7 @@ def require_roles(user: CurrentUser, *roles: UserRole) -> CurrentUser:
 
 
 def get_current_customer(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-    return require_roles(user, UserRole.CUSTOMER, UserRole.ADMIN, UserRole.VENDOR)
+    return require_roles(user, UserRole.CUSTOMER, UserRole.ADMIN)
 
 
 def get_current_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:

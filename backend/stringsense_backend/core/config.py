@@ -69,13 +69,6 @@ class Settings(BaseSettings):
         alias="SEED_ADMIN_PHONE_NUMBER",
     )
     seed_admin_password: str | None = Field(default=None, alias="SEED_ADMIN_PASSWORD")
-    seed_vendor_enabled: bool = Field(default=False, alias="SEED_VENDOR_ENABLED")
-    seed_vendor_username: str | None = Field(default=None, alias="SEED_VENDOR_USERNAME")
-    seed_vendor_phone_number: str | None = Field(
-        default=None,
-        alias="SEED_VENDOR_PHONE_NUMBER",
-    )
-    seed_vendor_password: str | None = Field(default=None, alias="SEED_VENDOR_PASSWORD")
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -126,13 +119,6 @@ class Settings(BaseSettings):
                 self.seed_admin_username,
                 self.seed_admin_phone_number,
                 self.seed_admin_password,
-            )
-        if self.seed_vendor_enabled:
-            self._require_seed_fields(
-                "vendor",
-                self.seed_vendor_username,
-                self.seed_vendor_phone_number,
-                self.seed_vendor_password,
             )
 
     @staticmethod

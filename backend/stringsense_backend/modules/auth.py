@@ -21,6 +21,7 @@ from stringsense_backend.core.domain import AuthProvider
 from stringsense_backend.core.domain import UserRole
 from stringsense_backend.core.errors import BadRequestError
 from stringsense_backend.core.errors import ConflictError
+from stringsense_backend.core.errors import ForbiddenError
 from stringsense_backend.core.errors import NotFoundError
 from stringsense_backend.core.errors import UnauthorizedError
 from stringsense_backend.core.security import create_access_token
@@ -149,6 +150,11 @@ def build_auth_response(user: User) -> AuthResponse:
     )
 
 
+def assert_supported_runtime_role(role: str) -> None:
+    if role not in {UserRole.CUSTOMER.value, UserRole.ADMIN.value}:
+        raise ForbiddenError("Unsupported user role")
+
+
 def issue_password_reset_code(
     payload: ForgotPasswordRequest,
     *,
@@ -260,6 +266,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
     ).scalar_one_or_none()
     if user is None or not verify_password(payload.password, user.password_hash):
         raise UnauthorizedError("Invalid credentials")
+    assert_supported_runtime_role(user.role)
     return build_auth_response(user)
 
 

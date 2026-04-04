@@ -100,7 +100,7 @@ def test_auth_profile_booking_and_admin_status_flow():
         },
     )
     assert booking_response.status_code == 200
-    assert booking_response.json()["status"] == "pending"
+    assert booking_response.json()["status"] == "awaiting_dropoff"
     booking_id = booking_response.json()["id"]
 
     my_bookings_response = client.get(
@@ -122,11 +122,26 @@ def test_auth_profile_booking_and_admin_status_flow():
     update_response = client.patch(
         f"/api/admin/bookings/{booking_id}/status",
         headers=headers(admin_token),
-        json={"status": "confirmed"},
+        json={"status": "in_progress"},
     )
     assert update_response.status_code == 200
-    assert update_response.json()["status"] == "confirmed"
+    assert update_response.json()["status"] == "in_progress"
     assert len(update_response.json()["status_history"]) == 2
+
+
+def test_customer_cannot_access_admin_booking_routes():
+    customer_token = register_customer()
+
+    response = client.get(
+        "/api/admin/bookings",
+        headers=headers(customer_token),
+    )
+
+    assert response.status_code == 403
+    assert (
+        response.json()["error"]["message"]
+        == "Insufficient permissions for this resource"
+    )
 
 
 def test_recommendations_logs_and_admin_string_controls():
@@ -341,3 +356,46 @@ def test_reset_password_enforces_attempt_limit(monkeypatch):
         reset_code = db.execute(select(PasswordResetCode)).scalar_one()
 
     assert reset_code.attempt_count == 2
+
+
+def test_admin_reject_requires_note_and_persists_history_note():
+    customer_token = register_customer(phone_number="+60126666666")
+    admin_token = login_admin()
+
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": first_string_id(customer_token),
+            "racket_brand": "Li-Ning",
+            "racket_model": "Halbertec 8000",
+            "requested_tension": 24,
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    missing_note_response = client.patch(
+        f"/api/admin/bookings/{booking_id}/status",
+        headers=headers(admin_token),
+        json={"status": "rejected"},
+    )
+    assert missing_note_response.status_code == 422
+
+    rejection_response = client.patch(
+        f"/api/admin/bookings/{booking_id}/status",
+        headers=headers(admin_token),
+        json={
+            "status": "rejected",
+            "note": "Customer requested a drop-off slot outside business hours.",
+        },
+    )
+    assert rejection_response.status_code == 200
+    assert rejection_response.json()["status"] == "rejected"
+    assert (
+        rejection_response.json()["latest_admin_note"]
+        == "Customer requested a drop-off slot outside business hours."
+    )
+    assert rejection_response.json()["status_history"][-1]["note"] == (
+        "Customer requested a drop-off slot outside business hours."
+    )

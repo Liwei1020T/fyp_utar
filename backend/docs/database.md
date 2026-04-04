@@ -45,10 +45,11 @@ Stores approved catalog string entries plus their normalized recommendation aspe
 ### `bookings`
 
 Stores service-tracking bookings only. Slot conflict detection remains intentionally out of scope.
+Current lifecycle values are `awaiting_dropoff`, `in_progress`, `ready_for_collection`, `completed`, `cancelled`, and `rejected`.
 
 ### `booking_status_history`
 
-Stores booking status transitions for auditability.
+Stores booking status transitions plus optional admin operator notes for auditability.
 
 ### `recommendation_logs`
 

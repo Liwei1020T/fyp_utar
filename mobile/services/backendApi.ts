@@ -25,7 +25,7 @@ export class BackendApiError extends Error {
 }
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PUT';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH';
   body?: unknown;
   token?: string | null;
 };
@@ -118,6 +118,47 @@ export const backendApi = {
   },
   listBookings(token: string) {
     return requestJson<BackendPage<BackendBooking>>('/bookings', { token });
+  },
+  adminListBookings(
+    token: string,
+    params?: {
+      status?: string;
+      search?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.status) {
+      searchParams.set('status', params.status);
+    }
+    if (params?.search) {
+      searchParams.set('search', params.search);
+    }
+    if (params?.limit != null) {
+      searchParams.set('limit', String(params.limit));
+    }
+    if (params?.offset != null) {
+      searchParams.set('offset', String(params.offset));
+    }
+    const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
+    return requestJson<BackendPage<BackendBooking>>(`/admin/bookings${suffix}`, {
+      token,
+    });
+  },
+  adminFetchBooking(token: string, bookingId: string) {
+    return requestJson<BackendBooking>(`/admin/bookings/${bookingId}`, { token });
+  },
+  adminUpdateBookingStatus(
+    token: string,
+    bookingId: string,
+    payload: { status: string; note?: string },
+  ) {
+    return requestJson<BackendBooking>(`/admin/bookings/${bookingId}/status`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    });
   },
   createBooking(
     token: string,

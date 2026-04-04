@@ -83,6 +83,7 @@ export interface BackendBookingStatusHistory {
   new_status: string;
   changed_by_user_id: string | null;
   changed_by_phone_number: string | null;
+  note: string | null;
   changed_at: string | null;
 }
 
@@ -101,6 +102,7 @@ export interface BackendBooking {
   status: string;
   created_at: string | null;
   updated_at: string | null;
+  latest_admin_note: string | null;
   status_history: BackendBookingStatusHistory[] | null;
 }
 

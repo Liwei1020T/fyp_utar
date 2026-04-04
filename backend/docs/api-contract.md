@@ -189,6 +189,15 @@ Recommendation response:
 - `GET /api/admin/bookings/{id}`
 - `PATCH /api/admin/bookings/{id}/status`
 
+Canonical booking statuses:
+
+- `awaiting_dropoff`
+- `in_progress`
+- `ready_for_collection`
+- `completed`
+- `cancelled`
+- `rejected`
+
 Example booking request:
 
 ```json
@@ -201,3 +210,16 @@ Example booking request:
   "notes": "Customer prefers a crisp feel."
 }
 ```
+
+Customer-created bookings now start in `awaiting_dropoff`.
+
+Example admin status update request:
+
+```json
+{
+  "status": "rejected",
+  "note": "Requested slot is outside current store operating hours."
+}
+```
+
+`note` is optional for forward progress updates and required for `cancelled` or `rejected`.

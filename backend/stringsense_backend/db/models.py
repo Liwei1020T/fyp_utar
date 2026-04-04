@@ -160,7 +160,11 @@ class Booking(Base):
         nullable=True,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(SAString(30), default="pending", index=True)
+    status: Mapped[str] = mapped_column(
+        SAString(30),
+        default="awaiting_dropoff",
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -196,6 +200,7 @@ class BookingStatusHistory(Base):
         ForeignKey("users.id"),
         nullable=True,
     )
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
     changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

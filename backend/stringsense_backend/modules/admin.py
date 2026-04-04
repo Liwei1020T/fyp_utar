@@ -163,6 +163,7 @@ def admin_update_booking_status(
             old_status=previous_status,
             new_status=payload.status,
             changed_by_user_id=current_user.user_id,
+            note=payload.note.strip() if payload.note else None,
         )
     )
     db.commit()

@@ -6,7 +6,6 @@ from enum import StrEnum
 class UserRole(StrEnum):
     CUSTOMER = "customer"
     ADMIN = "admin"
-    VENDOR = "vendor"
 
 
 class AuthProvider(StrEnum):
@@ -32,11 +31,10 @@ class GameType(StrEnum):
 
 
 class BookingStatus(StrEnum):
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
+    AWAITING_DROPOFF = "awaiting_dropoff"
     IN_PROGRESS = "in_progress"
-    READY_FOR_PICKUP = "ready_for_pickup"
-    PICKED_UP = "picked_up"
+    READY_FOR_COLLECTION = "ready_for_collection"
+    COMPLETED = "completed"
     CANCELLED = "cancelled"
     REJECTED = "rejected"
 
@@ -48,24 +46,19 @@ GAME_TYPES = tuple(game_type.value for game_type in GameType)
 BOOKING_STATUSES = tuple(status.value for status in BookingStatus)
 
 BOOKING_STATUS_TRANSITIONS: dict[BookingStatus, set[BookingStatus]] = {
-    BookingStatus.PENDING: {
-        BookingStatus.CONFIRMED,
+    BookingStatus.AWAITING_DROPOFF: {
+        BookingStatus.IN_PROGRESS,
         BookingStatus.REJECTED,
         BookingStatus.CANCELLED,
     },
-    BookingStatus.CONFIRMED: {
-        BookingStatus.IN_PROGRESS,
-        BookingStatus.CANCELLED,
-    },
     BookingStatus.IN_PROGRESS: {
-        BookingStatus.READY_FOR_PICKUP,
+        BookingStatus.READY_FOR_COLLECTION,
         BookingStatus.CANCELLED,
     },
-    BookingStatus.READY_FOR_PICKUP: {
-        BookingStatus.PICKED_UP,
-        BookingStatus.CANCELLED,
+    BookingStatus.READY_FOR_COLLECTION: {
+        BookingStatus.COMPLETED,
     },
-    BookingStatus.PICKED_UP: set(),
+    BookingStatus.COMPLETED: set(),
     BookingStatus.CANCELLED: set(),
     BookingStatus.REJECTED: set(),
 }

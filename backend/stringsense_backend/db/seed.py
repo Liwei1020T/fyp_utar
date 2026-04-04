@@ -25,14 +25,6 @@ def ensure_seed_users(db: Session) -> None:
             password=settings.seed_admin_password or "",
             role=UserRole.ADMIN.value,
         )
-    if settings.seed_vendor_enabled:
-        ensure_seed_user(
-            db,
-            username=settings.seed_vendor_username or "vendor",
-            phone_number=settings.seed_vendor_phone_number or "",
-            password=settings.seed_vendor_password or "",
-            role=UserRole.VENDOR.value,
-        )
 
 
 def ensure_seed_user(

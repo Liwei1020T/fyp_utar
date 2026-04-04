@@ -40,7 +40,7 @@
   - relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root
   - notebook-generated AI artifacts normally live in `../ml/nlp-workbench/outputs/`
   - `AUTO_CREATE_SCHEMA` is acceptable for local dev/test; use Alembic for controlled schema changes
-  - `SEED_ADMIN_ENABLED` and `SEED_VENDOR_ENABLED` default to `false`; enabling either requires explicit companion credentials
+  - `SEED_ADMIN_ENABLED` defaults to `false`; enabling it requires explicit companion credentials
 - State/data boundaries:
   - SQLAlchemy + Alembic own the active core business tables
   - the unified Python backend owns workflow writes
@@ -77,7 +77,7 @@
   - `./.venv/bin/alembic upgrade head`
 - Environment:
   - copy `.env.example` to `.env`
-  - only set `SEED_ADMIN_*` / `SEED_VENDOR_*` when the matching seed flag is explicitly enabled
+  - only set `SEED_ADMIN_*` when the matching seed flag is explicitly enabled
 - Run locally:
   - Unified backend: `./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload`
 - Test locally:

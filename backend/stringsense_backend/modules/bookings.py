@@ -8,6 +8,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 from sqlalchemy import func
 from sqlalchemy import or_
 from sqlalchemy import select
@@ -52,8 +53,18 @@ class UpdateBookingStatusPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: str = Field(
-        pattern="^(pending|confirmed|in_progress|ready_for_pickup|picked_up|cancelled|rejected)$"
+        pattern="^(awaiting_dropoff|in_progress|ready_for_collection|completed|cancelled|rejected)$"
     )
+    note: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_terminal_note(self) -> "UpdateBookingStatusPayload":
+        if self.status in {
+            BookingStatus.CANCELLED.value,
+            BookingStatus.REJECTED.value,
+        } and not (self.note and self.note.strip()):
+            raise ValueError("note is required when cancelling or rejecting a booking")
+        return self
 
 
 class BookingStatusHistoryOut(BaseModel):
@@ -61,6 +72,7 @@ class BookingStatusHistoryOut(BaseModel):
     new_status: str
     changed_by_user_id: str | None
     changed_by_phone_number: str | None
+    note: str | None
     changed_at: str | None
 
 
@@ -79,12 +91,21 @@ class BookingOut(BaseModel):
     status: str
     created_at: str | None = None
     updated_at: str | None = None
+    latest_admin_note: str | None = None
     status_history: list[BookingStatusHistoryOut] | None = None
 
 
 def serialize_booking(
     booking: Booking, *, include_user: bool, include_history: bool
 ) -> BookingOut:
+    latest_admin_note = next(
+        (
+            entry.note
+            for entry in reversed(booking.status_history)
+            if entry.note and entry.note.strip()
+        ),
+        None,
+    )
     return BookingOut(
         id=booking.id,
         user_id=booking.user_id,
@@ -100,6 +121,7 @@ def serialize_booking(
         status=booking.status,
         created_at=isoformat_or_none(booking.created_at),
         updated_at=isoformat_or_none(booking.updated_at),
+        latest_admin_note=latest_admin_note,
         status_history=[
             BookingStatusHistoryOut(
                 old_status=entry.old_status,
@@ -108,6 +130,7 @@ def serialize_booking(
                 changed_by_phone_number=entry.changed_by.phone_number
                 if entry.changed_by
                 else None,
+                note=entry.note,
                 changed_at=isoformat_or_none(entry.changed_at),
             )
             for entry in booking.status_history
@@ -230,7 +253,7 @@ def create_booking(
         requested_tension=payload.requested_tension,
         drop_off_datetime=payload.drop_off_datetime,
         notes=payload.notes,
-        status=BookingStatus.PENDING.value,
+        status=BookingStatus.AWAITING_DROPOFF.value,
     )
     db.add(booking)
     db.flush()
@@ -238,7 +261,7 @@ def create_booking(
         BookingStatusHistory(
             booking_id=booking.id,
             old_status=None,
-            new_status=BookingStatus.PENDING.value,
+            new_status=BookingStatus.AWAITING_DROPOFF.value,
             changed_by_user_id=current_user.user_id,
         )
     )

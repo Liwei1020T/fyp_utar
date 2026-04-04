@@ -53,7 +53,7 @@ The active public API does not require `x-internal-api-key`.
 1. Client authenticates with `phone_number + password`.
 2. FastAPI validates credentials against SQLAlchemy-managed users.
 3. FastAPI issues JWT bearer tokens.
-4. Optional seed admin/vendor users are created during startup only when explicitly enabled.
+4. Optional seed admin users are created during startup only when explicitly enabled.
 
 ### Recommendation Flow
 
@@ -72,21 +72,19 @@ The active public API does not require `x-internal-api-key`.
 
 Allowed status values:
 
-- `pending`
-- `confirmed`
+- `awaiting_dropoff`
 - `in_progress`
-- `ready_for_pickup`
-- `picked_up`
+- `ready_for_collection`
+- `completed`
 - `cancelled`
 - `rejected`
 
 Allowed transitions:
 
-- `pending -> confirmed | rejected | cancelled`
-- `confirmed -> in_progress | cancelled`
-- `in_progress -> ready_for_pickup | cancelled`
-- `ready_for_pickup -> picked_up | cancelled`
-- `picked_up`, `cancelled`, and `rejected` are terminal
+- `awaiting_dropoff -> in_progress | rejected | cancelled`
+- `in_progress -> ready_for_collection | cancelled`
+- `ready_for_collection -> completed`
+- `completed`, `cancelled`, and `rejected` are terminal
 
 ## Maintainability Rules
 
