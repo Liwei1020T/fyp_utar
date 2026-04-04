@@ -1,7 +1,7 @@
 import React from 'react';
 import { Redirect, usePathname } from 'expo-router';
 
-export default function VendorLayout() {
+export default function LegacyAdminLayoutRedirect() {
   const pathname = usePathname();
   const nextPath = pathname.replace(/^\/vendor/, '/admin') || '/admin';
 
