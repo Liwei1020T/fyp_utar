@@ -1,0 +1,47 @@
+[project]
+name = "stringsense-backend"
+version = "0.1.0"
+description = "StringSense backend workspace for the NestJS business API and Python AI service"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116.0",
+  "alembic>=1.18.0",
+  "PyJWT>=2.12.0",
+  "pydantic-settings>=2.10.0",
+  "python-multipart>=0.0.20",
+  "sqlalchemy>=2.0.0",
+  "uvicorn>=0.35.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.28.0",
+  "mypy>=1.16.0",
+  "pytest>=8.4.0",
+  "ruff>=0.12.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+extend-exclude = [
+  ".venv",
+  ".pytest_cache",
+  ".ruff_cache",
+  "__pycache__",
+  "archive",
+  "stringsense_backend.egg-info",
+  "nest-api/node_modules",
+  "nest-api/dist",
+  "**/._*",
+  "**/.__*",
+]
+
+[tool.setuptools.packages.find]
+include = ["ai_service*", "stringsense_backend*"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

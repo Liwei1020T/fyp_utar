@@ -1,0 +1,15 @@
+.DS_Store
+._*
+.__*
+*.db
+*.zip
+
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+
+nest-api/node_modules/
+nest-api/dist/
+stringsense_backend.egg-info/

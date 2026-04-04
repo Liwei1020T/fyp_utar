@@ -1,0 +1,47 @@
+import type { RacketPassport } from '../types/domain';
+
+export const MOCK_RACKETS: RacketPassport[] = [
+  {
+    id: 'racket-001',
+    playerId: 'player-001',
+    nickname: 'Match Day 88D',
+    brand: 'Yonex',
+    model: 'Astrox 88D Pro',
+    weightClass: '3U',
+    balancePoint: 'Head heavy',
+    gripSize: 'G5',
+    preferredUse: 'Attack-heavy doubles',
+    notes: 'Feels best when the string bed stays lively and crisp.',
+    serviceCount: 6,
+    currentStringId: 'string-001',
+    currentTension: 27,
+    preferredRange: [26, 28],
+    lastServicedAt: '2026-04-05T14:00:00.000Z',
+    stringHistory: [
+      { bookingId: 'BK-2402', stringId: 'string-001', tension: 27, installedAt: '2026-04-05T14:00:00.000Z', feelRating: 9, durabilityNote: 'Best attacking feel after 1 week.' },
+      { bookingId: 'BK-2366', stringId: 'string-003', tension: 27, installedAt: '2026-02-08T13:00:00.000Z', feelRating: 8, durabilityNote: 'Held up well through club nights.' },
+      { bookingId: 'BK-2338', stringId: 'string-004', tension: 28, installedAt: '2026-01-02T15:30:00.000Z', feelRating: 9, durabilityNote: 'Very lively but snapped earlier than expected.' },
+    ],
+  },
+  {
+    id: 'racket-002',
+    playerId: 'player-001',
+    nickname: 'Speed Frame',
+    brand: 'Victor',
+    model: 'Thruster Ryuga II',
+    weightClass: '4U',
+    balancePoint: 'Even balance',
+    gripSize: 'G6',
+    preferredUse: 'Fast doubles rotations',
+    notes: 'Best with a sharp response but not overly harsh on touch shots.',
+    serviceCount: 3,
+    currentStringId: 'string-004',
+    currentTension: 28,
+    preferredRange: [27, 28],
+    lastServicedAt: '2026-04-03T11:05:00.000Z',
+    stringHistory: [
+      { bookingId: 'BK-2401', stringId: 'string-004', tension: 28, installedAt: '2026-04-03T11:05:00.000Z', feelRating: 8, durabilityNote: 'Crisp and explosive for doubles drives.' },
+      { bookingId: 'BK-2351', stringId: 'string-001', tension: 27, installedAt: '2026-01-26T16:10:00.000Z', feelRating: 8, durabilityNote: 'Sound and touch were very balanced.' },
+    ],
+  },
+];

@@ -1,0 +1,165 @@
+@config "./tailwind.config.js";
+
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
+
+@layer theme {
+  @variant light {
+    --background: oklch(0.985 0.008 255);
+    --foreground: oklch(0.24 0.03 255);
+
+    --app-page: oklch(0.975 0.008 255);
+    --app-page-auth: oklch(0.982 0.007 250);
+    --app-page-admin: oklch(0.968 0.011 250);
+    --app-surface: oklch(0.997 0.003 255);
+    --app-surface-elevated: oklch(0.992 0.006 248);
+    --app-muted: oklch(0.962 0.011 250);
+    --app-hero: oklch(0.44 0.1 257);
+    --app-hero-foreground: oklch(0.985 0.004 255);
+    --app-hero-muted: oklch(0.91 0.03 252);
+    --app-tabbar: oklch(0.985 0.006 252);
+
+    --surface: oklch(0.998 0.003 255);
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.972 0.01 252);
+    --surface-secondary-foreground: oklch(0.28 0.028 252);
+    --surface-tertiary: oklch(0.95 0.014 250);
+    --surface-tertiary-foreground: oklch(0.3 0.03 250);
+
+    --overlay: oklch(1 0 0);
+    --overlay-foreground: var(--foreground);
+
+    --muted: oklch(0.58 0.024 252);
+    --default: oklch(0.955 0.012 250);
+    --default-foreground: oklch(0.32 0.03 252);
+
+    --accent: oklch(0.57 0.15 257);
+    --accent-foreground: oklch(0.98 0.003 255);
+
+    --field-background: oklch(0.995 0.003 250);
+    --field-foreground: var(--foreground);
+    --field-placeholder: oklch(0.72 0.02 250);
+    --field-border: oklch(0.91 0.014 250);
+
+    --success: oklch(0.66 0.11 165);
+    --success-foreground: oklch(0.98 0.004 165);
+    --warning: oklch(0.79 0.11 85);
+    --warning-foreground: oklch(0.33 0.06 85);
+    --danger: oklch(0.64 0.18 25);
+    --danger-foreground: oklch(0.98 0.004 25);
+
+    --separator: oklch(0.9 0.012 250);
+    --focus: var(--accent);
+    --link: var(--accent);
+
+    --surface-shadow: 0 12px 36px rgba(20, 32, 51, 0.08);
+    --overlay-shadow: 0 18px 48px rgba(20, 32, 51, 0.12);
+    --field-shadow: 0 6px 16px rgba(20, 32, 51, 0.06);
+  }
+
+  @variant dark {
+    --background: oklch(0.985 0.008 255);
+    --foreground: oklch(0.24 0.03 255);
+
+    --app-page: oklch(0.975 0.008 255);
+    --app-page-auth: oklch(0.982 0.007 250);
+    --app-page-admin: oklch(0.968 0.011 250);
+    --app-surface: oklch(0.997 0.003 255);
+    --app-surface-elevated: oklch(0.992 0.006 248);
+    --app-muted: oklch(0.962 0.011 250);
+    --app-hero: oklch(0.44 0.1 257);
+    --app-hero-foreground: oklch(0.985 0.004 255);
+    --app-hero-muted: oklch(0.91 0.03 252);
+    --app-tabbar: oklch(0.985 0.006 252);
+
+    --surface: oklch(0.998 0.003 255);
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.972 0.01 252);
+    --surface-secondary-foreground: oklch(0.28 0.028 252);
+    --surface-tertiary: oklch(0.95 0.014 250);
+    --surface-tertiary-foreground: oklch(0.3 0.03 250);
+
+    --overlay: oklch(1 0 0);
+    --overlay-foreground: var(--foreground);
+
+    --muted: oklch(0.58 0.024 252);
+    --default: oklch(0.955 0.012 250);
+    --default-foreground: oklch(0.32 0.03 252);
+
+    --accent: oklch(0.57 0.15 257);
+    --accent-foreground: oklch(0.98 0.003 255);
+
+    --field-background: oklch(0.995 0.003 250);
+    --field-foreground: var(--foreground);
+    --field-placeholder: oklch(0.72 0.02 250);
+    --field-border: oklch(0.91 0.014 250);
+
+    --success: oklch(0.66 0.11 165);
+    --success-foreground: oklch(0.98 0.004 165);
+    --warning: oklch(0.79 0.11 85);
+    --warning-foreground: oklch(0.33 0.06 85);
+    --danger: oklch(0.64 0.18 25);
+    --danger-foreground: oklch(0.98 0.004 25);
+
+    --separator: oklch(0.9 0.012 250);
+    --focus: var(--accent);
+    --link: var(--accent);
+
+    --surface-shadow: 0 12px 36px rgba(20, 32, 51, 0.08);
+    --overlay-shadow: 0 18px 48px rgba(20, 32, 51, 0.12);
+    --field-shadow: 0 6px 16px rgba(20, 32, 51, 0.06);
+  }
+}
+
+@theme inline {
+  --color-app-page: var(--app-page);
+  --color-app-page-auth: var(--app-page-auth);
+  --color-app-page-admin: var(--app-page-admin);
+  --color-app-surface: var(--app-surface);
+  --color-app-surface-elevated: var(--app-surface-elevated);
+  --color-app-muted: var(--app-muted);
+  --color-app-hero: var(--app-hero);
+  --color-app-hero-foreground: var(--app-hero-foreground);
+  --color-app-hero-muted: var(--app-hero-muted);
+  --color-app-tabbar: var(--app-tabbar);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-secondary-foreground: var(--surface-secondary-foreground);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-tertiary-foreground: var(--surface-tertiary-foreground);
+  --color-overlay: var(--overlay);
+  --color-overlay-foreground: var(--overlay-foreground);
+  --color-muted: var(--muted);
+  --color-default: var(--default);
+  --color-default-foreground: var(--default-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-field-background: var(--field-background);
+  --color-field-foreground: var(--field-foreground);
+  --color-field-placeholder: var(--field-placeholder);
+  --color-field-border: var(--field-border);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-separator: var(--separator);
+  --color-focus: var(--focus);
+  --color-link: var(--link);
+}
+
+@source "./app";
+@source "./components";
+@source "./node_modules/heroui-native/lib";
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--app-page);
+}

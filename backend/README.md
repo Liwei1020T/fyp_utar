@@ -1,0 +1,102 @@
+# StringSense Backend
+
+StringSense now runs on a unified Python backend:
+
+- `stringsense_backend/` is the active public business backend.
+- `ai_service/` remains as reusable AI logic and compatibility reference, but the active backend now calls AI logic in process instead of over internal HTTP.
+- `nest-api/` is legacy TypeScript code kept temporarily for migration reference, not as the active runtime target.
+- `archive/python_business_backend/` remains historical reference material only.
+
+## Active Structure
+
+```text
+backend/
+  stringsense_backend/
+  ai_service/
+  migrations/
+  data/raw/
+  docs/
+  nest-api/
+  archive/python_business_backend/
+```
+
+## Environment
+
+Copy values from [.env.example](./.env.example) into `backend/.env`.
+
+Key variables:
+
+- `DATABASE_URL`: SQLAlchemy database URL for the unified Python backend
+- `JWT_SECRET_KEY`: signing key for bearer tokens
+- `APPROVED_STRINGS_SOURCE_PATH`: approved real catalog source; relative paths resolve from the backend root
+- `SEED_ADMIN_*`: optional admin seed controls
+- `SEED_VENDOR_*`: optional vendor seed controls
+- `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
+
+In this unified workspace, `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` should normally point at `../ml/nlp-workbench/outputs/`.
+
+Legacy AI env vars such as `AI_INTERNAL_API_KEY` are only needed if you still run `ai_service/` directly for standalone compatibility checks.
+
+## Run
+
+1. Install Python dependencies:
+
+```bash
+cd backend
+uv sync --extra dev
+```
+
+2. Apply migrations for the unified backend:
+
+```bash
+cd backend
+./.venv/bin/alembic upgrade head
+```
+
+3. Start the unified backend:
+
+```bash
+cd backend
+./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload
+```
+
+The API base URL is `http://127.0.0.1:3001/api/v1`.
+FastAPI docs are available at `http://127.0.0.1:3001/docs`.
+
+## Verify
+
+```bash
+cd backend
+./.venv/bin/ruff check .
+./.venv/bin/ruff format --check .
+./.venv/bin/pytest -v
+```
+
+## API Summary
+
+Public unified Python endpoints:
+
+- `GET /health`
+- `GET /api/v1/health`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/profile`
+- `PUT /api/v1/profile`
+- `GET /api/v1/strings`
+- `GET /api/v1/strings/{id}`
+- `POST /api/v1/bookings`
+- `GET /api/v1/bookings`
+- `GET /api/v1/bookings/{id}`
+- `POST /api/v1/recommendations/preview`
+- `POST /api/v1/recommendations/profile`
+- `GET /api/v1/admin/strings`
+- `POST /api/v1/admin/strings`
+- `PUT /api/v1/admin/strings/{id}`
+- `DELETE /api/v1/admin/strings/{id}`
+- `GET /api/v1/admin/bookings`
+- `GET /api/v1/admin/bookings/{id}`
+- `PATCH /api/v1/admin/bookings/{id}/status`
+- `GET /api/v1/admin/recommendations/logs`
+
+More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-contract.md](./docs/api-contract.md), and [docs/database.md](./docs/database.md).

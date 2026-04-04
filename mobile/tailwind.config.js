@@ -1,0 +1,80 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
+    './node_modules/heroui-native/lib/**/*.{js,jsx,ts,tsx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#f2f7fc',
+          100: '#e1edf9',
+          200: '#c3daf1',
+          300: '#9dbfe6',
+          400: '#6f9ed8',
+          500: '#4f82ca',
+          600: '#2f64b6',
+          700: '#254e90',
+          800: '#1f4074',
+          900: '#1c365f',
+          950: '#14233c',
+        },
+        secondary: {
+          50: '#fff8e8',
+          100: '#fcecc2',
+          200: '#f7d98b',
+          300: '#efc45c',
+          400: '#eab23e',
+          500: '#e6a92f',
+          600: '#c4861e',
+          700: '#9a6415',
+          800: '#7d5016',
+          900: '#684315',
+        },
+        power: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          500: '#f97316',
+          600: '#ea580c',
+          700: '#c2410c',
+        },
+        durability: {
+          50: '#ecf8f2',
+          100: '#cdecdc',
+          500: '#269a6b',
+          600: '#1e8058',
+          700: '#176448',
+        },
+        control: {
+          50: '#eef9f8',
+          100: '#d4eeea',
+          500: '#2b9085',
+          600: '#22766d',
+          700: '#1b6058',
+        },
+        sound: {
+          50: '#f5f2fe',
+          100: '#e4dbfc',
+          500: '#7a63d1',
+          600: '#6550b8',
+          700: '#5440a0',
+        },
+        info: {
+          50: '#eff7fd',
+          100: '#d7eaf9',
+          500: '#2f8fca',
+          600: '#2676aa',
+          700: '#1d5f8a',
+        },
+      },
+      boxShadow: {
+        soft: '0 10px 30px rgba(15, 23, 42, 0.06)',
+        float: '0 16px 40px rgba(20, 35, 60, 0.16)',
+        glow: '0 18px 36px rgba(47, 100, 182, 0.22)',
+      },
+    },
+  },
+  plugins: [],
+};
