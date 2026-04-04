@@ -29,6 +29,16 @@ def normalize_phone_number(value: str) -> str:
     return normalized
 
 
+def validate_local_password(value: str) -> str:
+    if len(value) < 8 or len(value) > 128:
+        raise ValueError("password must be 8 to 128 characters")
+    if not any(char.isalpha() for char in value):
+        raise ValueError("password must contain at least one letter")
+    if not any(char.isdigit() for char in value):
+        raise ValueError("password must contain at least one digit")
+    return value
+
+
 def hash_password(value: str) -> str:
     salt = os.urandom(16)
     digest = hashlib.pbkdf2_hmac(

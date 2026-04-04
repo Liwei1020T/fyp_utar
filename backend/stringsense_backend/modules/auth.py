@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import secrets
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+
 from fastapi import APIRouter
 from fastapi import Depends
 from pydantic import BaseModel
@@ -11,20 +16,26 @@ from sqlalchemy.orm import Session
 
 from stringsense_backend.api.dependencies import CurrentUser
 from stringsense_backend.api.dependencies import get_current_user
+from stringsense_backend.core.config import get_settings
 from stringsense_backend.core.domain import AuthProvider
 from stringsense_backend.core.domain import UserRole
+from stringsense_backend.core.errors import BadRequestError
 from stringsense_backend.core.errors import ConflictError
 from stringsense_backend.core.errors import NotFoundError
 from stringsense_backend.core.errors import UnauthorizedError
 from stringsense_backend.core.security import create_access_token
 from stringsense_backend.core.security import hash_password
 from stringsense_backend.core.security import normalize_phone_number
+from stringsense_backend.core.security import validate_local_password
 from stringsense_backend.core.security import verify_password
+from stringsense_backend.db.models import PasswordResetCode
 from stringsense_backend.db.models import User
 from stringsense_backend.db.session import get_db
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+PASSWORD_RESET_CODE_LENGTH = 6
+PASSWORD_RESET_SUCCESS_MESSAGE = "Verification code sent if the account exists"
 
 
 class UserOut(BaseModel):
@@ -60,11 +71,7 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if not any(char.isalpha() for char in value):
-            raise ValueError("password must contain at least one letter")
-        if not any(char.isdigit() for char in value):
-            raise ValueError("password must contain at least one digit")
-        return value
+        return validate_local_password(value)
 
 
 class LoginRequest(BaseModel):
@@ -77,6 +84,44 @@ class LoginRequest(BaseModel):
     @classmethod
     def normalize_phone(cls, value: str) -> str:
         return normalize_phone_number(value)
+
+
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone_number: str
+
+    @field_validator("phone_number")
+    @classmethod
+    def normalize_phone(cls, value: str) -> str:
+        return normalize_phone_number(value)
+
+
+class ForgotPasswordRequestResponse(BaseModel):
+    message: str = PASSWORD_RESET_SUCCESS_MESSAGE
+    dev_code_preview: str | None = None
+
+
+class ForgotPasswordResetRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone_number: str
+    verification_code: str = Field(pattern=rf"^\d{{{PASSWORD_RESET_CODE_LENGTH}}}$")
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("phone_number")
+    @classmethod
+    def normalize_phone(cls, value: str) -> str:
+        return normalize_phone_number(value)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_local_password(value)
+
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 def serialize_user(user: User) -> UserOut:
@@ -102,6 +147,89 @@ def build_auth_response(user: User) -> AuthResponse:
         user_id=user.id,
         user=serialize_user(user),
     )
+
+
+def issue_password_reset_code(
+    payload: ForgotPasswordRequest,
+    *,
+    db: Session,
+) -> ForgotPasswordRequestResponse:
+    user = db.execute(
+        select(User).where(User.phone_number == payload.phone_number)
+    ).scalar_one_or_none()
+    if user is None:
+        return ForgotPasswordRequestResponse()
+
+    now = datetime.now(timezone.utc)
+    existing_codes = db.execute(
+        select(PasswordResetCode).where(
+            PasswordResetCode.phone_number == payload.phone_number,
+            PasswordResetCode.used_at.is_(None),
+        )
+    ).scalars()
+    for existing in existing_codes:
+        existing.used_at = now
+
+    code = f"{secrets.randbelow(10**PASSWORD_RESET_CODE_LENGTH):0{PASSWORD_RESET_CODE_LENGTH}d}"
+    settings = get_settings()
+    db.add(
+        PasswordResetCode(
+            user_id=user.id,
+            phone_number=user.phone_number,
+            code_hash=hash_password(code),
+            expires_at=now
+            + timedelta(minutes=settings.password_reset_code_expire_minutes),
+        )
+    )
+    db.commit()
+
+    if settings.password_reset_dev_preview_enabled and settings.is_dev_like:
+        return ForgotPasswordRequestResponse(dev_code_preview=code)
+    return ForgotPasswordRequestResponse()
+
+
+def reset_password_with_code(
+    payload: ForgotPasswordResetRequest,
+    *,
+    db: Session,
+) -> MessageResponse:
+    reset_code = db.execute(
+        select(PasswordResetCode)
+        .where(
+            PasswordResetCode.phone_number == payload.phone_number,
+            PasswordResetCode.used_at.is_(None),
+        )
+        .order_by(PasswordResetCode.created_at.desc())
+    ).scalar_one_or_none()
+    if reset_code is None:
+        raise BadRequestError("Invalid or expired verification code")
+
+    now = datetime.now(timezone.utc)
+    expires_at = reset_code.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at <= now:
+        raise BadRequestError("Invalid or expired verification code")
+
+    settings = get_settings()
+    if reset_code.attempt_count >= settings.password_reset_code_max_attempts:
+        raise BadRequestError("Verification code attempt limit exceeded")
+
+    if not verify_password(payload.verification_code, reset_code.code_hash):
+        reset_code.attempt_count += 1
+        db.commit()
+        raise BadRequestError("Invalid or expired verification code")
+
+    user = db.execute(
+        select(User).where(User.id == reset_code.user_id)
+    ).scalar_one_or_none()
+    if user is None:
+        raise BadRequestError("Invalid or expired verification code")
+
+    user.password_hash = hash_password(payload.new_password)
+    reset_code.used_at = now
+    db.commit()
+    return MessageResponse(message="Password reset successful")
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -133,6 +261,25 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
     if user is None or not verify_password(payload.password, user.password_hash):
         raise UnauthorizedError("Invalid credentials")
     return build_auth_response(user)
+
+
+@router.post(
+    "/forgot-password/request-code",
+    response_model=ForgotPasswordRequestResponse,
+)
+def request_forgot_password_code(
+    payload: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+) -> ForgotPasswordRequestResponse:
+    return issue_password_reset_code(payload, db=db)
+
+
+@router.post("/forgot-password/reset", response_model=MessageResponse)
+def reset_forgot_password(
+    payload: ForgotPasswordResetRequest,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    return reset_password_with_code(payload, db=db)
 
 
 @router.get("/me", response_model=UserOut)

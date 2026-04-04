@@ -32,7 +32,7 @@ const demoUsers: Array<{ role: UserRole; label: string; email: string; descripti
 
 export default function LoginScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ role?: UserRole }>();
+  const params = useLocalSearchParams<{ role?: UserRole; identifier?: string }>();
   const login = useAppStore((state) => state.login);
   const setBackendPlayerSession = useAppStore(
     (state) => state.setBackendPlayerSession,
@@ -44,6 +44,7 @@ export default function LoginScreen() {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -57,11 +58,12 @@ export default function LoginScreen() {
     () => demoUsers.find((item) => item.role === selectedRole) ?? demoUsers[0],
     [selectedRole]
   );
+  const identifierValue = watch('identifier');
 
   useEffect(() => {
-    setValue('identifier', activeDemo.email);
+    setValue('identifier', params.identifier ?? activeDemo.email);
     setValue('password', activeDemo.role === 'vendor' ? 'password' : '');
-  }, [activeDemo.email, activeDemo.role, setValue]);
+  }, [activeDemo.email, activeDemo.role, params.identifier, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
@@ -203,6 +205,23 @@ export default function LoginScreen() {
           onPress={handleSubmit(onSubmit)}
           isLoading={isSubmitting}
         />
+
+        {selectedRole === 'player' ? (
+          <Pressable
+            className="mt-4 self-end"
+            onPress={() =>
+              router.push(
+                `/auth/forgot-password?identifier=${encodeURIComponent(
+                  identifierValue || '',
+                )}`,
+              )
+            }
+          >
+            <HeroText className="text-sm font-semibold text-[#254E90]">
+              Forgot password?
+            </HeroText>
+          </Pressable>
+        ) : null}
 
         <View className="mt-5 gap-3">
           {demoUsers.map((item) => (

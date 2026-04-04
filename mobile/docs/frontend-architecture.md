@@ -109,6 +109,7 @@ Used for unauthenticated entry:
 - `welcome`
 - `login`
 - `register`
+- `forgot-password`
 
 `app/auth/_layout.tsx` redirects authenticated users away from auth screens and into their role home.
 
@@ -255,6 +256,7 @@ Examples:
 `services/backendApi.ts` and `services/backendMappers.ts` provide:
 
 - phone-based player auth against the Python backend
+- player password recovery code request/reset against the Python backend
 - live player profile reads/writes
 - live string catalog reads
 - live booking reads/creates

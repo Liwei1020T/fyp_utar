@@ -38,6 +38,18 @@ class Settings(BaseSettings):
         default=60,
         alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
+    password_reset_code_expire_minutes: int = Field(
+        default=10,
+        alias="PASSWORD_RESET_CODE_EXPIRE_MINUTES",
+    )
+    password_reset_code_max_attempts: int = Field(
+        default=5,
+        alias="PASSWORD_RESET_CODE_MAX_ATTEMPTS",
+    )
+    password_reset_dev_preview_enabled: bool = Field(
+        default=False,
+        alias="PASSWORD_RESET_DEV_PREVIEW_ENABLED",
+    )
     auto_create_schema: bool | None = Field(default=None, alias="AUTO_CREATE_SCHEMA")
     cors_origins: list[str] = Field(
         default_factory=lambda: [
@@ -90,6 +102,10 @@ class Settings(BaseSettings):
         if candidate.is_absolute():
             return candidate
         return BACKEND_ROOT / candidate
+
+    @property
+    def is_dev_like(self) -> bool:
+        return self.environment in {"development", "testing"}
 
     @property
     def sqlalchemy_database_url(self) -> str:

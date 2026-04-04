@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
+from stringsense_backend.core.config import get_settings
+from stringsense_backend.db.models import PasswordResetCode
+from stringsense_backend.db.session import SessionLocal
 from stringsense_backend.main import app
 
 
@@ -46,6 +50,11 @@ def first_string_id(token: str) -> str:
     response = client.get("/api/strings", headers=headers(token))
     assert response.status_code == 200
     return response.json()["items"][0]["id"]
+
+
+def enable_password_reset_preview(monkeypatch) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "password_reset_dev_preview_enabled", True)
 
 
 def test_auth_profile_booking_and_admin_status_flow():
@@ -199,3 +208,136 @@ def test_recommendations_logs_and_admin_string_controls():
     )
     assert deactivate_string.status_code == 200
     assert deactivate_string.json()["is_active"] is False
+
+
+def test_request_password_reset_is_generic_for_unknown_phone(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+
+    response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60127777777"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Verification code sent if the account exists"
+    assert response.json()["dev_code_preview"] is None
+
+
+def test_customer_can_reset_password_with_verification_code(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+    register_customer()
+
+    request_code_response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+    assert request_code_response.status_code == 200
+    verification_code = request_code_response.json()["dev_code_preview"]
+    assert verification_code is not None
+
+    reset_response = client.post(
+        "/api/auth/forgot-password/reset",
+        json={
+            "phone_number": "+60123456789",
+            "verification_code": verification_code,
+            "new_password": "newpass456",
+        },
+    )
+    assert reset_response.status_code == 200
+    assert reset_response.json()["message"] == "Password reset successful"
+
+    old_password_login = client.post(
+        "/api/auth/login",
+        json={
+            "phone_number": "+60123456789",
+            "password": "secret123",
+        },
+    )
+    assert old_password_login.status_code == 401
+
+    new_password_login = client.post(
+        "/api/auth/login",
+        json={
+            "phone_number": "+60123456789",
+            "password": "newpass456",
+        },
+    )
+    assert new_password_login.status_code == 200
+
+
+def test_reset_password_rejects_reused_verification_code(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+    register_customer()
+
+    request_code_response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+    verification_code = request_code_response.json()["dev_code_preview"]
+
+    first_reset_response = client.post(
+        "/api/auth/forgot-password/reset",
+        json={
+            "phone_number": "+60123456789",
+            "verification_code": verification_code,
+            "new_password": "newpass456",
+        },
+    )
+    second_reset_response = client.post(
+        "/api/auth/forgot-password/reset",
+        json={
+            "phone_number": "+60123456789",
+            "verification_code": verification_code,
+            "new_password": "newpass789",
+        },
+    )
+
+    assert first_reset_response.status_code == 200
+    assert second_reset_response.status_code == 400
+    assert (
+        second_reset_response.json()["error"]["message"]
+        == "Invalid or expired verification code"
+    )
+
+
+def test_reset_password_enforces_attempt_limit(monkeypatch):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "password_reset_dev_preview_enabled", True)
+    monkeypatch.setattr(settings, "password_reset_code_max_attempts", 2)
+    register_customer()
+
+    request_code_response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+    assert request_code_response.status_code == 200
+
+    for _ in range(2):
+        response = client.post(
+            "/api/auth/forgot-password/reset",
+            json={
+                "phone_number": "+60123456789",
+                "verification_code": "000000",
+                "new_password": "newpass456",
+            },
+        )
+        assert response.status_code == 400
+
+    limit_response = client.post(
+        "/api/auth/forgot-password/reset",
+        json={
+            "phone_number": "+60123456789",
+            "verification_code": "000000",
+            "new_password": "newpass456",
+        },
+    )
+    assert limit_response.status_code == 400
+    assert (
+        limit_response.json()["error"]["message"]
+        == "Verification code attempt limit exceeded"
+    )
+
+    with SessionLocal() as db:
+        reset_code = db.execute(select(PasswordResetCode)).scalar_one()
+
+    assert reset_code.attempt_count == 2

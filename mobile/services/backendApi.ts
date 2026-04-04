@@ -1,6 +1,8 @@
 import type {
   BackendAuthResponse,
   BackendBooking,
+  BackendForgotPasswordRequestResponse,
+  BackendMessageResponse,
   BackendPage,
   BackendProfile,
   BackendProfilePayload,
@@ -75,6 +77,25 @@ export const backendApi = {
   },
   loginPlayer(payload: { phone_number: string; password: string }) {
     return requestJson<BackendAuthResponse>('/auth/login', {
+      method: 'POST',
+      body: payload,
+    });
+  },
+  requestPasswordResetCode(payload: { phone_number: string }) {
+    return requestJson<BackendForgotPasswordRequestResponse>(
+      '/auth/forgot-password/request-code',
+      {
+        method: 'POST',
+        body: payload,
+      },
+    );
+  },
+  resetPasswordWithCode(payload: {
+    phone_number: string;
+    verification_code: string;
+    new_password: string;
+  }) {
+    return requestJson<BackendMessageResponse>('/auth/forgot-password/reset', {
       method: 'POST',
       body: payload,
     });

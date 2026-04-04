@@ -16,6 +16,15 @@ export interface BackendAuthResponse {
   user: BackendAuthUser;
 }
 
+export interface BackendMessageResponse {
+  message: string;
+}
+
+export interface BackendForgotPasswordRequestResponse
+  extends BackendMessageResponse {
+  dev_code_preview: string | null;
+}
+
 export interface BackendProfile {
   skill_level: string | null;
   playing_style: string | null;
