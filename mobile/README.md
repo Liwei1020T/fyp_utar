@@ -17,7 +17,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
   - AI String Recommendation based on playing style and priorities.
   - Badminton String Catalog with detailed performance scores.
   - Booking system for stringing services with status tracking.
-- **Admin/Vendor Flow:**
+- **Admin Flow:**
   - Secure Admin Login.
   - Operational Dashboard with key metrics.
   - Booking Management and Status Updates.
@@ -63,7 +63,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 5. **Navigate:**
    - The app starts at `/auth/welcome`.
    - Player flow now uses phone number + password against the Python backend.
-   - Vendor flow remains mock-based with `vendor@example.com` / `password`.
+   - Admin flow remains mock-based with `admin@example.com` / `password`.
 
 6. **Optional live backend override:**
    ```bash
@@ -78,7 +78,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 ## Architecture Decisions
 - **Modularity:** Separate domain logic (strings, bookings) from UI components.
 - **Surgical UI:** Used HeroUI Native as the primary design system to ensure a premium, modern aesthetic out of the box.
-- **Hybrid Player MVP:** Player auth, profile, strings, recommendations, and bookings can use the live Python backend while vendor and advanced domains remain mock-backed.
+- **Hybrid Player MVP:** Player auth, profile, strings, recommendations, and bookings can use the live Python backend while admin and advanced domains remain mock-backed.
 - **Type Safety:** Strict TypeScript interfaces for all data models.
 
 ---

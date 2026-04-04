@@ -2,14 +2,14 @@
 
 ## 1. Overview
 
-StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the player MVP flow can use the live Python backend, while the vendor workspace and non-core domains remain mock-first inside one codebase.
+StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the player MVP flow can use the live Python backend, while the admin workspace and non-core domains remain mock-first inside one codebase.
 
 The app is optimized for:
 
 - fast FYP prototyping
 - realistic product flows without a real backend
 - strong visual consistency through shared UI primitives
-- role-based navigation for player and vendor experiences
+- role-based navigation for player and admin experiences
 
 At runtime, the app behaves like a full product. Player auth, profile, strings, recommendation, and booking flows can be hydrated from the backend, while the rest of the product still uses local mock modules and Zustand-managed prototype state.
 
@@ -33,7 +33,7 @@ At runtime, the app behaves like a full product. Player auth, profile, strings, 
 
 - Zustand for application state, hybrid session state, and mock mutations
 - React Query provider is installed at the app root and the player MVP flow can use live backend requests
-- Local mock datasets in `mocks/` remain the source of truth for vendor and advanced player features
+- Local mock datasets in `mocks/` remain the source of truth for admin and advanced player features
 
 ### Forms and validation
 
@@ -55,13 +55,13 @@ flowchart TD
     E --> F{Authenticated?}
     F -->|No| G[/auth]
     F -->|Player| H[/player]
-    F -->|Vendor| I[/vendor]
+    F -->|Admin| I[/admin]
 
     H --> J[RoleGuard player]
-    I --> K[RoleGuard vendor]
+    I --> K[RoleGuard admin]
 
     J --> L[Player Tabs + Detail Screens]
-    K --> M[Vendor Tabs + Detail Screens]
+    K --> M[Admin Tabs + Detail Screens]
 
     N[mocks/*] --> O[store/appStore.ts]
     N --> P[services/mockAppService.ts]
@@ -138,9 +138,9 @@ Additional stack screens extend the tab workflow:
 
 `app/player/index.tsx` redirects to `/player/home`.
 
-#### `app/vendor`
+#### `app/admin`
 
-Protected by `RoleGuard` with `role="vendor"`.
+Protected by `RoleGuard` with `role="admin"`.
 
 Main tab workspace:
 
@@ -161,7 +161,7 @@ Additional operational stack screens:
 - check-in
 - chat detail
 
-`app/vendor/index.tsx` redirects to `/vendor/dashboard`.
+`app/admin/index.tsx` redirects to `/admin/dashboard`.
 
 ### Guard model
 
@@ -401,9 +401,9 @@ Support modules branch off that main flow:
 - rackets
 - wallet
 
-### Vendor information architecture
+### Admin Information Architecture
 
-The vendor workspace is structured as an operations console:
+The admin workspace is structured as an operations console:
 
 1. dashboard snapshot
 2. booking queue
@@ -472,13 +472,13 @@ Shared components:
 Screen flows:
 
 - player chat tab + detail
-- vendor chat tab + detail
+- admin chat tab + detail
 
 The same conversation model supports:
 
 - AI-only mode
-- waiting for vendor
-- vendor joined
+- waiting for admin
+- admin joined
 - resolved
 - closed
 
@@ -491,9 +491,9 @@ These modules capture the personalization and retention layer of the player prod
 - wallet top-up and balance
 - notifications and preferences
 
-### Vendor operations
+### Admin Operations
 
-Vendor-specific screens model the operational back office:
+Admin-specific screens model the operational back office:
 
 - dashboard metrics
 - bookings management
@@ -615,4 +615,4 @@ The current frontend is a role-based Expo Router application with:
 - a reusable HeroUI-based design system
 - feature modules covering the full player and vendor demo journeys
 
-It is best understood as a production-shaped prototype with a hybrid transition layer: the player MVP is now close to a real backend-connected product flow, while vendor and advanced product areas remain intentionally local and mock-driven.
+It is best understood as a production-shaped prototype with a hybrid transition layer: the player MVP is now close to a real backend-connected product flow, while admin and advanced product areas remain intentionally local and mock-driven.

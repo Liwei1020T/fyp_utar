@@ -1,6 +1,9 @@
 import React from 'react';
-import { RoleGuard } from '../../components/roles/RoleGuard';
+import { Redirect, usePathname } from 'expo-router';
 
 export default function VendorLayout() {
-  return <RoleGuard role="vendor" />;
+  const pathname = usePathname();
+  const nextPath = pathname.replace(/^\/vendor/, '/admin') || '/admin';
+
+  return <Redirect href={nextPath as never} />;
 }

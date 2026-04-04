@@ -97,7 +97,7 @@ export default function RegisterScreen() {
               Build your badminton profile from the first session.
             </HeroText>
             <HeroText className="mt-3 text-sm leading-6 text-[#607266]">
-              Only players can self-register. Vendor access stays pre-created for the single-store shop workspace.
+              Only players can self-register. Admin access stays pre-created for the single-store shop workspace.
             </HeroText>
           </View>
           <View className="h-14 w-14 items-center justify-center rounded-[22px] bg-[#E1EDF9]">

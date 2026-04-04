@@ -63,8 +63,8 @@ export default function PlayerCheckInScreen() {
         <View className="gap-3">
           {[
             'Show the booking token or QR placeholder to the service desk.',
-            'Vendor confirms racket model, string choice, and requested tension.',
-            'Service status moves from awaiting drop-off to in progress once the vendor accepts the racket.',
+            'Admin confirms racket model, string choice, and requested tension.',
+            'Service status moves from awaiting drop-off to in progress once the admin accepts the racket.',
           ].map((item) => (
             <AppCard key={item} variant="subtle" padding="sm">
               <HeroText className="text-sm leading-6 text-neutral-600">{item}</HeroText>

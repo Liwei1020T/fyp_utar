@@ -18,7 +18,7 @@ export default function VendorBusinessHoursScreen() {
   const businessHours = useBusinessHoursState();
   const updateBusinessHours = useAppStore((state) => state.updateBusinessHours);
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 

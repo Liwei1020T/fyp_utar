@@ -2,7 +2,7 @@ import type { VendorAnalyticsSummary } from '../types/domain';
 
 export const MOCK_VENDOR_ANALYTICS: VendorAnalyticsSummary[] = [
   {
-    vendorId: 'vendor-001',
+    vendorId: 'admin-001',
     weeklyBookings: 42,
     pendingPaymentCount: 4,
     awaitingDropoffCount: 6,

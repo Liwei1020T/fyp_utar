@@ -18,7 +18,7 @@ export default function VendorBookingsScreen() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
@@ -36,7 +36,7 @@ export default function VendorBookingsScreen() {
   );
 
   return (
-    <AppScreen title="Vendor bookings" subtitle="Operational list of shop bookings with filters, search, and quick drill-in." scrollable={false}>
+    <AppScreen title="Admin bookings" subtitle="Operational list of shop bookings with filters, search, and quick drill-in." scrollable={false}>
       <FlatList
         className="flex-1"
         data={filtered}
@@ -74,7 +74,7 @@ export default function VendorBookingsScreen() {
                 booking={item}
                 stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
                 vendorLabel={player?.name}
-                onPress={() => router.push(`/vendor/bookings/${item.id}`)}
+                onPress={() => router.push(`/admin/bookings/${item.id}`)}
               />
             </View>
           );

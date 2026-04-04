@@ -158,7 +158,7 @@ export function mapBackendUserToPlayerProfile(
       sound: toTenScale(profile?.pref_sound),
     },
     homeVenue: 'Klang Valley',
-    preferredVendorId: 'vendor-001',
+    preferredVendorId: 'admin-001',
     recentGoal:
       'Use your saved profile to generate a grounded shortlist for the next restring.',
   };
@@ -324,7 +324,7 @@ export function mapBackendBookingToBooking(
   return {
     id: booking.id,
     playerId: booking.user_id,
-    vendorId: 'vendor-001',
+    vendorId: 'admin-001',
     stringId: booking.string_id,
     status,
     paymentStatus: 'paid',

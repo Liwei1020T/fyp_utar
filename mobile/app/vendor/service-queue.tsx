@@ -14,7 +14,7 @@ export default function VendorServiceQueueScreen() {
   const user = useCurrentUser();
   const bookings = useBookings();
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 

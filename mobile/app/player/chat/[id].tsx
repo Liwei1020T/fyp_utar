@@ -47,13 +47,13 @@ export default function PlayerChatDetailScreen() {
         ? {
             role: 'vendor' as const,
             senderName: 'Daniel Tan',
-            body: 'Vendor note received. We can adjust timing, service notes, or drop-off details directly from the shop desk.',
+            body: 'Admin note received. We can adjust timing, service notes, or drop-off details directly from the shop desk.',
           }
         : conversation.mode === 'waiting_vendor'
           ? {
               role: 'system' as const,
               senderName: 'System',
-              body: 'Vendor support request is queued. The next reply will come from the shop once the vendor joins.',
+              body: 'Admin support request is queued. The next reply will come from the shop once the admin joins.',
             }
           : {
               role: 'ai' as const,
@@ -116,8 +116,8 @@ export default function PlayerChatDetailScreen() {
             <AppButton
               label={
                 conversation.mode === 'waiting_vendor'
-                  ? 'Vendor request sent'
-                  : 'Request Vendor Support'
+                  ? 'Admin request sent'
+                  : 'Request Admin Support'
               }
               variant={conversation.mode === 'waiting_vendor' ? 'outline' : 'secondary'}
               size="lg"

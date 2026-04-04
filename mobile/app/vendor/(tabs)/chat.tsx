@@ -14,7 +14,7 @@ export default function VendorChatQueueScreen() {
   const bottomContentInset = useBottomContentInset(16);
   const [filter, setFilter] = useState<'all' | 'waiting_vendor' | 'vendor_joined' | 'resolved' | 'closed'>('all');
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
@@ -30,7 +30,7 @@ export default function VendorChatQueueScreen() {
   );
 
   return (
-    <AppScreen title="Chat queue" subtitle="Service-related conversations assigned to the shop vendor." scrollable={false}>
+    <AppScreen title="Chat queue" subtitle="Service-related conversations assigned to the shop admin desk." scrollable={false}>
       <FlatList
         className="flex-1"
         data={vendorConversations}
@@ -51,7 +51,7 @@ export default function VendorChatQueueScreen() {
         }
         renderItem={({ item }) => (
           <View className="mb-4">
-            <ConversationCard conversation={item} onPress={() => router.push(`/vendor/chat/${item.id}`)} />
+            <ConversationCard conversation={item} onPress={() => router.push(`/admin/chat/${item.id}`)} />
           </View>
         )}
       />

@@ -1,4 +1,4 @@
-import type { AppUser, PlayerProfile, VendorProfile } from '../types/domain';
+import type { AdminProfile, AppUser, PlayerProfile } from '../types/domain';
 
 export const MOCK_PLAYERS: PlayerProfile[] = [
   {
@@ -20,7 +20,7 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
       sound: 8,
     },
     homeVenue: 'Bukit Jalil Badminton Arena',
-    preferredVendorId: 'vendor-001',
+    preferredVendorId: 'admin-001',
     recentGoal: 'More punch on back-court clears without losing net feel.',
   },
   {
@@ -42,7 +42,7 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
       sound: 6,
     },
     homeVenue: 'Petaling Smash Hall',
-    preferredVendorId: 'vendor-001',
+    preferredVendorId: 'admin-001',
     recentGoal: 'Keep touch on slices while reducing frequent restrings.',
   },
   {
@@ -64,17 +64,17 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
       sound: 4,
     },
     homeVenue: 'PJ Community Sports Hub',
-    preferredVendorId: 'vendor-001',
+    preferredVendorId: 'admin-001',
     recentGoal: 'More forgiving feel for longer weekend sessions.',
   },
 ];
 
-export const MOCK_VENDORS: VendorProfile[] = [
+export const MOCK_ADMINS: AdminProfile[] = [
   {
-    id: 'vendor-001',
-    role: 'vendor',
+    id: 'admin-001',
+    role: 'admin',
     name: 'Daniel Tan',
-    email: 'vendor@example.com',
+    email: 'admin@example.com',
     avatarLabel: 'DT',
     businessName: 'Apex String Lab',
     city: 'Kuala Lumpur',
@@ -87,4 +87,6 @@ export const MOCK_VENDORS: VendorProfile[] = [
   },
 ];
 
-export const MOCK_USERS: AppUser[] = [...MOCK_PLAYERS, ...MOCK_VENDORS];
+export const MOCK_VENDORS = MOCK_ADMINS;
+
+export const MOCK_USERS: AppUser[] = [...MOCK_PLAYERS, ...MOCK_ADMINS];

@@ -22,7 +22,7 @@ export default function VendorPaymentsScreen() {
   const user = useCurrentUser();
   const payments = usePayments();
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 

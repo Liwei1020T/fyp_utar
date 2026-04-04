@@ -22,7 +22,7 @@ export default function VendorSettingsScreen() {
   const [bookingNotes, setBookingNotes] = useState(settings?.bookingNotes ?? '');
   const [policyText, setPolicyText] = useState(settings?.storePolicyText ?? '');
 
-  if (!user || user.role !== 'vendor' || !settings) {
+  if (!user || user.role !== 'admin' || !settings) {
     return null;
   }
 

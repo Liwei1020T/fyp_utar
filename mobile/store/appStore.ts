@@ -119,9 +119,9 @@ function buildTimeline(status: BookingStatus, dropOffDate: string, dropOffTime: 
 function buildConversationMeta(mode: ChatConversation['mode']) {
   switch (mode) {
     case 'waiting_vendor':
-      return 'Waiting for Vendor';
+      return 'Waiting for Admin';
     case 'vendor_joined':
-      return 'Vendor Joined';
+      return 'Admin Joined';
     case 'resolved':
       return 'Resolved';
     case 'closed':
@@ -287,7 +287,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         sound: 5,
       },
       homeVenue: 'Klang Valley',
-      preferredVendorId: 'vendor-001',
+      preferredVendorId: 'admin-001',
       recentGoal: 'Dial in a setup that feels balanced and confidence-building.',
     };
 
@@ -715,7 +715,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
                   id: `msg-${conversation.messages.length + 300}`,
                   role: 'system',
                   senderName: 'System',
-                  body: 'Vendor support requested. The shop will respond in this thread.',
+                  body: 'Admin support requested. The shop will respond in this thread.',
                   sentAt: new Date().toISOString(),
                 },
               ],

@@ -19,7 +19,7 @@ export default function VendorDashboardScreen() {
   const bookings = useBookings();
   const logout = useAppStore((state) => state.logout);
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
@@ -35,7 +35,7 @@ export default function VendorDashboardScreen() {
             <Store size={20} color="#22766D" />
           </View>
           <View>
-            <HeroText className="text-xs text-neutral-500">Vendor workspace</HeroText>
+            <HeroText className="text-xs text-neutral-500">Admin workspace</HeroText>
             <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
               {user.businessName}
             </HeroText>
@@ -61,7 +61,7 @@ export default function VendorDashboardScreen() {
           Keep the service queue moving without losing the premium feel.
         </HeroText>
         <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-          Today’s prototype covers drop-offs, active jobs, inventory, assigned chat threads, and analytics all inside the vendor role.
+          Today’s prototype covers drop-offs, active jobs, inventory, assigned chat threads, and analytics all inside the admin role.
         </HeroText>
       </AppCard>
 
@@ -79,11 +79,11 @@ export default function VendorDashboardScreen() {
       <AppSection eyebrow="Quick actions" title="Jump into the queue">
         <View className="gap-3">
           {[
-            { title: 'Service queue', route: '/vendor/service-queue' },
-            { title: 'Check-in flow', route: '/vendor/check-in' },
-            { title: 'Business hours', route: '/vendor/business-hours' },
-            { title: 'Payments monitor', route: '/vendor/payments' },
-            { title: 'Store settings', route: '/vendor/settings' },
+            { title: 'Service queue', route: '/admin/service-queue' },
+            { title: 'Check-in flow', route: '/admin/check-in' },
+            { title: 'Business hours', route: '/admin/business-hours' },
+            { title: 'Payments monitor', route: '/admin/payments' },
+            { title: 'Store settings', route: '/admin/settings' },
           ].map((item) => (
             <Pressable key={item.title} onPress={() => router.push(item.route as never)}>
               <AppCard variant="elevated" padding="md">

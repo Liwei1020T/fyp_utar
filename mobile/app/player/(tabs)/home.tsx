@@ -40,7 +40,7 @@ const quickActions = [
   },
   {
     title: 'Ask support',
-    subtitle: 'Start with AI, then request vendor support when you need a human.',
+    subtitle: 'Start with AI, then request admin support when you need a human.',
     route: '/player/chat',
     icon: MessageSquareText,
     accentClassName: 'bg-[#E4F2F0]',

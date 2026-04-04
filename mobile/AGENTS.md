@@ -6,13 +6,13 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 - Maintain the StringSense frontend as a production-shaped Expo Router prototype for badminton string recommendation and service management.
 - Optimize for correctness, structure fidelity, and maintainability over quick one-off patches.
-- Keep the player and vendor flows realistic, coherent, and easy to extend into a real backend later.
+- Keep the player and admin flows realistic, coherent, and easy to extend into a real backend later.
 
 ## Project Context
 
-- Primary users: badminton players booking stringing services, and one shop vendor managing operations.
+- Primary users: badminton players booking stringing services, and one shop admin managing operations.
 - Product shape: one codebase inside the unified StringSence workspace, two role-based experiences, premium mobile UI, with a hybrid data layer.
-- Current runtime split: player core flow may use the Python backend, while vendor flow and non-core domains remain mock-first.
+- Current runtime split: player core flow may use the Python backend, while admin flow and non-core domains remain mock-first.
 - Non-goals: backend implementation, multi-store architecture, or inventing new tooling that does not exist in the repo.
 
 ## Canonical Commands
@@ -40,12 +40,12 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - App shell: `app/_layout.tsx`
   Owns global providers, `global.css`, splash/font setup, HeroUI Native, React Query, and the root Expo Router stack.
 - Root redirect: `app/index.tsx`
-  Sends users to `/auth/welcome`, `/player`, or `/vendor` based on session state.
-- Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/vendor/_layout.tsx`, `components/roles/RoleGuard.tsx`
-  Auth screens reject logged-in users; player and vendor route groups are role-guarded.
+  Sends users to `/auth/welcome`, `/player`, or `/admin` based on session state.
+- Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/admin/_layout.tsx`, `components/roles/RoleGuard.tsx`
+  Auth screens reject logged-in users; player and admin route groups are role-guarded.
 - Player workspace: `app/player/(tabs)` plus detail flows under `app/player/**`
   Covers recommendation, catalog, booking, payment, tracking, chat, profile, wallet, rackets, and notifications.
-- Vendor workspace: `app/vendor/(tabs)` plus operations screens under `app/vendor/**`
+- Admin workspace: `app/admin/(tabs)` plus operations screens under `app/admin/**`
   Covers dashboard, bookings, inventory, chat, analytics, business hours, check-in, payments, queue, and settings.
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
@@ -66,7 +66,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
   `app/index.tsx` -> auth layout or role home -> role guard
 - Player core journey:
   auth -> recommend/catalog -> string detail/compare -> booking draft -> payment -> booking detail/tracking -> feedback
-- Vendor core journey:
+- Admin core journey:
   auth -> dashboard -> bookings/chat/inventory -> booking or inventory detail -> operational updates
 - Shared state mutation hotspots:
   `submitBookingPayment`, `updateBookingStatus`, `appendChatMessage`, `requestVendorSupport`, `topUpWallet`, `updateBusinessHours`, `updateStringItem`
@@ -74,17 +74,17 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 ## Structure Rules
 
 1. Preserve the route-group structure.
-   Put auth screens under `app/auth`, player screens under `app/player`, and vendor screens under `app/vendor`. Do not bypass role boundaries with ad hoc routing.
+   Put auth screens under `app/auth`, player screens under `app/player`, and admin screens under `app/admin`. Legacy `app/vendor` paths should only act as compatibility redirects.
 2. Reuse the shared screen shell first.
    New screens should normally be built with `AppScreen` and `AppSection` before introducing layout exceptions.
 3. Keep app-level UI primitives in `components/ui`.
    If a pattern repeats across screens, promote it into a shared primitive instead of duplicating screen-local markup.
 4. Keep domain types centralized in `types/domain.ts`.
-   Do not redefine booking, payment, chat, racket, or vendor shapes inside screens.
+   Do not redefine booking, payment, chat, racket, or admin/store-operation shapes inside screens.
 5. Keep mutable business behavior in the store, not scattered across screens.
    Screens may derive display state, but durable mutations should live in `store/appStore.ts`.
 6. Treat the player core flow as hybrid.
-   Player auth, profile, strings, recommendation, and bookings may use the live backend, while vendor and non-core player domains stay mocked.
+   Player auth, profile, strings, recommendation, and bookings may use the live backend, while admin and non-core player domains stay mocked.
 
 ## Runtime and Styling Constraints
 
@@ -92,7 +92,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 2. `metro.config.js` must remain wrapped with `withUniwindConfig(..., { cssEntryFile: './global.css' })`.
 3. `babel.config.js` must keep `react-native-worklets/plugin` unless the runtime setup is intentionally changed.
 4. Preserve HeroUI Native + Uniwind patterns; do not swap to unrelated web-only component patterns.
-5. Keep the player/vendor visual split aligned with `components/ui/theme.ts`.
+5. Keep the player/admin visual split aligned with `components/ui/theme.ts`.
 
 ## Change Rules
 
@@ -126,7 +126,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Start with `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - Start the sibling backend in `../backend` when testing live player flows
 - Use `+60123456789` / `password` for the player flow
-- Use `vendor@example.com` / `password` for the vendor flow
+- Use `admin@example.com` / `password` for the admin flow
 
 ## Maintenance Rule
 

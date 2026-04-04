@@ -1,4 +1,4 @@
-export type UserRole = 'player' | 'vendor';
+export type UserRole = 'player' | 'admin';
 
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'Competitive';
 export type PlayingStyle = 'Attacking' | 'Balanced' | 'Control' | 'Defensive';
@@ -26,8 +26,8 @@ export interface PlayerProfile extends UserIdentity {
   recentGoal: string;
 }
 
-export interface VendorProfile extends UserIdentity {
-  role: 'vendor';
+export interface AdminProfile extends UserIdentity {
+  role: 'admin';
   businessName: string;
   city: string;
   branchCode: string;
@@ -38,7 +38,9 @@ export interface VendorProfile extends UserIdentity {
   escalationEmail: string;
 }
 
-export type AppUser = PlayerProfile | VendorProfile;
+export type VendorProfile = AdminProfile;
+
+export type AppUser = PlayerProfile | AdminProfile;
 
 export type InventoryAvailability = 'in_stock' | 'low_stock' | 'out_of_stock';
 

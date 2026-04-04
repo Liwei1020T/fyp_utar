@@ -27,7 +27,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 const demoUsers: Array<{ role: UserRole; label: string; email: string; description: string }> = [
   { role: 'player', label: 'Player', email: '+60123456789', description: 'Phone login for the live player backend flow.' },
-  { role: 'vendor', label: 'Vendor', email: 'vendor@example.com', description: 'Shop operations, inventory, queue, and support flow.' },
+  { role: 'admin', label: 'Admin', email: 'admin@example.com', description: 'Shop operations, inventory, queue, and support flow.' },
 ];
 
 export default function LoginScreen() {
@@ -62,13 +62,13 @@ export default function LoginScreen() {
 
   useEffect(() => {
     setValue('identifier', params.identifier ?? activeDemo.email);
-    setValue('password', activeDemo.role === 'vendor' ? 'password' : '');
+    setValue('password', activeDemo.role === 'admin' ? 'password' : '');
   }, [activeDemo.email, activeDemo.role, params.identifier, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
     await new Promise((resolve) => setTimeout(resolve, 450));
-    if (selectedRole === 'vendor') {
+    if (selectedRole === 'admin') {
       const role = login(data.identifier);
 
       if (!role) {
@@ -107,7 +107,7 @@ export default function LoginScreen() {
       tone="auth"
       eyebrow="Mock Access"
       title="Log in"
-      subtitle="Use the player demo or the pre-created vendor account to open the correct role surface."
+      subtitle="Use the player demo or the pre-created admin account to open the correct role surface."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#122018" />}
@@ -127,7 +127,7 @@ export default function LoginScreen() {
               Open the right prototype area in one step.
             </HeroText>
             <HeroText className="mt-3 text-sm leading-6 text-[#607266]">
-              Public registration is only for players. The vendor account is pre-created for the single-store prototype.
+              Public registration is only for players. The admin account is pre-created for the single-store prototype.
             </HeroText>
           </View>
           <View className="h-14 w-14 items-center justify-center rounded-[22px] bg-[#E1EDF9]">
@@ -158,7 +158,7 @@ export default function LoginScreen() {
               placeholder={
                 selectedRole === 'player'
                   ? 'e.g. +60123456789'
-                  : 'e.g. vendor@example.com'
+                  : 'e.g. admin@example.com'
               }
               keyboardType={
                 selectedRole === 'player' ? 'phone-pad' : 'email-address'
@@ -191,7 +191,7 @@ export default function LoginScreen() {
               helperText={
                 selectedRole === 'player'
                   ? 'Use the password from your live player account.'
-                  : 'Vendor continues to use the mock prototype login.'
+                  : 'Admin continues to use the mock prototype login.'
               }
               leftAdornment={<LockKeyhole size={18} color="#64748B" />}
             />

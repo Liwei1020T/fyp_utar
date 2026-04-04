@@ -15,7 +15,7 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 'notif-002',
     userId: 'player-001',
     category: 'chat',
-    title: 'Vendor replied in support chat',
+    title: 'Admin replied in support chat',
     body: 'Apex String Lab replied to your question about tension feel.',
     createdAt: '2026-04-03T11:16:00.000Z',
     read: false,

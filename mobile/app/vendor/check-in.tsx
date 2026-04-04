@@ -17,7 +17,7 @@ export default function VendorCheckInScreen() {
   const [reference, setReference] = useState('SS-BK-2401-VICT');
   const [submittedReference, setSubmittedReference] = useState('SS-BK-2401-VICT');
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
@@ -37,7 +37,7 @@ export default function VendorCheckInScreen() {
     <AppScreen
       tone="vendor"
       title="Check-in"
-      subtitle="Manual booking reference entry and fake QR scan flow for vendor use."
+      subtitle="Manual booking reference entry and fake QR scan flow for admin use."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}

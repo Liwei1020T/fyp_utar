@@ -23,7 +23,7 @@ export default function PlayerChatThreadsScreen() {
   const playerConversations = conversations.filter((item) => item.playerId === user.id);
 
   return (
-    <AppScreen title="Chat and support" subtitle="Start with AI, then request vendor support when you need the shop to step in." scrollable={false}>
+    <AppScreen title="Chat and support" subtitle="Start with AI, then request admin support when you need the shop to step in." scrollable={false}>
       <FlatList
         className="flex-1"
         data={playerConversations}

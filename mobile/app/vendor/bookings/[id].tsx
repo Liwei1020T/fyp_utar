@@ -34,7 +34,7 @@ export default function VendorBookingDetailScreen() {
     <AppScreen
       tone="vendor"
       title={`Booking ${booking.id}`}
-      subtitle="Vendor detail view for service status, payment, customer summary, and quick actions."
+      subtitle="Admin detail view for service status, payment, customer summary, and quick actions."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}

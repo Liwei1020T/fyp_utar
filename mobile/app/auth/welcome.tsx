@@ -20,13 +20,13 @@ const roleCards = [
     email: 'player@example.com',
   },
   {
-    role: 'vendor',
-    title: 'Vendor',
-    description: 'Shop dashboard, service queue, drop-off flow, inventory, support, and vendor analytics.',
+    role: 'admin',
+    title: 'Admin',
+    description: 'Shop dashboard, service queue, drop-off flow, inventory, support, and store analytics.',
     icon: Building2,
     accent: '#22766D',
     surface: 'bg-[#E4F2F0]',
-    email: 'vendor@example.com',
+    email: 'admin@example.com',
   },
 ] as const;
 
@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
           </HeroText>
 
           <HeroText className="mt-3 text-[14px] leading-6 text-[#496153]">
-            Explore the complete player journey and the shop vendor workspace from one polished Expo Router build.
+            Explore the complete player journey and the shop admin workspace from one polished Expo Router build.
           </HeroText>
 
           <View className="mt-6 gap-2.5">
@@ -79,7 +79,7 @@ export default function WelcomeScreen() {
                   Role-based product surfaces
                 </HeroText>
                 <HeroText className="mt-1 text-[13px] leading-5 text-[#607266]">
-                  Player and vendor areas are separated and guarded with mock session routing for the single-store flow.
+                  Player and admin areas are separated and guarded with mock session routing for the single-store flow.
                 </HeroText>
               </View>
             </View>

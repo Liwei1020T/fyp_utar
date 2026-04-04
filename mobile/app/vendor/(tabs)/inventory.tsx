@@ -21,7 +21,7 @@ export default function VendorInventoryScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
         renderItem={({ item }) => (
-          <Pressable onPress={() => router.push(`/vendor/inventory/${item.id}`)}>
+          <Pressable onPress={() => router.push(`/admin/inventory/${item.id}`)}>
             <AppCard variant="elevated" className="mb-4" padding="md">
               <View className="flex-row items-start justify-between gap-4">
                 <View className="flex-1">

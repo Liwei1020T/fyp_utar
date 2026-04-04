@@ -124,7 +124,7 @@ export default function PlayerBookingDetailScreen() {
             </HeroText>
           </View>
           <View className="p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Vendor</HeroText>
+            <HeroText className="text-neutral-500">Admin desk</HeroText>
             <HeroText className="font-semibold text-neutral-950">{vendor?.businessName}</HeroText>
           </View>
         </AppCard>
@@ -248,7 +248,7 @@ export default function PlayerBookingDetailScreen() {
         </View>
 
         <AppButton
-          label="Request vendor support"
+          label="Request admin support"
           variant="ghost"
           size="lg"
           leadingIcon={<MessageSquareText size={18} color="#475569" />}

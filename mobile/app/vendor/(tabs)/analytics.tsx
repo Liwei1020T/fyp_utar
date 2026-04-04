@@ -13,14 +13,14 @@ import { getVendorAnalytics, getStringById } from '../../../services/mockAppServ
 export default function VendorAnalyticsScreen() {
   const user = useCurrentUser();
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
   const analytics = getVendorAnalytics(user.id);
 
   return (
-    <AppScreen tone="vendor" title="Vendor analytics" subtitle="Vendor-only analytics UI for trends, busy slots, popular strings, payments, and workload." >
+    <AppScreen tone="vendor" title="Admin analytics" subtitle="Admin operations analytics UI for trends, busy slots, popular strings, payments, and workload." >
       <AppSection eyebrow="Metrics" title="Shop performance">
         <View className="flex-row flex-wrap gap-3">
           <MetricStatCard title="Weekly bookings" value={String(analytics?.weeklyBookings ?? 0)} icon={<BarChart3 size={20} color="#2F64B6" />} />

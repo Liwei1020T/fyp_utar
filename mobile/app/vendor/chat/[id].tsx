@@ -36,7 +36,7 @@ export default function VendorChatDetailScreen() {
   return (
     <AppScreen
       tone="vendor"
-      title="Vendor chat detail"
+      title="Admin chat detail"
       subtitle="Reply as the shop, review linked booking context, and close the conversation when it is resolved."
       headerLeft={
         <AppIconButton
@@ -67,11 +67,11 @@ export default function VendorChatDetailScreen() {
         </View>
       </AppSection>
 
-      <AppSection eyebrow="Reply" title="Send vendor response" className="mb-8">
+      <AppSection eyebrow="Reply" title="Send admin response" className="mb-8">
         <AppInput value={draft} onChangeText={setDraft} multiline inputClassName="min-h-24" />
         <View className="mt-3 gap-3">
           <AppButton
-            label="Send vendor reply"
+            label="Send admin reply"
             onPress={() =>
               appendChatMessage(conversation.id, {
                 role: 'vendor',
