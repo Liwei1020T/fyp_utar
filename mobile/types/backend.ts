@@ -123,6 +123,35 @@ export interface BackendSlot {
   day_label: string;
 }
 
+export interface BackendBookingStatusHistory {
+  old_status: string | null;
+  new_status: string;
+  changed_by_user_id: string | null;
+  changed_by_phone_number: string | null;
+  note: string | null;
+  changed_at: string | null;
+}
+
+export interface BackendBooking {
+  id: string;
+  user_id: string;
+  string_id: string;
+  string_name: string;
+  customer_phone_number: string | null;
+  customer_username: string | null;
+  racket_brand: string | null;
+  racket_model: string | null;
+  requested_tension: number | null;
+  drop_off_datetime: string | null;
+  notes: string | null;
+  status: string;
+  created_at: string | null;
+  updated_at: string | null;
+  check_in_reference?: string | null;
+  latest_admin_note: string | null;
+  status_history: BackendBookingStatusHistory[] | null;
+}
+
 export interface BackendCheckInLookupResponse {
   matched_by: 'booking_id' | 'check_in_reference';
   booking: BackendBooking;
@@ -204,34 +233,6 @@ export interface BackendPage<T> {
   total: number;
   limit: number | null;
   offset: number;
-}
-
-export interface BackendBookingStatusHistory {
-  old_status: string | null;
-  new_status: string;
-  changed_by_user_id: string | null;
-  changed_by_phone_number: string | null;
-  note: string | null;
-  changed_at: string | null;
-}
-
-export interface BackendBooking {
-  id: string;
-  user_id: string;
-  string_id: string;
-  string_name: string;
-  customer_phone_number: string | null;
-  customer_username: string | null;
-  racket_brand: string | null;
-  racket_model: string | null;
-  requested_tension: number | null;
-  drop_off_datetime: string | null;
-  notes: string | null;
-  status: string;
-  created_at: string | null;
-  updated_at: string | null;
-  latest_admin_note: string | null;
-  status_history: BackendBookingStatusHistory[] | null;
 }
 
 export interface BackendRecommendationResult {

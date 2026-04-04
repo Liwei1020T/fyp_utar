@@ -109,6 +109,17 @@ Example profile request:
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
+- `GET /api/admin/business-hours`
+- `PUT /api/admin/business-hours`
+- `GET /api/slots`
+- `GET /api/admin/slots`
+- `GET /api/admin/check-in/lookup`
+- `POST /api/admin/check-in`
+- `GET /api/admin/service-queue`
+- `GET /api/admin/store-settings`
+- `PUT /api/admin/store-settings`
+- `GET /api/admin/analytics/summary`
+- `GET /api/admin/analytics/popular-strings`
 
 Only approved catalog strings can be created or updated.
 
@@ -117,6 +128,14 @@ Inventory responses extend the base string shape with:
 - `stock_level`
 - `availability` (`in_stock`, `low_stock`, `out_of_stock`)
 - `admin_note`
+
+Store-ops responses add:
+
+- business hours day configs in snake_case (`is_open`, `open_time`, `slot_duration_minutes`, `max_bookings_per_slot`)
+- generated slot rows with `booked_count` and `available_spots`
+- service queue lanes grouped by booking status
+- single-store settings payloads for support/policy copy
+- analytics summary and popular string aggregates for the admin dashboard
 
 ### Recommendations
 

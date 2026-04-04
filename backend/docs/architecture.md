@@ -25,8 +25,9 @@ The unified backend owns:
 - strings catalog seeding and admin maintenance
 - single-store inventory fields and admin inventory adjustments
 - bookings and booking status transitions
+- single-store business hours, generated booking slots, check-in, service queue, and store settings
 - recommendation generation and logging
-- admin reporting endpoints
+- admin reporting and analytics endpoints
 - frontend-facing validation, error shaping, and OpenAPI docs
 
 ### Reused AI Logic (`ai_service/`)

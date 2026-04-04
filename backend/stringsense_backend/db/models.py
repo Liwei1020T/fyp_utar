@@ -7,6 +7,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import JSON
 from sqlalchemy import Numeric
 from sqlalchemy import String as SAString
 from sqlalchemy import Text
@@ -135,6 +136,45 @@ class StringCatalogItem(Base):
     )
 
     bookings: Mapped[list["Booking"]] = relationship(back_populates="string_item")
+
+
+class StoreBusinessHours(Base):
+    __tablename__ = "store_business_hours"
+
+    id: Mapped[str] = mapped_column(SAString(32), primary_key=True, default="main")
+    days_json: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    special_closed_dates: Mapped[list[str]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class StoreSettings(Base):
+    __tablename__ = "store_settings"
+
+    id: Mapped[str] = mapped_column(SAString(32), primary_key=True, default="main")
+    store_name: Mapped[str] = mapped_column(SAString(120))
+    store_contact: Mapped[str] = mapped_column(SAString(120))
+    support_text: Mapped[str] = mapped_column(Text)
+    payment_notes: Mapped[str] = mapped_column(Text)
+    booking_notes: Mapped[str] = mapped_column(Text)
+    store_policy_text: Mapped[str] = mapped_column(Text)
+    address: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
 
 
 class Booking(Base):

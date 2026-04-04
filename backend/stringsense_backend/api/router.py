@@ -11,6 +11,8 @@ from stringsense_backend.modules.bookings import router as bookings_router
 from stringsense_backend.modules.health import health_payload
 from stringsense_backend.modules.profile import router as profile_router
 from stringsense_backend.modules.recommendations import router as recommendations_router
+from stringsense_backend.modules.store_ops import admin_router as admin_store_ops_router
+from stringsense_backend.modules.store_ops import public_router as public_store_router
 from stringsense_backend.modules.strings import router as strings_router
 
 
@@ -28,3 +30,5 @@ router.include_router(strings_router)
 router.include_router(bookings_router)
 router.include_router(recommendations_router)
 router.include_router(admin_router)
+router.include_router(public_store_router)
+router.include_router(admin_store_ops_router)

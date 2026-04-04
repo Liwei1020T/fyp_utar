@@ -276,6 +276,253 @@ def test_admin_inventory_string_update_controls_public_availability():
     assert public_lookup.status_code == 404
 
 
+def test_admin_business_hours_settings_and_slots_flow():
+    customer_token = register_customer(phone_number="+60125554444")
+    admin_token = login_admin()
+
+    hours_response = client.get(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+    )
+    assert hours_response.status_code == 200
+    assert len(hours_response.json()["days"]) == 7
+    assert hours_response.json()["special_closed_dates"] == ["2026-04-14"]
+
+    slots_before_booking = client.get(
+        "/api/slots?date=2026-04-06",
+        headers=headers(customer_token),
+    )
+    assert slots_before_booking.status_code == 200
+    first_slot = slots_before_booking.json()["items"][0]
+    assert first_slot["available_spots"] == first_slot["capacity"]
+
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": first_string_id(customer_token),
+            "racket_brand": "Yonex",
+            "racket_model": "Nanoflare 1000",
+            "requested_tension": 25,
+            "drop_off_datetime": "2026-04-06T11:00:00",
+        },
+    )
+    assert booking_response.status_code == 200
+
+    slots_after_booking = client.get(
+        "/api/admin/slots?date=2026-04-06",
+        headers=headers(admin_token),
+    )
+    assert slots_after_booking.status_code == 200
+    updated_slot = next(
+        item for item in slots_after_booking.json()["items"] if item["time"] == "11:00"
+    )
+    assert updated_slot["available_spots"] == updated_slot["capacity"] - 1
+
+    updated_hours_payload = hours_response.json()
+    updated_hours_payload["special_closed_dates"] = ["2026-04-06"]
+    update_hours_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={
+            "days": updated_hours_payload["days"],
+            "special_closed_dates": updated_hours_payload["special_closed_dates"],
+        },
+    )
+    assert update_hours_response.status_code == 200
+
+    closed_slots_response = client.get(
+        "/api/admin/slots?date=2026-04-06",
+        headers=headers(admin_token),
+    )
+    assert closed_slots_response.status_code == 200
+    assert closed_slots_response.json()["items"] == []
+
+    settings_response = client.get(
+        "/api/admin/store-settings",
+        headers=headers(admin_token),
+    )
+    assert settings_response.status_code == 200
+    assert settings_response.json()["store_name"] == "Apex String Lab"
+
+    update_settings_response = client.put(
+        "/api/admin/store-settings",
+        headers=headers(admin_token),
+        json={
+            "store_name": "Apex String Lab Express",
+            "store_contact": "+60 12-111 2222",
+            "support_text": "Admin desk handles booking and string setup support.",
+            "payment_notes": "Payments are still reconciled manually in the FYP demo.",
+            "booking_notes": "Slots are capped by configured store capacity.",
+            "store_policy_text": "Completed bookings are final after collection.",
+            "address": "Bukit Jalil, Kuala Lumpur",
+        },
+    )
+    assert update_settings_response.status_code == 200
+    assert update_settings_response.json()["store_name"] == "Apex String Lab Express"
+
+
+def test_admin_check_in_and_service_queue_flow():
+    customer_token = register_customer(phone_number="+60126661111")
+    admin_token = login_admin()
+
+    first_booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": first_string_id(customer_token),
+            "racket_brand": "Victor",
+            "racket_model": "Auraspeed",
+            "requested_tension": 24,
+            "drop_off_datetime": "2026-04-07T11:00:00",
+        },
+    )
+    second_booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": first_string_id(customer_token),
+            "racket_brand": "Li-Ning",
+            "racket_model": "BladeX",
+            "requested_tension": 25,
+            "drop_off_datetime": "2026-04-07T12:00:00",
+        },
+    )
+    assert first_booking_response.status_code == 200
+    assert second_booking_response.status_code == 200
+
+    booking_id = first_booking_response.json()["id"]
+    reference = f"CHK-{booking_id[:8].upper()}"
+
+    lookup_response = client.get(
+        f"/api/admin/check-in/lookup?reference={reference}",
+        headers=headers(admin_token),
+    )
+    assert lookup_response.status_code == 200
+    assert lookup_response.json()["matched_by"] == "check_in_reference"
+    assert lookup_response.json()["booking"]["id"] == booking_id
+
+    check_in_response = client.post(
+        "/api/admin/check-in",
+        headers=headers(admin_token),
+        json={
+            "reference": reference,
+            "note": "Customer handed over racket at the counter.",
+        },
+    )
+    assert check_in_response.status_code == 200
+    assert check_in_response.json()["status"] == "in_progress"
+    assert check_in_response.json()["status_history"][-1]["note"] == (
+        "Customer handed over racket at the counter."
+    )
+
+    queue_response = client.get(
+        "/api/admin/service-queue",
+        headers=headers(admin_token),
+    )
+    assert queue_response.status_code == 200
+    lanes = {lane["status"]: lane["items"] for lane in queue_response.json()["lanes"]}
+    assert len(lanes["in_progress"]) == 1
+    assert lanes["in_progress"][0]["booking"]["id"] == booking_id
+    assert len(lanes["awaiting_dropoff"]) == 1
+    assert lanes["awaiting_dropoff"][0]["queue_position"] == 1
+
+
+def test_admin_analytics_summary_and_popular_strings():
+    customer_token = register_customer(phone_number="+60127773333")
+    admin_token = login_admin()
+
+    strings_response = client.get("/api/strings", headers=headers(customer_token))
+    assert strings_response.status_code == 200
+    string_ids = [item["id"] for item in strings_response.json()["items"][:2]]
+
+    first_booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_ids[0],
+            "racket_brand": "Yonex",
+            "racket_model": "Astrox 77",
+            "requested_tension": 25,
+            "drop_off_datetime": "2026-04-08T11:00:00",
+        },
+    )
+    second_booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_ids[0],
+            "racket_brand": "Yonex",
+            "racket_model": "Arcsaber 11",
+            "requested_tension": 24,
+            "drop_off_datetime": "2026-04-08T12:00:00",
+        },
+    )
+    third_booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_ids[1],
+            "racket_brand": "Victor",
+            "racket_model": "Thruster",
+            "requested_tension": 26,
+            "drop_off_datetime": "2026-04-09T10:00:00",
+        },
+    )
+    assert first_booking_response.status_code == 200
+    assert second_booking_response.status_code == 200
+    assert third_booking_response.status_code == 200
+
+    first_booking_id = first_booking_response.json()["id"]
+    second_booking_id = second_booking_response.json()["id"]
+
+    in_progress_response = client.patch(
+        f"/api/admin/bookings/{first_booking_id}/status",
+        headers=headers(admin_token),
+        json={"status": "in_progress"},
+    )
+    ready_response = client.patch(
+        f"/api/admin/bookings/{first_booking_id}/status",
+        headers=headers(admin_token),
+        json={"status": "ready_for_collection"},
+    )
+    completed_response = client.patch(
+        f"/api/admin/bookings/{first_booking_id}/status",
+        headers=headers(admin_token),
+        json={"status": "completed"},
+    )
+    second_in_progress_response = client.patch(
+        f"/api/admin/bookings/{second_booking_id}/status",
+        headers=headers(admin_token),
+        json={"status": "in_progress"},
+    )
+    assert in_progress_response.status_code == 200
+    assert ready_response.status_code == 200
+    assert completed_response.status_code == 200
+    assert second_in_progress_response.status_code == 200
+
+    summary_response = client.get(
+        "/api/admin/analytics/summary",
+        headers=headers(admin_token),
+    )
+    assert summary_response.status_code == 200
+    assert summary_response.json()["weekly_bookings"] == 3
+    assert summary_response.json()["awaiting_dropoff_count"] == 1
+    assert summary_response.json()["in_progress_count"] == 1
+    assert summary_response.json()["ready_for_collection_count"] == 0
+    assert summary_response.json()["completed_today"] == 1
+    assert summary_response.json()["low_stock_count"] >= 0
+    assert string_ids[0] in summary_response.json()["popular_string_ids"]
+
+    popular_strings_response = client.get(
+        "/api/admin/analytics/popular-strings?limit=2",
+        headers=headers(admin_token),
+    )
+    assert popular_strings_response.status_code == 200
+    assert popular_strings_response.json()[0]["string_id"] == string_ids[0]
+    assert popular_strings_response.json()[0]["booking_count"] == 2
+
+
 def test_request_password_reset_is_generic_for_unknown_phone(monkeypatch):
     enable_password_reset_preview(monkeypatch)
 

@@ -47,6 +47,14 @@ Also carries single-store inventory fields:
 - `admin_note`
 - `is_active` as the public availability gate
 
+### `store_business_hours`
+
+Stores the single-store weekly schedule plus special closed dates used to generate booking slot availability.
+
+### `store_settings`
+
+Stores the single-store support copy, policy text, contact details, and other admin-facing settings used by the operations UI.
+
 ### `bookings`
 
 Stores service-tracking bookings only. Slot conflict detection remains intentionally out of scope.

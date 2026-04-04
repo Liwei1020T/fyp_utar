@@ -19,6 +19,7 @@ from stringsense_backend.core.errors import AppError
 from stringsense_backend.core.http import error_payload
 from stringsense_backend.db.seed import ensure_catalog_seeded
 from stringsense_backend.db.seed import ensure_seed_users
+from stringsense_backend.db.seed import ensure_store_defaults
 from stringsense_backend.db.session import SessionLocal
 from stringsense_backend.db.session import create_all_tables
 from stringsense_backend.db.session import get_db
@@ -34,6 +35,7 @@ async def lifespan(_: FastAPI):
     with SessionLocal() as db:
         ensure_seed_users(db)
         ensure_catalog_seeded(db)
+        ensure_store_defaults(db)
         db.commit()
     yield
 

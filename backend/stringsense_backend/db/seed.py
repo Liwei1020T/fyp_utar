@@ -12,7 +12,104 @@ from stringsense_backend.core.security import hash_password
 from stringsense_backend.core.security import normalize_phone_number
 from stringsense_backend.db.catalog_seed import approved_catalog_defaults
 from stringsense_backend.db.models import StringCatalogItem
+from stringsense_backend.db.models import StoreBusinessHours
+from stringsense_backend.db.models import StoreSettings
 from stringsense_backend.db.models import User
+
+
+DEFAULT_BUSINESS_HOURS_DAYS = [
+    {
+        "day": "Monday",
+        "is_open": True,
+        "open_time": "11:00",
+        "close_time": "20:00",
+        "break_start": "15:00",
+        "break_end": "16:00",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 3,
+    },
+    {
+        "day": "Tuesday",
+        "is_open": True,
+        "open_time": "11:00",
+        "close_time": "20:00",
+        "break_start": "15:00",
+        "break_end": "16:00",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 3,
+    },
+    {
+        "day": "Wednesday",
+        "is_open": True,
+        "open_time": "11:00",
+        "close_time": "20:00",
+        "break_start": "15:00",
+        "break_end": "16:00",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 3,
+    },
+    {
+        "day": "Thursday",
+        "is_open": True,
+        "open_time": "11:00",
+        "close_time": "21:00",
+        "break_start": "15:00",
+        "break_end": "16:00",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 3,
+    },
+    {
+        "day": "Friday",
+        "is_open": True,
+        "open_time": "11:00",
+        "close_time": "21:00",
+        "break_start": "15:00",
+        "break_end": "16:00",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 4,
+    },
+    {
+        "day": "Saturday",
+        "is_open": True,
+        "open_time": "10:00",
+        "close_time": "21:00",
+        "break_start": "14:00",
+        "break_end": "15:00",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 4,
+    },
+    {
+        "day": "Sunday",
+        "is_open": True,
+        "open_time": "10:00",
+        "close_time": "18:00",
+        "break_start": "13:30",
+        "break_end": "14:30",
+        "slot_duration_minutes": 30,
+        "max_bookings_per_slot": 3,
+    },
+]
+
+DEFAULT_SPECIAL_CLOSED_DATES = ["2026-04-14"]
+
+DEFAULT_STORE_SETTINGS = {
+    "store_name": "Apex String Lab",
+    "store_contact": "+60 12-999 4421",
+    "support_text": (
+        "Ask us about tension pairing, string feel, or drop-off timing and "
+        "we will reply from the admin operations desk."
+    ),
+    "payment_notes": (
+        "Full payment is required to confirm every booking in this FYP prototype."
+    ),
+    "booking_notes": (
+        "Drop-off slots are generated from business hours and slot capacity settings."
+    ),
+    "store_policy_text": (
+        "Reschedule and cancellation are allowed only before payment is completed."
+    ),
+    "address": "Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur",
+}
 
 
 def ensure_seed_users(db: Session) -> None:
@@ -66,4 +163,22 @@ def ensure_catalog_seeded(db: Session) -> None:
 
     for payload in approved_catalog_defaults(settings.approved_strings_path).values():
         db.add(StringCatalogItem(**payload))
+    db.flush()
+
+
+def ensure_store_defaults(db: Session) -> None:
+    business_hours = db.get(StoreBusinessHours, "main")
+    if business_hours is None:
+        db.add(
+            StoreBusinessHours(
+                id="main",
+                days_json=DEFAULT_BUSINESS_HOURS_DAYS,
+                special_closed_dates=DEFAULT_SPECIAL_CLOSED_DATES,
+            )
+        )
+
+    store_settings = db.get(StoreSettings, "main")
+    if store_settings is None:
+        db.add(StoreSettings(id="main", **DEFAULT_STORE_SETTINGS))
+
     db.flush()

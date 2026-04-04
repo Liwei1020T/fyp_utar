@@ -27,6 +27,7 @@ os.environ.setdefault("AI_INTERNAL_API_KEY", "test-ai-internal-key")
 def reset_unified_backend_db() -> None:
     from stringsense_backend.db.seed import ensure_catalog_seeded
     from stringsense_backend.db.seed import ensure_seed_users
+    from stringsense_backend.db.seed import ensure_store_defaults
     from stringsense_backend.db.session import SessionLocal
     from stringsense_backend.db.session import create_all_tables
     from stringsense_backend.db.session import drop_all_tables
@@ -36,5 +37,6 @@ def reset_unified_backend_db() -> None:
     with SessionLocal() as db:
         ensure_seed_users(db)
         ensure_catalog_seeded(db)
+        ensure_store_defaults(db)
         db.commit()
     yield
