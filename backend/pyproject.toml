@@ -31,7 +31,6 @@ extend-exclude = [
   ".pytest_cache",
   ".ruff_cache",
   "__pycache__",
-  "archive",
   "stringsense_backend.egg-info",
   "**/._*",
   "**/.__*",

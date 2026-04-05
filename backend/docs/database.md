@@ -68,11 +68,4 @@ Stores booking status transitions plus optional admin operator notes for auditab
 
 Stores request snapshots, result snapshots, and `algorithm_version`.
 
-## Legacy Schema References
-
-The following are no longer active schema owners:
-
-- [archive/python_business_backend/app/db/models.py](../archive/python_business_backend/app/db/models.py)
-- [archive/python_business_backend/alembic](../archive/python_business_backend/alembic)
-
-They remain reference material only and must not be treated as runtime schema authorities.
+The active runtime schema authority is limited to `stringsense_backend/db/models.py` plus the root `migrations/` history.

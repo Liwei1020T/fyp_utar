@@ -18,7 +18,7 @@
 - Python tests: `./.venv/bin/pytest -v`
 - Alembic upgrade: `./.venv/bin/alembic upgrade head`
 - Fast loop for touched areas first, then run the relevant full checks before completion.
-- Ruff excludes generated and inactive paths such as `.venv/`, caches, AppleDouble sidecar files, and `archive/`, so repo-wide Python checks should stay green without narrowing the command scope.
+- Ruff excludes generated and inactive paths such as `.venv/`, caches, and AppleDouble sidecar files, so repo-wide Python checks should stay green without narrowing the command scope.
 
 ## Architecture Map
 
@@ -29,7 +29,6 @@
   - `stringsense_backend/`: auth, profiles, strings, bookings, admin, recommendation logging, public REST API, SQLAlchemy models
   - `ai_service/`: reusable recommendation, review analysis, and RAG-style logic
   - `migrations/`: active migration history for the unified backend
-  - `archive/python_business_backend/`: deprecated FastAPI monolith kept for reference only, not active runtime
 - Critical paths:
   - phone-first auth (`phone_number + password`)
   - booking state transition enforcement
@@ -84,4 +83,3 @@
   - `./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`
 - Release/deploy:
   - Deploy the unified Python backend as the public backend.
-  - Treat `archive/python_business_backend/` as legacy-reference code only.

@@ -12,7 +12,6 @@ Flutter App
 - The frontend now calls the Python backend directly.
 - `stringsense_backend/` owns public business routes, auth, profiles, strings, bookings, admin operations, and recommendation logging.
 - AI recommendation logic now runs in process inside the unified Python backend.
-- `archive/python_business_backend/` is reference code only.
 
 ## Ownership Boundaries
 

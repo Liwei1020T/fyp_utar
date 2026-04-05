@@ -39,11 +39,9 @@ cd backend
 - `AUTO_CREATE_SCHEMA=true` is meant for local development and tests; use Alembic migrations explicitly for controlled environments.
 - Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is configured with companion credentials.
 
-## 5. Legacy Components
+## 5. Optional Compatibility Component
 
-These components remain in the repo for comparison and reference:
-
-- `archive/python_business_backend/`
+This component still exists for compatibility checks and local experimentation:
 - `ai_service/` standalone HTTP entrypoint
 
 They are not the active public runtime path anymore.

@@ -4,7 +4,6 @@ StringSense now runs on a unified Python backend:
 
 - `stringsense_backend/` is the active public business backend.
 - `ai_service/` remains as reusable AI logic and compatibility reference, but the active backend now calls AI logic in process instead of over internal HTTP.
-- `archive/python_business_backend/` remains historical reference material only.
 
 ## Active Structure
 
@@ -15,7 +14,6 @@ backend/
   migrations/
   data/raw/
   docs/
-  archive/python_business_backend/
 ```
 
 ## Environment
