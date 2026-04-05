@@ -74,7 +74,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 ## Structure Rules
 
 1. Preserve the route-group structure.
-   Put auth screens under `app/auth`, player screens under `app/player`, and admin screens under `app/admin`. Legacy `app/vendor` paths should only act as compatibility redirects.
+   Put auth screens under `app/auth`, player screens under `app/player`, and admin screens under `app/admin`.
 2. Reuse the shared screen shell first.
    New screens should normally be built with `AppScreen` and `AppSection` before introducing layout exceptions.
 3. Keep app-level UI primitives in `components/ui`.
