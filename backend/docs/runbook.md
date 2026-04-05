@@ -43,7 +43,6 @@ cd backend
 
 These components remain in the repo for comparison and reference:
 
-- `nest-api/`
 - `archive/python_business_backend/`
 - `ai_service/` standalone HTTP entrypoint
 

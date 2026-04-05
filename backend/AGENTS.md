@@ -9,7 +9,7 @@
 
 - Mission: Keep StringSense’s public business backend in Python with a maintainable FastAPI + SQLAlchemy architecture and in-process AI capabilities.
 - Primary users: `customer`, `admin`
-- Non-goals: reintroducing NestJS as the active public backend, introducing queue/event infrastructure, or overengineering beyond FYP needs
+- Non-goals: reintroducing a second public backend stack, introducing queue/event infrastructure, or overengineering beyond FYP needs
 
 ## Validation Commands
 
@@ -18,7 +18,7 @@
 - Python tests: `./.venv/bin/pytest -v`
 - Alembic upgrade: `./.venv/bin/alembic upgrade head`
 - Fast loop for touched areas first, then run the relevant full checks before completion.
-- Ruff excludes generated and inactive paths such as `.venv/`, `nest-api/node_modules/`, `nest-api/dist/`, caches, AppleDouble sidecar files, and `archive/`, so repo-wide Python checks should stay green without narrowing the command scope.
+- Ruff excludes generated and inactive paths such as `.venv/`, caches, AppleDouble sidecar files, and `archive/`, so repo-wide Python checks should stay green without narrowing the command scope.
 
 ## Architecture Map
 
@@ -84,4 +84,4 @@
   - `./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`
 - Release/deploy:
   - Deploy the unified Python backend as the public backend.
-  - Treat `nest-api/` and `archive/python_business_backend/` as migration-reference code only.
+  - Treat `archive/python_business_backend/` as legacy-reference code only.

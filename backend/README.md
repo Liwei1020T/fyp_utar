@@ -4,7 +4,6 @@ StringSense now runs on a unified Python backend:
 
 - `stringsense_backend/` is the active public business backend.
 - `ai_service/` remains as reusable AI logic and compatibility reference, but the active backend now calls AI logic in process instead of over internal HTTP.
-- `nest-api/` is legacy TypeScript code kept temporarily for migration reference, not as the active runtime target.
 - `archive/python_business_backend/` remains historical reference material only.
 
 ## Active Structure
@@ -16,7 +15,6 @@ backend/
   migrations/
   data/raw/
   docs/
-  nest-api/
   archive/python_business_backend/
 ```
 

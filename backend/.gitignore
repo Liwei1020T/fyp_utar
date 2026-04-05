@@ -9,7 +9,4 @@
 .ruff_cache/
 __pycache__/
 *.py[cod]
-
-nest-api/node_modules/
-nest-api/dist/
 stringsense_backend.egg-info/

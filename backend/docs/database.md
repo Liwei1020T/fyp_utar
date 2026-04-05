@@ -72,7 +72,6 @@ Stores request snapshots, result snapshots, and `algorithm_version`.
 
 The following are no longer active schema owners:
 
-- [nest-api/prisma/schema.prisma](../nest-api/prisma/schema.prisma)
 - [archive/python_business_backend/app/db/models.py](../archive/python_business_backend/app/db/models.py)
 - [archive/python_business_backend/alembic](../archive/python_business_backend/alembic)
 
