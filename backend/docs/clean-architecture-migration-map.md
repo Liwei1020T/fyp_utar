@@ -4,7 +4,7 @@
 
 - Old: `stringsense_backend/main.py`
 - New: `app/main.py`
-- Compatibility: `stringsense_backend/main.py` re-exports the new app
+- Status: legacy compatibility shell removed after imports, tests, and Alembic were rewired
 
 ## API Layer
 

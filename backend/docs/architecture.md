@@ -12,7 +12,6 @@ Mobile App
 ```
 
 - `app/` is now the primary runtime package.
-- `stringsense_backend/` remains as a compatibility shell so existing imports, tests, and Alembic wiring keep working while the runtime lives under `app/`.
 - `ai_service/` is preserved and reused behind adapter boundaries instead of being deleted.
 
 ## Layering Rules
@@ -83,25 +82,13 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/recommendation_log.py`
 - `models/password_reset_code.py`
 
-Alembic still targets the same metadata through compatibility imports in `stringsense_backend/db/`.
+Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
 
 ## AI Boundary
 
 - The public recommendation flow now depends on `RecommendationEngine` through a port.
 - `app/adapters/services/ai/recommendation_engine_adapter.py` preserves the current in-process recommendation behavior.
 - Review analysis and RAG helpers are preserved as adapters over `ai_service.service.RecommendationService`.
-
-## Compatibility Strategy
-
-These legacy paths remain as wrappers:
-
-- `stringsense_backend/main.py`
-- `stringsense_backend/api/*`
-- `stringsense_backend/core/*`
-- `stringsense_backend/db/*`
-- `stringsense_backend/modules/*`
-
-This lets the refactor land incrementally without breaking tests, imports, or migration wiring.
 
 ## Validation Contract
 
@@ -110,6 +97,6 @@ Primary validation commands:
 ```bash
 cd backend
 ./.venv/bin/ruff check .
-./.venv/bin/mypy app stringsense_backend ai_service tests
+./.venv/bin/mypy app ai_service tests
 ./.venv/bin/pytest -q
 ```

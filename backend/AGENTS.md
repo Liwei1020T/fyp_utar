@@ -23,10 +23,10 @@
 ## Architecture Map
 
 - Entry points:
-  - Unified FastAPI backend: `stringsense_backend/main.py`
+  - Unified FastAPI backend: `app/main.py`
   - Legacy AI-only service reference: `ai_service/main.py`
 - Core modules:
-  - `stringsense_backend/`: auth, profiles, strings, bookings, admin, recommendation logging, public REST API, SQLAlchemy models
+  - `app/`: FastAPI entrypoints, use cases, domain, ports, DTOs, and adapters for the unified backend
   - `ai_service/`: reusable recommendation, review analysis, and RAG-style logic
   - `migrations/`: active migration history for the unified backend
 - Critical paths:
@@ -50,7 +50,7 @@
 1. Prefer minimal diffs that solve requested scope.
 2. Reuse existing patterns before introducing new abstractions.
 3. Prefer shared helpers for path resolution, env validation, serialization, and DTO-to-persistence mapping before adding duplicate logic.
-4. Keep frontend-facing APIs in `stringsense_backend/` and prefer in-process service calls over internal HTTP.
+4. Keep frontend-facing APIs in `app/entrypoints/` and prefer in-process service calls over internal HTTP.
 5. Update docs/tests when behavior changes.
 6. Never commit secrets or private credentials.
 7. If simplifying code, preserve behavior exactly and reduce duplication before introducing broader refactors.
@@ -78,8 +78,8 @@
   - copy `.env.example` to `.env`
   - only set `SEED_ADMIN_*` when the matching seed flag is explicitly enabled
 - Run locally:
-  - Unified backend: `./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload`
+  - Unified backend: `./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
 - Test locally:
-  - `./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`
+  - `./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
 - Release/deploy:
   - Deploy the unified Python backend as the public backend.

@@ -69,10 +69,6 @@ def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
     return mapping
 
 
-def approved_normalized_names(source_path: Path) -> set[str]:
-    return set(approved_catalog_defaults(source_path).keys())
-
-
 def approved_row_to_values(row: dict[str, Any]) -> dict[str, Any]:
     brand = as_string(row.get("brand")) or "Unknown"
     model_name = (

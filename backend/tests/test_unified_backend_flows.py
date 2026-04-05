@@ -3,10 +3,10 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from stringsense_backend.core.config import get_settings
-from stringsense_backend.db.models import PasswordResetCode
-from stringsense_backend.db.session import SessionLocal
-from stringsense_backend.main import app
+from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
+from app.adapters.persistence.sqlalchemy.session import SessionLocal
+from app.config.settings import get_settings
+from app.main import app
 
 
 client = TestClient(app)

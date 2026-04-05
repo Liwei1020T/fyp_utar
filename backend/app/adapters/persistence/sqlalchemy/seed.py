@@ -4,6 +4,7 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import approved_catalog_defaults
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
@@ -13,7 +14,6 @@ from app.config.settings import get_settings
 from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.shared.errors import ConflictError
-from stringsense_backend.db.catalog_seed import approved_catalog_defaults
 
 
 DEFAULT_BUSINESS_HOURS_DAYS = [
@@ -182,4 +182,3 @@ def ensure_store_defaults(db: Session) -> None:
         db.add(StoreSettings(id="main", **DEFAULT_STORE_SETTINGS))
 
     db.flush()
-

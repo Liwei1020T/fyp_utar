@@ -26,12 +26,12 @@ os.environ.setdefault("AI_INTERNAL_API_KEY", "test-ai-internal-key")
 
 @pytest.fixture(autouse=True)
 def reset_unified_backend_db() -> Generator[None, None, None]:
-    from stringsense_backend.db.seed import ensure_catalog_seeded
-    from stringsense_backend.db.seed import ensure_seed_users
-    from stringsense_backend.db.seed import ensure_store_defaults
-    from stringsense_backend.db.session import SessionLocal
-    from stringsense_backend.db.session import create_all_tables
-    from stringsense_backend.db.session import drop_all_tables
+    from app.adapters.persistence.sqlalchemy.seed import ensure_catalog_seeded
+    from app.adapters.persistence.sqlalchemy.seed import ensure_seed_users
+    from app.adapters.persistence.sqlalchemy.seed import ensure_store_defaults
+    from app.adapters.persistence.sqlalchemy.session import SessionLocal
+    from app.adapters.persistence.sqlalchemy.session import create_all_tables
+    from app.adapters.persistence.sqlalchemy.session import drop_all_tables
 
     drop_all_tables()
     create_all_tables()

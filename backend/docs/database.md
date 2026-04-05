@@ -2,7 +2,7 @@
 
 ## Source of Truth
 
-SQLAlchemy models in [models.py](../stringsense_backend/db/models.py) plus Alembic revisions in [migrations](../migrations) are now the active schema source of truth for the backend.
+SQLAlchemy models in [app/adapters/persistence/sqlalchemy/models](../app/adapters/persistence/sqlalchemy/models) plus Alembic revisions in [migrations](../migrations) are now the active schema source of truth for the backend.
 
 The initial unified-backend migration is:
 
@@ -68,4 +68,4 @@ Stores booking status transitions plus optional admin operator notes for auditab
 
 Stores request snapshots, result snapshots, and `algorithm_version`.
 
-The active runtime schema authority is limited to `stringsense_backend/db/models.py` plus the root `migrations/` history.
+The active runtime schema authority is limited to `app/adapters/persistence/sqlalchemy/models/` plus the root `migrations/` history.

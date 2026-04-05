@@ -12,7 +12,7 @@ uv sync --extra dev
 
 ```bash
 cd backend
-./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload
+./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload
 ```
 
 FastAPI docs:
@@ -27,6 +27,7 @@ http://127.0.0.1:3001/docs
 cd backend
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
+./.venv/bin/mypy app ai_service tests
 ./.venv/bin/pytest -v
 ```
 

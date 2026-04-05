@@ -2,14 +2,14 @@
 
 StringSense now runs on a unified Python backend:
 
-- `stringsense_backend/` is the active public business backend.
+- `app/` is the active public backend runtime organized in clean architecture layers.
 - `ai_service/` remains as reusable AI logic and compatibility reference, but the active backend now calls AI logic in process instead of over internal HTTP.
 
 ## Active Structure
 
 ```text
 backend/
-  stringsense_backend/
+  app/
   ai_service/
   migrations/
   data/raw/
@@ -52,7 +52,7 @@ cd backend
 
 ```bash
 cd backend
-./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload
+./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload
 ```
 
 The API base URL is `http://127.0.0.1:3001/api`.
@@ -64,6 +64,7 @@ FastAPI docs are available at `http://127.0.0.1:3001/docs`.
 cd backend
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
+./.venv/bin/mypy app ai_service tests
 ./.venv/bin/pytest -v
 ```
 

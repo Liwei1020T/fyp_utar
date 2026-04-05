@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from stringsense_backend.db.catalog_seed import merge_with_approved_defaults
+from app.adapters.persistence.sqlalchemy.catalog_seed import merge_with_approved_defaults
 
 
 @dataclass

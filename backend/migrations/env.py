@@ -7,9 +7,9 @@ from alembic.script.base import Script
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from stringsense_backend.core.config import get_settings
-from stringsense_backend.db.base import Base
-import stringsense_backend.db.models  # noqa: F401
+from app.adapters.persistence.sqlalchemy.base import Base
+from app.config.settings import get_settings
+import app.adapters.persistence.sqlalchemy.models  # noqa: F401
 
 
 config = context.config
