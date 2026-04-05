@@ -45,7 +45,6 @@ export function ConversationCard({ conversation, onPress }: ConversationCardProp
             </View>
             <View className="mt-4 flex-row flex-wrap gap-2">
               <AppChip label={conversation.statusLabel} variant={statusVariant} />
-              <AppChip label={formatConversationMode(conversation.mode)} variant="neutral" />
             </View>
             <HeroText className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
               Updated {formatDateTime(conversation.updatedAt)}

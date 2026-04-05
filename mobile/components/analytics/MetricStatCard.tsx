@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { AppCard } from '../ui/AppCard';
 import { HeroText } from '../ui/heroui';
 
@@ -18,24 +18,30 @@ export function MetricStatCard({
   accentClassName = 'bg-primary-50',
   icon,
 }: MetricStatCardProps) {
+  const { width } = useWindowDimensions();
+  const flexBasis =
+    width >= 900 ? '23%' : width >= 640 ? '31%' : '47%';
+
   return (
-    <AppCard variant="elevated" className="flex-1" padding="md">
-      <View className="flex-row items-center justify-between gap-3">
-        <View className={`h-11 w-11 items-center justify-center rounded-[18px] ${accentClassName}`}>
+    <View style={{ flexBasis, flexGrow: 1, minWidth: 148 }}>
+      <AppCard variant="elevated" className="h-full" padding="md">
+        <View
+          className={`h-11 w-11 items-center justify-center rounded-[18px] ${accentClassName}`}
+        >
           {icon}
         </View>
-        <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        <HeroText className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
           {title}
         </HeroText>
-      </View>
-      <HeroText className="mt-5 text-[28px] font-bold tracking-tight text-neutral-950">
-        {value}
-      </HeroText>
-      {subtitle ? (
-        <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
-          {subtitle}
+        <HeroText className="mt-2 text-[28px] font-bold tracking-tight text-neutral-950">
+          {value}
         </HeroText>
-      ) : null}
-    </AppCard>
+        {subtitle ? (
+          <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
+            {subtitle}
+          </HeroText>
+        ) : null}
+      </AppCard>
+    </View>
   );
 }

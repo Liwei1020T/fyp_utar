@@ -14,8 +14,11 @@ export default function AdminCheckInScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
-  const [reference, setReference] = useState('SS-BK-2401-VICT');
-  const [submittedReference, setSubmittedReference] = useState('SS-BK-2401-VICT');
+  const defaultReference = bookings.find(
+    (item) => item.adminId === user?.id && item.status === 'awaiting_dropoff'
+  )?.checkInReference ?? bookings.find((item) => item.adminId === user?.id)?.checkInReference ?? '';
+  const [reference, setReference] = useState(defaultReference);
+  const [submittedReference, setSubmittedReference] = useState(defaultReference);
 
   if (!user || user.role !== 'admin') {
     return null;

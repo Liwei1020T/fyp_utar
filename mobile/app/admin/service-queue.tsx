@@ -41,13 +41,21 @@ export default function AdminServiceQueueScreen() {
       {lanes.map((lane) => (
         <AppSection key={lane.title} eyebrow="Queue lane" title={lane.title}>
           <View className="gap-3">
-            {lane.items.map((item) => (
-              <AppCard key={item.id} variant="elevated" padding="sm">
-                <HeroText className="text-sm font-semibold text-neutral-900">
-                  {item.id} • {item.racketBrand} {item.racketModel}
+            {lane.items.length > 0 ? (
+              lane.items.map((item) => (
+                <AppCard key={item.id} variant="elevated" padding="sm">
+                  <HeroText className="text-sm font-semibold text-neutral-900">
+                    {item.id} • {item.racketBrand} {item.racketModel}
+                  </HeroText>
+                </AppCard>
+              ))
+            ) : (
+              <AppCard variant="subtle" padding="md">
+                <HeroText className="text-sm leading-6 text-neutral-500">
+                  No rackets are sitting in this lane right now.
                 </HeroText>
               </AppCard>
-            ))}
+            )}
           </View>
         </AppSection>
       ))}

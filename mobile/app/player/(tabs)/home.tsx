@@ -109,7 +109,7 @@ export default function PlayerHomeScreen() {
         <View className="flex-row items-start justify-between gap-4">
           <View className="flex-1">
             <AppChip label="PLAYER COMMAND CENTER" variant="secondary" className="self-start" />
-            <HeroText className="mt-4 text-[32px] font-bold leading-[38px] tracking-tight text-white">
+            <HeroText className="mt-4 text-[28px] font-bold leading-[34px] tracking-tight text-white">
               Move from recommendation to drop-off without leaving the flow.
             </HeroText>
             <HeroText className="mt-3 text-sm leading-6 text-primary-100">
@@ -122,16 +122,16 @@ export default function PlayerHomeScreen() {
         </View>
 
         <View className="mt-7 flex-row gap-3">
-          <AppCard variant="subtle" className="min-h-[104px] flex-1 bg-white/8 border-white/10" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
+          <AppCard variant="subtle" className="min-h-[104px] flex-1 bg-white/14 border-white/15" padding="sm">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
               Preferred tension
             </HeroText>
             <HeroText className="mt-2 text-2xl font-bold text-white">
               {user.preferredTension} lbs
             </HeroText>
           </AppCard>
-          <AppCard variant="subtle" className="min-h-[104px] flex-1 bg-white/8 border-white/10" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
+          <AppCard variant="subtle" className="min-h-[104px] flex-1 bg-white/14 border-white/15" padding="sm">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
               Wallet balance
             </HeroText>
             <HeroText className="mt-2 text-2xl font-bold text-white">

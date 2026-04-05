@@ -56,21 +56,21 @@ export default function PlayerProfileScreen() {
         </View>
 
         <View className="mt-7 flex-row gap-3">
-          <AppCard variant="subtle" className="flex-1 items-center bg-white/8 border-white/10" padding="sm">
+          <AppCard variant="subtle" className="flex-1 items-center bg-white/14 border-white/15" padding="sm">
             <HeroText className="text-2xl font-bold text-white">{playerBookings.length}</HeroText>
-            <HeroText className="mt-1 text-xs uppercase tracking-[0.18em] text-primary-100">
+            <HeroText className="mt-1 text-xs uppercase tracking-[0.16em] text-primary-50">
               Bookings
             </HeroText>
           </AppCard>
-          <AppCard variant="subtle" className="flex-1 items-center bg-white/8 border-white/10" padding="sm">
+          <AppCard variant="subtle" className="flex-1 items-center bg-white/14 border-white/15" padding="sm">
             <HeroText className="text-2xl font-bold text-white">{rackets.length}</HeroText>
-            <HeroText className="mt-1 text-xs uppercase tracking-[0.18em] text-primary-100">
+            <HeroText className="mt-1 text-xs uppercase tracking-[0.16em] text-primary-50">
               Rackets
             </HeroText>
           </AppCard>
-          <AppCard variant="subtle" className="flex-1 items-center bg-white/8 border-white/10" padding="sm">
+          <AppCard variant="subtle" className="flex-1 items-center bg-white/14 border-white/15" padding="sm">
             <HeroText className="text-2xl font-bold text-white">{user.preferredTension}</HeroText>
-            <HeroText className="mt-1 text-xs uppercase tracking-[0.18em] text-primary-100">
+            <HeroText className="mt-1 text-xs uppercase tracking-[0.16em] text-primary-50">
               Fav lbs
             </HeroText>
           </AppCard>

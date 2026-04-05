@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowRight, ChevronLeft, MessageSquareText, Scale, Sparkles } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
@@ -137,13 +137,11 @@ export default function RecommendationResultsScreen() {
                   </View>
                 </View>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5">
+                <View className="mt-5 flex-row flex-wrap gap-2">
                   {item.strengths.map((strength) => (
-                    <View key={strength} className="mr-2">
-                      <AppChip label={strength} variant="secondary" />
-                    </View>
+                    <AppChip key={strength} label={strength} variant="secondary" />
                   ))}
-                </ScrollView>
+                </View>
 
                 <AppCard variant="subtle" className="mt-4" padding="sm">
                   <HeroText className="text-sm leading-6 text-neutral-600">
@@ -231,13 +229,11 @@ export default function RecommendationResultsScreen() {
                     </View>
                   </View>
 
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-5">
+                  <View className="mt-5 flex-row flex-wrap gap-2">
                     {topAspectLabels.map((label) => (
-                      <View key={label} className="mr-2">
-                        <AppChip label={label} variant="secondary" />
-                      </View>
+                      <AppChip key={label} label={label} variant="secondary" />
                     ))}
-                  </ScrollView>
+                  </View>
 
                   <AppCard variant="subtle" className="mt-4" padding="sm">
                     <HeroText className="text-sm leading-6 text-neutral-600">

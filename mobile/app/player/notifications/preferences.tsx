@@ -39,7 +39,9 @@ export default function NotificationPreferencesScreen() {
       }
     >
       <View className="gap-3">
-        {Object.entries(settings).map(([key, value]) => (
+        {Object.entries(settings)
+          .filter(([key]) => key !== 'userId')
+          .map(([key, value]) => (
           <Pressable
             key={key}
             onPress={() =>

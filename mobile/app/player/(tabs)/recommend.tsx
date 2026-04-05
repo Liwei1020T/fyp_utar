@@ -108,7 +108,7 @@ export default function RecommendationInputScreen() {
         <View className="flex-row items-start justify-between gap-4">
           <View className="flex-1">
             <AppChip label="AI MATCH INPUT" variant="secondary" className="self-start" />
-            <HeroText className="mt-4 text-[28px] font-bold tracking-tight text-white leading-[34px]">
+            <HeroText className="mt-4 text-[26px] font-bold tracking-tight text-white leading-[32px]">
               Build today&apos;s ideal string profile.
             </HeroText>
             <HeroText className="mt-3 text-sm leading-6 text-primary-100">
@@ -121,16 +121,16 @@ export default function RecommendationInputScreen() {
         </View>
 
         <View className="mt-7 flex-row gap-3">
-          <AppCard variant="subtle" className="min-h-[100px] flex-1 bg-white/8 border-white/10" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
+          <AppCard variant="subtle" className="min-h-[100px] flex-1 bg-white/14 border-white/15" padding="sm">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
               Default tension
             </HeroText>
             <HeroText className="mt-2 text-lg font-bold text-white">
               {user.preferredTension} lbs
             </HeroText>
           </AppCard>
-          <AppCard variant="subtle" className="min-h-[100px] flex-1 bg-white/8 border-white/10" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
+          <AppCard variant="subtle" className="min-h-[100px] flex-1 bg-white/14 border-white/15" padding="sm">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
               Strongest priority
             </HeroText>
             <HeroText className="mt-2 text-lg font-bold text-white">
