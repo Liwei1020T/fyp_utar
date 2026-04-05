@@ -108,7 +108,7 @@ class RecommendationService:
         )
 
     def explain(self, request: ExplainRequest) -> ExplainResponse:
-        item = StringRecord(**self.get_string(request.string_name))
+        item = StringRecord.model_validate(self.get_string(request.string_name))
         _, reasons = self._score_item(item, request.user_context)
         return ExplainResponse(
             algorithm_version=ALGORITHM_VERSION,

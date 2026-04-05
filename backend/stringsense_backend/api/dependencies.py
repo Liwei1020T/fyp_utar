@@ -1,49 +1,45 @@
 from __future__ import annotations
 
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials
-from fastapi.security import HTTPBearer
-from pydantic import BaseModel
+from app.entrypoints.api.dependencies import CurrentUser
+from app.entrypoints.api.dependencies import get_booking_repository
+from app.entrypoints.api.dependencies import get_catalog_repository
+from app.entrypoints.api.dependencies import get_clock
+from app.entrypoints.api.dependencies import get_current_admin
+from app.entrypoints.api.dependencies import get_current_customer
+from app.entrypoints.api.dependencies import get_current_user
+from app.entrypoints.api.dependencies import get_db
+from app.entrypoints.api.dependencies import get_password_hasher
+from app.entrypoints.api.dependencies import get_password_reset_repository
+from app.entrypoints.api.dependencies import get_profile_repository
+from app.entrypoints.api.dependencies import get_rag_service
+from app.entrypoints.api.dependencies import get_recommendation_engine
+from app.entrypoints.api.dependencies import get_recommendation_log_repository
+from app.entrypoints.api.dependencies import get_review_analysis_service
+from app.entrypoints.api.dependencies import get_store_repository
+from app.entrypoints.api.dependencies import get_token_service
+from app.entrypoints.api.dependencies import get_user_repository
+from app.entrypoints.api.dependencies import require_roles
+from app.entrypoints.api.dependencies import security
 
-from stringsense_backend.core.domain import UserRole
-from stringsense_backend.core.errors import ForbiddenError
-from stringsense_backend.core.errors import UnauthorizedError
-from stringsense_backend.core.security import verify_access_token
-
-
-class CurrentUser(BaseModel):
-    sub: str
-    user_id: str
-    phone_number: str
-    role: str
-
-
-security = HTTPBearer(auto_error=False)
-
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
-) -> CurrentUser:
-    if credentials is None:
-        raise UnauthorizedError("Missing bearer token")
-
-    payload = verify_access_token(credentials.credentials)
-    if payload is None:
-        raise UnauthorizedError("Invalid access token")
-
-    return CurrentUser(**payload)
-
-
-def require_roles(user: CurrentUser, *roles: UserRole) -> CurrentUser:
-    allowed = {role.value for role in roles}
-    if user.role not in allowed:
-        raise ForbiddenError("Insufficient permissions for this resource")
-    return user
-
-
-def get_current_customer(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-    return require_roles(user, UserRole.CUSTOMER, UserRole.ADMIN)
-
-
-def get_current_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-    return require_roles(user, UserRole.ADMIN)
+__all__ = [
+    "CurrentUser",
+    "get_booking_repository",
+    "get_catalog_repository",
+    "get_clock",
+    "get_current_admin",
+    "get_current_customer",
+    "get_current_user",
+    "get_db",
+    "get_password_hasher",
+    "get_password_reset_repository",
+    "get_profile_repository",
+    "get_rag_service",
+    "get_recommendation_engine",
+    "get_recommendation_log_repository",
+    "get_review_analysis_service",
+    "get_store_repository",
+    "get_token_service",
+    "get_user_repository",
+    "require_roles",
+    "security",
+]

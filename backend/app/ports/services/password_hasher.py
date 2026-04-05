@@ -1,0 +1,14 @@
+from __future__ import annotations
+
+from typing import Protocol
+
+
+class PasswordHasher(Protocol):
+    def normalize_phone_number(self, value: str) -> str: ...
+
+    def validate_local_password(self, value: str) -> str: ...
+
+    def hash_password(self, value: str) -> str: ...
+
+    def verify_password(self, plain_password: str, password_hash: str) -> bool: ...
+

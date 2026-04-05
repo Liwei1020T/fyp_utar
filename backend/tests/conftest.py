@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Generator
 
 import pytest
 
@@ -24,7 +25,7 @@ os.environ.setdefault("AI_INTERNAL_API_KEY", "test-ai-internal-key")
 
 
 @pytest.fixture(autouse=True)
-def reset_unified_backend_db() -> None:
+def reset_unified_backend_db() -> Generator[None, None, None]:
     from stringsense_backend.db.seed import ensure_catalog_seeded
     from stringsense_backend.db.seed import ensure_seed_users
     from stringsense_backend.db.seed import ensure_store_defaults

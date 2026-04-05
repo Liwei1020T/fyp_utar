@@ -1,56 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from app.adapters.persistence.sqlalchemy.session import SessionLocal
+from app.adapters.persistence.sqlalchemy.session import check_database_connection
+from app.adapters.persistence.sqlalchemy.session import create_all_tables
+from app.adapters.persistence.sqlalchemy.session import drop_all_tables
+from app.adapters.persistence.sqlalchemy.session import engine
+from app.adapters.persistence.sqlalchemy.session import get_db
 
-from sqlalchemy import create_engine
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import sessionmaker
-
-from stringsense_backend.core.config import get_settings
-from stringsense_backend.db.base import Base
-
-
-def _connect_args(database_url: str) -> dict[str, object]:
-    if database_url.startswith("sqlite"):
-        return {"check_same_thread": False}
-    return {}
-
-
-settings = get_settings()
-engine = create_engine(
-    settings.sqlalchemy_database_url,
-    connect_args=_connect_args(settings.sqlalchemy_database_url),
-    pool_pre_ping=not settings.sqlalchemy_database_url.startswith("sqlite"),
-)
-SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
-    autocommit=False,
-    expire_on_commit=False,
-    class_=Session,
-)
-
-
-def create_all_tables() -> None:
-    import stringsense_backend.db.models  # noqa: F401
-
-    Base.metadata.create_all(bind=engine)
-
-
-def drop_all_tables() -> None:
-    import stringsense_backend.db.models  # noqa: F401
-
-    Base.metadata.drop_all(bind=engine)
-
-
-def check_database_connection(db: Session) -> None:
-    db.execute(text("SELECT 1")).scalar_one()
-
-
-def get_db() -> Iterator[Session]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+__all__ = [
+    "SessionLocal",
+    "check_database_connection",
+    "create_all_tables",
+    "drop_all_tables",
+    "engine",
+    "get_db",
+]

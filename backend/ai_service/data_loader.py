@@ -171,7 +171,7 @@ def _load_from_csv(matrix_path: Path) -> list[StringRecord]:
             "source_item_id": _first_string(row, "source_item_id", "id", "eid"),
             "source_url": _first_string(row, "source_url", "url"),
         }
-        records.append(StringRecord(**values))
+        records.append(StringRecord.model_validate(values))
 
     return records
 

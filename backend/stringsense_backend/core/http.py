@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.shared.http import error_payload
+
 
 def page_response(
     *,
@@ -18,16 +20,4 @@ def page_response(
     }
 
 
-def error_payload(
-    *,
-    code: str,
-    message: str,
-    details: Any | None = None,
-) -> dict[str, Any]:
-    return {
-        "error": {
-            "code": code,
-            "message": message,
-            "details": details or {},
-        }
-    }
+__all__ = ["error_payload", "page_response"]

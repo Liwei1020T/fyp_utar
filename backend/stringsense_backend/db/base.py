@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from sqlalchemy.orm import DeclarativeBase
+from app.adapters.persistence.sqlalchemy.base import Base
 
-
-class Base(DeclarativeBase):
-    pass
+__all__ = ["Base"]

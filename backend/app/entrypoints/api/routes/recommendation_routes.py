@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+from fastapi import APIRouter
+from fastapi import Depends
+
+from app.dto.recommendation import ProfileRecommendationPayload
+from app.dto.recommendation import RecommendationRequestDto
+from app.dto.recommendation import RecommendationResponseDto
+from app.dto.recommendation import recommendation_request_to_domain
+from app.dto.recommendation import recommendation_response_to_dto
+from app.entrypoints.api.dependencies import CurrentUser
+from app.entrypoints.api.dependencies import get_catalog_repository
+from app.entrypoints.api.dependencies import get_current_customer
+from app.entrypoints.api.dependencies import get_profile_repository
+from app.entrypoints.api.dependencies import get_recommendation_engine
+from app.entrypoints.api.dependencies import get_recommendation_log_repository
+from app.use_cases.recommendation.generate_recommendation import (
+    GenerateRecommendationUseCase,
+)
+
+
+router = APIRouter(prefix="/recommendations", tags=["recommendations"])
+
+
+@router.post("/preview", response_model=RecommendationResponseDto)
+def preview_recommendations(
+    payload: RecommendationRequestDto,
+    current_user: CurrentUser = Depends(get_current_customer),
+    catalog_repository=Depends(get_catalog_repository),
+    profile_repository=Depends(get_profile_repository),
+    recommendation_engine=Depends(get_recommendation_engine),
+    recommendation_log_repository=Depends(get_recommendation_log_repository),
+) -> RecommendationResponseDto:
+    result = GenerateRecommendationUseCase(
+        catalog_repository=catalog_repository,
+        profile_repository=profile_repository,
+        recommendation_engine=recommendation_engine,
+        recommendation_log_repository=recommendation_log_repository,
+    ).execute_preview(
+        user_id=current_user.user_id,
+        request=recommendation_request_to_domain(payload),
+    )
+    return recommendation_response_to_dto(result)
+
+
+@router.post("/profile", response_model=RecommendationResponseDto)
+def recommend_for_profile(
+    payload: ProfileRecommendationPayload,
+    current_user: CurrentUser = Depends(get_current_customer),
+    catalog_repository=Depends(get_catalog_repository),
+    profile_repository=Depends(get_profile_repository),
+    recommendation_engine=Depends(get_recommendation_engine),
+    recommendation_log_repository=Depends(get_recommendation_log_repository),
+) -> RecommendationResponseDto:
+    result = GenerateRecommendationUseCase(
+        catalog_repository=catalog_repository,
+        profile_repository=profile_repository,
+        recommendation_engine=recommendation_engine,
+        recommendation_log_repository=recommendation_log_repository,
+    ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
+    return recommendation_response_to_dto(result)

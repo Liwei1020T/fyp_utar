@@ -24,4 +24,4 @@ class AIServiceSettings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_ai_settings() -> AIServiceSettings:
-    return AIServiceSettings()
+    return AIServiceSettings()  # type: ignore[call-arg]

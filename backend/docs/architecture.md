@@ -3,97 +3,105 @@
 ## Active Runtime
 
 ```text
-Flutter App
-  -> FastAPI Public API (`stringsense_backend/`)
-      -> SQLAlchemy + Alembic managed database
-      -> In-process recommendation and AI helper modules
+Mobile App
+  -> FastAPI Entrypoints (`app/entrypoints`)
+      -> Application Use Cases (`app/use_cases`)
+          -> Domain + Ports (`app/domain`, `app/ports`)
+              -> SQLAlchemy / JWT / AI Adapters (`app/adapters`)
+                  -> PostgreSQL or SQLite test database
 ```
 
-- The frontend now calls the Python backend directly.
-- `stringsense_backend/` owns public business routes, auth, profiles, strings, bookings, admin operations, and recommendation logging.
-- AI recommendation logic now runs in process inside the unified Python backend.
+- `app/` is now the primary runtime package.
+- `stringsense_backend/` remains as a compatibility shell so existing imports, tests, and Alembic wiring keep working while the runtime lives under `app/`.
+- `ai_service/` is preserved and reused behind adapter boundaries instead of being deleted.
 
-## Ownership Boundaries
+## Layering Rules
 
-### Unified Backend (`stringsense_backend/`)
+Allowed dependency direction:
 
-The unified backend owns:
+- `entrypoints -> use_cases`
+- `use_cases -> domain`
+- `use_cases -> ports`
+- `adapters -> ports`
+- `adapters -> domain`
 
-- authentication and JWT issuance
-- users and profiles
-- strings catalog seeding and admin maintenance
-- single-store inventory fields and admin inventory adjustments
-- bookings and booking status transitions
-- single-store business hours, generated booking slots, check-in, service queue, and store settings
-- recommendation generation and logging
-- admin reporting and analytics endpoints
-- frontend-facing validation, error shaping, and OpenAPI docs
+Explicitly avoided:
 
-### Reused AI Logic (`ai_service/`)
+- route-to-route business imports
+- domain objects depending on FastAPI or SQLAlchemy
+- use cases depending on ORM models
+- adapters pulling business rules from route modules
 
-`ai_service/` is no longer the active public runtime. Its value is now:
+## Folder Map
 
-- reusable recommendation/review-analysis reference logic
-- fallback data-loading utilities
-- compatibility tests around recommendation primitives
+- `app/main.py`
+  - FastAPI app bootstrap, middleware, exception handlers, startup seeding
+- `app/entrypoints/api/routes/`
+  - Thin request/response handlers grouped by API surface
+- `app/use_cases/`
+  - One file per business action or closely related action
+- `app/domain/`
+  - Pure Python entities, enums, and policies by bounded context
+- `app/ports/`
+  - Repository and service abstractions
+- `app/adapters/persistence/sqlalchemy/`
+  - SQLAlchemy session, split ORM models, repositories, seed helpers
+- `app/adapters/services/`
+  - JWT, password hashing, clock, and AI adapters
+- `app/dto/`
+  - API request/response models and mapping helpers
+- `app/config/`
+  - `pydantic-settings` runtime configuration
+- `app/shared/`
+  - errors, serialization, constants, pagination
 
-The active public API does not require `x-internal-api-key`.
+## Bounded Contexts
 
-## Configuration and Startup
+- `auth`
+  - registration, login, token parsing, password reset
+- `profile`
+  - customer preference profile read/write
+- `catalog`
+  - public strings catalog plus admin inventory controls
+- `booking`
+  - booking creation, retrieval, admin listing, status changes
+- `store`
+  - business hours, slots, check-in, service queue, store settings, analytics
+- `recommendation`
+  - preview/profile recommendation generation and recommendation logging
 
-- The unified backend loads `backend/.env` through `pydantic-settings`.
-- Relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root.
-- `DATABASE_URL` now uses SQLAlchemy semantics; the default example points to a local SQLite file in `/tmp`.
-- `AUTO_CREATE_SCHEMA=true` is intended for local development and tests. Production should use Alembic migrations explicitly.
-- Privileged seed users remain opt-in. If `SEED_ADMIN_ENABLED` is true, the matching username, phone number, and password must all be provided.
+## Persistence Structure
 
-## Core Flows
+The old monolithic ORM module was split into per-domain model files:
 
-### Auth Flow
+- `models/user.py`
+- `models/profile.py`
+- `models/string_catalog_item.py`
+- `models/booking.py`
+- `models/store_business_hours.py`
+- `models/store_settings.py`
+- `models/recommendation_log.py`
+- `models/password_reset_code.py`
 
-1. Client authenticates with `phone_number + password`.
-2. FastAPI validates credentials against SQLAlchemy-managed users.
-3. FastAPI issues JWT bearer tokens.
-4. Optional seed admin users are created during startup only when explicitly enabled.
+Alembic still targets the same metadata through compatibility imports in `stringsense_backend/db/`.
 
-### Recommendation Flow
+## AI Boundary
 
-1. Frontend calls the Python backend directly.
-2. The backend uses either the stored profile or a direct preview payload.
-3. The active string catalog is scored in process by the unified recommendation module.
-4. The backend stores request and result snapshots in `recommendation_logs`.
+- The public recommendation flow now depends on `RecommendationEngine` through a port.
+- `app/adapters/services/ai/recommendation_engine_adapter.py` preserves the current in-process recommendation behavior.
+- Review analysis and RAG helpers are preserved as adapters over `ai_service.service.RecommendationService`.
 
-### Strings Flow
+## Compatibility Strategy
 
-1. Startup seeds strings from the approved catalog when the table is empty.
-2. Admin string write operations must still map to approved catalog entries.
-3. The same string records are used by both public catalog routes and recommendation scoring.
+These legacy paths remain as wrappers:
 
-## Booking Workflow
+- `stringsense_backend/main.py`
+- `stringsense_backend/api/*`
+- `stringsense_backend/core/*`
+- `stringsense_backend/db/*`
+- `stringsense_backend/modules/*`
 
-Allowed status values:
-
-- `awaiting_dropoff`
-- `in_progress`
-- `ready_for_collection`
-- `completed`
-- `cancelled`
-- `rejected`
-
-Allowed transitions:
-
-- `awaiting_dropoff -> in_progress | rejected | cancelled`
-- `in_progress -> ready_for_collection | cancelled`
-- `ready_for_collection -> completed`
-- `completed`, `cancelled`, and `rejected` are terminal
-
-## Maintainability Rules
-
-- Keep shared settings, auth, error handling, and serialization in `stringsense_backend/core/`.
-- Keep ORM models, seed logic, and migrations in `stringsense_backend/db/` plus `migrations/`.
-- Keep feature routers and domain logic grouped by module under `stringsense_backend/modules/`.
-- Prefer direct in-process service calls over internal HTTP between backend components.
-- Update tests and docs whenever runtime behavior or config rules change.
+This lets the refactor land incrementally without breaking tests, imports, or migration wiring.
 
 ## Validation Contract
 
@@ -102,6 +110,6 @@ Primary validation commands:
 ```bash
 cd backend
 ./.venv/bin/ruff check .
-./.venv/bin/ruff format --check .
-./.venv/bin/pytest -v
+./.venv/bin/mypy app stringsense_backend ai_service tests
+./.venv/bin/pytest -q
 ```

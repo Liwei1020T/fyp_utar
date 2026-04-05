@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Protocol
+
+from app.domain.booking.entities import BookingRecord
+from app.shared.pagination import Page
+
+
+class BookingRepository(Protocol):
+    def create_booking(
+        self,
+        *,
+        user_id: str,
+        string_id: str,
+        racket_brand: str | None,
+        racket_model: str | None,
+        requested_tension: float | None,
+        drop_off_datetime: datetime | None,
+        notes: str | None,
+        status: str,
+        changed_by_user_id: str | None,
+    ) -> BookingRecord: ...
+
+    def get_by_id(self, booking_id: str) -> BookingRecord | None: ...
+
+    def list_by_user(self, user_id: str) -> Page[BookingRecord]: ...
+
+    def list_admin(
+        self,
+        *,
+        status: str | None,
+        search: str | None,
+        sort_by: str,
+        sort_order: str,
+        limit: int | None,
+        offset: int,
+    ) -> Page[BookingRecord]: ...
+
+    def update_status(
+        self,
+        *,
+        booking_id: str,
+        next_status: str,
+        changed_by_user_id: str | None,
+        note: str | None,
+    ) -> BookingRecord: ...
+
+    def list_slot_bookings(self) -> list[BookingRecord]: ...
+
+    def list_active_queue(self) -> list[BookingRecord]: ...
+
+    def list_all_for_analytics(self) -> list[BookingRecord]: ...
+

@@ -1,0 +1,10 @@
+from __future__ import annotations
+
+from datetime import datetime
+from datetime import timezone
+
+
+class SystemClock:
+    def now(self) -> datetime:
+        return datetime.now(timezone.utc)
+

@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime
-from decimal import Decimal
+from app.shared.serialization import isoformat_or_none
+from app.shared.serialization import number_to_float
 
 
-def decimal_to_float(value: Decimal | None) -> float | None:
-    if value is None:
-        return None
-    return float(value)
+def decimal_to_float(value):
+    return number_to_float(value)
 
 
-def isoformat_or_none(value: datetime | None) -> str | None:
-    if value is None:
-        return None
-    return value.isoformat()
+__all__ = ["decimal_to_float", "isoformat_or_none", "number_to_float"]
