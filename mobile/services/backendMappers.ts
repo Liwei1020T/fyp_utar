@@ -360,7 +360,7 @@ export function mapBackendBookingToBooking(
 export function buildBackendProfilePayload(
   player: Pick<
     PlayerProfile,
-    'skillLevel' | 'playingStyle' | 'playFrequency' | 'preferredTension' | 'priorities' | 'homeVenue'
+    'skillLevel' | 'playingStyle' | 'playFrequency' | 'preferredTension' | 'priorities'
   >,
 ): BackendProfilePayload {
   return {

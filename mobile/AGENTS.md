@@ -17,20 +17,20 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 ## Canonical Commands
 
-- Required Node line: `25.x`
-- Pinned project version in `.nvmrc`: `25.9.0`
+- Required Node line: `20.x`
+- Pinned project version in `.nvmrc`: `20.19.0`
 - Setup: `nvm use` then `npm install`
 - Run web: `npm run web`
 - Run iOS: `npm run ios`
 - Run Android: `npm run android`
 - Typecheck: `npx tsc --noEmit`
-  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `25.9.0`.
+  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `20.19.0`.
 
 ## Validation Reality
 
 - There is no `npm run build`, `npm run lint`, or `npm test` script in this repo today. Do not invent them.
 - For UI or flow changes, use the smallest truthful validation available:
-  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `25.9.0` when possible
+  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `20.19.0` when possible
   - `npm run web` for runtime smoke validation
   - targeted manual route checks for touched flows
 - If a check cannot be run, mark it `unverified` and explain why.
@@ -38,7 +38,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 ## Architecture Map
 
 - App shell: `app/_layout.tsx`
-  Owns global providers, `global.css`, splash/font setup, HeroUI Native, React Query, and the root Expo Router stack.
+  Owns global providers, `global.css`, HeroUI Native, React Query, and the root Expo Router stack.
 - Root redirect: `app/index.tsx`
   Sends users to `/auth/welcome`, `/player`, or `/admin` based on session state.
 - Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/admin/_layout.tsx`, `components/roles/RoleGuard.tsx`

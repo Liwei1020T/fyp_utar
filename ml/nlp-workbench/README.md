@@ -7,8 +7,8 @@ This folder keeps the notebook-driven ABSA pipeline used to generate recommendat
 - `data/归档.zip`
 - `data/domain_dictionary_optimized_v6.csv`
 - `data/normalization_rules_v6.csv`
-- `data/nlp_absa_long_dataset.csv`
-- `data/nlp_absa_high_confidence.csv`
+- `data/nlp_absa_long_dataset_latest.csv`
+- `data/nlp_absa_high_confidence_latest.csv`
 
 ## Generated Outputs Used by the Backend
 

@@ -84,7 +84,6 @@ The root application shell lives in `app/_layout.tsx`.
 Responsibilities:
 
 - imports `global.css`
-- initializes Expo font loading and splash screen timing
 - wraps the app in `GestureHandlerRootView`
 - creates the global `QueryClient`
 - injects `HeroUINativeProvider`
@@ -237,7 +236,7 @@ This keeps screens relatively simple while avoiding a separate selector layer.
 
 ### Runtime and Bundling Constraints
 
-- To avoid `import.meta` ESM web errors during Expo Metro bundling, the project relies on `babel-plugin-transform-import-meta` in `babel.config.js` and prioritizes `.js` over `.mjs` in `metro.config.js` `sourceExts`.
+- To avoid `import.meta` ESM web errors during Expo Metro bundling, `babel.config.js` extends `babel-preset-expo` with `unstable_transformImportMeta: true` and `metro.config.js` prioritizes `.js` over `.mjs` in `sourceExts`.
 - Zustand is kept at version 4.x to maintain broad Expo Metro compatibility without triggering advanced ESM edge cases.
 
 ## 7. Data Layer Model

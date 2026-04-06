@@ -30,6 +30,14 @@ const priorityLabels = [
   { key: 'sound', title: 'Hitting sound' },
 ] as const;
 
+const styleOptions = [
+  { value: 'Attacking', label: 'Attacking' },
+  { value: 'Balanced', label: 'Balanced' },
+  { value: 'Control', label: 'Control / Defensive' },
+] as const;
+
+const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
+
 export default function RecommendationInputScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -46,8 +54,21 @@ export default function RecommendationInputScreen() {
     return null;
   }
 
-  const [playingStyle, setPlayingStyle] = useState(user.playingStyle);
-  const [skillLevel, setSkillLevel] = useState(user.skillLevel);
+  const normalizedPlayingStyle =
+    user.playingStyle === 'Attacking' || user.playingStyle === 'Balanced'
+      ? user.playingStyle
+      : 'Control';
+  const normalizedSkillLevel =
+    user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
+      ? user.skillLevel
+      : 'Advanced';
+
+  const [playingStyle, setPlayingStyle] = useState<(typeof styleOptions)[number]['value']>(
+    normalizedPlayingStyle,
+  );
+  const [skillLevel, setSkillLevel] = useState<(typeof skillOptions)[number]>(
+    normalizedSkillLevel,
+  );
   const [priorities, setPriorities] = useState(user.priorities);
 
   const strongestPriority = useMemo(
@@ -157,13 +178,13 @@ export default function RecommendationInputScreen() {
             Playing style
           </HeroText>
           <View className="mt-4 flex-row flex-wrap gap-2">
-            {(['Attacking', 'Balanced', 'Control', 'Defensive'] as const).map((style) => (
+            {styleOptions.map((style) => (
               <AppChip
-                key={style}
-                label={style}
+                key={style.value}
+                label={style.label}
                 size="md"
-                variant={playingStyle === style ? 'primary' : 'neutral'}
-                onPress={() => setPlayingStyle(style)}
+                variant={playingStyle === style.value ? 'primary' : 'neutral'}
+                onPress={() => setPlayingStyle(style.value)}
               />
             ))}
           </View>
@@ -172,7 +193,7 @@ export default function RecommendationInputScreen() {
             Skill level
           </HeroText>
           <View className="mt-4 flex-row flex-wrap gap-2">
-            {(['Beginner', 'Intermediate', 'Advanced', 'Competitive'] as const).map((level) => (
+            {skillOptions.map((level) => (
               <AppChip
                 key={level}
                 label={level}
@@ -181,6 +202,17 @@ export default function RecommendationInputScreen() {
                 onPress={() => setSkillLevel(level)}
               />
             ))}
+          </View>
+
+          <HeroText className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-400">
+            Play frequency
+          </HeroText>
+          <View className="mt-4">
+            <AppChip
+              label={`${user.playFrequency} (from saved profile)`}
+              size="md"
+              variant="secondary"
+            />
           </View>
         </AppCard>
       </AppSection>
@@ -219,7 +251,7 @@ export default function RecommendationInputScreen() {
           <View className="flex-row gap-3">
             <Info size={18} color="#0891B2" />
             <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-              Style, skill level, preferred tension, and your five weighted priorities feed the ranking engine shown on the next screen.
+              Style, skill level, play frequency, preferred tension, and your five weighted priorities feed the ranking engine shown on the next screen.
             </HeroText>
           </View>
         </AppCard>

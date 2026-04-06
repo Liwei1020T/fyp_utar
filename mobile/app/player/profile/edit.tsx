@@ -26,8 +26,8 @@ import {
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Please enter your name'),
-  skillLevel: z.enum(['Beginner', 'Intermediate', 'Advanced', 'Competitive']),
-  playingStyle: z.enum(['Attacking', 'Balanced', 'Control', 'Defensive']),
+  skillLevel: z.enum(['Beginner', 'Intermediate', 'Advanced']),
+  playingStyle: z.enum(['Attacking', 'Balanced', 'Control']),
   preferredTension: z.coerce.number().min(18).max(32),
   playFrequency: z.enum(['Social', 'Weekly', 'Tournament']),
   recentGoal: z.string().min(8, 'Tell us what you want from your next setup'),
@@ -44,6 +44,26 @@ const priorityKeys = [
   { key: 'sound', label: 'Sound' },
 ] as const;
 
+const styleOptions = [
+  {
+    value: 'Attacking',
+    label: 'Attacking',
+    description: 'Fast rebound, crisp contact, and confident pressure in drives.',
+  },
+  {
+    value: 'Balanced',
+    label: 'Balanced',
+    description: 'A little bit of everything with reliable all-court feel.',
+  },
+  {
+    value: 'Control',
+    label: 'Control / Defensive',
+    description: 'Touch, placement, comfort, and patient rallies over raw punch.',
+  },
+] as const;
+
+const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
+
 export default function ProfileEditScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -55,6 +75,15 @@ export default function ProfileEditScreen() {
     return null;
   }
 
+  const normalizedPlayingStyle =
+    user.playingStyle === 'Attacking' || user.playingStyle === 'Balanced'
+      ? user.playingStyle
+      : 'Control';
+  const normalizedSkillLevel =
+    user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
+      ? user.skillLevel
+      : 'Advanced';
+
   const [priorities, setPriorities] = useState(user.priorities);
 
   const {
@@ -65,8 +94,8 @@ export default function ProfileEditScreen() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: user.name,
-      skillLevel: user.skillLevel,
-      playingStyle: user.playingStyle,
+      skillLevel: normalizedSkillLevel,
+      playingStyle: normalizedPlayingStyle,
       preferredTension: user.preferredTension,
       playFrequency: user.playFrequency,
       recentGoal: user.recentGoal,
@@ -196,20 +225,21 @@ export default function ProfileEditScreen() {
           name="playingStyle"
           render={({ field: { onChange, value } }) => (
             <View className="flex-row flex-wrap gap-3">
-              {(['Attacking', 'Balanced', 'Control', 'Defensive'] as const).map((style) => (
-                <Pressable key={style} className="w-[48%]" onPress={() => onChange(style)}>
-                  <AppCard variant={value === style ? 'highlighted' : 'elevated'} padding="md">
+              {styleOptions.map((style) => (
+                <Pressable
+                  key={style.value}
+                  className="w-full"
+                  onPress={() => onChange(style.value)}
+                >
+                  <AppCard
+                    variant={value === style.value ? 'highlighted' : 'elevated'}
+                    padding="md"
+                  >
                     <HeroText className="text-base font-bold tracking-tight text-neutral-950">
-                      {style}
+                      {style.label}
                     </HeroText>
                     <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-                      {style === 'Attacking'
-                        ? 'Fast rebound, crisp contact, and confident pressure in drives.'
-                        : style === 'Balanced'
-                          ? 'A little bit of everything with reliable all-court feel.'
-                          : style === 'Control'
-                            ? 'Touch, placement, and shuttle hold matter most.'
-                            : 'Comfort, patience, and reliable lifts over raw punch.'}
+                      {style.description}
                     </HeroText>
                   </AppCard>
                 </Pressable>
@@ -226,7 +256,7 @@ export default function ProfileEditScreen() {
             name="skillLevel"
             render={({ field: { onChange, value } }) => (
               <View className="flex-row flex-wrap gap-2">
-                {(['Beginner', 'Intermediate', 'Advanced', 'Competitive'] as const).map((level) => (
+                {skillOptions.map((level) => (
                   <AppChip
                     key={level}
                     label={level}
