@@ -360,7 +360,7 @@ export function mapBackendBookingToBooking(
 export function buildBackendProfilePayload(
   player: Pick<
     PlayerProfile,
-    'skillLevel' | 'playingStyle' | 'playFrequency' | 'preferredTension' | 'priorities'
+    'skillLevel' | 'playingStyle' | 'playFrequency' | 'preferredTension' | 'priorities' | 'homeVenue'
   >,
 ): BackendProfilePayload {
   return {
@@ -386,19 +386,24 @@ export function buildBackendProfilePayload(
 }
 
 export function buildRecommendationPayload(input: {
+  userId: string;
   skillLevel: SkillLevel;
   playingStyle: PlayingStyle;
   preferredTension: number;
   playFrequency: PlayFrequency;
   priorities: PlayerProfile['priorities'];
+  gameType?: string;
+  budgetMin?: number;
+  budgetMax?: number;
 }): BackendRecommendationPayload {
   return {
+    user_id: input.userId,
     skill_level: mapFrontendSkillLevel(input.skillLevel),
     playing_style: mapFrontendPlayingStyle(input.playingStyle),
-    budget_min: 0,
-    budget_max: 999,
+    budget_min: input.budgetMin ?? 0,
+    budget_max: input.budgetMax ?? 999,
     preferred_tension: input.preferredTension,
-    game_type: 'doubles',
+    game_type: input.gameType ?? 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),
     pref_attack: toFiveScale(input.priorities.power),
     pref_comfort: toFiveScale(input.priorities.comfort),

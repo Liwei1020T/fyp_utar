@@ -15,4 +15,8 @@ config.resolver.blockList = exclusionList([
   /(^|\/)\._[^/]+$/,
 ]);
 
+config.resolver.sourceExts = [
+  'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'json', 'scss', 'sass', 'css'
+];
+
 module.exports = config;

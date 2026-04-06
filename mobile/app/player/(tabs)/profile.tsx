@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bell, ChevronRight, Dumbbell, LogOut, Settings, Star, Wallet } from 'lucide-react-native';
+import { Bell, ChevronLeft, ChevronRight, Dumbbell, LogOut, Settings, Star, Wallet } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -33,6 +33,15 @@ export default function PlayerProfileScreen() {
     <AppScreen
       title="Profile"
       subtitle="Your player identity, saved preferences, and product shortcuts."
+      headerLeft={
+        router.canGoBack() ? (
+          <AppIconButton
+            icon={<ChevronLeft size={20} color="#475569" />}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+          />
+        ) : undefined
+      }
       headerRight={
         <AppIconButton
           icon={<Settings size={20} color="#475569" />}

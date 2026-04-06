@@ -138,6 +138,7 @@ interface RegisterPlayerInput {
 }
 
 interface AppStoreState {
+  hasHydrated: boolean;
   sessionSource: 'mock' | 'backend' | null;
   backendAccessToken: string | null;
   currentUserId: string | null;
@@ -200,6 +201,7 @@ interface AppStoreState {
 }
 
 export const useAppStore = create<AppStoreState>((set, get) => ({
+  hasHydrated: true,
   sessionSource: null,
   backendAccessToken: null,
   currentUserId: null,

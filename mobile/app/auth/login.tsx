@@ -129,7 +129,13 @@ export default function LoginScreen() {
           ? 'Use your phone and password to open the player flow.'
           : 'Use the pre-filled admin account to enter the operations workspace.'
       }
-      onBack={() => router.back()}
+      onBack={() => {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace('/auth/welcome');
+        }
+      }}
       footer={
         <View className="items-center gap-3">
           <Pressable onPress={() => router.push('/auth/register')}>

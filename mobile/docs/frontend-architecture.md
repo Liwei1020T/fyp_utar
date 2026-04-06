@@ -181,7 +181,7 @@ The frontend’s mutable source of truth is `store/appStore.ts`.
 
 The store owns:
 
-- current session state
+- current session state (persisted via Zustand middleware to `localStorage` for web)
 - backend player session bridge
 - live player profile, strings, bookings, and recommendation results
 - users
@@ -204,7 +204,7 @@ The store owns:
 The store handles all user-visible prototype mutations:
 
 - auth login, quick login, logout, player registration
-- backend player session hydration
+- backend player session hydration and persistence
 - player profile updates
 - booking draft creation and clearing
 - full booking payment flow
@@ -234,6 +234,11 @@ The store file also exports convenience hooks such as:
 - `useWallets`
 
 This keeps screens relatively simple while avoiding a separate selector layer.
+
+### Runtime and Bundling Constraints
+
+- To avoid `import.meta` ESM web errors during Expo Metro bundling, the project relies on `babel-plugin-transform-import-meta` in `babel.config.js` and prioritizes `.js` over `.mjs` in `metro.config.js` `sourceExts`.
+- Zustand is kept at version 4.x to maintain broad Expo Metro compatibility without triggering advanced ESM edge cases.
 
 ## 7. Data Layer Model
 

@@ -1,0 +1,34 @@
+- generic [ref=e15]:
+  - generic [ref=e20]:
+    - button "Go back" [ref=e21] [cursor=pointer]:
+      - img [ref=e22]
+    - generic [ref=e24]:
+      - generic [ref=e25]: Mock Access
+      - generic [ref=e26]: Log in
+      - generic [ref=e27]: Use the player demo or the pre-created admin account to open the correct role surface.
+  - generic [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]
+        - img [ref=e38]
+      - generic [ref=e41]:
+        - button "Player" [ref=e42] [cursor=pointer]
+        - button "Admin" [ref=e44] [cursor=pointer]
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e48]: Phone number
+        - generic [ref=e50]
+        - generic [ref=e56]: Players now sign in against the live Python backend.
+      - generic [ref=e57]:
+        - generic [ref=e58]: Password
+        - generic [ref=e60]
+        - generic [ref=e67]: Use the password from your live player account.
+      - button "Sign in" [ref=e68] [cursor=pointer]:
+        - generic [ref=e70]: Sign in
+      - generic [ref=e72] [cursor=pointer]: Forgot password?
+      - generic [ref=e73]:
+        - generic [ref=e78] [cursor=pointer]
+        - generic [ref=e87] [cursor=pointer]
+    - generic [ref=e92]:
+      - generic [ref=e93]: Need a player account?
+      - generic [ref=e95] [cursor=pointer]: Create account

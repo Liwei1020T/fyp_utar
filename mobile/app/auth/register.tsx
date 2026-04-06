@@ -76,7 +76,13 @@ export default function RegisterScreen() {
       eyebrow="New player"
       title="Create your account"
       subtitle="Set up a player login and continue straight into your profile."
-      onBack={() => router.back()}
+      onBack={() => {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace('/auth/welcome');
+        }
+      }}
       footer={
         <View className="items-center">
           <Pressable onPress={() => router.push('/auth/login')}>

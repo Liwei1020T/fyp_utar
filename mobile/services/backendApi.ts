@@ -24,7 +24,7 @@ import type {
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ||
-  'http://127.0.0.1:3001/api';
+  'http://localhost:3001/api';
 const REQUEST_TIMEOUT_MS = 12000;
 
 export class BackendApiError extends Error {

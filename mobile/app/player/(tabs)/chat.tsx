@@ -1,11 +1,12 @@
 import React from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bot, Sparkles } from 'lucide-react-native';
+import { Bot, ChevronLeft, Sparkles } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { ConversationCard } from '../../../components/chat/ConversationCard';
 import { useConversations, useCurrentUser } from '../../../store/appStore';
@@ -23,7 +24,20 @@ export default function PlayerChatThreadsScreen() {
   const playerConversations = conversations.filter((item) => item.playerId === user.id);
 
   return (
-    <AppScreen title="Chat and support" subtitle="Start with AI, then request admin support when you need the shop to step in." scrollable={false}>
+    <AppScreen
+      title="Chat and support"
+      subtitle="Start with AI, then request admin support when you need the shop to step in."
+      scrollable={false}
+      headerLeft={
+        router.canGoBack() ? (
+          <AppIconButton
+            icon={<ChevronLeft size={20} color="#111827" />}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+          />
+        ) : undefined
+      }
+    >
       <FlatList
         className="flex-1"
         data={playerConversations}

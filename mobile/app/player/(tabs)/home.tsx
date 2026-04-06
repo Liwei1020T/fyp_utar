@@ -122,22 +122,22 @@ export default function PlayerHomeScreen() {
         </View>
 
         <View className="mt-7 flex-row gap-3">
-          <AppCard variant="subtle" className="min-h-[104px] flex-1 bg-white/14 border-white/15" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
+          <View className="min-h-[104px] flex-1 rounded-[26px] border border-white/20 bg-white/12 p-4">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-100/80">
               Preferred tension
             </HeroText>
             <HeroText className="mt-2 text-2xl font-bold text-white">
               {user.preferredTension} lbs
             </HeroText>
-          </AppCard>
-          <AppCard variant="subtle" className="min-h-[104px] flex-1 bg-white/14 border-white/15" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
+          </View>
+          <View className="min-h-[104px] flex-1 rounded-[26px] border border-white/20 bg-white/12 p-4">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-100/80">
               Wallet balance
             </HeroText>
             <HeroText className="mt-2 text-2xl font-bold text-white">
               {formatCurrency(wallet?.availableBalance ?? 0)}
             </HeroText>
-          </AppCard>
+          </View>
         </View>
 
         <View className="mt-6 flex-row flex-wrap gap-3">

@@ -1,0 +1,48 @@
+- generic [ref=e104]:
+  - generic [ref=e105]:
+    - generic [ref=e109]:
+      - generic [ref=e113]:
+        - generic [ref=e115]
+        - button [ref=e337] [cursor=pointer]
+      - generic [ref=e131]:
+        - generic [ref=e134]
+        - generic [ref=e138]
+        - generic [ref=e195]
+        - generic [ref=e227]
+    - generic [ref=e341]:
+      - generic [ref=e347]:
+        - generic [ref=e348]: Admin bookings
+        - generic [ref=e349]: Operational list of shop bookings with filters, search, and quick drill-in.
+      - generic [ref=e353]:
+        - generic [ref=e355]
+        - generic [ref=e376] [cursor=pointer]
+        - generic [ref=e411] [cursor=pointer]
+        - generic [ref=e446] [cursor=pointer]
+        - generic [ref=e481] [cursor=pointer]
+        - generic [ref=e516] [cursor=pointer]
+  - tablist [ref=e254]:
+    - tab "Overview" [ref=e256] [cursor=pointer]:
+      - generic [ref=e257]:
+        - img [ref=e260]
+        - img [ref=e267]
+      - generic [ref=e272]: Overview
+    - tab "Bookings" [active] [selected] [ref=e274] [cursor=pointer]:
+      - generic [ref=e275]:
+        - img [ref=e278]
+        - img [ref=e282]
+      - generic [ref=e284]: Bookings
+    - tab "Inventory" [ref=e286] [cursor=pointer]:
+      - generic [ref=e287]:
+        - img [ref=e290]
+        - img [ref=e302]
+      - generic [ref=e312]: Inventory
+    - tab "Chat" [ref=e314] [cursor=pointer]:
+      - generic [ref=e315]:
+        - img [ref=e318]
+        - img [ref=e322]
+      - generic [ref=e324]: Chat
+    - tab "Analytics" [ref=e326] [cursor=pointer]:
+      - generic [ref=e327]:
+        - img [ref=e330]
+        - img [ref=e334]
+      - generic [ref=e336]: Analytics

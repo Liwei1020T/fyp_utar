@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Info, Sparkles, WandSparkles } from 'lucide-react-native';
+import { Info, Sparkles, WandSparkles, ChevronLeft } from 'lucide-react-native';
 import { HeroSlider, HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
+import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import {
@@ -77,6 +78,7 @@ export default function RecommendationInputScreen() {
       const response = await backendApi.previewRecommendations(
         token,
         buildRecommendationPayload({
+          userId: user.id,
           skillLevel,
           playingStyle,
           preferredTension: user.preferredTension,
@@ -103,6 +105,15 @@ export default function RecommendationInputScreen() {
     <AppScreen
       title="Recommendation lab"
       subtitle="Shape the session profile before generating your shortlist."
+      headerLeft={
+        router.canGoBack() ? (
+          <AppIconButton
+            icon={<ChevronLeft size={20} color="#111827" />}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+          />
+        ) : undefined
+      }
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
         <View className="flex-row items-start justify-between gap-4">
@@ -121,22 +132,22 @@ export default function RecommendationInputScreen() {
         </View>
 
         <View className="mt-7 flex-row gap-3">
-          <AppCard variant="subtle" className="min-h-[100px] flex-1 bg-white/14 border-white/15" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
+          <View className="min-h-[100px] flex-1 rounded-[26px] border border-white/20 bg-white/12 p-4">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-100/80">
               Default tension
             </HeroText>
             <HeroText className="mt-2 text-lg font-bold text-white">
               {user.preferredTension} lbs
             </HeroText>
-          </AppCard>
-          <AppCard variant="subtle" className="min-h-[100px] flex-1 bg-white/14 border-white/15" padding="sm">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-50">
+          </View>
+          <View className="min-h-[100px] flex-1 rounded-[26px] border border-white/20 bg-white/12 p-4">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-100/80">
               Strongest priority
             </HeroText>
             <HeroText className="mt-2 text-lg font-bold text-white">
               {strongestPriority}
             </HeroText>
-          </AppCard>
+          </View>
         </View>
       </AppCard>
 

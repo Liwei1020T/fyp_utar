@@ -90,6 +90,10 @@ export default function ForgotPasswordScreen() {
         phone_number: data.phoneNumber,
       });
 
+      if (response.dev_code_preview) {
+        console.log(`[DEV] Verification code for ${data.phoneNumber}: ${response.dev_code_preview}`);
+      }
+
       setRequestMessage(response.message);
       setDevCodePreview(response.dev_code_preview);
       resetResetForm({
@@ -140,7 +144,13 @@ export default function ForgotPasswordScreen() {
           ? 'Request a 6-digit code for your phone-based player account.'
           : 'Use the code you received and set a new password.'
       }
-      onBack={() => router.back()}
+      onBack={() => {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace('/auth/welcome');
+        }
+      }}
       footer={
         <View className="items-center">
           <Pressable onPress={() => router.replace('/auth/login?role=player')}>

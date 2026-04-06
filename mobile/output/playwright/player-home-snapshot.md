@@ -1,0 +1,56 @@
+- generic [ref=e96]:
+  - generic [ref=e101]:
+    - generic [ref=e105]:
+      - generic [ref=e107]:
+        - generic [ref=e109]: AF
+        - generic [ref=e110]
+      - button "Open notifications" [ref=e114] [cursor=pointer]:
+        - img [ref=e115]
+    - generic [ref=e120]:
+      - generic [ref=e123]:
+        - generic [ref=e124]
+        - generic [ref=e134]
+        - generic [ref=e145]
+      - generic [ref=e155]:
+        - generic [ref=e157]
+        - generic [ref=e162]
+      - generic [ref=e204]:
+        - generic [ref=e205]
+        - generic [ref=e212]
+      - generic [ref=e271]:
+        - generic [ref=e273]
+        - generic [ref=e279]
+      - generic [ref=e319]:
+        - generic [ref=e321]
+        - generic [ref=e328]
+  - tablist [ref=e332]:
+    - tab "Home" [selected] [ref=e334] [cursor=pointer]:
+      - generic [ref=e335]:
+        - img [ref=e338]
+        - img [ref=e343]
+      - generic [ref=e346]: Home
+    - tab "Strings" [ref=e348] [cursor=pointer]:
+      - generic [ref=e349]:
+        - img [ref=e352]
+        - img [ref=e355]
+      - generic [ref=e356]: Strings
+    - tab "RECO" [ref=e358] [cursor=pointer]:
+      - generic [ref=e359]:
+        - img [ref=e363]
+        - img [ref=e368]
+      - generic [ref=e370]: RECO
+    - tab "Bookings" [ref=e372] [cursor=pointer]:
+      - generic [ref=e373]:
+        - img [ref=e376]
+        - img [ref=e380]
+      - generic [ref=e382]: Bookings
+    - tab "Chat" [ref=e384] [cursor=pointer]:
+      - generic [ref=e385]:
+        - img [ref=e388]
+        - img [ref=e392]
+      - generic [ref=e394]: Chat
+    - tab "Profile" [ref=e396] [cursor=pointer]:
+      - generic [ref=e397]:
+        - img [ref=e400]
+        - img [ref=e405]
+      - generic [ref=e408]: Profile

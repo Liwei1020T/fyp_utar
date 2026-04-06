@@ -1,0 +1,25 @@
+- generic [ref=e18]:
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - img [ref=e22]
+      - generic [ref=e25] [cursor=pointer]: STRINGSENSE FYP 1 PROTOTYPE
+      - generic [ref=e26]: Premium frontend prototype for one badminton stringing shop.
+      - generic [ref=e27]: Explore the complete player journey and the shop admin workspace from one polished Expo Router build.
+      - generic [ref=e28]:
+        - generic [ref=e29]
+        - generic [ref=e38]
+    - generic [ref=e47]:
+      - generic [ref=e52] [cursor=pointer]:
+        - img [ref=e54]
+        - generic [ref=e57]
+      - generic [ref=e66] [cursor=pointer]:
+        - img [ref=e68]
+        - generic [ref=e72]
+  - generic [ref=e77]:
+    - button "Continue to login" [ref=e78] [cursor=pointer]:
+      - generic [ref=e79]:
+        - generic [ref=e80]: Continue to login
+        - img [ref=e82]
+    - generic [ref=e85] [cursor=pointer]: New player? Create an account
+    - generic [ref=e87] [cursor=pointer]: Quick demo as player
+    - generic [ref=e88]: frontend-only • mock data • expo router • fyp 2026

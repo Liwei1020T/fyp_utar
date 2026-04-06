@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search } from 'lucide-react-native';
+import { Plus, Search, ChevronLeft } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -54,6 +54,15 @@ export default function BookingsListScreen() {
     <AppScreen
       title="My bookings"
       subtitle="Track payment status, drop-off windows, and service progress from one list."
+      headerLeft={
+        router.canGoBack() ? (
+          <AppIconButton
+            icon={<ChevronLeft size={20} color="#111827" />}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+          />
+        ) : undefined
+      }
       headerRight={
         <AppIconButton
           icon={<Plus size={20} color="white" />}

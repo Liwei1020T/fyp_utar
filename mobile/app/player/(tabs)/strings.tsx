@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowUpWideNarrow, Search, Scale, SlidersHorizontal, Sparkles } from 'lucide-react-native';
+import { ArrowUpWideNarrow, Search, Scale, SlidersHorizontal, Sparkles, ChevronLeft } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -50,7 +50,20 @@ export default function StringsCatalogScreen() {
   }, [searchQuery, selectedCategory, sortBy, strings]);
 
   return (
-    <AppScreen title="String catalog" subtitle="Search, filter, sort, and build a compare shortlist." scrollable={false}>
+    <AppScreen
+      title="String catalog"
+      subtitle="Search, filter, sort, and build a compare shortlist."
+      scrollable={false}
+      headerLeft={
+        router.canGoBack() ? (
+          <AppIconButton
+            icon={<ChevronLeft size={20} color="#111827" />}
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+          />
+        ) : undefined
+      }
+    >
       <FlatList
         className="flex-1"
         data={filteredStrings}

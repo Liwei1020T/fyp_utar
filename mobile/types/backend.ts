@@ -270,6 +270,7 @@ export interface BackendProfilePayload {
 }
 
 export interface BackendRecommendationPayload {
+  user_id: string;
   skill_level: string;
   playing_style: string;
   budget_min: number;
