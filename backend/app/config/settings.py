@@ -55,6 +55,8 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "http://127.0.0.1:3000",
             "http://localhost:3000",
+            "http://127.0.0.1:8081",
+            "http://localhost:8081",
         ],
         alias="CORS_ORIGINS",
     )
@@ -148,4 +150,3 @@ def get_settings() -> Settings:
     settings = Settings()  # type: ignore[call-arg]
     settings.validate_runtime()
     return settings
-
