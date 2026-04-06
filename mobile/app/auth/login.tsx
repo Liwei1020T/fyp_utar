@@ -4,14 +4,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, LockKeyhole, Mail, Sparkles } from 'lucide-react-native';
-import { HeroText } from '../../components/ui/heroui';
+import { LockKeyhole, Mail } from 'lucide-react-native';
+import { AuthShell } from '../../components/auth/AuthShell';
 import { AppButton } from '../../components/ui/AppButton';
-import { AppIconButton } from '../../components/ui/AppIconButton';
-import { AppInput } from '../../components/ui/AppInput';
-import { AppScreen } from '../../components/shared/AppScreen';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
+import { AppInput } from '../../components/ui/AppInput';
+import { HeroText } from '../../components/ui/heroui';
 import { useAppStore } from '../../store/appStore';
 import { getRoleHome } from '../../lib/navigation';
 import { BackendApiError, backendApi } from '../../services/backendApi';
@@ -26,8 +25,18 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 const demoUsers: Array<{ role: UserRole; label: string; email: string; description: string }> = [
-  { role: 'player', label: 'Player', email: '+60123456789', description: 'Phone login for the live player backend flow.' },
-  { role: 'admin', label: 'Admin', email: 'admin@example.com', description: 'Shop operations, inventory, queue, and support flow.' },
+  {
+    role: 'player',
+    label: 'Player',
+    email: '+60123456789',
+    description: 'Use your phone-based player login.',
+  },
+  {
+    role: 'admin',
+    label: 'Admin',
+    email: 'admin@example.com',
+    description: 'Open the shop operations workspace.',
+  },
 ];
 
 export default function LoginScreen() {
@@ -67,12 +76,13 @@ export default function LoginScreen() {
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
-    await new Promise((resolve) => setTimeout(resolve, 450));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
     if (selectedRole === 'admin') {
       const role = login(data.identifier);
 
       if (!role) {
-        setFormError('No mock user matched that email. Use one of the demo accounts below.');
+        setFormError('Use the pre-filled admin demo account to continue.');
         return;
       }
 
@@ -103,52 +113,43 @@ export default function LoginScreen() {
   };
 
   return (
-    <AppScreen
-      tone="auth"
-      eyebrow="Mock Access"
+    <AuthShell
+      eyebrow={selectedRole === 'player' ? 'Player access' : 'Admin access'}
       title="Log in"
-      subtitle="Use the player demo or the pre-created admin account to open the correct role surface."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#122018" />}
-          accessibilityLabel="Go back"
-          variant="auth"
-          onPress={() => router.back()}
-        />
+      subtitle={
+        selectedRole === 'player'
+          ? 'Use your phone and password to open the player flow.'
+          : 'Use the pre-filled admin account to enter the operations workspace.'
+      }
+      onBack={() => router.back()}
+      footer={
+        <View className="items-center gap-3">
+          <Pressable onPress={() => router.push('/auth/register')}>
+            <HeroText className="text-sm font-semibold text-primary-700">
+              Need a player account? Create one
+            </HeroText>
+          </Pressable>
+        </View>
       }
     >
-      <View className="rounded-[32px] border border-[#D9E5F1] bg-white px-5 py-6 shadow-soft">
-        <View className="flex-row items-start justify-between gap-4">
-          <View className="flex-1">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6B7C70]">
-              Role-based access
-            </HeroText>
-            <HeroText className="mt-2 text-[27px] font-bold tracking-tight text-[#122018]">
-              Open the right prototype area in one step.
-            </HeroText>
-            <HeroText className="mt-3 text-sm leading-6 text-[#607266]">
-              Public registration is only for players. The admin account is pre-created for the single-store prototype.
-            </HeroText>
+      <View className="gap-4">
+        <View className="gap-3">
+          <View className="flex-row gap-2">
+            {demoUsers.map((item) => (
+              <AppChip
+                key={item.role}
+                label={item.label}
+                size="md"
+                variant={selectedRole === item.role ? 'primary' : 'neutral'}
+                onPress={() => setSelectedRole(item.role)}
+              />
+            ))}
           </View>
-          <View className="h-14 w-14 items-center justify-center rounded-[22px] bg-[#E1EDF9]">
-            <Sparkles size={22} color="#2F64B6" />
-          </View>
+          <HeroText className="text-sm leading-5 text-neutral-500">
+            {activeDemo.description}
+          </HeroText>
         </View>
 
-        <View className="mt-6 flex-row flex-wrap gap-2">
-          {demoUsers.map((item) => (
-            <AppChip
-              key={item.role}
-              label={item.label}
-              variant={selectedRole === item.role ? 'primary' : 'neutral'}
-              size="md"
-              onPress={() => setSelectedRole(item.role)}
-            />
-          ))}
-        </View>
-      </View>
-
-      <View className="mt-6 rounded-[32px] border border-[#D9E5F1] bg-white p-5 shadow-soft">
         <Controller
           control={control}
           name="identifier"
@@ -160,17 +161,15 @@ export default function LoginScreen() {
                   ? 'e.g. +60123456789'
                   : 'e.g. admin@example.com'
               }
-              keyboardType={
-                selectedRole === 'player' ? 'phone-pad' : 'email-address'
-              }
+              keyboardType={selectedRole === 'player' ? 'phone-pad' : 'email-address'}
               value={value}
               onChangeText={onChange}
               error={errors.identifier?.message}
               helperText={
-                formError ??
-                (selectedRole === 'player'
-                  ? 'Players now sign in against the live Python backend.'
-                  : `Demo ${activeDemo.label.toLowerCase()} account is prefilled.`)
+                formError
+                  ?? (selectedRole === 'player'
+                    ? 'Player accounts authenticate against the live backend.'
+                    : 'Admin access stays mock-first for the demo.')
               }
               leftAdornment={<Mail size={18} color="#64748B" />}
             />
@@ -190,8 +189,8 @@ export default function LoginScreen() {
               error={errors.password?.message}
               helperText={
                 selectedRole === 'player'
-                  ? 'Use the password from your live player account.'
-                  : 'Admin continues to use the mock prototype login.'
+                  ? 'Use the password from your player account.'
+                  : 'The admin demo password is already filled in.'
               }
               leftAdornment={<LockKeyhole size={18} color="#64748B" />}
             />
@@ -201,14 +200,13 @@ export default function LoginScreen() {
         <AppButton
           label="Sign in"
           size="lg"
-          className="border-[#2F64B6] bg-[#2F64B6] shadow-float"
           onPress={handleSubmit(onSubmit)}
           isLoading={isSubmitting}
         />
 
         {selectedRole === 'player' ? (
           <Pressable
-            className="mt-4 self-end"
+            className="self-end"
             onPress={() =>
               router.push(
                 `/auth/forgot-password?identifier=${encodeURIComponent(
@@ -217,13 +215,13 @@ export default function LoginScreen() {
               )
             }
           >
-            <HeroText className="text-sm font-semibold text-[#254E90]">
+            <HeroText className="text-sm font-semibold text-primary-700">
               Forgot password?
             </HeroText>
           </Pressable>
         ) : null}
 
-        <View className="mt-5 gap-3">
+        <View className="gap-2">
           {demoUsers.map((item) => (
             <Pressable
               key={item.role}
@@ -238,11 +236,11 @@ export default function LoginScreen() {
                     <HeroText className="text-sm font-semibold text-neutral-900">
                       {item.label} demo
                     </HeroText>
-                    <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
+                    <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
                       {item.description}
                     </HeroText>
                   </View>
-                  <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
+                  <HeroText className="text-xs font-semibold text-primary-700">
                     {item.email}
                   </HeroText>
                 </View>
@@ -251,13 +249,6 @@ export default function LoginScreen() {
           ))}
         </View>
       </View>
-
-      <View className="mt-7 flex-row justify-center pb-6">
-        <HeroText className="text-[#607266]">Need a player account? </HeroText>
-        <Pressable onPress={() => router.push('/auth/register')}>
-          <HeroText className="font-semibold text-[#254E90]">Create account</HeroText>
-        </Pressable>
-      </View>
-    </AppScreen>
+    </AuthShell>
   );
 }

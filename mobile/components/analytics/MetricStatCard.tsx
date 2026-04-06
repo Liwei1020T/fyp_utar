@@ -33,11 +33,15 @@ export function MetricStatCard({
         <HeroText className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
           {title}
         </HeroText>
-        <HeroText className="mt-2 text-[28px] font-bold tracking-tight text-neutral-950">
+        <HeroText
+          className="mt-2 text-[26px] font-bold tracking-tight text-neutral-950"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
           {value}
         </HeroText>
         {subtitle ? (
-          <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
+          <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
             {subtitle}
           </HeroText>
         ) : null}

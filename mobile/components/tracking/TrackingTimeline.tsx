@@ -34,13 +34,14 @@ export function TrackingTimeline({ timeline, currentStatus }: TrackingTimelinePr
                 {!isLast ? <View className="mt-2 h-8 w-[2px] bg-neutral-200" /> : null}
               </View>
               <View className="flex-1">
-                <View className="flex-row items-center justify-between gap-3">
+                <View className="gap-2 md:flex-row md:items-center md:justify-between">
                   <HeroText className="text-base font-bold tracking-tight text-neutral-950">
                     {entry.title}
                   </HeroText>
                   <AppChip
                     label={formatBookingStatus(entry.status)}
                     variant={getBookingStatusVariant(entry.status)}
+                    className="self-start"
                   />
                 </View>
                 <HeroText className="mt-2 text-sm leading-6 text-neutral-500">

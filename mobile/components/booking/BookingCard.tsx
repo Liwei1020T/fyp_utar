@@ -36,13 +36,13 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
               </HeroText>
             ) : null}
           </View>
-          <View className="items-end gap-2">
+          <View className="max-w-[40%] items-end gap-2">
             <AppChip label={formatBookingStatus(booking.status)} variant={getBookingStatusVariant(booking.status)} />
             <AppChip label={formatPaymentStatus(booking.paymentStatus)} variant={getPaymentStatusVariant(booking.paymentStatus)} />
           </View>
         </View>
 
-        <View className="flex-row items-center justify-between rounded-[22px] bg-app-muted px-4 py-3">
+        <View className="gap-3 rounded-[20px] bg-app-muted px-4 py-3 md:flex-row md:items-center md:justify-between">
           <View className="flex-row items-center gap-2">
             <CalendarDays size={14} color="#64748B" />
             <HeroText className="text-sm font-medium text-neutral-700">

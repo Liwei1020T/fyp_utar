@@ -110,10 +110,10 @@ export default function PlayerHomeScreen() {
           <View className="flex-1">
             <AppChip label="PLAYER COMMAND CENTER" variant="secondary" className="self-start" />
             <HeroText className="mt-4 text-[28px] font-bold leading-[34px] tracking-tight text-white">
-              Move from recommendation to drop-off without leaving the flow.
+              Recommendation, booking, and service updates in one place.
             </HeroText>
             <HeroText className="mt-3 text-sm leading-6 text-primary-100">
-              Your profile, booking progress, support threads, racket history, and service updates all stay connected in one premium prototype.
+              Keep the next action obvious and the latest booking easy to track during the demo.
             </HeroText>
           </View>
           <View className="h-14 w-14 items-center justify-center rounded-[22px] bg-white/12">
@@ -160,7 +160,7 @@ export default function PlayerHomeScreen() {
         </View>
       </AppCard>
 
-      <AppSection eyebrow="Quick actions" title="What do you want to do next?" subtitle="These routes cover the highest-value product moments for the player experience.">
+      <AppSection eyebrow="Quick actions" title="What do you want to do next?" subtitle="Jump straight into the player flows that matter most.">
         <View className="gap-3">
           {quickActions.map((item) => {
             const Icon = item.icon;
@@ -194,7 +194,7 @@ export default function PlayerHomeScreen() {
         <AppSection
           eyebrow="Latest booking"
           title="Current service snapshot"
-          subtitle="Your most recent drop-off stays visible from the home screen."
+          subtitle="Keep the latest service visible without digging through tabs."
           rightAction={
             <Pressable onPress={() => router.push(`/player/bookings/${latestBooking.id}/tracking`)}>
               <HeroText className="text-sm font-semibold text-primary-700">Track</HeroText>
@@ -243,7 +243,7 @@ export default function PlayerHomeScreen() {
         </AppSection>
       ) : null}
 
-      <AppSection eyebrow="Recommended now" title="Top strings for your current profile" subtitle="These suggestions are ranked from your saved playing style and priority mix.">
+      <AppSection eyebrow="Recommended now" title="Top strings for your current profile" subtitle="Ranked from your saved playing style and priority mix.">
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {recommendations.map((item) => (
             <AppCard

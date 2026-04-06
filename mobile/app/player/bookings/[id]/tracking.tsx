@@ -1,8 +1,8 @@
 import React from 'react';
-import { Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { AppCard } from '../../../../components/ui/AppCard';
+import { AppIconButton } from '../../../../components/ui/AppIconButton';
 import { HeroText } from '../../../../components/ui/heroui';
 import { AppScreen } from '../../../../components/shared/AppScreen';
 import { AppSection } from '../../../../components/shared/AppSection';
@@ -32,9 +32,11 @@ export default function BookingTrackingScreen() {
       title="Service tracking"
       subtitle="Follow the drop-off journey from pending payment to completed collection."
       headerLeft={
-        <Pressable onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
+        <AppIconButton
+          icon={<ChevronLeft size={20} color="#111827" />}
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+        />
       }
     >
       <AppSection eyebrow="Timeline" title={`Booking ${booking.id}`}>

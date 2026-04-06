@@ -6,6 +6,7 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
+import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import {
@@ -120,38 +121,30 @@ export default function BookingSummaryScreen() {
       </AppSection>
 
       <AppSection eyebrow="Details" title="Drop-off and setup">
-        <AppCard variant="elevated" padding="none">
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">String</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {stringItem?.brand} {stringItem?.model}
-            </HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Racket</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {bookingDraft.racketBrand} {bookingDraft.racketModel}
-            </HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Requested tension</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {bookingDraft.requestedTension} lbs
-            </HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Drop-off date and time</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {bookingDraft.dropOffDate} at {bookingDraft.dropOffTime}
-            </HeroText>
-          </View>
-          <View className="p-4">
-            <HeroText className="text-neutral-500">Notes</HeroText>
-            <HeroText className="mt-2 font-semibold text-neutral-950">
-              {bookingDraft.notes || 'No extra notes provided.'}
-            </HeroText>
-          </View>
-        </AppCard>
+        <AppDetailList
+          items={[
+            {
+              label: 'String',
+              value: `${stringItem?.brand ?? ''} ${stringItem?.model ?? ''}`.trim(),
+            },
+            {
+              label: 'Racket',
+              value: `${bookingDraft.racketBrand} ${bookingDraft.racketModel}`,
+            },
+            {
+              label: 'Requested tension',
+              value: `${bookingDraft.requestedTension} lbs`,
+            },
+            {
+              label: 'Drop-off date and time',
+              value: `${bookingDraft.dropOffDate} at ${bookingDraft.dropOffTime}`,
+            },
+            {
+              label: 'Notes',
+              value: bookingDraft.notes || 'No extra notes provided.',
+            },
+          ]}
+        />
       </AppSection>
 
       <AppSection eyebrow="Pricing" title="Payable now">

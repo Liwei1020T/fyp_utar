@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CalendarRange, Clock3, LogOut, QrCode, Store, TimerReset } from 'lucide-react-native';
+import { ArrowRight, CalendarRange, Clock3, LogOut, QrCode, Store, TimerReset } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
@@ -58,10 +58,10 @@ export default function AdminDashboardScreen() {
           Shop operations
         </HeroText>
         <HeroText className="mt-2 text-[28px] font-bold tracking-tight text-white">
-          Keep the service queue moving without losing the premium feel.
+          Keep today&apos;s queue clear and the counter team aligned.
         </HeroText>
         <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-          Today’s prototype covers drop-offs, active jobs, inventory, assigned chat threads, and analytics all inside the admin role.
+          Focus the dashboard on workload, outstanding payments, and the next operational action.
         </HeroText>
       </AppCard>
 
@@ -79,15 +79,21 @@ export default function AdminDashboardScreen() {
       <AppSection eyebrow="Quick actions" title="Jump into the queue">
         <View className="gap-3">
           {[
-            { title: 'Service queue', route: '/admin/service-queue' },
-            { title: 'Check-in flow', route: '/admin/check-in' },
-            { title: 'Business hours', route: '/admin/business-hours' },
-            { title: 'Payments monitor', route: '/admin/payments' },
-            { title: 'Store settings', route: '/admin/settings' },
+            { title: 'Service queue', subtitle: 'See what is waiting on the bench.', route: '/admin/service-queue' },
+            { title: 'Check-in flow', subtitle: 'Handle counter arrivals and scan-ins.', route: '/admin/check-in' },
+            { title: 'Business hours', subtitle: 'Adjust opening windows for the shop.', route: '/admin/business-hours' },
+            { title: 'Payments monitor', subtitle: 'Review unpaid or failed payment states.', route: '/admin/payments' },
+            { title: 'Store settings', subtitle: 'Tune shop-facing defaults and notes.', route: '/admin/settings' },
           ].map((item) => (
             <Pressable key={item.title} onPress={() => router.push(item.route as never)}>
               <AppCard variant="elevated" padding="md">
-                <HeroText className="text-base font-semibold text-neutral-900">{item.title}</HeroText>
+                <View className="flex-row items-center justify-between gap-4">
+                  <View className="flex-1">
+                    <HeroText className="text-base font-semibold text-neutral-900">{item.title}</HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-neutral-500">{item.subtitle}</HeroText>
+                  </View>
+                  <ArrowRight size={16} color="#94A3B8" />
+                </View>
               </AppCard>
             </Pressable>
           ))}

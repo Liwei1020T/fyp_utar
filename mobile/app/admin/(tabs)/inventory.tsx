@@ -20,6 +20,18 @@ export default function AdminInventoryScreen() {
         data={strings}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
+        ListHeaderComponent={
+          <View className="pb-6">
+            <AppCard variant="highlighted" padding="md">
+              <HeroText className="text-base font-bold tracking-tight text-neutral-950">
+                Inventory health
+              </HeroText>
+              <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+                Review stock-like status, price, and shop notes without leaving the admin surface.
+              </HeroText>
+            </AppCard>
+          </View>
+        }
         renderItem={({ item }) => (
           <Pressable onPress={() => router.push(`/admin/inventory/${item.id}`)}>
             <AppCard variant="elevated" className="mb-4" padding="md">
@@ -30,6 +42,9 @@ export default function AdminInventoryScreen() {
                   </HeroText>
                   <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
                     {item.gauge} • {item.inventoryTags.join(' • ')} • stock {item.stockLevel}
+                  </HeroText>
+                  <HeroText className="mt-3 text-sm font-semibold text-primary-700">
+                    RM {item.price.toFixed(2)}
                   </HeroText>
                 </View>
                 <AppChip

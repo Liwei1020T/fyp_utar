@@ -34,14 +34,14 @@ export function AppInput({
       )}
       <View
         className={cn(
-          'rounded-[28px] border p-1.5 shadow-soft',
+          'rounded-[24px] border p-1 shadow-soft',
           error ? 'border-danger/20 bg-danger/10' : 'border-separator bg-surface-secondary',
           containerClassName
         )}
       >
         <View
           className={cn(
-            'min-h-14 flex-row items-center gap-3 rounded-[24px] border px-4 py-1',
+            'min-h-[52px] flex-row items-center gap-3 rounded-[20px] border px-4 py-1',
             error ? 'border-danger/15 bg-danger/5' : 'border-field-border bg-field-background'
           )}
         >

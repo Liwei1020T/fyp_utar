@@ -49,10 +49,10 @@ export function AppScreen({
   };
 
   const headerStyles = {
-    default: 'border-white/90 bg-white/70',
-    auth: 'border-[#DDE9F4] bg-[#ECF2F8]',
-    player: 'border-white/90 bg-white/70',
-    admin: 'border-white/90 bg-[#E8F3F2]',
+    default: 'border-white/90 bg-white/72',
+    auth: 'border-[#E0E8F1] bg-[#EDF3F9]',
+    player: 'border-white/90 bg-white/72',
+    admin: 'border-white/90 bg-[#EAF4F3]',
   };
 
   const headerCoreStyles = {
@@ -74,14 +74,14 @@ export function AppScreen({
         <View className="px-5 pt-4">
           <View
             className={cn(
-              'w-full self-center rounded-[30px] border p-1.5 shadow-soft',
+              'w-full self-center rounded-[28px] border p-1 shadow-soft',
               headerStyles[tone]
             )}
             style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
           >
             <View
               className={cn(
-                'rounded-[26px] border px-4 py-3.5',
+                'rounded-[24px] border px-4 py-3',
                 headerCoreStyles[tone]
               )}
             >
@@ -95,12 +95,12 @@ export function AppScreen({
                       </HeroText>
                     ) : null}
                     {title ? (
-                      <HeroText className="text-[22px] font-bold tracking-tight text-neutral-950">
+                      <HeroText className="text-[20px] font-bold tracking-tight text-neutral-950">
                         {title}
                       </HeroText>
                     ) : null}
                     {subtitle ? (
-                      <HeroText className="mt-0.5 text-sm text-neutral-500">
+                      <HeroText className="mt-0.5 text-[13px] leading-5 text-neutral-500">
                         {subtitle}
                       </HeroText>
                     ) : null}
@@ -121,7 +121,7 @@ export function AppScreen({
           {...props}
         >
           <View
-            className={cn('flex-1 w-full self-center px-5 pt-5', contentContainerClassName)}
+            className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
             style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
           >
             {children}
@@ -130,7 +130,7 @@ export function AppScreen({
       ) : (
         <View className={cn('flex-1', className)} {...props}>
           <View
-            className={cn('flex-1 w-full self-center px-5 pt-5', contentContainerClassName)}
+            className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
             style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
           >
             {children}

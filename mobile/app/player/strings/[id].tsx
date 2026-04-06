@@ -7,6 +7,7 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
+import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { useAppStore } from '../../../store/appStore';
@@ -114,24 +115,16 @@ export default function StringDetailScreen() {
       </AppCard>
 
       <AppSection eyebrow="Specs" title="Key setup details">
-        <AppCard variant="elevated" padding="none">
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Gauge</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{selectedString.gauge}</HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Material</HeroText>
-            <HeroText className="max-w-[12rem] text-right font-semibold text-neutral-950">
-              {selectedString.material}
-            </HeroText>
-          </View>
-          <View className="p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Recommended tension</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {selectedString.recommendedTension[0]} - {selectedString.recommendedTension[1]} lbs
-            </HeroText>
-          </View>
-        </AppCard>
+        <AppDetailList
+          items={[
+            { label: 'Gauge', value: selectedString.gauge },
+            { label: 'Material', value: selectedString.material },
+            {
+              label: 'Recommended tension',
+              value: `${selectedString.recommendedTension[0]} - ${selectedString.recommendedTension[1]} lbs`,
+            },
+          ]}
+        />
       </AppSection>
 
       <AppSection eyebrow="Performance" title="Highlights that matter">
@@ -214,15 +207,14 @@ export default function StringDetailScreen() {
             className="min-w-[150px] flex-1"
             onPress={() => router.push(`/player/recommend/explain/${selectedString.id}`)}
           />
-          <AppButton
-            label="Ask AI"
-            variant="ghost"
-            size="lg"
-            className="min-w-[150px] flex-1"
-            leadingIcon={<MessageSquareText size={16} color="#475569" />}
-            onPress={() => router.push('/player/chat/chat-001')}
-          />
         </View>
+        <AppButton
+          label="Ask AI about this string"
+          variant="ghost"
+          size="lg"
+          leadingIcon={<MessageSquareText size={16} color="#475569" />}
+          onPress={() => router.push('/player/chat/chat-001')}
+        />
       </View>
     </AppScreen>
   );

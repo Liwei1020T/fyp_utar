@@ -28,7 +28,7 @@ export default function StringsCatalogScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'repulsion' | 'balanced' | 'control' | 'durable'>('all');
   const [sortBy, setSortBy] = useState<(typeof sortOptions)[number]['id']>('power');
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
 
   const filteredStrings = useMemo(() => {
     const next = strings.filter((item) => {
@@ -68,10 +68,10 @@ export default function StringsCatalogScreen() {
                     Product discovery
                   </HeroText>
                   <HeroText className="mt-2 text-[24px] font-bold tracking-tight text-neutral-950">
-                    Compare feel, sound, tension fit, and trade-offs before you book.
+                    Compare the shortlist before you book.
                   </HeroText>
                   <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-                    Select up to three strings for side-by-side comparison and send the winner straight into the booking flow.
+                    Search quickly, keep filters nearby, and push the winner straight into booking.
                   </HeroText>
                 </View>
                 <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary-600">
@@ -134,7 +134,7 @@ export default function StringsCatalogScreen() {
             ) : (
               <AppCard variant="subtle" padding="sm">
                 <HeroText className="text-sm leading-6 text-neutral-600">
-                  Filters: {selectedCategory === 'all' ? 'All strings' : formatLabel(selectedCategory)} • Sort: {formatLabel(sortBy)}
+                  Showing {selectedCategory === 'all' ? 'all strings' : formatLabel(selectedCategory)} • sorted by {formatLabel(sortBy)}
                 </HeroText>
               </AppCard>
             )}

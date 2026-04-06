@@ -109,10 +109,10 @@ export default function RecommendationInputScreen() {
           <View className="flex-1">
             <AppChip label="AI MATCH INPUT" variant="secondary" className="self-start" />
             <HeroText className="mt-4 text-[26px] font-bold tracking-tight text-white leading-[32px]">
-              Build today&apos;s ideal string profile.
+              Build today&apos;s string profile.
             </HeroText>
             <HeroText className="mt-3 text-sm leading-6 text-primary-100">
-              This mock input surface is structured for future AI and RAG integration, but already behaves like a polished product tool.
+              Adjust the player context first so the shortlist feels grounded and believable.
             </HeroText>
           </View>
           <View className="h-14 w-14 items-center justify-center rounded-[22px] bg-white/12">
@@ -140,7 +140,7 @@ export default function RecommendationInputScreen() {
         </View>
       </AppCard>
 
-      <AppSection eyebrow="Profile overlay" title="Adjust today’s playing context" subtitle="These selections make priorities and intent easier to understand during the demo.">
+      <AppSection eyebrow="Profile overlay" title="Adjust today’s playing context" subtitle="Keep the recommendation inputs easy to read in the demo.">
         <AppCard variant="elevated" padding="lg">
           <HeroText className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-400">
             Playing style
@@ -174,7 +174,7 @@ export default function RecommendationInputScreen() {
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Priority mixer" title="Refine what matters most" subtitle="Keep the weighting explicit so the output feels explainable instead of magical.">
+      <AppSection eyebrow="Priority mixer" title="Refine what matters most" subtitle="Make the weighting explicit so every recommendation feels explainable.">
         <View className="gap-4">
           {priorityLabels.map((item) => (
             <AppCard key={item.key} variant="elevated" padding="md">
@@ -208,7 +208,7 @@ export default function RecommendationInputScreen() {
           <View className="flex-row gap-3">
             <Info size={18} color="#0891B2" />
             <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-              Your current style, skill level, preferred tension, and five weighted priorities feed the mock ranking engine. The follow-up pages explain why each string fits.
+              Style, skill level, preferred tension, and your five weighted priorities feed the ranking engine shown on the next screen.
             </HeroText>
           </View>
         </AppCard>

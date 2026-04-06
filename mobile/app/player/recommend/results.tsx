@@ -149,34 +149,34 @@ export default function RecommendationResultsScreen() {
                   </HeroText>
                 </AppCard>
 
-                <View className="mt-6 flex-row flex-wrap gap-3">
+                <View className="mt-6 gap-3">
                   <AppButton
-                    label="Book"
+                    label="Book this string"
                     size="md"
-                    className="min-w-[136px] flex-1"
                     trailingIcon={<ArrowRight size={16} color="white" />}
                     onPress={() => router.push(`/player/bookings/new?stringId=${item.id}`)}
                   />
+                  <View className="flex-row gap-3">
+                    <AppButton
+                      label="Explain fit"
+                      variant="outline"
+                      size="md"
+                      className="flex-1"
+                      onPress={() => router.push(`/player/recommend/explain/${item.id}`)}
+                    />
+                    <AppButton
+                      label={isSelected ? 'Selected' : 'Compare'}
+                      variant={isSelected ? 'secondary' : 'outline'}
+                      size="md"
+                      className="flex-1"
+                      leadingIcon={<Scale size={16} color={isSelected ? '#78350F' : '#475569'} />}
+                      onPress={() => toggleCompareSelection(item.id)}
+                    />
+                  </View>
                   <AppButton
-                    label="Explain"
-                    variant="outline"
-                    size="md"
-                    className="min-w-[136px] flex-1"
-                    onPress={() => router.push(`/player/recommend/explain/${item.id}`)}
-                  />
-                  <AppButton
-                    label={isSelected ? 'Selected' : 'Compare'}
-                    variant={isSelected ? 'secondary' : 'outline'}
-                    size="md"
-                    className="min-w-[136px] flex-1"
-                    leadingIcon={<Scale size={16} color={isSelected ? '#78350F' : '#475569'} />}
-                    onPress={() => toggleCompareSelection(item.id)}
-                  />
-                  <AppButton
-                    label="Ask AI"
+                    label="Ask AI about this match"
                     variant="ghost"
                     size="md"
-                    className="min-w-[136px] flex-1"
                     leadingIcon={<MessageSquareText size={16} color="#475569" />}
                     onPress={() => router.push('/player/chat/chat-001')}
                   />
@@ -241,11 +241,10 @@ export default function RecommendationResultsScreen() {
                     </HeroText>
                   </AppCard>
 
-                  <View className="mt-6 flex-row flex-wrap gap-3">
+                  <View className="mt-6 gap-3">
                     <AppButton
-                      label="Book"
+                      label="Book this string"
                       size="md"
-                      className="min-w-[136px] flex-1"
                       trailingIcon={<ArrowRight size={16} color="white" />}
                       isDisabled={!item.stringId}
                       onPress={() =>
@@ -254,35 +253,44 @@ export default function RecommendationResultsScreen() {
                           : undefined
                       }
                     />
-                    <AppButton
-                      label="Explain"
-                      variant="outline"
-                      size="md"
-                      className="min-w-[136px] flex-1"
-                      isDisabled={!item.stringId}
-                      onPress={() =>
-                        item.stringId
-                          ? router.push(`/player/recommend/explain/${item.stringId}`)
-                          : undefined
-                      }
-                    />
-                    <AppButton
-                      label={isSelected ? 'Selected' : 'Compare'}
-                      variant={isSelected ? 'secondary' : 'outline'}
-                      size="md"
-                      className="min-w-[136px] flex-1"
-                      leadingIcon={
-                        <Scale
-                          size={16}
-                          color={isSelected ? '#78350F' : '#475569'}
-                        />
-                      }
-                      isDisabled={!item.stringId}
-                      onPress={() => {
-                        if (item.stringId) {
-                          toggleCompareSelection(item.stringId);
+                    <View className="flex-row gap-3">
+                      <AppButton
+                        label="Explain fit"
+                        variant="outline"
+                        size="md"
+                        className="flex-1"
+                        isDisabled={!item.stringId}
+                        onPress={() =>
+                          item.stringId
+                            ? router.push(`/player/recommend/explain/${item.stringId}`)
+                            : undefined
                         }
-                      }}
+                      />
+                      <AppButton
+                        label={isSelected ? 'Selected' : 'Compare'}
+                        variant={isSelected ? 'secondary' : 'outline'}
+                        size="md"
+                        className="flex-1"
+                        leadingIcon={
+                          <Scale
+                            size={16}
+                            color={isSelected ? '#78350F' : '#475569'}
+                          />
+                        }
+                        isDisabled={!item.stringId}
+                        onPress={() => {
+                          if (item.stringId) {
+                            toggleCompareSelection(item.stringId);
+                          }
+                        }}
+                      />
+                    </View>
+                    <AppButton
+                      label="Ask AI about this match"
+                      variant="ghost"
+                      size="md"
+                      leadingIcon={<MessageSquareText size={16} color="#475569" />}
+                      onPress={() => router.push('/player/chat/chat-001')}
                     />
                   </View>
                 </AppCard>

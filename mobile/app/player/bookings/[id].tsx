@@ -1,11 +1,13 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, MessageSquareText, QrCode, TimerReset } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
+import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
+import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { useAppStore, useBookings, usePayments } from '../../../store/appStore';
@@ -53,9 +55,11 @@ export default function PlayerBookingDetailScreen() {
       title={`Booking ${booking.id}`}
       subtitle="Booking info, payment info, drop-off details, and service actions in one player view."
       headerLeft={
-        <Pressable onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
+        <AppIconButton
+          icon={<ChevronLeft size={20} color="#111827" />}
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+        />
       }
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
@@ -104,30 +108,26 @@ export default function PlayerBookingDetailScreen() {
       </AppSection>
 
       <AppSection eyebrow="Booking info" title="String and racket setup">
-        <AppCard variant="elevated" padding="none">
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">String</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {stringItem?.brand} {stringItem?.model}
-            </HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Racket</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {booking.racketBrand} {booking.racketModel}
-            </HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Requested tension</HeroText>
-            <HeroText className="font-semibold text-neutral-950">
-              {booking.requestedTension} lbs
-            </HeroText>
-          </View>
-          <View className="p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Admin desk</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{admin?.businessName}</HeroText>
-          </View>
-        </AppCard>
+        <AppDetailList
+          items={[
+            {
+              label: 'String',
+              value: `${stringItem?.brand ?? ''} ${stringItem?.model ?? ''}`.trim(),
+            },
+            {
+              label: 'Racket',
+              value: `${booking.racketBrand} ${booking.racketModel}`,
+            },
+            {
+              label: 'Requested tension',
+              value: `${booking.requestedTension} lbs`,
+            },
+            {
+              label: 'Admin desk',
+              value: admin?.businessName ?? 'Assigned shop',
+            },
+          ]}
+        />
       </AppSection>
 
       <AppSection eyebrow="Drop-off" title="Arrival and check-in">
@@ -152,39 +152,28 @@ export default function PlayerBookingDetailScreen() {
       </AppSection>
 
       <AppSection eyebrow="Payment info" title="Pricing breakdown">
-        <AppCard variant="elevated" padding="none">
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">String fee</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{formatCurrency(booking.stringFee)}</HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Service fee</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{formatCurrency(booking.serviceFee)}</HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Wallet used</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{formatCurrency(booking.walletUsed)}</HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Amount paid</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{formatCurrency(booking.amountPaid)}</HeroText>
-          </View>
-          <View className="border-b border-neutral-100 p-4 flex-row justify-between">
-            <HeroText className="text-neutral-500">Total amount</HeroText>
-            <HeroText className="font-semibold text-neutral-950">{formatCurrency(booking.totalAmount)}</HeroText>
-          </View>
-          <View className="p-4">
-            <HeroText className="text-neutral-500">Payment records</HeroText>
-            <View className="mt-2 gap-2">
-              {bookingPayments.map((payment) => (
-                <HeroText key={payment.id} className="text-sm text-neutral-700">
-                  {formatPaymentMethod(payment.method)} • {formatCurrency(payment.amount)} •{' '}
-                  {formatPaymentStatus(payment.status)}
-                </HeroText>
-              ))}
-            </View>
-          </View>
-        </AppCard>
+        <AppDetailList
+          items={[
+            { label: 'String fee', value: formatCurrency(booking.stringFee) },
+            { label: 'Service fee', value: formatCurrency(booking.serviceFee) },
+            { label: 'Wallet used', value: formatCurrency(booking.walletUsed) },
+            { label: 'Amount paid', value: formatCurrency(booking.amountPaid) },
+            { label: 'Total amount', value: formatCurrency(booking.totalAmount) },
+            {
+              label: 'Payment records',
+              value: (
+                <View className="mt-1 gap-2 md:items-end">
+                  {bookingPayments.map((payment) => (
+                    <HeroText key={payment.id} className="text-sm leading-6 text-neutral-700 md:text-right">
+                      {formatPaymentMethod(payment.method)} • {formatCurrency(payment.amount)} •{' '}
+                      {formatPaymentStatus(payment.status)}
+                    </HeroText>
+                  ))}
+                </View>
+              ),
+            },
+          ]}
+        />
       </AppSection>
 
       <AppSection eyebrow="Rule" title="Booking policy">

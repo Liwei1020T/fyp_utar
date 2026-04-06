@@ -38,7 +38,7 @@ export function AppCard({
 
   const paddingStyles = {
     none: 'p-0',
-    sm: 'p-4',
+    sm: 'p-3.5',
     md: 'p-5',
     lg: 'p-6',
   };
@@ -63,7 +63,7 @@ export function AppCard({
     <Surface
       variant={nativeVariantMap[variant]}
       className={cn(
-        'overflow-hidden rounded-[28px] p-1.5',
+        'overflow-hidden rounded-[26px] p-1',
         shellStyles[variant],
         className
       )}
@@ -71,7 +71,7 @@ export function AppCard({
     >
       <View
         className={cn(
-          'overflow-hidden rounded-[24px]',
+          'overflow-hidden rounded-[22px]',
           coreStyles[variant]
         )}
       >
