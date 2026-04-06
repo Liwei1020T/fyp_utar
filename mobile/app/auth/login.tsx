@@ -24,17 +24,25 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-const demoUsers: Array<{ role: UserRole; label: string; email: string; description: string }> = [
+const demoUsers: Array<{
+  role: UserRole;
+  label: string;
+  identifier: string;
+  password: string;
+  description: string;
+}> = [
   {
     role: 'player',
     label: 'Player',
-    email: '+60123456789',
+    identifier: '+60123456789',
+    password: 'password',
     description: 'Use your phone-based player login.',
   },
   {
     role: 'admin',
     label: 'Admin',
-    email: 'admin@example.com',
+    identifier: 'admin@example.com',
+    password: 'password',
     description: 'Open the shop operations workspace.',
   },
 ];
@@ -70,9 +78,9 @@ export default function LoginScreen() {
   const identifierValue = watch('identifier');
 
   useEffect(() => {
-    setValue('identifier', params.identifier ?? activeDemo.email);
-    setValue('password', activeDemo.role === 'admin' ? 'password' : '');
-  }, [activeDemo.email, activeDemo.role, params.identifier, setValue]);
+    setValue('identifier', params.identifier ?? activeDemo.identifier);
+    setValue('password', activeDemo.password);
+  }, [activeDemo.identifier, activeDemo.password, params.identifier, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
@@ -141,9 +149,9 @@ export default function LoginScreen() {
                 label={item.label}
                 size="md"
                 variant={selectedRole === item.role ? 'primary' : 'neutral'}
-                onPress={() => setSelectedRole(item.role)}
-              />
-            ))}
+              onPress={() => setSelectedRole(item.role)}
+            />
+          ))}
           </View>
           <HeroText className="text-sm leading-5 text-neutral-500">
             {activeDemo.description}
@@ -227,7 +235,8 @@ export default function LoginScreen() {
               key={item.role}
               onPress={() => {
                 setSelectedRole(item.role);
-                setValue('identifier', item.email);
+                setValue('identifier', item.identifier);
+                setValue('password', item.password);
               }}
             >
               <AppCard variant="subtle" padding="sm">
@@ -241,7 +250,7 @@ export default function LoginScreen() {
                     </HeroText>
                   </View>
                   <HeroText className="text-xs font-semibold text-primary-700">
-                    {item.email}
+                    {item.identifier}
                   </HeroText>
                 </View>
               </AppCard>
