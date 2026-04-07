@@ -109,6 +109,12 @@ export const backendApi = {
       body: payload,
     });
   },
+  login(payload: { phone_number: string; password: string }) {
+    return requestJson<BackendAuthResponse>('/auth/login', {
+      method: 'POST',
+      body: payload,
+    });
+  },
   loginPlayer(payload: { phone_number: string; password: string }) {
     return requestJson<BackendAuthResponse>('/auth/login', {
       method: 'POST',

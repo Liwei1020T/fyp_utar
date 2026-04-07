@@ -12,7 +12,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 - Primary users: badminton players booking stringing services, and one shop admin managing operations.
 - Product shape: one codebase inside the unified StringSence workspace, two role-based experiences, premium mobile UI, with a hybrid data layer.
-- Current runtime split: player core flow may use the Python backend, while admin flow and non-core domains remain mock-first.
+- Current runtime split: player core flow and FYP1 admin booking/inventory flows may use the Python backend, while non-core domains remain mock-first.
 - Non-goals: backend implementation, multi-store architecture, or inventing new tooling that does not exist in the repo.
 
 ## Canonical Commands
@@ -84,7 +84,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 5. Keep mutable business behavior in the store, not scattered across screens.
    Screens may derive display state, but durable mutations should live in `store/appStore.ts`.
 6. Treat the player core flow as hybrid.
-   Player auth, profile, strings, recommendation, and bookings may use the live backend, while admin and non-core player domains stay mocked.
+   Player auth, profile, strings, recommendation, bookings, and FYP1 admin booking/inventory operations may use the live backend, while non-core player/admin domains stay mocked.
 
 ## Runtime and Styling Constraints
 
@@ -126,7 +126,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Start with `EXPO_PUBLIC_API_BASE_URL=http://localhost:3001/api npm run web`
 - Start the sibling backend in `../backend` when testing live player flows
 - Use `+60123456789` / `password` for the player flow
-- Use `admin@example.com` / `password` for the admin flow
+- Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`
 
 ## Maintenance Rule
 

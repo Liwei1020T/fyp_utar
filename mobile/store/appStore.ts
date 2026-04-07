@@ -17,6 +17,7 @@ import {
 import { getRoleHome } from '../lib/navigation';
 import type {
   AppUser,
+  AdminProfile,
   Booking,
   BookingDraft,
   RecommendationMatch,
@@ -143,6 +144,7 @@ interface AppStoreState {
   backendAccessToken: string | null;
   currentUserId: string | null;
   livePlayerProfile: PlayerProfile | null;
+  liveAdminProfile: AdminProfile | null;
   liveStrings: StringItem[];
   liveBookings: Booking[];
   liveRecommendationResults: RecommendationMatch[];
@@ -167,6 +169,10 @@ interface AppStoreState {
   setBackendPlayerSession: (input: {
     accessToken: string;
     player: PlayerProfile;
+  }) => void;
+  setBackendAdminSession: (input: {
+    accessToken: string;
+    admin: AdminProfile;
   }) => void;
   setLiveStrings: (strings: StringItem[]) => void;
   setLiveBookings: (bookings: Booking[]) => void;
@@ -206,6 +212,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   backendAccessToken: null,
   currentUserId: null,
   livePlayerProfile: null,
+  liveAdminProfile: null,
   liveStrings: [],
   liveBookings: [],
   liveRecommendationResults: [],
@@ -236,6 +243,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       sessionSource: 'mock',
       backendAccessToken: null,
       livePlayerProfile: null,
+      liveAdminProfile: null,
       liveStrings: [],
       liveBookings: [],
       liveRecommendationResults: [],
@@ -254,6 +262,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       sessionSource: 'mock',
       backendAccessToken: null,
       livePlayerProfile: null,
+      liveAdminProfile: null,
       liveStrings: [],
       liveBookings: [],
       liveRecommendationResults: [],
@@ -299,6 +308,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       sessionSource: 'mock',
       backendAccessToken: null,
       livePlayerProfile: null,
+      liveAdminProfile: null,
       liveStrings: [],
       liveBookings: [],
       liveRecommendationResults: [],
@@ -327,6 +337,16 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       backendAccessToken: accessToken,
       currentUserId: player.id,
       livePlayerProfile: player,
+      liveAdminProfile: null,
+      liveRecommendationResults: [],
+    }),
+  setBackendAdminSession: ({ accessToken, admin }) =>
+    set({
+      sessionSource: 'backend',
+      backendAccessToken: accessToken,
+      currentUserId: admin.id,
+      liveAdminProfile: admin,
+      livePlayerProfile: null,
       liveRecommendationResults: [],
     }),
   setLiveStrings: (liveStrings) => set({ liveStrings }),
@@ -344,6 +364,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       backendAccessToken: null,
       currentUserId: null,
       livePlayerProfile: null,
+      liveAdminProfile: null,
       liveStrings: [],
       liveBookings: [],
       liveRecommendationResults: [],
@@ -745,11 +766,21 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       ),
     })),
   updateStringItem: (stringId, patch) =>
-    set((state) => ({
-      strings: state.strings.map((item) =>
-        item.id === stringId ? { ...item, ...patch } : item
-      ),
-    })),
+    set((state) => {
+      if (state.sessionSource === 'backend') {
+        return {
+          liveStrings: state.liveStrings.map((item) =>
+            item.id === stringId ? { ...item, ...patch } : item
+          ),
+        };
+      }
+
+      return {
+        strings: state.strings.map((item) =>
+          item.id === stringId ? { ...item, ...patch } : item
+        ),
+      };
+    }),
   markNotificationRead: (notificationId) =>
     set((state) => ({
       notifications: state.notifications.map((item) =>
@@ -802,10 +833,11 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 export function useCurrentUser() {
   const sessionSource = useAppStore((state) => state.sessionSource);
   const livePlayerProfile = useAppStore((state) => state.livePlayerProfile);
+  const liveAdminProfile = useAppStore((state) => state.liveAdminProfile);
   const currentUserId = useAppStore((state) => state.currentUserId);
   const users = useAppStore((state) => state.users);
   if (sessionSource === 'backend') {
-    return livePlayerProfile;
+    return livePlayerProfile ?? liveAdminProfile;
   }
   return users.find((item) => item.id === currentUserId) ?? null;
 }

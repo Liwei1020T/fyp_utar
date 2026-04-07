@@ -45,6 +45,13 @@ export function getUserById(id?: string | null): AppUser | undefined {
   ) {
     return state.livePlayerProfile;
   }
+  if (
+    state.sessionSource === 'backend' &&
+    state.liveAdminProfile &&
+    state.liveAdminProfile.id === id
+  ) {
+    return state.liveAdminProfile;
+  }
   return MOCK_USERS.find((item) => item.id === id);
 }
 
@@ -65,6 +72,14 @@ export function getPlayerById(id?: string | null): PlayerProfile | undefined {
 }
 
 export function getAdminById(id?: string | null): AdminProfile | undefined {
+  const state = useAppStore.getState();
+  if (
+    state.sessionSource === 'backend' &&
+    state.liveAdminProfile &&
+    state.liveAdminProfile.id === id
+  ) {
+    return state.liveAdminProfile;
+  }
   return MOCK_ADMINS.find((item) => item.id === id);
 }
 
@@ -97,6 +112,10 @@ export function getBookingsForPlayer(playerId: string): Booking[] {
 }
 
 export function getBookingsForAdmin(adminId: string): Booking[] {
+  const state = useAppStore.getState();
+  if (state.sessionSource === 'backend') {
+    return state.liveBookings.filter((item) => item.adminId === adminId);
+  }
   return MOCK_BOOKINGS.filter((item) => item.adminId === adminId);
 }
 

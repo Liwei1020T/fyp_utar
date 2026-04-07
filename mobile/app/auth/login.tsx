@@ -14,7 +14,10 @@ import { HeroText } from '../../components/ui/heroui';
 import { useAppStore } from '../../store/appStore';
 import { getRoleHome } from '../../lib/navigation';
 import { BackendApiError, backendApi } from '../../services/backendApi';
-import { mapBackendUserToPlayerProfile } from '../../services/backendMappers';
+import {
+  mapBackendUserToAdminProfile,
+  mapBackendUserToPlayerProfile,
+} from '../../services/backendMappers';
 import type { UserRole } from '../../types/domain';
 
 const loginSchema = z.object({
@@ -41,9 +44,9 @@ const demoUsers: Array<{
   {
     role: 'admin',
     label: 'Admin',
-    identifier: 'admin@example.com',
-    password: 'password',
-    description: 'Open the shop operations workspace.',
+    identifier: '+60190000000',
+    password: 'admin1234',
+    description: 'Use the seeded backend admin login for shop operations.',
   },
 ];
 
@@ -53,6 +56,9 @@ export default function LoginScreen() {
   const login = useAppStore((state) => state.login);
   const setBackendPlayerSession = useAppStore(
     (state) => state.setBackendPlayerSession,
+  );
+  const setBackendAdminSession = useAppStore(
+    (state) => state.setBackendAdminSession,
   );
   const [selectedRole, setSelectedRole] = useState<UserRole>(params.role ?? 'player');
   const [formError, setFormError] = useState<string | null>(null);
@@ -86,23 +92,31 @@ export default function LoginScreen() {
     setFormError(null);
     await new Promise((resolve) => setTimeout(resolve, 250));
 
-    if (selectedRole === 'admin') {
-      const role = login(data.identifier);
-
-      if (!role) {
-        setFormError('Use the pre-filled admin demo account to continue.');
-        return;
-      }
-
-      router.replace(getRoleHome(role) as never);
-      return;
-    }
-
     try {
-      const auth = await backendApi.loginPlayer({
+      const auth = await backendApi.login({
         phone_number: data.identifier,
         password: data.password,
       });
+
+      if (selectedRole === 'admin') {
+        if (auth.role !== 'admin') {
+          setFormError('This account is not an admin account.');
+          return;
+        }
+
+        setBackendAdminSession({
+          accessToken: auth.access_token,
+          admin: mapBackendUserToAdminProfile(auth.user),
+        });
+        router.replace(getRoleHome('admin') as never);
+        return;
+      }
+
+      if (auth.role !== 'customer') {
+        setFormError('This account is not a player account.');
+        return;
+      }
+
       const profile = await backendApi.fetchProfile(auth.access_token).catch(() => null);
 
       setBackendPlayerSession({
@@ -112,6 +126,14 @@ export default function LoginScreen() {
 
       router.replace((profile ? '/player' : '/player/profile/edit') as never);
     } catch (error) {
+      if (selectedRole === 'admin') {
+        const role = login(data.identifier);
+        if (role === 'admin') {
+          router.replace(getRoleHome(role) as never);
+          return;
+        }
+      }
+
       setFormError(
         error instanceof BackendApiError
           ? error.message
@@ -127,7 +149,7 @@ export default function LoginScreen() {
       subtitle={
         selectedRole === 'player'
           ? 'Use your phone and password to open the player flow.'
-          : 'Use the pre-filled admin account to enter the operations workspace.'
+          : 'Use the seeded backend admin phone and password to enter the operations workspace.'
       }
       onBack={() => {
         if (router.canGoBack()) {
@@ -169,13 +191,13 @@ export default function LoginScreen() {
           name="identifier"
           render={({ field: { onChange, value } }) => (
             <AppInput
-              label={selectedRole === 'player' ? 'Phone number' : 'Email address'}
+              label="Phone number"
               placeholder={
                 selectedRole === 'player'
                   ? 'e.g. +60123456789'
-                  : 'e.g. admin@example.com'
+                  : 'e.g. +60190000000'
               }
-              keyboardType={selectedRole === 'player' ? 'phone-pad' : 'email-address'}
+              keyboardType="phone-pad"
               value={value}
               onChangeText={onChange}
               error={errors.identifier?.message}
@@ -183,7 +205,7 @@ export default function LoginScreen() {
                 formError
                   ?? (selectedRole === 'player'
                     ? 'Player accounts authenticate against the live backend.'
-                    : 'Admin access stays mock-first for the demo.')
+                    : 'Admin accounts authenticate against the live backend.')
               }
               leftAdornment={<Mail size={18} color="#64748B" />}
             />
@@ -204,7 +226,7 @@ export default function LoginScreen() {
               helperText={
                 selectedRole === 'player'
                   ? 'Use the password from your player account.'
-                  : 'The admin demo password is already filled in.'
+                  : 'Use the seeded admin password from the backend environment.'
               }
               leftAdornment={<LockKeyhole size={18} color="#64748B" />}
             />

@@ -55,7 +55,7 @@ Zod.
 | [mobile/app/index.tsx](../mobile/app/index.tsx) | Initial redirect based on current user role/session. |
 | [mobile/app/auth/_layout.tsx](../mobile/app/auth/_layout.tsx) | Auth stack layout and redirect guard for already-authenticated users. |
 | [mobile/app/auth/welcome.tsx](../mobile/app/auth/welcome.tsx) | Role-aware welcome/entry screen. |
-| [mobile/app/auth/login.tsx](../mobile/app/auth/login.tsx) | Login form; player login can hit backend, admin remains mock-first. |
+| [mobile/app/auth/login.tsx](../mobile/app/auth/login.tsx) | Login form; player and seeded admin login can hit the backend auth flow. |
 | [mobile/app/auth/register.tsx](../mobile/app/auth/register.tsx) | Player registration form against backend session bridge. |
 | [mobile/app/auth/forgot-password.tsx](../mobile/app/auth/forgot-password.tsx) | Password reset code request/reset flow. |
 | [mobile/app/player/_layout.tsx](../mobile/app/player/_layout.tsx) | Player route-group guard. |
@@ -107,7 +107,7 @@ Zod.
 
 | Path | Purpose | Open When |
 | --- | --- | --- |
-| [mobile/store/appStore.ts](../mobile/store/appStore.ts) | Zustand source of truth for session state, live player bridge data, mock state, booking/payment mutations, chat, wallet, notifications, admin settings, and selector hooks. | UI state is stale, screen needs a new mutation, or mock/live session behavior changes. |
+| [mobile/store/appStore.ts](../mobile/store/appStore.ts) | Zustand source of truth for session state, live player/admin bridge data, mock state, booking/payment mutations, chat, wallet, notifications, admin settings, and selector hooks. | UI state is stale, screen needs a new mutation, or mock/live session behavior changes. |
 | [mobile/services/backendApi.ts](../mobile/services/backendApi.ts) | Fetch wrapper and typed backend endpoint methods; uses `EXPO_PUBLIC_API_BASE_URL` with a 12s timeout. | Adding or changing live backend calls. |
 | [mobile/services/backendMappers.ts](../mobile/services/backendMappers.ts) | Converts backend snake_case DTOs into mobile domain models and builds backend payloads from mobile state. | Backend contract changes or mobile/backend field names diverge. |
 | [mobile/services/mockAppService.ts](../mobile/services/mockAppService.ts) | Synchronous read helpers over mock datasets. | Mock-first screens need lookup or derived data. |

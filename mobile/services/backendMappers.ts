@@ -1,4 +1,5 @@
 import type {
+  AdminProfile,
   Booking,
   BookingStatus,
   BookingStatusEntry,
@@ -10,6 +11,7 @@ import type {
   StringItem,
 } from '../types/domain';
 import type {
+  BackendAdminInventoryString,
   BackendAuthUser,
   BackendBooking,
   BackendBookingStatusHistory,
@@ -164,6 +166,24 @@ export function mapBackendUserToPlayerProfile(
   };
 }
 
+export function mapBackendUserToAdminProfile(user: BackendAuthUser): AdminProfile {
+  return {
+    id: user.id,
+    role: 'admin',
+    name: user.username,
+    email: user.phone_number,
+    avatarLabel: initials(user.username),
+    businessName: 'Apex String Lab',
+    city: 'Kuala Lumpur',
+    branchCode: 'LIVE-BACKEND',
+    averageTurnaroundHours: 24,
+    queueCapacity: 24,
+    rating: 4.8,
+    specialties: ['Booking operations', 'Inventory control', 'String setup support'],
+    escalationEmail: user.phone_number,
+  };
+}
+
 function deriveCategory(item: BackendString): StringItem['category'] {
   const ranked = [
     ['repulsion', item.attack + item.elasticity] as const,
@@ -254,6 +274,17 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   };
 }
 
+export function mapBackendInventoryStringToStringItem(
+  item: BackendAdminInventoryString,
+): StringItem {
+  return {
+    ...mapBackendStringToStringItem(item),
+    stockLevel: item.stock_level,
+    availability: item.availability,
+    adminNote: item.admin_note ?? undefined,
+  };
+}
+
 function mapBackendStatus(value: string): BookingStatus {
   switch (value) {
     case 'awaiting_dropoff':
@@ -314,6 +345,7 @@ function historyToTimeline(
 export function mapBackendBookingToBooking(
   booking: BackendBooking,
   priceByStringId: Map<string, number>,
+  adminId = 'admin-001',
 ): Booking {
   const status = mapBackendStatus(booking.status);
   const dropOffDateTime = booking.drop_off_datetime
@@ -324,7 +356,7 @@ export function mapBackendBookingToBooking(
   return {
     id: booking.id,
     playerId: booking.user_id,
-    adminId: 'admin-001',
+    adminId,
     stringId: booking.string_id,
     status,
     paymentStatus: 'paid',
@@ -345,7 +377,8 @@ export function mapBackendBookingToBooking(
     amountPaid: stringFee,
     walletUsed: 0,
     bookingToken: booking.id,
-    checkInReference: `LIVE-${booking.id.slice(0, 8).toUpperCase()}`,
+    checkInReference:
+      booking.check_in_reference ?? `LIVE-${booking.id.slice(0, 8).toUpperCase()}`,
     queuePosition: 0,
     paymentRuleNote:
       'Payment flow is still mocked. This live booking only covers the core service request flow.',

@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the player MVP flow can use the live Python backend, while the admin workspace and non-core domains remain mock-first inside one codebase.
+StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the player MVP flow and FYP1 admin booking/inventory operations can use the live Python backend, while non-core domains remain mock-first inside one codebase.
 
 The app is optimized for:
 
@@ -619,4 +619,4 @@ The current frontend is a role-based Expo Router application with:
 - a reusable HeroUI-based design system
 - feature modules covering the full player and admin demo journeys
 
-It is best understood as a production-shaped prototype with a hybrid transition layer: the player MVP is now close to a real backend-connected product flow, while admin and advanced product areas remain intentionally local and mock-driven.
+It is best understood as a production-shaped prototype with a hybrid transition layer: the player MVP plus FYP1 admin booking/inventory flows are now close to real backend-connected product flows, while advanced product areas remain intentionally local and mock-driven.
