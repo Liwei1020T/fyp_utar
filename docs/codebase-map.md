@@ -40,7 +40,7 @@ Zod.
 | Path | Purpose | Notes |
 | --- | --- | --- |
 | [mobile/package.json](../mobile/package.json) | Expo scripts and dependency versions. | Main scripts are `npm run web`, `npm run ios`, `npm run android`; typecheck uses `npx tsc --noEmit`. |
-| [mobile/.nvmrc](../mobile/.nvmrc) | Node version pin. | Run `nvm use` before installing or running the app. |
+| [mobile/.nvmrc](../mobile/.nvmrc) | Node version pin. | Pins `20.19.0`; run `nvm use` before installing or running the app. |
 | [mobile/app.json](../mobile/app.json) | Expo app metadata. | Update when app name, icons, or Expo config changes. |
 | [mobile/babel.config.js](../mobile/babel.config.js) | Expo/Babel setup. | Keeps worklet and import-meta compatibility stable. |
 | [mobile/metro.config.js](../mobile/metro.config.js) | Metro bundler plus Uniwind integration. | Must continue pointing at `global.css`. |
@@ -296,7 +296,7 @@ asks to version a specific artifact.
 Prefer the commands in [AGENTS.md](../AGENTS.md). Minimum checks by scope:
 
 - Docs-only change: inspect Markdown diff; no build normally required.
-- Mobile code change: `cd mobile && npx tsc --noEmit`.
-- Backend code change: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`.
+- Mobile code change: `cd mobile && nvm use && npx tsc --noEmit`.
+- Backend code change: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`.
 - Backend contract/schema change: add or update tests, update `backend/docs/api-contract.md` and/or `backend/docs/database.md`.
 - Cross-workspace change: run the relevant backend and mobile checks, then smoke the mobile app against `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api`.

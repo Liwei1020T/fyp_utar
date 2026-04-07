@@ -42,7 +42,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
    nvm use
    ```
 
-   The project now pins Node `25.9.0` in `.nvmrc` and allows the `25.x` line in `package.json`.
+   The project pins Node `20.19.0` in `.nvmrc` and allows the `20.x` line in `package.json`.
 
 2. **Install Dependencies:**
    ```bash
@@ -63,7 +63,8 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 5. **Navigate:**
    - The app starts at `/auth/welcome`.
    - Player flow now uses phone number + password against the Python backend.
-   - Admin flow remains mock-based with `admin@example.com` / `password`.
+   - Admin FYP1 booking, inventory, business-hours, and limited store-settings flows can use the Python backend.
+   - Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`.
 
 6. **Optional live backend override:**
    ```bash
@@ -78,7 +79,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 ## Architecture Decisions
 - **Modularity:** Separate domain logic (strings, bookings) from UI components.
 - **Surgical UI:** Used HeroUI Native as the primary design system to ensure a premium, modern aesthetic out of the box.
-- **Hybrid Player MVP:** Player auth, profile, strings, recommendations, and bookings can use the live Python backend while admin and advanced domains remain mock-backed.
+- **Hybrid FYP1 MVP:** Player auth, profile, strings, recommendations, bookings, booking updates, and FYP1 admin operations can use the live Python backend while deferred FYP2 domains remain hidden, local, or mock-backed.
 - **Type Safety:** Strict TypeScript interfaces for all data models.
 
 ---

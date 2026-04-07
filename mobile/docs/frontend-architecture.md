@@ -65,7 +65,7 @@ flowchart TD
 
     N[mocks/*] --> O[store/appStore.ts]
     N --> P[services/mockAppService.ts]
-    R[stringsense_backend API] --> S[services/backendApi.ts]
+    R[Unified Python API app/main.py] --> S[services/backendApi.ts]
     S --> T[services/backendMappers.ts]
     T --> O
     O --> L

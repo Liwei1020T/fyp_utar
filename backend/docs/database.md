@@ -4,9 +4,14 @@
 
 SQLAlchemy models in [app/adapters/persistence/sqlalchemy/models](../app/adapters/persistence/sqlalchemy/models) plus Alembic revisions in [migrations](../migrations) are now the active schema source of truth for the backend.
 
-The initial unified-backend migration is:
+The active migration sequence is:
 
 - [20260404_0001_unified_python_backend.py](../migrations/versions/20260404_0001_unified_python_backend.py)
+- [20260404_0002_password_reset_codes.py](../migrations/versions/20260404_0002_password_reset_codes.py)
+- [20260404_0003_admin_booking_baseline.py](../migrations/versions/20260404_0003_admin_booking_baseline.py)
+- [20260405_0004_inventory_fields.py](../migrations/versions/20260405_0004_inventory_fields.py)
+- [20260405_0005_store_ops_tables.py](../migrations/versions/20260405_0005_store_ops_tables.py)
+- [20260407_0006_booking_updates.py](../migrations/versions/20260407_0006_booking_updates.py)
 
 ## Active Business Tables
 
@@ -63,6 +68,10 @@ Current lifecycle values are `awaiting_dropoff`, `in_progress`, `ready_for_colle
 ### `booking_status_history`
 
 Stores booking status transitions plus optional admin operator notes for auditability.
+
+### `booking_updates`
+
+Stores player/admin booking comments and optional uploaded photo metadata. Photo files are stored locally under `backend/var/uploads/booking-updates/` for the FYP demo and exposed through relative `/media/...` URLs.
 
 ### `recommendation_logs`
 

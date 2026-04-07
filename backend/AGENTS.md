@@ -16,6 +16,7 @@
 - Local Postgres from workspace root: `docker compose up -d postgres`
 - Python lint: `./.venv/bin/ruff check .`
 - Python format check: `./.venv/bin/ruff format --check .`
+- Python typecheck: `./.venv/bin/mypy app ai_service tests`
 - Python tests: `./.venv/bin/pytest -v`
 - Alembic upgrade: `./.venv/bin/alembic upgrade head`
 - Fast loop for touched areas first, then run the relevant full checks before completion.

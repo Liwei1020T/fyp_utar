@@ -18,7 +18,7 @@ cd backend
 cp .env.example .env
 uv sync --extra dev
 ./.venv/bin/alembic upgrade head
-./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload
+./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload
 ```
 
 ### 2. Start the mobile app
@@ -30,7 +30,7 @@ npm install
 EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
 ```
 
-The mobile workspace pins Node `25.9.0` via `mobile/.nvmrc`.
+The mobile workspace pins Node `20.19.0` via `mobile/.nvmrc` and `mobile/package.json` allows the Node `20.x` line.
 
 ### 3. Run the NLP workbench when you need fresh recommendation artifacts
 
@@ -50,7 +50,7 @@ Run `stringsense_complete_absa_pipeline_notebook.ipynb` from top to bottom. The 
 
 ## Validation
 
-- Mobile: `cd mobile && npx tsc --noEmit`
-- Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`
+- Mobile: `cd mobile && nvm use && npx tsc --noEmit`
+- Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
 
 More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md).

@@ -19,7 +19,7 @@
 - Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - Backend setup: `cd backend && uv sync --extra dev`
 - Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
-- Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/pytest -v`
+- Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
 - NLP notebook setup: `cd ml/nlp-workbench && python3 -m pip install -r requirements.txt`
 - NLP notebook run: `cd ml/nlp-workbench && jupyter lab`
 
@@ -27,7 +27,7 @@
 
 - Entry points:
   - Mobile app: `mobile/app/_layout.tsx`
-  - Public backend: `backend/stringsense_backend/main.py`
+  - Public backend: `backend/app/main.py`
   - NLP workbench: `ml/nlp-workbench/stringsense_complete_absa_pipeline_notebook.ipynb`
 - Core modules:
   - `mobile/`: Expo Router app for player and admin flows
@@ -72,7 +72,7 @@
   - `cd backend && cp .env.example .env`
   - `cd backend && uv sync --extra dev`
   - `cd backend && ./.venv/bin/alembic upgrade head`
-  - `cd backend && ./.venv/bin/uvicorn stringsense_backend.main:app --host 127.0.0.1 --port 3001 --reload`
+  - `cd backend && ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
 - Mobile:
   - `cd mobile && nvm use`
   - `cd mobile && npm install`

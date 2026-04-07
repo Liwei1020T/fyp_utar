@@ -3,6 +3,7 @@
 - [Architecture](./architecture.md)
 - [API Contract](./api-contract.md)
 - [Database Ownership](./database.md)
+- [Clean Architecture Migration Map](./clean-architecture-migration-map.md)
 - [Runbook](./runbook.md)
 
 These backend-local docs describe the active unified Python runtime inside `backend/` and are kept aligned with the code in this workspace.

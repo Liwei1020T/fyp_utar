@@ -97,6 +97,7 @@ Primary validation commands:
 ```bash
 cd backend
 ./.venv/bin/ruff check .
+./.venv/bin/ruff format --check .
 ./.venv/bin/mypy app ai_service tests
-./.venv/bin/pytest -q
+./.venv/bin/pytest -v
 ```

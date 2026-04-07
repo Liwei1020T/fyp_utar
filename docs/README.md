@@ -9,5 +9,6 @@
 - [Backend Architecture](../backend/docs/architecture.md)
 - [Backend API Contract](../backend/docs/api-contract.md)
 - [Backend Database Ownership](../backend/docs/database.md)
+- [Backend Clean Architecture Migration Map](../backend/docs/clean-architecture-migration-map.md)
 - [Backend Runbook](../backend/docs/runbook.md)
 - [NLP Workbench README](../ml/nlp-workbench/README.md)

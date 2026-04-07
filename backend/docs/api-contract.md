@@ -38,6 +38,8 @@ Error responses use:
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/forgot-password/request-code`
+- `POST /api/auth/forgot-password/reset`
 - `GET /api/auth/me`
 
 Example register request:
@@ -67,6 +69,24 @@ Example login response:
     "auth_provider": "local",
     "external_auth_id": null
   }
+}
+```
+
+Example forgot-password request:
+
+```json
+{
+  "phone_number": "+60123456789"
+}
+```
+
+Example forgot-password reset request:
+
+```json
+{
+  "phone_number": "+60123456789",
+  "verification_code": "123456",
+  "new_password": "newsecret123"
 }
 ```
 
@@ -213,9 +233,11 @@ Recommendation response:
 - `POST /api/bookings`
 - `GET /api/bookings`
 - `GET /api/bookings/{id}`
+- `POST /api/bookings/{id}/updates`
 - `GET /api/admin/bookings`
 - `GET /api/admin/bookings/{id}`
 - `PATCH /api/admin/bookings/{id}/status`
+- `POST /api/admin/bookings/{id}/updates`
 
 Canonical booking statuses:
 
@@ -251,3 +273,13 @@ Example admin status update request:
 ```
 
 `note` is optional for forward progress updates and required for `cancelled` or `rejected`.
+
+Booking update endpoints accept `multipart/form-data` with at least one of:
+
+- `comment`: optional text comment
+- `photo`: optional JPG, PNG, or WEBP image up to 5 MB
+
+Booking responses include:
+
+- `updates`: booking comments/photos from player or admin users
+- `photo_url`: relative media URL such as `/media/booking-updates/<file>`

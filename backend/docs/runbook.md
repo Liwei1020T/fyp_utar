@@ -2,6 +2,14 @@
 
 ## 1. Prepare Environment
 
+From the workspace root, start the local Postgres service:
+
+```bash
+docker compose up -d postgres
+```
+
+Then prepare the backend environment:
+
 ```bash
 cd backend
 uv sync --extra dev
