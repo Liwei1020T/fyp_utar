@@ -43,7 +43,7 @@ docker compose up -d postgres
 Use this backend connection string:
 
 ```env
-DATABASE_URL=postgresql+psycopg://stringsense:stringsense_dev_password@127.0.0.1:55432/stringsense
+DATABASE_URL=postgresql+psycopg://admin:admin@127.0.0.1:55432/stringsense
 ```
 
 The Compose service stores data in the `stringsense_postgres_data` Docker volume.

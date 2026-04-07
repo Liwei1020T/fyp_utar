@@ -5,14 +5,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: stringsense
-      POSTGRES_USER: stringsense
-      POSTGRES_PASSWORD: stringsense_dev_password
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
     ports:
       - "55432:5432"
     volumes:
       - stringsense_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stringsense -d stringsense"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d stringsense"]
       interval: 5s
       timeout: 3s
       retries: 10
