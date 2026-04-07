@@ -32,6 +32,22 @@ In this unified workspace, `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` 
 
 Legacy AI env vars such as `AI_INTERNAL_API_KEY` are only needed if you still run `ai_service/` directly for standalone compatibility checks.
 
+## Local Postgres
+
+Start the local development database from the workspace root:
+
+```bash
+docker compose up -d postgres
+```
+
+Use this backend connection string:
+
+```env
+DATABASE_URL=postgresql+psycopg://stringsense:stringsense_dev_password@127.0.0.1:55432/stringsense
+```
+
+The Compose service stores data in the `stringsense_postgres_data` Docker volume.
+
 ## Run
 
 1. Install Python dependencies:

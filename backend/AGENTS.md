@@ -13,6 +13,7 @@
 
 ## Validation Commands
 
+- Local Postgres from workspace root: `docker compose up -d postgres`
 - Python lint: `./.venv/bin/ruff check .`
 - Python format check: `./.venv/bin/ruff format --check .`
 - Python tests: `./.venv/bin/pytest -v`
@@ -71,6 +72,8 @@
 
 ## Quick Start
 
+- Local Postgres:
+  - from workspace root, run `docker compose up -d postgres`
 - Setup:
   - `uv sync --extra dev`
   - `./.venv/bin/alembic upgrade head`

@@ -13,6 +13,7 @@
 
 ## Validation Commands
 
+- Local Postgres: `docker compose up -d postgres`
 - Mobile setup: `cd mobile && nvm use && npm install`
 - Mobile typecheck: `cd mobile && npx tsc --noEmit`
 - Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
@@ -65,6 +66,8 @@
 
 ## Quick Start
 
+- Local Postgres:
+  - `docker compose up -d postgres`
 - Backend:
   - `cd backend && cp .env.example .env`
   - `cd backend && uv sync --extra dev`

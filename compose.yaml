@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: stringsense-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stringsense
+      POSTGRES_USER: stringsense
+      POSTGRES_PASSWORD: stringsense_dev_password
+    ports:
+      - "55432:5432"
+    volumes:
+      - stringsense_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stringsense -d stringsense"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  stringsense_postgres_data:
