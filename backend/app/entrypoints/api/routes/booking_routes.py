@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
+from fastapi import UploadFile
 
 from app.domain.auth.entities import UserRole
 from app.dto.booking import BookingOut
@@ -12,6 +15,8 @@ from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_current_customer
+from app.shared.upload_storage import save_booking_update_photo
+from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.shared.errors import NotFoundError
 from app.use_cases.booking.create_booking import CreateBookingUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
@@ -73,3 +78,34 @@ def get_booking(
         include_history=True,
     )
 
+
+@router.post("/{booking_id}/updates", response_model=BookingOut)
+async def add_booking_update(
+    booking_id: str,
+    comment: str | None = Form(default=None),
+    photo: UploadFile | None = File(default=None),
+    current_user: CurrentUser = Depends(get_current_customer),
+    booking_repository=Depends(get_booking_repository),
+) -> BookingOut:
+    photo_path = None
+    photo_original_name = None
+    photo_content_type = None
+    if photo is not None:
+        photo_content_type = photo.content_type
+        photo_original_name = photo.filename
+        photo_path = save_booking_update_photo(
+            content=await photo.read(),
+            content_type=photo.content_type,
+            original_name=photo.filename,
+        )
+
+    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
+        booking_id=booking_id,
+        author_user_id=current_user.user_id,
+        author_role=current_user.role,
+        comment=comment,
+        photo_path=photo_path,
+        photo_original_name=photo_original_name,
+        photo_content_type=photo_content_type,
+    )
+    return booking_to_dto(booking, include_user=False, include_history=True)

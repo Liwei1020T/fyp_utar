@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -13,7 +13,6 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
-  useWallets,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
@@ -26,7 +25,6 @@ export default function BookingSummaryScreen() {
   const bookingDraft = useAppStore((state) => state.bookingDraft);
   const clearBookingDraft = useAppStore((state) => state.clearBookingDraft);
   const prependLiveBooking = useAppStore((state) => state.prependLiveBooking);
-  const wallets = useWallets();
   const token = useBackendAccessToken();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -50,21 +48,20 @@ export default function BookingSummaryScreen() {
 
   const stringItem = getStringById(bookingDraft.stringId);
   const admin = getAdminById(bookingDraft.adminId);
-  const wallet = wallets.find((item) => item.userId === user.id);
   const stringFee = stringItem?.price ?? 36;
   const serviceFee = 18;
   const totalPayable = stringFee + serviceFee;
 
   const handleProceed = async () => {
     if (!token) {
-      router.push('/player/payments/draft');
+      setSubmitError('Live backend login is required to confirm an FYP1 booking.');
       return;
     }
 
     setSubmitError(null);
     setIsSubmitting(true);
     try {
-      const booking = await backendApi.createBooking(token, {
+      let booking = await backendApi.createBooking(token, {
         string_id: bookingDraft.stringId,
         racket_brand: bookingDraft.racketBrand,
         racket_model: bookingDraft.racketModel,
@@ -72,6 +69,16 @@ export default function BookingSummaryScreen() {
         drop_off_datetime: `${bookingDraft.dropOffDate}T${bookingDraft.dropOffTime}:00`,
         notes: bookingDraft.notes || undefined,
       });
+
+      if (bookingDraft.photoUri) {
+        booking = await backendApi.addBookingUpdate(token, booking.id, {
+          photo: {
+            uri: bookingDraft.photoUri,
+            name: bookingDraft.photoName ?? `booking-photo-${booking.id}.jpg`,
+            type: bookingDraft.photoContentType ?? 'image/jpeg',
+          },
+        });
+      }
 
       prependLiveBooking(
         mapBackendBookingToBooking(
@@ -95,7 +102,7 @@ export default function BookingSummaryScreen() {
   return (
     <AppScreen
       title="Booking summary"
-      subtitle="Review your string, drop-off timing, and full payment breakdown before checkout."
+      subtitle="Review your string, drop-off timing, and booking photo before confirming."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}
@@ -147,7 +154,7 @@ export default function BookingSummaryScreen() {
         />
       </AppSection>
 
-      <AppSection eyebrow="Pricing" title="Payable now">
+      <AppSection eyebrow="Pricing" title="Estimated service cost">
         <AppCard variant="dark" padding="lg">
           <View className="flex-row items-center justify-between">
             <HeroText className="text-sm text-primary-100">String fee</HeroText>
@@ -161,14 +168,8 @@ export default function BookingSummaryScreen() {
               {formatCurrency(serviceFee)}
             </HeroText>
           </View>
-          <View className="mt-3 flex-row items-center justify-between">
-            <HeroText className="text-sm text-primary-100">Wallet balance</HeroText>
-            <HeroText className="text-lg font-bold text-white">
-              {formatCurrency(wallet?.availableBalance ?? 0)}
-            </HeroText>
-          </View>
           <View className="mt-5 border-t border-white/10 pt-4 flex-row items-center justify-between">
-            <HeroText className="text-sm text-primary-100">Total payable now</HeroText>
+            <HeroText className="text-sm text-primary-100">Estimated total</HeroText>
             <HeroText className="text-2xl font-bold text-white">
               {formatCurrency(totalPayable)}
             </HeroText>
@@ -176,12 +177,27 @@ export default function BookingSummaryScreen() {
         </AppCard>
       </AppSection>
 
+      {bookingDraft.photoUri ? (
+        <AppSection eyebrow="Photo" title="Attached racket photo">
+          <AppCard variant="elevated" padding="md">
+            <Image
+              source={{ uri: bookingDraft.photoUri }}
+              className="h-52 w-full rounded-[24px] bg-neutral-100"
+              resizeMode="cover"
+            />
+            <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
+              This photo will be uploaded to the backend after the booking is created.
+            </HeroText>
+          </AppCard>
+        </AppSection>
+      ) : null}
+
       <AppSection eyebrow="Rule" title="Before you continue">
         <AppCard variant="subtle" padding="md">
           <HeroText className="text-sm leading-6 text-neutral-600">
             {token
-              ? 'This MVP flow confirms the booking directly with the live backend. Payment stays mocked for a later phase.'
-              : 'Full payment confirms the booking. You can still cancel or reschedule before payment is completed, but those actions are hidden after payment succeeds.'}
+              ? 'This FYP1 flow confirms the booking directly with the live backend. Payment remains deferred to FYP2.'
+              : 'Live backend login is required to confirm an FYP1 booking.'}
           </HeroText>
         </AppCard>
       </AppSection>
@@ -196,7 +212,7 @@ export default function BookingSummaryScreen() {
 
       <View className="mb-12 mt-8 gap-3">
         <AppButton
-          label={token ? 'Confirm booking' : 'Proceed to payment'}
+          label="Confirm booking"
           size="lg"
           onPress={handleProceed}
           isLoading={isSubmitting}

@@ -12,7 +12,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 - Primary users: badminton players booking stringing services, and one shop admin managing operations.
 - Product shape: one codebase inside the unified StringSence workspace, two role-based experiences, premium mobile UI, with a hybrid data layer.
-- Current runtime split: player core flow and FYP1 admin booking/inventory flows may use the Python backend, while non-core domains remain mock-first.
+- Current runtime split: FYP1 player/admin core flows may use the Python backend, while deferred FYP2 domains remain hidden, local, or mock-first.
 - Non-goals: backend implementation, multi-store architecture, or inventing new tooling that does not exist in the repo.
 
 ## Canonical Commands
@@ -84,7 +84,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 5. Keep mutable business behavior in the store, not scattered across screens.
    Screens may derive display state, but durable mutations should live in `store/appStore.ts`.
 6. Treat the player core flow as hybrid.
-   Player auth, profile, strings, recommendation, bookings, and FYP1 admin booking/inventory operations may use the live backend, while non-core player/admin domains stay mocked.
+   Player auth, profile, strings, recommendation, bookings, booking photos/comments, and FYP1 admin booking, inventory, business-hours, and limited store-settings operations may use the live backend, while FYP2 player/admin domains stay mocked or hidden.
 
 ## Runtime and Styling Constraints
 

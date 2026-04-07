@@ -23,6 +23,7 @@ backend/stringsense_backend.egg-info/
 backend/.env
 backend/*.db
 backend/*.zip
+backend/var/
 
 ml/nlp-workbench/outputs/*
 !ml/nlp-workbench/outputs/.gitkeep

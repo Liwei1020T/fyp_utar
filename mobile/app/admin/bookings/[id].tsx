@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
+import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { BookingUpdates } from '../../../components/booking/BookingUpdates';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import {
   useAppStore,
@@ -18,7 +21,7 @@ import {
   useStrings,
 } from '../../../store/appStore';
 import type { BookingStatus } from '../../../types/domain';
-import { formatBookingStatus, formatCurrency, formatPaymentStatus } from '../../../lib/formatters';
+import { formatBookingStatus, formatCurrency } from '../../../lib/formatters';
 import { getStringById, getUserById } from '../../../services/mockAppService';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
@@ -36,12 +39,54 @@ export default function AdminBookingDetailScreen() {
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [updateComment, setUpdateComment] = useState('');
+  const [updatePhoto, setUpdatePhoto] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
 
   useEffect(() => {
     if (booking) {
       setStatus(booking.status);
     }
   }, [booking]);
+
+  useEffect(() => {
+    if (!token || user?.role !== 'admin' || !params.id) {
+      return;
+    }
+
+    const bookingId = params.id;
+    let cancelled = false;
+
+    const hydrateBooking = async () => {
+      try {
+        const freshBooking = await backendApi.adminFetchBooking(token, bookingId);
+        if (cancelled) {
+          return;
+        }
+        const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
+        const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId, user.id);
+        const currentBookings = useAppStore.getState().liveBookings;
+        setLiveBookings(
+          currentBookings.some((item) => item.id === mapped.id)
+            ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
+            : [mapped, ...currentBookings],
+        );
+      } catch (loadError) {
+        console.warn('Failed to refresh live admin booking detail', loadError);
+      }
+    };
+
+    void hydrateBooking();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id, setLiveBookings, strings, token, user?.id, user?.role]);
 
   if (!booking) {
     return null;
@@ -81,12 +126,64 @@ export default function AdminBookingDetailScreen() {
       setIsSaving(false);
     }
   };
+  const pickUpdatePhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+      allowsEditing: false,
+    });
+
+    if (result.canceled || !result.assets[0]) {
+      return;
+    }
+
+    const asset = result.assets[0];
+    setUpdatePhoto({
+      uri: asset.uri,
+      name: asset.fileName ?? `admin-booking-photo-${Date.now()}.jpg`,
+      type: asset.mimeType ?? 'image/jpeg',
+    });
+  };
+  const submitBookingUpdate = async () => {
+    setUpdateError(null);
+    if (!token || user?.role !== 'admin') {
+      setUpdateError('Live admin login is required to add booking updates.');
+      return;
+    }
+    if (!updateComment.trim() && !updatePhoto) {
+      setUpdateError('Add a comment or photo before saving.');
+      return;
+    }
+
+    setIsSubmittingUpdate(true);
+    try {
+      const updated = await backendApi.adminAddBookingUpdate(token, booking.id, {
+        comment: updateComment,
+        photo: updatePhoto,
+      });
+      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
+      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
+      setLiveBookings(
+        bookings.map((item) => (item.id === mapped.id ? mapped : item)),
+      );
+      setUpdateComment('');
+      setUpdatePhoto(null);
+    } catch (saveError) {
+      setUpdateError(
+        saveError instanceof BackendApiError
+          ? saveError.message
+          : 'Failed to add booking update.',
+      );
+    } finally {
+      setIsSubmittingUpdate(false);
+    }
+  };
 
   return (
     <AppScreen
       tone="admin"
       title={`Booking ${booking.id}`}
-      subtitle="Admin detail view for service status, payment, customer summary, and quick actions."
+      subtitle="Admin detail view for service status, customer summary, booking comments, and photos."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}
@@ -102,7 +199,6 @@ export default function AdminBookingDetailScreen() {
             {booking.racketBrand} {booking.racketModel} • {stringItem?.brand} {stringItem?.model} • {booking.requestedTension} lbs
           </HeroText>
           <View className="mt-4 flex-row flex-wrap gap-2">
-            <AppChip label={formatPaymentStatus(booking.paymentStatus)} variant="primary" />
             <AppChip label={formatCurrency(booking.totalAmount)} variant="secondary" />
           </View>
         </AppCard>
@@ -145,6 +241,55 @@ export default function AdminBookingDetailScreen() {
             Queue position: #{booking.queuePosition}
           </HeroText>
         </AppCard>
+      </AppSection>
+
+      <AppSection eyebrow="Updates" title="Comments and photos">
+        <BookingUpdates updates={booking.updates} />
+      </AppSection>
+
+      <AppSection eyebrow="Admin update" title="Add comment or photo">
+        <AppInput
+          label="Comment"
+          value={updateComment}
+          onChangeText={setUpdateComment}
+          multiline
+          inputClassName="min-h-24"
+          placeholder="Add service notes, condition notes, or collection instructions..."
+        />
+        {updatePhoto ? (
+          <Image
+            source={{ uri: updatePhoto.uri }}
+            className="mt-4 h-48 w-full rounded-[24px] bg-neutral-100"
+            resizeMode="cover"
+          />
+        ) : null}
+        {updateError ? (
+          <HeroText className="mt-3 text-sm font-semibold text-danger-600">
+            {updateError}
+          </HeroText>
+        ) : null}
+        <View className="mt-4 flex-row gap-3">
+          <AppButton
+            label={updatePhoto ? 'Change photo' : 'Attach photo'}
+            variant="outline"
+            className="flex-1"
+            onPress={pickUpdatePhoto}
+          />
+          {updatePhoto ? (
+            <AppButton
+              label="Remove photo"
+              variant="ghost"
+              className="flex-1"
+              onPress={() => setUpdatePhoto(null)}
+            />
+          ) : null}
+        </View>
+        <AppButton
+          label="Save booking update"
+          className="mt-4"
+          onPress={submitBookingUpdate}
+          isLoading={isSubmittingUpdate}
+        />
       </AppSection>
     </AppScreen>
   );

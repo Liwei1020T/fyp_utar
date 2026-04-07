@@ -42,6 +42,26 @@ type RequestOptions = {
   token?: string | null;
 };
 
+export type BackendUploadFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+function apiRootUrl() {
+  return API_BASE_URL.replace(/\/api\/?$/, '');
+}
+
+export function resolveBackendMediaUrl(value?: string | null) {
+  if (!value) {
+    return undefined;
+  }
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+  return `${apiRootUrl()}${value.startsWith('/') ? value : `/${value}`}`;
+}
+
 async function requestJson<T>(
   path: string,
   { method = 'GET', body, token }: RequestOptions = {},
@@ -95,6 +115,80 @@ async function requestJson<T>(
   }
 
   return json as T;
+}
+
+async function requestFormJson<T>(
+  path: string,
+  {
+    formData,
+    token,
+  }: {
+    formData: FormData;
+    token?: string | null;
+  },
+): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new BackendApiError(
+        `The backend did not respond within ${REQUEST_TIMEOUT_MS / 1000} seconds. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL is correct.`,
+      );
+    }
+
+    throw new BackendApiError(
+      'Unable to reach the backend. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL points to it.',
+    );
+  }
+
+  clearTimeout(timeoutId);
+
+  const json = (await response.json().catch(() => ({}))) as
+    | Record<string, unknown>
+    | undefined;
+
+  if (!response.ok) {
+    const error = json?.error as
+      | { message?: string; details?: unknown }
+      | undefined;
+    throw new BackendApiError(
+      error?.message ||
+        (typeof json?.detail === 'string' ? json.detail : undefined) ||
+        'Request failed',
+      response.status,
+    );
+  }
+
+  return json as T;
+}
+
+function buildBookingUpdateForm(input: {
+  comment?: string;
+  photo?: BackendUploadFile | null;
+}) {
+  const formData = new FormData();
+  if (input.comment?.trim()) {
+    formData.append('comment', input.comment.trim());
+  }
+  if (input.photo) {
+    formData.append('photo', input.photo as unknown as Blob);
+  }
+  return formData;
 }
 
 export const backendApi = {
@@ -159,6 +253,9 @@ export const backendApi = {
   listBookings(token: string) {
     return requestJson<BackendPage<BackendBooking>>('/bookings', { token });
   },
+  fetchBooking(token: string, bookingId: string) {
+    return requestJson<BackendBooking>(`/bookings/${bookingId}`, { token });
+  },
   adminListBookings(
     token: string,
     params?: {
@@ -197,6 +294,16 @@ export const backendApi = {
     return requestJson<BackendBooking>(`/admin/bookings/${bookingId}/status`, {
       method: 'PATCH',
       body: payload,
+      token,
+    });
+  },
+  adminAddBookingUpdate(
+    token: string,
+    bookingId: string,
+    input: { comment?: string; photo?: BackendUploadFile | null },
+  ) {
+    return requestFormJson<BackendBooking>(`/admin/bookings/${bookingId}/updates`, {
+      formData: buildBookingUpdateForm(input),
       token,
     });
   },
@@ -376,6 +483,16 @@ export const backendApi = {
     return requestJson<BackendBooking>('/bookings', {
       method: 'POST',
       body: payload,
+      token,
+    });
+  },
+  addBookingUpdate(
+    token: string,
+    bookingId: string,
+    input: { comment?: string; photo?: BackendUploadFile | null },
+  ) {
+    return requestFormJson<BackendBooking>(`/bookings/${bookingId}/updates`, {
+      formData: buildBookingUpdateForm(input),
       token,
     });
   },

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowRight, ChevronLeft, MessageSquareText, Scale, Sparkles } from 'lucide-react-native';
+import { ArrowRight, ChevronLeft, Scale, Sparkles } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -173,13 +173,6 @@ export default function RecommendationResultsScreen() {
                       onPress={() => toggleCompareSelection(item.id)}
                     />
                   </View>
-                  <AppButton
-                    label="Ask AI about this match"
-                    variant="ghost"
-                    size="md"
-                    leadingIcon={<MessageSquareText size={16} color="#475569" />}
-                    onPress={() => router.push('/player/chat/chat-001')}
-                  />
                 </View>
               </AppCard>
             );
@@ -285,13 +278,6 @@ export default function RecommendationResultsScreen() {
                         }}
                       />
                     </View>
-                    <AppButton
-                      label="Ask AI about this match"
-                      variant="ghost"
-                      size="md"
-                      leadingIcon={<MessageSquareText size={16} color="#475569" />}
-                      onPress={() => router.push('/player/chat/chat-001')}
-                    />
                   </View>
                 </AppCard>
               );

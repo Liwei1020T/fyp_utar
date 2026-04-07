@@ -10,6 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -49,6 +50,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+settings.upload_root_path.mkdir(parents=True, exist_ok=True)
+app.mount(
+    "/media",
+    StaticFiles(directory=str(settings.upload_root_path)),
+    name="media",
 )
 
 

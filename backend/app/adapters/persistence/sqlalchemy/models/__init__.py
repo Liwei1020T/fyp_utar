@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.adapters.persistence.sqlalchemy.models.booking import Booking
 from app.adapters.persistence.sqlalchemy.models.booking import BookingStatusHistory
+from app.adapters.persistence.sqlalchemy.models.booking import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models.password_reset_code import (
     PasswordResetCode,
 )
@@ -21,6 +22,7 @@ from app.adapters.persistence.sqlalchemy.models.user import User
 __all__ = [
     "Booking",
     "BookingStatusHistory",
+    "BookingUpdate",
     "PasswordResetCode",
     "Profile",
     "RecommendationLog",

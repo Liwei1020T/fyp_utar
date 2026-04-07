@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageSquareText, QrCode, TimerReset } from 'lucide-react-native';
+import { CalendarClock, ChevronLeft, TimerReset } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -10,23 +10,64 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { useAppStore, useBookings, usePayments } from '../../../store/appStore';
+import { BookingUpdates } from '../../../components/booking/BookingUpdates';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useBookings,
+  useStrings,
+} from '../../../store/appStore';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
   formatBookingStatus,
   formatCurrency,
-  formatPaymentMethod,
-  formatPaymentStatus,
 } from '../../../lib/formatters';
-import { getBookingStatusVariant, getPaymentStatusVariant } from '../../../components/ui/theme';
+import { getBookingStatusVariant } from '../../../components/ui/theme';
+import { backendApi } from '../../../services/backendApi';
+import { mapBackendBookingToBooking } from '../../../services/backendMappers';
 
 export default function PlayerBookingDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const bookings = useBookings();
-  const payments = usePayments();
-  const cancelBooking = useAppStore((state) => state.cancelBooking);
+  const strings = useStrings();
+  const token = useBackendAccessToken();
+  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
   const booking = bookings.find((item) => item.id === params.id);
+
+  useEffect(() => {
+    if (!token || !params.id) {
+      return;
+    }
+
+    const bookingId = params.id;
+    let cancelled = false;
+
+    const hydrateBooking = async () => {
+      try {
+        const freshBooking = await backendApi.fetchBooking(token, bookingId);
+        if (cancelled) {
+          return;
+        }
+        const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
+        const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId);
+        const currentBookings = useAppStore.getState().liveBookings;
+        setLiveBookings(
+          currentBookings.some((item) => item.id === mapped.id)
+            ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
+            : [mapped, ...currentBookings],
+        );
+      } catch (error) {
+        console.warn('Failed to refresh live player booking detail', error);
+      }
+    };
+
+    void hydrateBooking();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id, setLiveBookings, strings, token]);
 
   if (!booking) {
     return (
@@ -47,13 +88,11 @@ export default function PlayerBookingDetailScreen() {
 
   const stringItem = getStringById(booking.stringId);
   const admin = getAdminById(booking.adminId);
-  const bookingPayments = payments.filter((item) => item.bookingId === booking.id);
-  const canEditBeforePayment = booking.paymentStatus !== 'paid';
 
   return (
     <AppScreen
       title={`Booking ${booking.id}`}
-      subtitle="Booking info, payment info, drop-off details, and service actions in one player view."
+      subtitle="Booking info, drop-off details, admin updates, and service status in one player view."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}
@@ -75,10 +114,6 @@ export default function PlayerBookingDetailScreen() {
               Drop-off on {booking.dropOffDate} at {booking.dropOffTime}
             </HeroText>
           </View>
-          <AppChip
-            label={formatPaymentStatus(booking.paymentStatus)}
-            variant={getPaymentStatusVariant(booking.paymentStatus)}
-          />
         </View>
       </AppCard>
 
@@ -91,16 +126,6 @@ export default function PlayerBookingDetailScreen() {
             <AppChip
               label={formatBookingStatus(booking.status)}
               variant={getBookingStatusVariant(booking.status)}
-              className="mt-3 self-start"
-            />
-          </AppCard>
-          <AppCard variant="elevated" className="flex-1" padding="md">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-              Payment
-            </HeroText>
-            <AppChip
-              label={formatPaymentStatus(booking.paymentStatus)}
-              variant={getPaymentStatusVariant(booking.paymentStatus)}
               className="mt-3 self-start"
             />
           </AppCard>
@@ -134,9 +159,9 @@ export default function PlayerBookingDetailScreen() {
         <View className="gap-3">
           <AppCard variant="subtle" padding="md">
             <View className="flex-row items-center gap-3">
-              <QrCode size={18} color="#2F64B6" />
+              <CalendarClock size={18} color="#2F64B6" />
               <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                Check-in reference: {booking.checkInReference}. Show this or the booking QR at the counter during drop-off.
+                Booking reference: {booking.checkInReference}. Show this reference at the counter during drop-off.
               </HeroText>
             </View>
           </AppCard>
@@ -151,27 +176,12 @@ export default function PlayerBookingDetailScreen() {
         </View>
       </AppSection>
 
-      <AppSection eyebrow="Payment info" title="Pricing breakdown">
+      <AppSection eyebrow="Pricing" title="Estimated service cost">
         <AppDetailList
           items={[
             { label: 'String fee', value: formatCurrency(booking.stringFee) },
             { label: 'Service fee', value: formatCurrency(booking.serviceFee) },
-            { label: 'Wallet used', value: formatCurrency(booking.walletUsed) },
-            { label: 'Amount paid', value: formatCurrency(booking.amountPaid) },
-            { label: 'Total amount', value: formatCurrency(booking.totalAmount) },
-            {
-              label: 'Payment records',
-              value: (
-                <View className="mt-1 gap-2 md:items-end">
-                  {bookingPayments.map((payment) => (
-                    <HeroText key={payment.id} className="text-sm leading-6 text-neutral-700 md:text-right">
-                      {formatPaymentMethod(payment.method)} • {formatCurrency(payment.amount)} •{' '}
-                      {formatPaymentStatus(payment.status)}
-                    </HeroText>
-                  ))}
-                </View>
-              ),
-            },
+            { label: 'Estimated total', value: formatCurrency(booking.totalAmount) },
           ]}
         />
       </AppSection>
@@ -192,56 +202,16 @@ export default function PlayerBookingDetailScreen() {
         </AppSection>
       ) : null}
 
+      <AppSection eyebrow="Booking updates" title="Photos and comments">
+        <BookingUpdates updates={booking.updates} />
+      </AppSection>
+
       <View className="mb-12 mt-8 gap-3">
-        {canEditBeforePayment ? (
-          <>
-            <AppButton
-              label="Continue payment"
-              size="lg"
-              onPress={() => router.push(`/player/payments/${booking.id}`)}
-            />
-            <View className="flex-row gap-3">
-              <AppButton
-                label="Reschedule"
-                variant="outline"
-                size="lg"
-                className="flex-1"
-                onPress={() => router.push(`/player/bookings/new?stringId=${booking.stringId}`)}
-              />
-              <AppButton
-                label="Cancel booking"
-                variant="ghost"
-                size="lg"
-                className="flex-1"
-                onPress={() => cancelBooking(booking.id)}
-              />
-            </View>
-          </>
-        ) : null}
-
-        <View className="flex-row gap-3">
-          <AppButton
-            label="View tracking"
-            variant={canEditBeforePayment ? 'outline' : 'primary'}
-            size="lg"
-            className="flex-1"
-            onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
-          />
-          <AppButton
-            label="Check-in"
-            variant="ghost"
-            size="lg"
-            className="flex-1"
-            onPress={() => router.push('/player/check-in')}
-          />
-        </View>
-
         <AppButton
-          label="Request admin support"
-          variant="ghost"
+          label="View tracking"
+          variant="primary"
           size="lg"
-          leadingIcon={<MessageSquareText size={18} color="#475569" />}
-          onPress={() => router.push('/player/chat/chat-001')}
+          onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
         />
       </View>
     </AppScreen>

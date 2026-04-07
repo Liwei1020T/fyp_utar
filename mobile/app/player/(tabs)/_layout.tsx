@@ -132,6 +132,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
+          href: null,
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
             <StandardTabIcon icon={MessageSquareText} color={color} size={size} focused={focused} />

@@ -8,9 +8,10 @@ just to find the right ownership boundary.
 
 1. Start here for ownership, entry points, and "where do I change this?"
 2. Read [README.md](../README.md) for setup and cross-workspace quick start.
-3. Read [mobile/docs/frontend-architecture.md](../mobile/docs/frontend-architecture.md) before changing Expo screens, state, or UI primitives.
-4. Read [backend/docs/architecture.md](../backend/docs/architecture.md), [backend/docs/api-contract.md](../backend/docs/api-contract.md), and [backend/docs/database.md](../backend/docs/database.md) before changing API behavior.
-5. Read [ml/nlp-workbench/README.md](../ml/nlp-workbench/README.md) before regenerating AI/NLP artifacts.
+3. Read [docs/fyp1-scope.md](./fyp1-scope.md) before changing visible demo scope.
+4. Read [mobile/docs/frontend-architecture.md](../mobile/docs/frontend-architecture.md) before changing Expo screens, state, or UI primitives.
+5. Read [backend/docs/architecture.md](../backend/docs/architecture.md), [backend/docs/api-contract.md](../backend/docs/api-contract.md), and [backend/docs/database.md](../backend/docs/database.md) before changing API behavior.
+6. Read [ml/nlp-workbench/README.md](../ml/nlp-workbench/README.md) before regenerating AI/NLP artifacts.
 
 ## Workspace Roots
 
@@ -20,6 +21,7 @@ just to find the right ownership boundary.
 | [README.md](../README.md) | Human quick start for the integrated mobile, backend, and NLP workspace. | Onboarding, demo setup, backend/mobile connection setup. |
 | [compose.yaml](../compose.yaml) | Local Postgres 16 service on host port `55432`. | Backend needs local database state. |
 | [docs/README.md](./README.md) | Workspace documentation index. | Finding existing docs. |
+| [docs/fyp1-scope.md](./fyp1-scope.md) | FYP1 included/deferred scope, recommendation positioning, and demo proof. | Changing visible demo scope or deciding whether a feature is FYP1 or FYP2. |
 | [docs/codebase-map.md](./codebase-map.md) | This low-token source map. | Deciding which source files are worth opening. |
 
 Local archive files such as `backend.zip`, `ml.zip`, `stringsence.zip`, and
@@ -100,7 +102,7 @@ Zod.
 | [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Admin check-in lookup and confirmation. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Admin service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Payment monitoring screen. |
-| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store/admin settings editor. |
+| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Limited FYP1 store settings editor for store name, contact, address, support text, booking notes, and booking policy text. |
 | [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/[id].tsx) | Admin chat detail. |
 
 ### Mobile State, Services, And Types

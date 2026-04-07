@@ -3,6 +3,9 @@ import type {
   Booking,
   BookingStatus,
   BookingStatusEntry,
+  BookingUpdate,
+  BookingSlot,
+  BusinessHours,
   PlayerProfile,
   PlayFrequency,
   PlayingStyle,
@@ -15,12 +18,16 @@ import type {
   BackendAuthUser,
   BackendBooking,
   BackendBookingStatusHistory,
+  BackendBookingUpdate,
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
   BackendRecommendationResponse,
   BackendString,
+  BackendSlot,
+  BackendStoreBusinessHours,
 } from '../types/backend';
+import { resolveBackendMediaUrl } from './backendApi';
 
 function titleCase(value: string) {
   return value
@@ -285,6 +292,58 @@ export function mapBackendInventoryStringToStringItem(
   };
 }
 
+export function mapBackendBusinessHoursToBusinessHours(
+  item: BackendStoreBusinessHours,
+  adminId: string,
+): BusinessHours {
+  return {
+    adminId,
+    days: item.days.map((day) => ({
+      day: day.day,
+      isOpen: day.is_open,
+      openTime: day.open_time,
+      closeTime: day.close_time,
+      breakStart: day.break_start ?? undefined,
+      breakEnd: day.break_end ?? undefined,
+      slotDurationMinutes: day.slot_duration_minutes,
+      maxBookingsPerSlot: day.max_bookings_per_slot,
+    })),
+    specialClosedDates: item.special_closed_dates,
+  };
+}
+
+export function mapBusinessHoursToBackendPayload(item: BusinessHours) {
+  return {
+    days: item.days.map((day) => ({
+      day: day.day,
+      is_open: day.isOpen,
+      open_time: day.openTime,
+      close_time: day.closeTime,
+      break_start: day.breakStart ?? null,
+      break_end: day.breakEnd ?? null,
+      slot_duration_minutes: day.slotDurationMinutes,
+      max_bookings_per_slot: day.maxBookingsPerSlot,
+    })),
+    special_closed_dates: item.specialClosedDates,
+  };
+}
+
+export function mapBackendSlotToBookingSlot(
+  item: BackendSlot,
+  adminId: string,
+): BookingSlot {
+  return {
+    id: item.id,
+    adminId,
+    date: item.date,
+    time: item.time,
+    capacity: item.capacity,
+    availableSpots: item.available_spots,
+    label: item.label,
+    dayLabel: item.day_label,
+  };
+}
+
 function mapBackendStatus(value: string): BookingStatus {
   switch (value) {
     case 'awaiting_dropoff':
@@ -342,6 +401,23 @@ function historyToTimeline(
   });
 }
 
+function mapBackendBookingUpdateToBookingUpdate(
+  item: BackendBookingUpdate,
+): BookingUpdate {
+  return {
+    id: item.id,
+    bookingId: item.booking_id,
+    authorUserId: item.author_user_id,
+    authorRole: item.author_role === 'admin' ? 'admin' : 'player',
+    authorPhoneNumber: item.author_phone_number ?? undefined,
+    comment: item.comment ?? undefined,
+    photoUrl: resolveBackendMediaUrl(item.photo_url),
+    photoOriginalName: item.photo_original_name ?? undefined,
+    photoContentType: item.photo_content_type ?? undefined,
+    createdAt: item.created_at ?? new Date().toISOString(),
+  };
+}
+
 export function mapBackendBookingToBooking(
   booking: BackendBooking,
   priceByStringId: Map<string, number>,
@@ -387,6 +463,7 @@ export function mapBackendBookingToBooking(
       status,
       booking.created_at ?? new Date().toISOString(),
     ),
+    updates: (booking.updates ?? []).map(mapBackendBookingUpdateToBookingUpdate),
   };
 }
 

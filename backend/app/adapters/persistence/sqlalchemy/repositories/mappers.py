@@ -14,6 +14,7 @@ from app.domain.auth.entities import PasswordResetCodeRecord
 from app.domain.auth.entities import UserAccount
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
+from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.profile.entities import PlayerProfile
 from app.domain.catalog.entities import StringItem
 from app.domain.recommendation.entities import RecommendationLogRecord
@@ -140,6 +141,21 @@ def to_booking_record(booking: Booking) -> BookingRecord:
                 changed_at=entry.changed_at,
             )
             for entry in booking.status_history
+        ],
+        updates=[
+            BookingUpdateEntry(
+                id=entry.id,
+                booking_id=entry.booking_id,
+                author_user_id=entry.author_user_id,
+                author_role=entry.author_role,
+                author_phone_number=entry.author.phone_number if entry.author else None,
+                comment=entry.comment,
+                photo_path=entry.photo_path,
+                photo_original_name=entry.photo_original_name,
+                photo_content_type=entry.photo_content_type,
+                created_at=entry.created_at,
+            )
+            for entry in booking.updates
         ],
     )
 

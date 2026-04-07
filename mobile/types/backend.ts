@@ -132,6 +132,19 @@ export interface BackendBookingStatusHistory {
   changed_at: string | null;
 }
 
+export interface BackendBookingUpdate {
+  id: string;
+  booking_id: string;
+  author_user_id: string;
+  author_role: string;
+  author_phone_number: string | null;
+  comment: string | null;
+  photo_url: string | null;
+  photo_original_name: string | null;
+  photo_content_type: string | null;
+  created_at: string | null;
+}
+
 export interface BackendBooking {
   id: string;
   user_id: string;
@@ -150,6 +163,7 @@ export interface BackendBooking {
   check_in_reference?: string | null;
   latest_admin_note: string | null;
   status_history: BackendBookingStatusHistory[] | null;
+  updates: BackendBookingUpdate[] | null;
 }
 
 export interface BackendCheckInLookupResponse {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -26,6 +26,43 @@ export default function AdminInventoryDetailScreen() {
   const [notes, setNotes] = useState(stringItem?.adminNote ?? '');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!token || !params.id) {
+      return;
+    }
+
+    const stringId = params.id;
+    let cancelled = false;
+
+    const hydrateInventoryItem = async () => {
+      try {
+        const response = await backendApi.adminFetchInventoryString(token, stringId);
+        if (cancelled) {
+          return;
+        }
+        const mapped = mapBackendInventoryStringToStringItem(response);
+        updateStringItem(mapped.id, mapped);
+        setPrice(String(mapped.price));
+        setStockLevel(String(mapped.stockLevel));
+        setNotes(mapped.adminNote ?? '');
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(
+            loadError instanceof BackendApiError
+              ? loadError.message
+              : 'Failed to load inventory item.',
+          );
+        }
+      }
+    };
+
+    void hydrateInventoryItem();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id, token, updateStringItem]);
 
   if (!stringItem) {
     return null;

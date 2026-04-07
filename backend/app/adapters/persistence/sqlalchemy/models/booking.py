@@ -26,7 +26,9 @@ if TYPE_CHECKING:
 class Booking(Base):
     __tablename__ = "bookings"
 
-    id: Mapped[str] = mapped_column(SAString(36), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
     user_id: Mapped[str] = mapped_column(
         SAString(36),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -70,12 +72,19 @@ class Booking(Base):
         cascade="all, delete-orphan",
         order_by="BookingStatusHistory.changed_at.asc()",
     )
+    updates: Mapped[list["BookingUpdate"]] = relationship(
+        back_populates="booking",
+        cascade="all, delete-orphan",
+        order_by="BookingUpdate.created_at.asc()",
+    )
 
 
 class BookingStatusHistory(Base):
     __tablename__ = "booking_status_history"
 
-    id: Mapped[str] = mapped_column(SAString(36), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
     booking_id: Mapped[str] = mapped_column(
         SAString(36),
         ForeignKey("bookings.id", ondelete="CASCADE"),
@@ -96,3 +105,35 @@ class BookingStatusHistory(Base):
 
     booking: Mapped["Booking"] = relationship(back_populates="status_history")
     changed_by: Mapped["User | None"] = relationship()
+
+
+class BookingUpdate(Base):
+    __tablename__ = "booking_updates"
+
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
+    booking_id: Mapped[str] = mapped_column(
+        SAString(36),
+        ForeignKey("bookings.id", ondelete="CASCADE"),
+        index=True,
+    )
+    author_user_id: Mapped[str] = mapped_column(
+        SAString(36),
+        ForeignKey("users.id"),
+        index=True,
+    )
+    author_role: Mapped[str] = mapped_column(SAString(20))
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    photo_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    photo_original_name: Mapped[str | None] = mapped_column(
+        SAString(255), nullable=True
+    )
+    photo_content_type: Mapped[str | None] = mapped_column(SAString(120), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+
+    booking: Mapped["Booking"] = relationship(back_populates="updates")
+    author: Mapped["User"] = relationship()

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageSquareText, Scale, Share2, Sparkles, Star } from 'lucide-react-native';
+import { ChevronLeft, Scale, Share2, Sparkles, Star } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -208,13 +208,6 @@ export default function StringDetailScreen() {
             onPress={() => router.push(`/player/recommend/explain/${selectedString.id}`)}
           />
         </View>
-        <AppButton
-          label="Ask AI about this string"
-          variant="ghost"
-          size="lg"
-          leadingIcon={<MessageSquareText size={16} color="#475569" />}
-          onPress={() => router.push('/player/chat/chat-001')}
-        />
       </View>
     </AppScreen>
   );

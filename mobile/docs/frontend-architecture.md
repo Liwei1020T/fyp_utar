@@ -2,16 +2,16 @@
 
 ## 1. Overview
 
-StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the player MVP flow and FYP1 admin booking/inventory operations can use the live Python backend, while non-core domains remain mock-first inside one codebase.
+StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the FYP1 player flow plus admin booking, inventory, business-hours, limited store-settings, and booking photo/comment operations can use the live Python backend, while deferred FYP2 domains remain mock-first or hidden inside one codebase.
 
 The app is optimized for:
 
 - fast FYP prototyping
-- realistic product flows without a real backend
+- realistic FYP1 product flows with live backend persistence
 - strong visual consistency through shared UI primitives
 - role-based navigation for player and admin experiences
 
-At runtime, the app behaves like a full product. Player auth, profile, strings, recommendation, and booking flows can be hydrated from the backend, while the rest of the product still uses local mock modules and Zustand-managed prototype state.
+At runtime, the FYP1-visible product flow is backend-oriented. Player auth, profile, strings, recommendation, bookings, booking photos/comments, admin booking management, inventory, business hours, and limited store settings can be hydrated from the backend, while FYP2 modules such as chat, payment/wallet, notifications, racket passport, QR check-in, service queue, advanced analytics, and advanced settings stay deferred.
 
 ## 2. Technology Stack
 
@@ -33,7 +33,7 @@ At runtime, the app behaves like a full product. Player auth, profile, strings, 
 
 - Zustand for application state, hybrid session state, and mock mutations
 - React Query provider is installed at the app root and the player MVP flow can use live backend requests
-- Local mock datasets in `mocks/` remain the source of truth for admin and advanced player features
+- Local mock datasets in `mocks/` remain available for deferred FYP2 routes and fallback prototype state
 
 ### Forms and validation
 
@@ -619,4 +619,4 @@ The current frontend is a role-based Expo Router application with:
 - a reusable HeroUI-based design system
 - feature modules covering the full player and admin demo journeys
 
-It is best understood as a production-shaped prototype with a hybrid transition layer: the player MVP plus FYP1 admin booking/inventory flows are now close to real backend-connected product flows, while advanced product areas remain intentionally local and mock-driven.
+It is best understood as a production-shaped FYP1 prototype with a hybrid transition layer: the core player flow plus admin booking, inventory, business-hours, limited settings, and booking update flows are backend-connected, while advanced product areas remain intentionally hidden, local, or mock-driven for FYP2.

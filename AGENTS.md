@@ -40,7 +40,7 @@
   - NLP artifact handoff: notebook outputs in `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
 - State/data boundaries:
   - `backend/` owns runtime data, auth, bookings, and recommendation logs
-  - `mobile/` stays hybrid: live player core flow plus mock-first admin/non-core domains
+  - `mobile/` stays hybrid: live FYP1 player/admin core flow plus hidden/mock-first FYP2 domains
   - `ml/nlp-workbench/` is offline experimentation and artifact generation, not a public service
 
 ## Change Rules

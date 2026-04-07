@@ -6,7 +6,10 @@ from typing import cast
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
 from fastapi import Query
+from fastapi import UploadFile
 
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
@@ -43,6 +46,8 @@ from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_admin
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_store_repository
+from app.shared.upload_storage import save_booking_update_photo
+from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
 from app.use_cases.booking.list_admin_bookings import ListAdminBookingsUseCase
 from app.use_cases.booking.update_booking_status import UpdateBookingStatusUseCase
@@ -195,7 +200,9 @@ def admin_update_inventory_string(
         values["stock_level"] = stock_level
         values["is_active"] = stock_level > 0
     if "admin_note" in payload.model_fields_set:
-        values["admin_note"] = payload.admin_note.strip() if payload.admin_note else None
+        values["admin_note"] = (
+            payload.admin_note.strip() if payload.admin_note else None
+        )
     item = UpdateInventoryStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
         values=values,
@@ -224,7 +231,9 @@ def admin_bookings(
     )
     return page_to_dict(
         page,
-        lambda item: booking_to_dto(item, include_user=True, include_history=True).model_dump(),
+        lambda item: booking_to_dto(
+            item, include_user=True, include_history=True
+        ).model_dump(),
     )
 
 
@@ -234,7 +243,9 @@ def admin_get_booking(
     _: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
 ) -> BookingOut:
-    booking = GetBookingUseCase(booking_repository=booking_repository).execute(booking_id)
+    booking = GetBookingUseCase(booking_repository=booking_repository).execute(
+        booking_id
+    )
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
@@ -250,6 +261,38 @@ def admin_update_booking_status(
         next_status=payload.status,
         changed_by_user_id=current_user.user_id,
         note=payload.note,
+    )
+    return booking_to_dto(booking, include_user=True, include_history=True)
+
+
+@router.post("/bookings/{booking_id}/updates", response_model=BookingOut)
+async def admin_add_booking_update(
+    booking_id: str,
+    comment: str | None = Form(default=None),
+    photo: UploadFile | None = File(default=None),
+    current_user: CurrentUser = Depends(get_current_admin),
+    booking_repository=Depends(get_booking_repository),
+) -> BookingOut:
+    photo_path = None
+    photo_original_name = None
+    photo_content_type = None
+    if photo is not None:
+        photo_content_type = photo.content_type
+        photo_original_name = photo.filename
+        photo_path = save_booking_update_photo(
+            content=await photo.read(),
+            content_type=photo.content_type,
+            original_name=photo.filename,
+        )
+
+    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
+        booking_id=booking_id,
+        author_user_id=current_user.user_id,
+        author_role=current_user.role,
+        comment=comment,
+        photo_path=photo_path,
+        photo_original_name=photo_original_name,
+        photo_content_type=photo_content_type,
     )
     return booking_to_dto(booking, include_user=True, include_history=True)
 

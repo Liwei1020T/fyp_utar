@@ -697,3 +697,56 @@ def test_admin_reject_requires_note_and_persists_history_note():
     assert rejection_response.json()["status_history"][-1]["note"] == (
         "Customer requested a drop-off slot outside business hours."
     )
+
+
+def test_player_and_admin_can_add_booking_update_photos():
+    customer_token = register_customer(
+        username="photo-user",
+        phone_number="+60125550123",
+    )
+    string_id = first_string_id(customer_token)
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Astrox 77",
+            "requested_tension": 25,
+            "drop_off_datetime": "2026-04-12T10:00:00",
+            "notes": "Photo upload test booking.",
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    player_update = client.post(
+        f"/api/bookings/{booking_id}/updates",
+        headers=headers(customer_token),
+        data={"comment": "Frame condition before drop-off."},
+        files={"photo": ("player-racket.jpg", b"player-photo", "image/jpeg")},
+    )
+    assert player_update.status_code == 200
+    assert player_update.json()["updates"][0]["author_role"] == "customer"
+    assert player_update.json()["updates"][0]["photo_url"].startswith(
+        "/media/booking-updates/"
+    )
+
+    admin_token = login_admin()
+    admin_update = client.post(
+        f"/api/admin/bookings/{booking_id}/updates",
+        headers=headers(admin_token),
+        data={"comment": "Admin received the racket photo."},
+        files={"photo": ("admin-racket.png", b"admin-photo", "image/png")},
+    )
+    assert admin_update.status_code == 200
+    updates = admin_update.json()["updates"]
+    assert [item["author_role"] for item in updates] == ["customer", "admin"]
+    assert updates[-1]["comment"] == "Admin received the racket photo."
+
+    player_detail = client.get(
+        f"/api/bookings/{booking_id}",
+        headers=headers(customer_token),
+    )
+    assert player_detail.status_code == 200
+    assert len(player_detail.json()["updates"]) == 2

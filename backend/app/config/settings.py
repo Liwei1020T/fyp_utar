@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     )
     seed_admin_password: str | None = Field(default=None, alias="SEED_ADMIN_PASSWORD")
     ai_internal_api_key: str | None = Field(default=None, alias="AI_INTERNAL_API_KEY")
+    upload_root_path_raw: str = Field(default="var/uploads", alias="UPLOAD_ROOT_PATH")
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -95,6 +96,13 @@ class Settings(BaseSettings):
     @property
     def approved_strings_path(self) -> Path:
         candidate = Path(self.approved_strings_source_path)
+        if candidate.is_absolute():
+            return candidate
+        return BACKEND_ROOT / candidate
+
+    @property
+    def upload_root_path(self) -> Path:
+        candidate = Path(self.upload_root_path_raw)
         if candidate.is_absolute():
             return candidate
         return BACKEND_ROOT / candidate

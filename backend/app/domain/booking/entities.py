@@ -15,6 +15,20 @@ class BookingStatusHistoryEntry:
 
 
 @dataclass(frozen=True)
+class BookingUpdateEntry:
+    id: str
+    booking_id: str
+    author_user_id: str
+    author_role: str
+    author_phone_number: str | None
+    comment: str | None
+    photo_path: str | None
+    photo_original_name: str | None
+    photo_content_type: str | None
+    created_at: datetime | None
+
+
+@dataclass(frozen=True)
 class BookingRecord:
     id: str
     user_id: str
@@ -32,4 +46,4 @@ class BookingRecord:
     updated_at: datetime | None
     latest_admin_note: str | None
     status_history: list[BookingStatusHistoryEntry]
-
+    updates: list[BookingUpdateEntry]

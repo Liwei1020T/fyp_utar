@@ -2,14 +2,11 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  Bell,
   ChevronLeft,
   ChevronRight,
-  Dumbbell,
   LogOut,
   Settings,
   Star,
-  Wallet,
 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -22,29 +19,19 @@ import {
   useAppStore,
   useBookings,
   useCurrentUser,
-  useNotifications,
-  useWallets,
 } from '../../../store/appStore';
-import { getRacketsForPlayer } from '../../../services/mockAppService';
 
 export default function PlayerProfileScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const logout = useAppStore((state) => state.logout);
   const bookings = useBookings();
-  const notifications = useNotifications();
-  const wallets = useWallets();
 
   if (!user || user.role !== 'player') {
     return null;
   }
 
   const playerBookings = bookings.filter((item) => item.playerId === user.id);
-  const rackets = getRacketsForPlayer(user.id);
-  const unreadNotifications = notifications.filter(
-    (item) => item.userId === user.id && !item.read,
-  ).length;
-  const wallet = wallets.find((item) => item.userId === user.id);
   const apiAlignedSkillLevel =
     user.skillLevel === 'Competitive' ? 'Advanced' : user.skillLevel;
   const apiAlignedPlayingStyle =
@@ -98,7 +85,6 @@ export default function PlayerProfileScreen() {
         <View className="mt-9 flex-row gap-4">
           {[
             { value: playerBookings.length, label: 'Bookings' },
-            { value: rackets.length, label: 'Rackets' },
             { value: user.preferredTension, label: 'Fav lbs' },
           ].map((stat, index) => (
             <View key={index} className="flex-1">
@@ -145,27 +131,6 @@ export default function PlayerProfileScreen() {
                 'Skill level, playing style, priorities, and preferred tension.',
               icon: <Star size={18} color="#2F64B6" />,
               route: '/player/profile/edit',
-            },
-            {
-              title: 'Notification center',
-              subtitle: `${unreadNotifications} unread alerts across bookings, chat, and service updates.`,
-              icon: <Bell size={18} color="#22766D" />,
-              route: '/player/notifications',
-            },
-            {
-              title: 'Racket passport',
-              subtitle:
-                'Saved frames, string history, tensions, and service notes.',
-              icon: <Dumbbell size={18} color="#6550B8" />,
-              route: '/player/rackets',
-            },
-            {
-              title: 'Wallet balance',
-              subtitle: `Stored balance ${
-                wallet ? `RM ${wallet.availableBalance.toFixed(2)}` : 'RM 0.00'
-              } for future checkout support.`,
-              icon: <Wallet size={18} color="#C98A2E" />,
-              route: '/player/wallet',
             },
           ].map((item) => (
             <Pressable

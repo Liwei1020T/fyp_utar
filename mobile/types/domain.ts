@@ -95,6 +95,19 @@ export interface BookingStatusEntry {
   at: string;
 }
 
+export interface BookingUpdate {
+  id: string;
+  bookingId: string;
+  authorUserId: string;
+  authorRole: UserRole;
+  authorPhoneNumber?: string;
+  comment?: string;
+  photoUrl?: string;
+  photoOriginalName?: string;
+  photoContentType?: string;
+  createdAt: string;
+}
+
 export interface Booking {
   id: string;
   playerId: string;
@@ -120,6 +133,7 @@ export interface Booking {
   queuePosition: number;
   paymentRuleNote: string;
   timeline: BookingStatusEntry[];
+  updates: BookingUpdate[];
 }
 
 export interface RecommendationMatch {
@@ -322,5 +336,8 @@ export interface BookingDraft {
   notes: string;
   dropOffDate: string;
   dropOffTime: string;
+  photoUri?: string;
+  photoName?: string;
+  photoContentType?: string;
   saveRacket?: boolean;
 }

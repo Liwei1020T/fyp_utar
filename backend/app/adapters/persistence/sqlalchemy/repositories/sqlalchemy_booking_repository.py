@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import BookingStatusHistory
+from app.adapters.persistence.sqlalchemy.models import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_booking_record
@@ -30,15 +31,13 @@ class SqlAlchemyBookingRepository:
         self.db = db
 
     def _detail_query(self):
-        return (
-            select(Booking)
-            .options(
-                joinedload(Booking.string_item),
-                joinedload(Booking.user),
-                joinedload(Booking.status_history).joinedload(
-                    BookingStatusHistory.changed_by
-                ),
-            )
+        return select(Booking).options(
+            joinedload(Booking.string_item),
+            joinedload(Booking.user),
+            joinedload(Booking.status_history).joinedload(
+                BookingStatusHistory.changed_by
+            ),
+            joinedload(Booking.updates).joinedload(BookingUpdate.author),
         )
 
     def create_booking(
@@ -81,9 +80,11 @@ class SqlAlchemyBookingRepository:
         return refreshed
 
     def get_by_id(self, booking_id: str) -> BookingRecord | None:
-        booking = self.db.execute(
-            self._detail_query().where(Booking.id == booking_id)
-        ).unique().scalar_one_or_none()
+        booking = (
+            self.db.execute(self._detail_query().where(Booking.id == booking_id))
+            .unique()
+            .scalar_one_or_none()
+        )
         return to_booking_record(booking) if booking else None
 
     def list_by_user(self, user_id: str) -> Page[BookingRecord]:
@@ -177,6 +178,34 @@ class SqlAlchemyBookingRepository:
         assert refreshed is not None
         return refreshed
 
+    def add_update(
+        self,
+        *,
+        booking_id: str,
+        author_user_id: str,
+        author_role: str,
+        comment: str | None,
+        photo_path: str | None,
+        photo_original_name: str | None,
+        photo_content_type: str | None,
+    ) -> BookingRecord:
+        self.db.add(
+            BookingUpdate(
+                booking_id=booking_id,
+                author_user_id=author_user_id,
+                author_role=author_role,
+                comment=comment,
+                photo_path=photo_path,
+                photo_original_name=photo_original_name,
+                photo_content_type=photo_content_type,
+            )
+        )
+        self.db.commit()
+        self.db.expire_all()
+        refreshed = self.get_by_id(booking_id)
+        assert refreshed is not None
+        return refreshed
+
     def list_slot_bookings(self) -> list[BookingRecord]:
         items = (
             self.db.execute(
@@ -209,4 +238,3 @@ class SqlAlchemyBookingRepository:
     def list_all_for_analytics(self) -> list[BookingRecord]:
         items = self.db.execute(self._detail_query()).unique().scalars().all()
         return [to_booking_record(item) for item in items]
-

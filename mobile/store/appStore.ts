@@ -563,6 +563,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       paymentRuleNote:
         'Full payment confirms the booking. Reschedule or cancel stays available only before payment completes.',
       timeline: buildTimeline(bookingStatus, draft.dropOffDate, draft.dropOffTime),
+      updates: [],
     };
 
     const payment: Payment = {
@@ -761,9 +762,11 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     })),
   updateBusinessHours: (adminId, nextHours) =>
     set((state) => ({
-      businessHours: state.businessHours.map((item) =>
-        item.adminId === adminId ? nextHours : item
-      ),
+      businessHours: state.businessHours.some((item) => item.adminId === adminId)
+        ? state.businessHours.map((item) =>
+            item.adminId === adminId ? nextHours : item
+          )
+        : [nextHours, ...state.businessHours],
     })),
   updateStringItem: (stringId, patch) =>
     set((state) => {
@@ -824,9 +827,24 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     })),
   updateAdminSettings: (adminId, patch) =>
     set((state) => ({
-      adminSettings: state.adminSettings.map((item) =>
-        item.adminId === adminId ? { ...item, ...patch } : item
-      ),
+      adminSettings: state.adminSettings.some((item) => item.adminId === adminId)
+        ? state.adminSettings.map((item) =>
+            item.adminId === adminId ? { ...item, ...patch } : item
+          )
+        : [
+            {
+              adminId,
+              storeName: '',
+              storeContact: '',
+              supportText: '',
+              paymentNotes: '',
+              bookingNotes: '',
+              storePolicyText: '',
+              address: '',
+              ...patch,
+            },
+            ...state.adminSettings,
+          ],
     })),
 }));
 

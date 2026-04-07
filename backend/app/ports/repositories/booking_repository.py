@@ -46,9 +46,20 @@ class BookingRepository(Protocol):
         note: str | None,
     ) -> BookingRecord: ...
 
+    def add_update(
+        self,
+        *,
+        booking_id: str,
+        author_user_id: str,
+        author_role: str,
+        comment: str | None,
+        photo_path: str | None,
+        photo_original_name: str | None,
+        photo_content_type: str | None,
+    ) -> BookingRecord: ...
+
     def list_slot_bookings(self) -> list[BookingRecord]: ...
 
     def list_active_queue(self) -> list[BookingRecord]: ...
 
     def list_all_for_analytics(self) -> list[BookingRecord]: ...
-

@@ -97,6 +97,7 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
+          href: null,
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
             <AdminTabIcon icon={MessageCircleMore} color={color} size={size} focused={focused} />
@@ -106,6 +107,7 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="analytics"
         options={{
+          href: null,
           title: 'Analytics',
           tabBarIcon: ({ color, size, focused }) => (
             <AdminTabIcon icon={BarChart3} color={color} size={size} focused={focused} />

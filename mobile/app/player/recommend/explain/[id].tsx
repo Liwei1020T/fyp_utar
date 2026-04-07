@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageSquareText, Sparkles } from 'lucide-react-native';
+import { ChevronLeft, Sparkles } from 'lucide-react-native';
 import { HeroText } from '../../../../components/ui/heroui';
 import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
@@ -119,19 +119,11 @@ export default function RecommendationExplanationScreen() {
         <View className="flex-row flex-wrap gap-2">
           <AppChip label="Compare with shortlist" variant="neutral" />
           <AppChip label="Book from here" variant="primary" />
-          <AppChip label="Ask AI follow-up questions" variant="info" />
         </View>
       </AppSection>
 
       <View className="mb-10 mt-8 gap-3">
         <AppButton label="Book this string" size="lg" onPress={() => router.push(`/player/bookings/new?stringId=${stringItem.id}`)} />
-        <AppButton
-          label="Ask AI about this fit"
-          variant="outline"
-          size="lg"
-          leadingIcon={<MessageSquareText size={18} color="#475569" />}
-          onPress={() => router.push('/player/chat/chat-001')}
-        />
       </View>
     </AppScreen>
   );

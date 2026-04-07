@@ -10,6 +10,7 @@ from pydantic import model_validator
 
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
+from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.booking.enums import BookingStatus
 from app.shared.serialization import isoformat_or_none
 
@@ -56,6 +57,19 @@ class BookingStatusHistoryOut(BaseModel):
     changed_at: str | None
 
 
+class BookingUpdateOut(BaseModel):
+    id: str
+    booking_id: str
+    author_user_id: str
+    author_role: str
+    author_phone_number: str | None = None
+    comment: str | None = None
+    photo_url: str | None = None
+    photo_original_name: str | None = None
+    photo_content_type: str | None = None
+    created_at: str | None = None
+
+
 class BookingOut(BaseModel):
     id: str
     user_id: str
@@ -73,6 +87,7 @@ class BookingOut(BaseModel):
     updated_at: str | None = None
     latest_admin_note: str | None = None
     status_history: list[BookingStatusHistoryOut] | None = None
+    updates: list[BookingUpdateOut] | None = None
 
 
 def booking_history_to_dto(entry: BookingStatusHistoryEntry) -> BookingStatusHistoryOut:
@@ -83,6 +98,21 @@ def booking_history_to_dto(entry: BookingStatusHistoryEntry) -> BookingStatusHis
         changed_by_phone_number=entry.changed_by_phone_number,
         note=entry.note,
         changed_at=isoformat_or_none(entry.changed_at),
+    )
+
+
+def booking_update_to_dto(entry: BookingUpdateEntry) -> BookingUpdateOut:
+    return BookingUpdateOut(
+        id=entry.id,
+        booking_id=entry.booking_id,
+        author_user_id=entry.author_user_id,
+        author_role=entry.author_role,
+        author_phone_number=entry.author_phone_number,
+        comment=entry.comment,
+        photo_url=f"/media/{entry.photo_path}" if entry.photo_path else None,
+        photo_original_name=entry.photo_original_name,
+        photo_content_type=entry.photo_content_type,
+        created_at=isoformat_or_none(entry.created_at),
     )
 
 
@@ -113,6 +143,7 @@ def booking_to_dto(
         ]
         if include_history
         else None,
+        updates=[booking_update_to_dto(entry) for entry in booking.updates],
     )
 
 

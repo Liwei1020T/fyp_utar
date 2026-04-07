@@ -53,7 +53,7 @@ export default function BookingsListScreen() {
   return (
     <AppScreen
       title="My bookings"
-      subtitle="Track payment status, drop-off windows, and service progress from one list."
+      subtitle="Track drop-off windows, admin updates, and service progress from one list."
       headerLeft={
         router.canGoBack() ? (
           <AppIconButton
@@ -91,7 +91,7 @@ export default function BookingsListScreen() {
                 Keep every drop-off and service status in view.
               </HeroText>
               <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-                Filter by stage, revisit payment state, and jump into detail or tracking pages without losing context.
+                Filter by stage and jump into booking detail or tracking pages without losing context.
               </HeroText>
             </AppCard>
 

@@ -31,6 +31,7 @@ export const MOCK_BOOKINGS: Booking[] = [
       { status: 'awaiting_dropoff', title: 'Awaiting drop-off', note: 'Bring your racket before 11:00 AM on the selected day.', at: '2026-04-02T18:00:00.000Z' },
       { status: 'in_progress', title: 'Stringing in progress', note: 'Assigned to Daniel Tan on the high-tension bench.', at: '2026-04-03T11:05:00.000Z' },
     ],
+    updates: [],
   },
   {
     id: 'BK-2402',
@@ -59,6 +60,7 @@ export const MOCK_BOOKINGS: Booking[] = [
     timeline: [
       { status: 'pending_payment', title: 'Payment pending', note: 'Awaiting full mock payment to confirm the booking.', at: '2026-03-31T14:20:00.000Z' },
     ],
+    updates: [],
   },
   {
     id: 'BK-2398',
@@ -89,6 +91,7 @@ export const MOCK_BOOKINGS: Booking[] = [
       { status: 'in_progress', title: 'In progress', note: 'Racket checked in and the restring job started.', at: '2026-04-02T16:42:00.000Z' },
       { status: 'ready_for_collection', title: 'Ready for collection', note: 'Final inspection passed and pickup note was sent.', at: '2026-04-03T09:08:00.000Z' },
     ],
+    updates: [],
   },
   {
     id: 'BK-2392',
@@ -121,6 +124,7 @@ export const MOCK_BOOKINGS: Booking[] = [
       { status: 'ready_for_collection', title: 'Ready for collection', note: 'Pickup reminder sent.', at: '2026-03-29T18:45:00.000Z' },
       { status: 'completed', title: 'Completed', note: 'Customer collected the racket and closed the job.', at: '2026-03-30T10:15:00.000Z' },
     ],
+    updates: [],
   },
   {
     id: 'BK-2387',
@@ -148,5 +152,6 @@ export const MOCK_BOOKINGS: Booking[] = [
       { status: 'pending_payment', title: 'Payment pending', note: 'Customer exited before completing the mock payment.', at: '2026-03-24T14:30:00.000Z' },
       { status: 'cancelled', title: 'Booking cancelled', note: 'Slot released back into the operating schedule.', at: '2026-03-24T14:42:00.000Z' },
     ],
+    updates: [],
   },
 ];

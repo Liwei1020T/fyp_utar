@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,13 +18,16 @@ import { SlotPicker } from '../../../components/booking/SlotPicker';
 import {
   useAppStore,
   useBusinessHoursState,
+  useBackendAccessToken,
   useCurrentUser,
-  useRackets,
   useStrings,
 } from '../../../store/appStore';
 import { MOCK_BOOKING_SLOTS } from '../../../mocks';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatDateLabel } from '../../../lib/formatters';
+import { BackendApiError, backendApi } from '../../../services/backendApi';
+import { mapBackendSlotToBookingSlot } from '../../../services/backendMappers';
+import type { BookingSlot } from '../../../types/domain';
 
 const bookingSchema = z.object({
   racketBrand: z.string().min(1, 'Racket brand is required'),
@@ -40,9 +44,9 @@ export default function NewBookingScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const strings = useStrings();
+  const token = useBackendAccessToken();
   const setBookingDraft = useAppStore((state) => state.setBookingDraft);
   const businessHours = useBusinessHoursState();
-  const rackets = useRackets();
 
   if (!user || user.role !== 'player') {
     return null;
@@ -53,10 +57,22 @@ export default function NewBookingScreen() {
     (params.stringId ? undefined : strings[0]) ??
     getStringById('string-001');
   const adminId = user.preferredAdminId;
-  const [selectedDate, setSelectedDate] = useState('2026-04-05');
-  const playerRackets = rackets.filter((item) => item.playerId === user.id);
-  const [selectedRacketId, setSelectedRacketId] = useState<string | null>(playerRackets[0]?.id ?? null);
-  const slots = MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId && item.date === selectedDate);
+  const today = new Date().toISOString().slice(0, 10);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [liveSlots, setLiveSlots] = useState<BookingSlot[]>([]);
+  const [didLoadLiveSlots, setDidLoadLiveSlots] = useState(false);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [bookingPhoto, setBookingPhoto] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const sourceSlots =
+    token && didLoadLiveSlots && !slotsError
+      ? liveSlots
+      : MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId);
+  const slots = sourceSlots.filter((item) => item.adminId === adminId && item.date === selectedDate);
   const availableSlots = useMemo(
     () => slots.filter((item) => item.availableSpots > 0),
     [slots]
@@ -66,19 +82,17 @@ export default function NewBookingScreen() {
   );
   const [slotError, setSlotError] = useState<string | null>(null);
   const availableDates = Array.from(
-    new Set(MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId).map((item) => item.date))
+    new Set(sourceSlots.filter((item) => item.adminId === adminId).map((item) => item.date))
   );
   const selectedSlot = slots.find(
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
   const selectedAdmin = getAdminById(adminId);
   const adminHours = businessHours.find((item) => item.adminId === adminId);
-  const selectedRacket = playerRackets.find((item) => item.id === selectedRacketId);
 
   const {
     control,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<BookingFormInput, unknown, BookingForm>({
     resolver: zodResolver(bookingSchema),
@@ -89,6 +103,56 @@ export default function NewBookingScreen() {
       notes: '',
     },
   });
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateSlots = async () => {
+      setIsLoadingSlots(true);
+      setSlotsError(null);
+      try {
+        const response = await backendApi.listSlots(token, {
+          date_from: today,
+          days: 14,
+        });
+        if (cancelled) {
+          return;
+        }
+        const mappedSlots = response.items.map((item) =>
+          mapBackendSlotToBookingSlot(item, adminId),
+        );
+        setLiveSlots(mappedSlots);
+        setDidLoadLiveSlots(true);
+        const firstAvailable = mappedSlots.find((item) => item.availableSpots > 0);
+        if (firstAvailable) {
+          setSelectedDate(firstAvailable.date);
+          setSelectedSlotId(firstAvailable.id);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSlotsError(
+            error instanceof BackendApiError
+              ? error.message
+              : 'Failed to load backend slots.',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingSlots(false);
+        }
+      }
+    };
+
+    void hydrateSlots();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [adminId, today, token]);
 
   useEffect(() => {
     const currentSelection = slots.find((item) => item.id === selectedSlotId);
@@ -118,16 +182,38 @@ export default function NewBookingScreen() {
     setBookingDraft({
       stringId: selectedString.id,
       adminId: selectedAdmin.id,
-      racketId: selectedRacketId,
+      racketId: null,
       racketBrand: data.racketBrand,
       racketModel: data.racketModel,
       requestedTension: data.requestedTension,
       notes: data.notes ?? '',
       dropOffDate: selectedSlot.date,
       dropOffTime: selectedSlot.time,
-      saveRacket: !selectedRacketId,
+      photoUri: bookingPhoto?.uri,
+      photoName: bookingPhoto?.name,
+      photoContentType: bookingPhoto?.type,
+      saveRacket: false,
     });
     router.push('/player/bookings/summary');
+  };
+
+  const pickBookingPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+      allowsEditing: false,
+    });
+
+    if (result.canceled || !result.assets[0]) {
+      return;
+    }
+
+    const asset = result.assets[0];
+    setBookingPhoto({
+      uri: asset.uri,
+      name: asset.fileName ?? `booking-photo-${Date.now()}.jpg`,
+      type: asset.mimeType ?? 'image/jpeg',
+    });
   };
 
   if (!selectedString) {
@@ -186,34 +272,8 @@ export default function NewBookingScreen() {
       <AppSection eyebrow="Setup" title="Racket and tension">
         <AppCard variant="elevated" padding="lg">
           <HeroText className="mb-3 text-sm font-semibold text-neutral-900">
-            Use a saved racket or enter a new frame for this booking.
+            Enter the racket details for this booking.
           </HeroText>
-          <View className="mb-4 flex-row flex-wrap gap-2">
-            {playerRackets.map((racket) => (
-              <AppChip
-                key={racket.id}
-                label={racket.nickname}
-                size="md"
-                variant={selectedRacketId === racket.id ? 'primary' : 'neutral'}
-                onPress={() => {
-                  setSelectedRacketId(racket.id);
-                  setValue('racketBrand', racket.brand);
-                  setValue('racketModel', racket.model);
-                  setValue('requestedTension', racket.currentTension);
-                }}
-              />
-            ))}
-            <AppChip
-              label="Enter new racket"
-              size="md"
-              variant={selectedRacketId === null ? 'secondary' : 'neutral'}
-              onPress={() => {
-                setSelectedRacketId(null);
-                setValue('racketBrand', selectedRacket?.brand ?? 'Yonex');
-                setValue('racketModel', selectedRacket?.model ?? 'Astrox 88D Pro');
-              }}
-            />
-          </View>
           <Controller
             control={control}
             name="racketBrand"
@@ -274,6 +334,20 @@ export default function NewBookingScreen() {
 
       <AppSection eyebrow="Drop-off" title="Pick your date and time">
         <View className="gap-4">
+          {slotsError ? (
+            <AppCard variant="highlighted" padding="md">
+              <HeroText className="text-sm leading-6 text-neutral-700">
+                {slotsError} Showing local fallback slots so you can continue the prototype flow.
+              </HeroText>
+            </AppCard>
+          ) : null}
+          {isLoadingSlots ? (
+            <AppCard variant="subtle" padding="md">
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                Loading live backend slots from the store business hours...
+              </HeroText>
+            </AppCard>
+          ) : null}
           <View className="flex-row flex-wrap gap-2">
             {availableDates.map((date) => (
               <AppChip
@@ -284,7 +358,7 @@ export default function NewBookingScreen() {
                 onPress={() => {
                   setSelectedDate(date);
                   setSelectedSlotId(
-                    MOCK_BOOKING_SLOTS.find(
+                    sourceSlots.find(
                       (item) =>
                         item.adminId === adminId
                         && item.date === date
@@ -320,6 +394,37 @@ export default function NewBookingScreen() {
             </View>
           </AppCard>
         </View>
+      </AppSection>
+
+      <AppSection eyebrow="Photo" title="Optional racket photo">
+        <AppCard variant="elevated" padding="lg">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Add a photo of the racket or current string condition so the admin can review it with the booking.
+          </HeroText>
+          {bookingPhoto ? (
+            <Image
+              source={{ uri: bookingPhoto.uri }}
+              className="mt-4 h-48 w-full rounded-[24px] bg-neutral-100"
+              resizeMode="cover"
+            />
+          ) : null}
+          <View className="mt-4 flex-row gap-3">
+            <AppButton
+              label={bookingPhoto ? 'Change photo' : 'Upload photo'}
+              variant="outline"
+              className="flex-1"
+              onPress={pickBookingPhoto}
+            />
+            {bookingPhoto ? (
+              <AppButton
+                label="Remove"
+                variant="ghost"
+                className="flex-1"
+                onPress={() => setBookingPhoto(null)}
+              />
+            ) : null}
+          </View>
+        </AppCard>
       </AppSection>
 
       <View className="mb-12 mt-8">
