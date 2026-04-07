@@ -1,5 +1,6 @@
 # Workspace Docs Index
 
+- [Low-Token Codebase Map](./codebase-map.md)
 - [Workspace Root](../README.md)
 - [Mobile README](../mobile/README.md)
 - [Mobile Architecture](../mobile/docs/frontend-architecture.md)
