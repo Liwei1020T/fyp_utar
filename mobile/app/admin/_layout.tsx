@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Redirect, useSegments } from 'expo-router';
 import { RoleGuard } from '../../components/roles/RoleGuard';
 import { useAppStore, useBackendAccessToken, useCurrentUser } from '../../store/appStore';
 import { backendApi } from '../../services/backendApi';
@@ -8,7 +9,16 @@ import {
   mapBackendUserToAdminProfile,
 } from '../../services/backendMappers';
 
+const DEFERRED_ADMIN_SEGMENTS = new Set([
+  'analytics',
+  'chat',
+  'check-in',
+  'payments',
+  'service-queue',
+]);
+
 export default function AdminLayout() {
+  const segments = useSegments();
   const token = useBackendAccessToken();
   const user = useCurrentUser();
   const sessionSource = useAppStore((state) => state.sessionSource);
@@ -70,6 +80,10 @@ export default function AdminLayout() {
     token,
     user?.role,
   ]);
+
+  if (segments.some((segment) => DEFERRED_ADMIN_SEGMENTS.has(segment))) {
+    return <Redirect href="/admin" />;
+  }
 
   return <RoleGuard role="admin" />;
 }

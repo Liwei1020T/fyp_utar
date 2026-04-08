@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEffect } from 'react';
+import { Redirect, useSegments } from 'expo-router';
 import { RoleGuard } from '../../components/roles/RoleGuard';
 import { useAppStore, useBackendAccessToken } from '../../store/appStore';
 import { backendApi } from '../../services/backendApi';
@@ -9,7 +10,19 @@ import {
   mapBackendUserToPlayerProfile,
 } from '../../services/backendMappers';
 
+const DEFERRED_PLAYER_SEGMENTS = new Set([
+  'chat',
+  'chatbot',
+  'check-in',
+  'feedback',
+  'notifications',
+  'payments',
+  'rackets',
+  'wallet',
+]);
+
 export default function PlayerLayout() {
+  const segments = useSegments();
   const token = useBackendAccessToken();
   const sessionSource = useAppStore((state) => state.sessionSource);
   const setBackendPlayerSession = useAppStore(
@@ -69,6 +82,10 @@ export default function PlayerLayout() {
     setLiveStrings,
     token,
   ]);
+
+  if (segments.some((segment) => DEFERRED_PLAYER_SEGMENTS.has(segment))) {
+    return <Redirect href="/player" />;
+  }
 
   return <RoleGuard role="player" />;
 }
