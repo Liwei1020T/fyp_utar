@@ -33,9 +33,9 @@ export const MOCK_ADMIN_SETTINGS: AdminSettings[] = [
     storeName: 'Apex String Lab',
     storeContact: '+60 12-999 4421',
     supportText: 'Ask us about tension pairing, string feel, or drop-off timing and we will reply from the admin operations desk.',
-    paymentNotes: 'Full payment is required to confirm every booking in this FYP 1 prototype.',
+    paymentNotes: 'Payment handling stays outside the FYP1 demo flow.',
     bookingNotes: 'Drop-off slots are previewed from business hours and capacity settings.',
-    storePolicyText: 'Reschedule and cancellation are allowed only before payment is completed. Collection reminders remain mock-only in FYP 1.',
+    storePolicyText: 'Reschedule or cancellation is allowed before the admin starts work on the racket. Collection reminders remain mock-only in FYP1.',
     address: 'Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur',
   },
 ];

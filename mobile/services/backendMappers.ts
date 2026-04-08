@@ -27,6 +27,7 @@ import type {
   BackendSlot,
   BackendStoreBusinessHours,
 } from '../types/backend';
+import { formatLocalDateInputValue, formatLocalTimeValue } from '../lib/formatters';
 import { resolveBackendMediaUrl } from './backendApi';
 
 function titleCase(value: string) {
@@ -375,8 +376,8 @@ function historyToTimeline(
     return [
       {
         status: currentStatus,
-        title: titleCase(currentStatus),
-        note: 'Booking created in the live backend.',
+        title: 'Booking created',
+        note: 'Initial booking submitted through the live backend.',
         at: createdAt,
       },
     ];
@@ -440,10 +441,10 @@ export function mapBackendBookingToBooking(
     racketModel: booking.racket_model ?? 'Unknown',
     requestedTension: booking.requested_tension ?? 24,
     dropOffDate: dropOffDateTime
-      ? dropOffDateTime.toISOString().slice(0, 10)
+      ? formatLocalDateInputValue(dropOffDateTime)
       : booking.created_at?.slice(0, 10) ?? 'TBD',
     dropOffTime: dropOffDateTime
-      ? dropOffDateTime.toISOString().slice(11, 16)
+      ? formatLocalTimeValue(dropOffDateTime)
       : 'TBD',
     createdAt: booking.created_at ?? new Date().toISOString(),
     notes: booking.notes ?? undefined,
@@ -457,7 +458,7 @@ export function mapBackendBookingToBooking(
       booking.check_in_reference ?? `LIVE-${booking.id.slice(0, 8).toUpperCase()}`,
     queuePosition: 0,
     paymentRuleNote:
-      'Payment flow is still mocked. This live booking only covers the core service request flow.',
+      'This FYP1 booking covers drop-off, status updates, and collection tracking only.',
     timeline: historyToTimeline(
       booking.status_history,
       status,

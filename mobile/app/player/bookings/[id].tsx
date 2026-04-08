@@ -169,7 +169,9 @@ export default function PlayerBookingDetailScreen() {
             <View className="flex-row items-center gap-3">
               <TimerReset size={18} color="#22766D" />
               <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                Queue position is currently #{booking.queuePosition}. Service updates appear on the tracking timeline as the admin desk updates your order.
+                {booking.queuePosition > 0
+                  ? `Queue position is currently #${booking.queuePosition}. Service updates appear on the tracking timeline as the admin desk updates your order.`
+                  : 'Service updates appear on the tracking timeline as the admin desk updates your order.'}
               </HeroText>
             </View>
           </AppCard>

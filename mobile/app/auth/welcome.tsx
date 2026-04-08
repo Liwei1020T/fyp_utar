@@ -13,7 +13,7 @@ const roleCards = [
   {
     role: 'player',
     title: 'Player demo',
-    description: 'Recommendations, bookings, tracking, wallet, and profile.',
+    description: 'Recommendations, bookings, tracking, and profile.',
     icon: Sparkles,
     accentClassName: 'bg-[#DCE8F6]',
     accentColor: '#2F64B6',
@@ -21,7 +21,7 @@ const roleCards = [
   {
     role: 'admin',
     title: 'Admin demo',
-    description: 'Dashboard, bookings, inventory, queue, and analytics.',
+    description: 'Bookings, inventory, business hours, and store settings.',
     icon: Building2,
     accentClassName: 'bg-[#E2F1EF]',
     accentColor: '#22766D',

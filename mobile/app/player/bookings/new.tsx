@@ -24,7 +24,7 @@ import {
 } from '../../../store/appStore';
 import { MOCK_BOOKING_SLOTS } from '../../../mocks';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
-import { formatDateLabel } from '../../../lib/formatters';
+import { formatDateLabel, formatLocalDateInputValue } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendSlotToBookingSlot } from '../../../services/backendMappers';
 import type { BookingSlot } from '../../../types/domain';
@@ -57,7 +57,7 @@ export default function NewBookingScreen() {
     (params.stringId ? undefined : strings[0]) ??
     getStringById('string-001');
   const adminId = user.preferredAdminId;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [liveSlots, setLiveSlots] = useState<BookingSlot[]>([]);
   const [didLoadLiveSlots, setDidLoadLiveSlots] = useState(false);

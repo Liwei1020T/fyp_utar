@@ -17,7 +17,11 @@ const registerSchema = z
   .object({
     username: z.string().min(3, 'Username must be at least 3 characters'),
     phoneNumber: z.string().min(9, 'Phone number must be at least 9 digits'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Za-z]/, 'Password must include at least one letter')
+      .regex(/\d/, 'Password must include at least one number'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -135,7 +139,10 @@ export default function RegisterScreen() {
             value={value}
             onChangeText={onChange}
             error={errors.password?.message}
-            helperText={formError ?? 'This creates a live player account for the MVP flow.'}
+            helperText={
+              formError
+                ?? 'Use at least 8 characters with at least one letter and one number.'
+            }
             leftAdornment={<LockKeyhole size={18} color="#64748B" />}
           />
         )}

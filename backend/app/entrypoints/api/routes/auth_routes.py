@@ -3,6 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
+from fastapi import HTTPException
+from pydantic import BaseModel
+from pydantic import ValidationError
 
 from app.config.settings import get_settings
 from app.dto.auth import AuthResponse
@@ -46,6 +49,17 @@ def _build_auth_response(user, token_service) -> AuthResponse:
     )
 
 
+def _validate_payload(model: type[BaseModel], payload: dict, **context):
+    try:
+        return model.model_validate(payload, context=context)
+    except ValidationError as exc:
+        first_error = exc.errors()[0] if exc.errors() else {}
+        message = str(first_error.get("msg", "Invalid request"))
+        if message.startswith("Value error, "):
+            message = message.removeprefix("Value error, ")
+        raise HTTPException(status_code=422, detail=message) from exc
+
+
 @router.post("/register", response_model=AuthResponse)
 def register(
     payload: dict = Body(...),
@@ -53,9 +67,10 @@ def register(
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     token_service=Depends(get_token_service),
 ) -> AuthResponse:
-    request = RegisterRequest.model_validate(
+    request = _validate_payload(
+        RegisterRequest,
         payload,
-        context={"password_hasher": password_hasher},
+        password_hasher=password_hasher,
     )
     user = RegisterUserUseCase(
         user_repository=user_repository,
@@ -75,9 +90,10 @@ def login(
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     token_service=Depends(get_token_service),
 ) -> AuthResponse:
-    request = LoginRequest.model_validate(
+    request = _validate_payload(
+        LoginRequest,
         payload,
-        context={"password_hasher": password_hasher},
+        password_hasher=password_hasher,
     )
     user = LoginUseCase(
         user_repository=user_repository,
@@ -100,9 +116,10 @@ def request_forgot_password_code(
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     clock=Depends(get_clock),
 ) -> ForgotPasswordRequestResponse:
-    request = ForgotPasswordRequest.model_validate(
+    request = _validate_payload(
+        ForgotPasswordRequest,
         payload,
-        context={"password_hasher": password_hasher},
+        password_hasher=password_hasher,
     )
     settings = get_settings()
     code = RequestPasswordResetUseCase(
@@ -125,9 +142,10 @@ def reset_forgot_password(
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     clock=Depends(get_clock),
 ) -> MessageResponse:
-    request = ForgotPasswordResetRequest.model_validate(
+    request = _validate_payload(
+        ForgotPasswordResetRequest,
         payload,
-        context={"password_hasher": password_hasher},
+        password_hasher=password_hasher,
     )
     settings = get_settings()
     ResetPasswordUseCase(
@@ -153,4 +171,3 @@ def me(
         current_user.user_id
     )
     return user_to_dto(user)
-

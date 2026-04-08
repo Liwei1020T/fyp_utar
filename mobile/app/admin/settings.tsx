@@ -10,6 +10,13 @@ import { HeroText } from '../../components/ui/heroui';
 import { useAppStore, useBackendAccessToken, useCurrentUser } from '../../store/appStore';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 
+function normalizeFyp1PolicyText(value: string) {
+  if (/payment is completed|payment completes|full payment/i.test(value)) {
+    return 'Reschedule or cancellation is allowed before the admin starts work on the racket.';
+  }
+  return value;
+}
+
 export default function AdminSettingsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -37,7 +44,7 @@ export default function AdminSettingsScreen() {
     setAddress(settings.address);
     setSupportText(settings.supportText);
     setBookingNotes(settings.bookingNotes);
-    setPolicyText(settings.storePolicyText);
+    setPolicyText(normalizeFyp1PolicyText(settings.storePolicyText));
     setPaymentNotes(settings.paymentNotes);
   }, [settings]);
 
@@ -62,7 +69,7 @@ export default function AdminSettingsScreen() {
           supportText: response.support_text,
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
-          storePolicyText: response.store_policy_text,
+          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
         });
       } catch (loadError) {
         if (!cancelled) {
@@ -107,7 +114,7 @@ export default function AdminSettingsScreen() {
           supportText: response.support_text,
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
-          storePolicyText: response.store_policy_text,
+          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
         });
       } else {
         updateAdminSettings(user.id, {

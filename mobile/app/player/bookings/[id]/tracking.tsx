@@ -30,7 +30,7 @@ export default function BookingTrackingScreen() {
   return (
     <AppScreen
       title="Service tracking"
-      subtitle="Follow the drop-off journey from pending payment to completed collection."
+      subtitle="Follow the drop-off journey from booking confirmation to collection."
       headerLeft={
         <AppIconButton
           icon={<ChevronLeft size={20} color="#111827" />}

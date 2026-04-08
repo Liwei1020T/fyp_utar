@@ -237,9 +237,11 @@ export default function AdminBookingDetailScreen() {
           <HeroText className="mt-2 text-sm leading-6 text-neutral-600">
             Check-in reference: {booking.checkInReference}
           </HeroText>
-          <HeroText className="mt-2 text-sm leading-6 text-neutral-600">
-            Queue position: #{booking.queuePosition}
-          </HeroText>
+          {booking.queuePosition > 0 ? (
+            <HeroText className="mt-2 text-sm leading-6 text-neutral-600">
+              Queue position: #{booking.queuePosition}
+            </HeroText>
+          ) : null}
         </AppCard>
       </AppSection>
 

@@ -49,7 +49,7 @@ export default function BookingSummaryScreen() {
   const stringItem = getStringById(bookingDraft.stringId);
   const admin = getAdminById(bookingDraft.adminId);
   const stringFee = stringItem?.price ?? 36;
-  const serviceFee = 18;
+  const serviceFee = token ? 0 : 18;
   const totalPayable = stringFee + serviceFee;
 
   const handleProceed = async () => {

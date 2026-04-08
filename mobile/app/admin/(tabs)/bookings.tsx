@@ -82,7 +82,7 @@ export default function AdminBookingsScreen() {
             </View>
             {showFilters ? (
               <View className="flex-row flex-wrap gap-2">
-                {(['all', 'pending_payment', 'awaiting_dropoff', 'in_progress', 'ready_for_collection', 'completed'] as const).map((item) => (
+                {(['all', 'awaiting_dropoff', 'in_progress', 'ready_for_collection', 'completed'] as const).map((item) => (
                   <AppChip
                     key={item}
                     label={item === 'all' ? 'All' : formatBookingStatus(item)}

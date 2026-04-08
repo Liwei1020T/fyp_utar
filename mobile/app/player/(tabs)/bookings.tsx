@@ -16,8 +16,6 @@ import { formatBookingStatus } from '../../../lib/formatters';
 
 const filters: Array<BookingStatus | 'all'> = [
   'all',
-  'pending',
-  'pending_payment',
   'awaiting_dropoff',
   'in_progress',
   'ready_for_collection',

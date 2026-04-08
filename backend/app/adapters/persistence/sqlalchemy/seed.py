@@ -99,13 +99,13 @@ DEFAULT_STORE_SETTINGS = {
         "we will reply from the admin operations desk."
     ),
     "payment_notes": (
-        "Full payment is required to confirm every booking in this FYP prototype."
+        "Payment handling stays outside the FYP1 demo flow."
     ),
     "booking_notes": (
         "Drop-off slots are generated from business hours and slot capacity settings."
     ),
     "store_policy_text": (
-        "Reschedule and cancellation are allowed only before payment is completed."
+        "Reschedule or cancellation is allowed before the admin starts work on the racket."
     ),
     "address": "Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur",
 }

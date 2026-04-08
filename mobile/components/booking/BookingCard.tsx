@@ -4,8 +4,8 @@ import { CalendarDays, ChevronRight, Clock3 } from 'lucide-react-native';
 import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
-import { getBookingStatusVariant, getPaymentStatusVariant } from '../ui/theme';
-import { formatBookingStatus, formatCurrency, formatPaymentStatus } from '../../lib/formatters';
+import { getBookingStatusVariant } from '../ui/theme';
+import { formatBookingStatus, formatCurrency } from '../../lib/formatters';
 import type { Booking } from '../../types/domain';
 
 interface BookingCardProps {
@@ -38,7 +38,6 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
           </View>
           <View className="max-w-[40%] items-end gap-2">
             <AppChip label={formatBookingStatus(booking.status)} variant={getBookingStatusVariant(booking.status)} />
-            <AppChip label={formatPaymentStatus(booking.paymentStatus)} variant={getPaymentStatusVariant(booking.paymentStatus)} />
           </View>
         </View>
 
@@ -59,7 +58,7 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
 
         <View className="flex-row items-center justify-between">
           <HeroText className="text-sm text-neutral-500">
-            Paid now {formatCurrency(booking.amountPaid)}
+            Service estimate
           </HeroText>
           <HeroText className="text-sm font-semibold text-neutral-900">
             Total {formatCurrency(booking.totalAmount)}

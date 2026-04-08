@@ -206,27 +206,73 @@ interface AppStoreState {
   updateAdminSettings: (adminId: string, patch: Partial<AdminSettings>) => void;
 }
 
+type PersistedAppState = Pick<
+  AppStoreState,
+  | 'sessionSource'
+  | 'backendAccessToken'
+  | 'currentUserId'
+  | 'livePlayerProfile'
+  | 'liveAdminProfile'
+  | 'liveStrings'
+  | 'liveBookings'
+  | 'liveRecommendationResults'
+  | 'businessHours'
+  | 'adminSettings'
+>;
+
+const APP_STORE_KEY = 'stringsense-app-store';
+
+function readPersistedState(): Partial<PersistedAppState> {
+  if (typeof localStorage === 'undefined') {
+    return {};
+  }
+
+  try {
+    const raw = localStorage.getItem(APP_STORE_KEY);
+    return raw ? (JSON.parse(raw) as PersistedAppState) : {};
+  } catch {
+    return {};
+  }
+}
+
+function extractPersistedState(state: AppStoreState): PersistedAppState {
+  return {
+    sessionSource: state.sessionSource,
+    backendAccessToken: state.backendAccessToken,
+    currentUserId: state.currentUserId,
+    livePlayerProfile: state.livePlayerProfile,
+    liveAdminProfile: state.liveAdminProfile,
+    liveStrings: state.liveStrings,
+    liveBookings: state.liveBookings,
+    liveRecommendationResults: state.liveRecommendationResults,
+    businessHours: state.businessHours,
+    adminSettings: state.adminSettings,
+  };
+}
+
+const persistedState = readPersistedState();
+
 export const useAppStore = create<AppStoreState>((set, get) => ({
   hasHydrated: true,
-  sessionSource: null,
-  backendAccessToken: null,
-  currentUserId: null,
-  livePlayerProfile: null,
-  liveAdminProfile: null,
-  liveStrings: [],
-  liveBookings: [],
-  liveRecommendationResults: [],
+  sessionSource: persistedState.sessionSource ?? null,
+  backendAccessToken: persistedState.backendAccessToken ?? null,
+  currentUserId: persistedState.currentUserId ?? null,
+  livePlayerProfile: persistedState.livePlayerProfile ?? null,
+  liveAdminProfile: persistedState.liveAdminProfile ?? null,
+  liveStrings: persistedState.liveStrings ?? [],
+  liveBookings: persistedState.liveBookings ?? [],
+  liveRecommendationResults: persistedState.liveRecommendationResults ?? [],
   users: MOCK_USERS,
   strings: MOCK_STRINGS,
   bookings: MOCK_BOOKINGS,
   payments: MOCK_PAYMENTS,
   conversations: MOCK_CHAT_CONVERSATIONS,
   notifications: MOCK_NOTIFICATIONS,
-  businessHours: MOCK_BUSINESS_HOURS,
+  businessHours: persistedState.businessHours ?? MOCK_BUSINESS_HOURS,
   rackets: MOCK_RACKETS,
   wallets: MOCK_WALLETS,
   walletTransactions: MOCK_WALLET_TRANSACTIONS,
-  adminSettings: MOCK_ADMIN_SETTINGS,
+  adminSettings: persistedState.adminSettings ?? MOCK_ADMIN_SETTINGS,
   notificationPreferences: MOCK_NOTIFICATION_PREFERENCES,
   compareSelection: [],
   bookingDraft: null,
@@ -847,6 +893,16 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
           ],
     })),
 }));
+
+if (typeof localStorage !== 'undefined') {
+  useAppStore.subscribe((state) => {
+    try {
+      localStorage.setItem(APP_STORE_KEY, JSON.stringify(extractPersistedState(state)));
+    } catch {
+      // Ignore local persistence failures and keep runtime state usable.
+    }
+  });
+}
 
 export function useCurrentUser() {
   const sessionSource = useAppStore((state) => state.sessionSource);
