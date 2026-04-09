@@ -12,7 +12,6 @@ import {
 const DEFERRED_ADMIN_SEGMENTS = new Set([
   'analytics',
   'chat',
-  'check-in',
   'payments',
   'service-queue',
 ]);
