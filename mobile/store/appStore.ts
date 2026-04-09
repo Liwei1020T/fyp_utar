@@ -739,7 +739,14 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         };
       }
 
-      const next = [...state.compareSelection, stringId].slice(-3);
+      if (state.compareSelection.length >= 2) {
+        if (typeof window !== 'undefined') {
+          alert('Comparison limit reached. You can only compare up to 2 strings at once.');
+        }
+        return { compareSelection: state.compareSelection };
+      }
+
+      const next = [...state.compareSelection, stringId];
       return { compareSelection: next };
     }),
   clearCompareSelection: () => set({ compareSelection: [] }),

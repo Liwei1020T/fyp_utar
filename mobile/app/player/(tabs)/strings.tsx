@@ -3,14 +3,12 @@ import { FlatList, Pressable, View, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
   Search, 
-  Scale, 
   SlidersHorizontal, 
   ChevronLeft, 
   LayoutGrid, 
   Tags,
   Plus,
-  Check,
-  X
+  Check
 } from 'lucide-react-native';
 import { HeroText, HeroTextField } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -20,6 +18,7 @@ import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { FloatingCompareTray } from '../../../components/shared/FloatingCompareTray';
 import { useAppStore, useStrings } from '../../../store/appStore';
 import { formatLabel } from '../../../lib/formatters';
 import { cn } from '../../../components/ui/heroui';
@@ -319,38 +318,7 @@ export default function StringsCatalogScreen() {
         />
       </AppScreen>
 
-      {/* Floating Compare Tray */}
-      {compareSelection.length >= 2 && (
-        <View 
-          className="absolute left-4 right-4 z-50 bg-slate-900 rounded-2xl shadow-xl p-3.5 flex-row items-center justify-between"
-          style={{ bottom: bottomContentInset - 8 }}
-        >
-          <View className="flex-row items-center gap-2.5">
-            <View className="h-7 w-7 rounded-full bg-primary-600 items-center justify-center">
-              <HeroText className="text-[11px] font-bold text-white">{compareSelection.length}</HeroText>
-            </View>
-            <View>
-              <HeroText className="text-[13px] font-bold text-white leading-none">Shortlist Ready</HeroText>
-              <HeroText className="text-[10px] text-slate-400 font-medium mt-0.5">Open side-by-side compare</HeroText>
-            </View>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <Pressable 
-              onPress={clearCompareSelection}
-              className="h-9 w-9 items-center justify-center rounded-full bg-white/10"
-            >
-              <X size={16} color="white" />
-            </Pressable>
-            <AppButton 
-              label="Compare" 
-              size="sm" 
-              variant="primary" 
-              className="h-9 px-4 rounded-full"
-              onPress={() => router.push('/player/strings/compare')}
-            />
-          </View>
-        </View>
-      )}
+      <FloatingCompareTray />
     </View>
   );
 }
