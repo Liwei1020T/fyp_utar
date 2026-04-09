@@ -1,15 +1,12 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CalendarClock, Circle, CircleCheck, TimerReset } from 'lucide-react-native';
+import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText } from '../../../components/ui/heroui';
-import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
-import { AppSection } from '../../../components/shared/AppSection';
-import { BookingUpdates } from '../../../components/booking/BookingUpdates';
 import {
   useAppStore,
   useBackendAccessToken,
@@ -20,7 +17,6 @@ import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
-  formatCurrency,
 } from '../../../lib/formatters';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { backendApi } from '../../../services/backendApi';
@@ -77,40 +73,116 @@ function getStageState(stageKey: (typeof TRACKING_STAGES)[number]['key'], bookin
   return 'upcoming' as const;
 }
 
-function getNextStepSummary(status: BookingStatus) {
+function formatTrackingDateTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString('en-MY', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+function formatDropOffDateTime(booking: Booking) {
+  const date = new Date(`${booking.dropOffDate}T${booking.dropOffTime}:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return `${booking.dropOffDate} at ${booking.dropOffTime}`;
+  }
+
+  return date.toLocaleString('en-MY', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).replace(',', ' at');
+}
+
+function getHeroStatusLabel(status: BookingStatus) {
+  switch (status) {
+    case 'in_progress':
+      return 'In Progress';
+    case 'ready_for_collection':
+      return 'Ready for Collection';
+    default:
+      return formatBookingStatus(status);
+  }
+}
+
+function getNextStepLabel(status: BookingStatus) {
   switch (status) {
     case 'pending':
     case 'pending_payment':
-      return 'Complete booking confirmation to lock in your drop-off slot.';
+      return 'Waiting for booking confirmation';
     case 'confirmed':
     case 'awaiting_dropoff':
-      return 'Bring your racket and show the booking reference at the counter.';
+      return 'Waiting for drop-off check-in';
     case 'in_progress':
-      return 'Waiting for stringing completion from the shop.';
+      return 'Waiting for stringing completion';
     case 'ready_for_collection':
-      return 'Your racket is ready. Head to the shop for collection.';
+      return 'Waiting for collection';
     case 'completed':
-      return 'Service completed. You can review the final updates anytime.';
+      return 'Service completed';
     case 'cancelled':
     default:
-      return 'This booking is no longer progressing.';
+      return 'Booking closed';
   }
 }
 
-function getPricingLabel(amount: number, fallback: string) {
-  return amount > 0 ? formatCurrency(amount) : fallback;
-}
-
-function getDropOffNote(booking: Booking) {
-  return `Use reference ${booking.checkInReference} at counter check-in.`;
-}
-
-function getQueueNote(booking: Booking) {
-  if (booking.queuePosition > 0) {
-    return `Current queue: #${booking.queuePosition}. Updates appear here as the shop progresses your order.`;
+function getQuoteStatus(booking: Booking) {
+  if (booking.totalAmount > 0 || booking.amountPaid > 0) {
+    return 'Quote confirmed';
   }
 
-  return 'Queue and service updates appear here as the shop progresses your order.';
+  return 'Vendor quote pending';
+}
+
+function getLatestUpdate(booking: Booking): {
+  label: string;
+  at: string;
+  message: string;
+} {
+  const latestAdminUpdate = [...booking.updates]
+    .filter((item) => item.authorRole === 'admin')
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())[0];
+
+  if (latestAdminUpdate) {
+    return {
+      label: 'Admin update',
+      at: latestAdminUpdate.createdAt,
+      message: latestAdminUpdate.comment ?? 'The shop posted a service update for this booking.',
+    };
+  }
+
+  const latestTimelineEntry = booking.timeline[booking.timeline.length - 1];
+
+  return {
+    label: 'Latest update',
+    at: latestTimelineEntry?.at ?? booking.createdAt,
+    message: latestTimelineEntry?.note ?? 'The shop will post the next service update here.',
+  };
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-row items-start justify-between gap-4 py-3">
+      <HeroText className="text-[13px] text-neutral-500">
+        {label}
+      </HeroText>
+      <HeroText className="max-w-[58%] text-right text-[13px] font-semibold leading-5 text-neutral-950">
+        {value}
+      </HeroText>
+    </View>
+  );
 }
 
 export default function PlayerBookingDetailScreen() {
@@ -176,179 +248,170 @@ export default function PlayerBookingDetailScreen() {
   const stringItem = getStringById(booking.stringId);
   const admin = getAdminById(booking.adminId);
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
+  const latestUpdate = getLatestUpdate(booking);
 
   return (
     <AppScreen
       headerVariant="secondary"
+      compactHeader
       title={`Booking ${orderCode}`}
-      subtitle="Booking info and live service progress"
+      subtitle="Track booking info and live progress."
       showBackButton
       onBackPress={() => router.back()}
+      contentContainerClassName="pt-3"
     >
-      <AppCard variant="dark" className="rounded-[32px]" padding="lg">
-        <View className="flex-row items-start justify-between gap-4">
-          <View className="flex-1">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
-              Service status
-            </HeroText>
-            <HeroText className="mt-2 text-[28px] font-bold tracking-tight text-white">
-              {formatBookingStatus(booking.status)}
-            </HeroText>
-            <HeroText className="mt-2 text-sm text-primary-100">
-              Drop-off on {booking.dropOffDate} at {booking.dropOffTime}
-            </HeroText>
-            <View className="mt-4 rounded-[20px] bg-white/10 px-4 py-3">
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-100">
-                Next
+      <View className="gap-4">
+        <AppCard variant="dark" className="rounded-[28px]" padding="md">
+          <View className="gap-3">
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="min-w-0 flex-1">
+                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
+                  Status overview
+                </HeroText>
+                <HeroText className="mt-2 text-[26px] font-bold tracking-tight text-white">
+                  {getHeroStatusLabel(booking.status)}
+                </HeroText>
+              </View>
+              <AppChip
+                label={formatBookingStatus(booking.status)}
+                variant={getBookingStatusVariant(booking.status)}
+                className="self-start bg-white/15 border-white/20"
+              />
+            </View>
+
+            <View className="rounded-[20px] bg-white/10 px-4 py-3">
+              <HeroText className="text-sm text-primary-100">
+                Drop-off on {formatDropOffDateTime(booking)}
               </HeroText>
-              <HeroText className="mt-1 text-sm font-medium leading-6 text-white">
-                {getNextStepSummary(booking.status)}
+              <HeroText className="mt-2 text-sm font-medium leading-6 text-white">
+                Next: {getNextStepLabel(booking.status)}
               </HeroText>
             </View>
           </View>
-        </View>
-      </AppCard>
+        </AppCard>
 
-      <AppSection eyebrow="Overview" title="Booking summary" variant="compact">
-        <AppDetailList
-          items={[
-            {
-              label: 'Status',
-              value: (
-                <AppChip
-                  label={formatBookingStatus(booking.status)}
-                  variant={getBookingStatusVariant(booking.status)}
-                  className="self-start md:self-end"
-                />
-              ),
-            },
-            { label: 'Vendor', value: admin?.businessName ?? 'Assigned shop' },
-            { label: 'Requested tension', value: `${booking.requestedTension} lbs` },
-            { label: 'Reference', value: booking.checkInReference || 'Assigned at check-in' },
-          ]}
-          className="overflow-hidden"
-        />
-      </AppSection>
+        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
+          <View className="gap-1">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+              Booking details
+            </HeroText>
+            <View className="mt-2">
+              <DetailRow label="Vendor" value={admin?.businessName ?? 'Assigned shop'} />
+              <View className="h-px bg-[#EEF3F8]" />
+              <DetailRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
+              <View className="h-px bg-[#EEF3F8]" />
+              <DetailRow
+                label="String"
+                value={`${stringItem?.brand ?? 'Custom'} ${stringItem?.model ?? 'String selection'}`.trim()}
+              />
+              <View className="h-px bg-[#EEF3F8]" />
+              <DetailRow label="Tension" value={`${booking.requestedTension} lbs`} />
+              <View className="h-px bg-[#EEF3F8]" />
+              <DetailRow label="Order ID" value={orderCode} />
+              <View className="h-px bg-[#EEF3F8]" />
+              <DetailRow label="Quote status" value={getQuoteStatus(booking)} />
+            </View>
+          </View>
+        </AppCard>
 
-      <AppSection eyebrow="Setup" title="String and racket setup" variant="compact">
-        <AppDetailList
-          items={[
-            {
-              label: 'String',
-              value: `${stringItem?.brand ?? ''} ${stringItem?.model ?? ''}`.trim(),
-            },
-            {
-              label: 'Racket',
-              value: `${booking.racketBrand} ${booking.racketModel}`,
-            },
-            {
-              label: 'Requested tension',
-              value: `${booking.requestedTension} lbs`,
-            },
-          ]}
-        />
-      </AppSection>
-
-      <AppSection eyebrow="Progress" title="Tracking preview" variant="compact">
-        <AppCard variant="elevated" padding="md">
+        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
           <View className="gap-3">
-            {TRACKING_STAGES.map((stage) => {
-              const state = getStageState(stage.key, booking);
-              const isCurrent = state === 'current';
-              const isComplete = state === 'complete';
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="min-w-0 flex-1">
+                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                  Progress
+                </HeroText>
+                <HeroText className="mt-1 text-[15px] font-bold tracking-tight text-neutral-950">
+                  Progress preview
+                </HeroText>
+              </View>
+              <AppButton
+                label="View full"
+                variant="ghost"
+                size="sm"
+                onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
+              />
+            </View>
 
-              return (
-                <View
-                  key={stage.key}
-                  className={`flex-row items-center gap-3 rounded-[18px] px-2 py-1.5 ${isCurrent ? 'bg-primary-50/80' : ''}`}
-                >
-                  <View className="h-7 w-7 items-center justify-center">
-                    {isComplete ? (
-                      <CircleCheck size={20} color="#2F64B6" />
-                    ) : isCurrent ? (
-                      <Circle size={18} color="#2F64B6" fill="#2F64B6" />
-                    ) : (
-                      <Circle size={18} color="#C4D0E0" />
-                    )}
-                  </View>
-                  <HeroText
-                    className={`text-sm leading-6 ${isCurrent ? 'font-semibold text-primary-700' : isComplete ? 'font-medium text-neutral-700' : 'text-neutral-400'}`}
+            <View className="gap-2">
+              {TRACKING_STAGES.map((stage) => {
+                const state = getStageState(stage.key, booking);
+                const isCurrent = state === 'current';
+                const isComplete = state === 'complete';
+
+                return (
+                  <View
+                    key={stage.key}
+                    className={`flex-row items-center gap-3 rounded-[18px] px-3 py-2 ${
+                      isCurrent ? 'bg-primary-50/80' : ''
+                    }`}
                   >
-                    {stage.label}
-                  </HeroText>
-                </View>
-              );
-            })}
+                    <View className="h-6 w-6 items-center justify-center">
+                      {isComplete ? (
+                        <CircleCheck size={18} color="#2F64B6" />
+                      ) : isCurrent ? (
+                        <Circle size={16} color="#2F64B6" fill="#2F64B6" />
+                      ) : (
+                        <Circle size={16} color="#C9D5E4" />
+                      )}
+                    </View>
+                    <HeroText
+                      className={`text-[14px] leading-6 ${
+                        isCurrent
+                          ? 'font-semibold text-primary-700'
+                          : isComplete
+                            ? 'font-medium text-neutral-700'
+                            : 'text-neutral-400'
+                      }`}
+                    >
+                      {stage.label}
+                    </HeroText>
+                  </View>
+                );
+              })}
+            </View>
           </View>
         </AppCard>
-      </AppSection>
 
-      <AppSection eyebrow="Drop-off" title="Check-in notes" variant="compact">
-        <AppCard variant="subtle" padding="md">
+        <AppCard variant="subtle" padding="md" className="rounded-[24px]">
+          <View className="flex-row items-start gap-3">
+            <CalendarClock size={18} color="#2F64B6" />
+            <View className="min-w-0 flex-1">
+              <HeroText className="text-[14px] font-semibold tracking-tight text-neutral-950">
+                Show your order ID at the counter during drop-off.
+              </HeroText>
+              <HeroText className="mt-1 text-[13px] leading-5 text-neutral-600">
+                The vendor uses the order ID to verify the booking and proceed with drop-off confirmation.
+              </HeroText>
+            </View>
+          </View>
+        </AppCard>
+
+        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
           <View className="gap-3">
-            <View className="flex-row items-start gap-3">
-              <CalendarClock size={18} color="#2F64B6" />
-              <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                {getDropOffNote(booking)}
+            <View className="flex-row items-start justify-between gap-3">
+              <AppChip label={latestUpdate.label} variant="primary" />
+              <HeroText className="text-[12px] text-neutral-500">
+                {formatTrackingDateTime(latestUpdate.at)}
               </HeroText>
             </View>
-            <View className="h-px bg-white/70" />
-            <View className="flex-row items-start gap-3">
-              <TimerReset size={18} color="#22766D" />
-              <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                {getQueueNote(booking)}
-              </HeroText>
-            </View>
+            <HeroText className="text-[14px] leading-6 text-neutral-700">
+              {latestUpdate.message}
+            </HeroText>
           </View>
         </AppCard>
-      </AppSection>
 
-      <AppSection eyebrow="Pricing" title="Pricing" variant="compact">
-        <AppDetailList
-          items={[
-            {
-              label: 'String fee',
-              value: getPricingLabel(booking.stringFee, 'Quoted at shop'),
-            },
-            {
-              label: 'Service fee',
-              value: getPricingLabel(booking.serviceFee, 'To be confirmed'),
-            },
-            {
-              label: 'Estimated total',
-              value: getPricingLabel(booking.totalAmount, 'Vendor quote'),
-            },
-          ]}
-        />
-      </AppSection>
-
-      <AppSection eyebrow="Updates" title="Admin updates" variant="compact">
-        <BookingUpdates updates={booking.updates} />
-      </AppSection>
-
-      <AppSection eyebrow="Note" title="FYP1 booking flow" variant="compact">
-        <AppCard variant="subtle" padding="md">
-          <HeroText className="text-sm leading-6 text-neutral-700">
-            FYP1 booking covers drop-off, status updates, and collection tracking.
+        <View className="pt-1">
+          <AppButton
+            label="View tracking"
+            variant="primary"
+            size="lg"
+            onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
+          />
+          <HeroText className="mt-3 text-center text-[11px] leading-5 text-neutral-400">
+            Booking flow covers drop-off, progress updates, and collection tracking.
           </HeroText>
-        </AppCard>
-      </AppSection>
-
-      {booking.notes ? (
-        <AppSection eyebrow="Notes" title="Service instructions" variant="compact">
-          <AppCard variant="subtle" padding="md">
-            <HeroText className="text-sm leading-6 text-neutral-700">{booking.notes}</HeroText>
-          </AppCard>
-        </AppSection>
-      ) : null}
-
-      <View className="mb-12 mt-7 gap-3">
-        <AppButton
-          label="View tracking"
-          variant="primary"
-          size="lg"
-          onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
-        />
+        </View>
       </View>
     </AppScreen>
   );
