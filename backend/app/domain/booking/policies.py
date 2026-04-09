@@ -35,3 +35,8 @@ def validate_terminal_status_note(status: str, note: str | None) -> None:
                 "note is required when cancelling or rejecting a booking"
             )
 
+
+def booking_order_code(booking_id: str) -> str:
+    normalized = "".join(char for char in booking_id.upper() if char.isalnum())
+    short_code = (normalized[:5] or "00000").ljust(5, "0")
+    return f"ORD-{short_code}"

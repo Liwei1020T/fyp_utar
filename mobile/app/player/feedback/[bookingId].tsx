@@ -9,10 +9,14 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { formatBookingOrderCode } from '../../../lib/formatters';
 
 export default function FeedbackScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ bookingId?: string }>();
+  const orderCode = params.bookingId
+    ? formatBookingOrderCode(params.bookingId)
+    : 'recent booking';
   const [rating, setRating] = useState(5);
   const [stringFeedback, setStringFeedback] = useState('Crisp and lively with strong front-court response.');
   const [serviceFeedback, setServiceFeedback] = useState('Smooth check-in and clear service updates throughout the flow.');
@@ -25,7 +29,7 @@ export default function FeedbackScreen() {
       showBackButton
       onBackPress={() => router.back()}
     >
-      <AppSection eyebrow="Booking" title={`Feedback for ${params.bookingId ?? 'recent booking'}`}>
+      <AppSection eyebrow="Booking" title={`Feedback for ${orderCode}`}>
         <AppCard variant="highlighted" padding="lg">
           <View className="flex-row gap-2">
             {[1, 2, 3, 4, 5].map((value) => (

@@ -21,7 +21,11 @@ import {
   useStrings,
 } from '../../../store/appStore';
 import type { BookingStatus } from '../../../types/domain';
-import { formatBookingStatus, formatCurrency } from '../../../lib/formatters';
+import {
+  formatBookingOrderCode,
+  formatBookingStatus,
+  formatCurrency,
+} from '../../../lib/formatters';
 import { getStringById, getUserById } from '../../../services/mockAppService';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
@@ -94,6 +98,7 @@ export default function AdminBookingDetailScreen() {
 
   const player = getUserById(booking.playerId);
   const stringItem = getStringById(booking.stringId);
+  const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const saveStatus = async () => {
     setError(null);
 
@@ -183,7 +188,7 @@ export default function AdminBookingDetailScreen() {
     <AppScreen
       tone="admin"
       headerVariant="secondary"
-      title={`Booking ${booking.id}`}
+      title={`Booking ${orderCode}`}
       subtitle="Admin detail view for service status, customer summary, booking comments, and photos."
       showBackButton
       onBackPress={() => router.back()}

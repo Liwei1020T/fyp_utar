@@ -6,7 +6,7 @@ import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
 import { HeroText } from '../../../../components/ui/heroui';
 import { AppScreen } from '../../../../components/shared/AppScreen';
-import { formatCurrency } from '../../../../lib/formatters';
+import { formatBookingOrderCode, formatCurrency } from '../../../../lib/formatters';
 import { useBookings, usePayments } from '../../../../store/appStore';
 
 export default function PaymentResultScreen() {
@@ -17,6 +17,9 @@ export default function PaymentResultScreen() {
   const booking = bookings.find((item) => item.id === params.bookingId);
   const payment = payments.find((item) => item.bookingId === params.bookingId);
   const status = params.status ?? 'success';
+  const orderCode = booking
+    ? booking.orderCode ?? formatBookingOrderCode(booking.id)
+    : null;
 
   const meta = status === 'success'
     ? {
@@ -64,7 +67,7 @@ export default function PaymentResultScreen() {
                 Booking reference
               </HeroText>
               <HeroText className="mt-2 text-center text-sm leading-6 text-white">
-                {booking.id} • {payment?.reference ?? 'Mock payment reference pending'}
+                {orderCode} • {payment?.reference ?? 'Mock payment reference pending'}
               </HeroText>
               <HeroText className="mt-3 text-center text-sm leading-6 text-white">
                 Paid amount {formatCurrency(payment?.amount ?? booking.totalAmount)}

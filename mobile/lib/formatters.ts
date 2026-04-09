@@ -66,6 +66,14 @@ export function formatCurrency(amount: number) {
   return `RM ${amount.toFixed(2)}`;
 }
 
+export function formatBookingOrderCode(bookingId: string) {
+  const normalized = bookingId
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+  const shortCode = (normalized.slice(0, 5) || '00000').padEnd(5, '0');
+  return `ORD-${shortCode}`;
+}
+
 export function formatLocalDateInputValue(value: Date | string) {
   const date = typeof value === 'string' ? new Date(value) : value;
 

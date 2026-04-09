@@ -14,7 +14,7 @@ import { BookingCard } from '../../../components/booking/BookingCard';
 import { useBookings, useCurrentUser } from '../../../store/appStore';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
 import type { BookingStatus } from '../../../types/domain';
-import { formatBookingStatus } from '../../../lib/formatters';
+import { formatBookingOrderCode, formatBookingStatus } from '../../../lib/formatters';
 
 const filters: Array<BookingStatus | 'all'> = [
   'all',
@@ -48,7 +48,9 @@ export default function BookingsListScreen() {
 
         // Apply search
         const matchesSearch =
-          `${item.id} ${item.racketBrand} ${item.racketModel}`.toLowerCase().includes(search.toLowerCase());
+          `${item.id} ${item.orderCode ?? formatBookingOrderCode(item.id)} ${item.racketBrand} ${item.racketModel}`
+            .toLowerCase()
+            .includes(search.toLowerCase());
         
         return matchesFilter && matchesSearch;
       }),

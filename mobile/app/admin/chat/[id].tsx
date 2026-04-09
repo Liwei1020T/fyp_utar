@@ -11,6 +11,7 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { ChatBubble } from '../../../components/chat/ChatBubble';
+import { formatBookingOrderCode } from '../../../lib/formatters';
 import { getBookingById, getPlayerById, getStringById } from '../../../services/mockAppService';
 import { useAppStore, useConversations } from '../../../store/appStore';
 
@@ -32,6 +33,9 @@ export default function AdminChatDetailScreen() {
   const player = getPlayerById(conversation.playerId);
   const booking = getBookingById(conversation.bookingId);
   const stringItem = getStringById(conversation.stringId ?? booking?.stringId);
+  const orderCode = booking
+    ? booking.orderCode ?? formatBookingOrderCode(booking.id)
+    : null;
 
   return (
     <AppScreen
@@ -46,7 +50,7 @@ export default function AdminChatDetailScreen() {
         <AppCard variant="highlighted" padding="md">
           <View className="flex-row flex-wrap gap-2">
             <AppChip label={conversation.statusLabel} variant="primary" />
-            {booking ? <AppChip label={booking.id} variant="secondary" /> : null}
+            {orderCode ? <AppChip label={orderCode} variant="secondary" /> : null}
           </View>
           <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
             {stringItem ? `${stringItem.brand} ${stringItem.model}` : 'String not linked'} •{' '}

@@ -31,6 +31,7 @@ class BookingUpdateEntry:
 @dataclass(frozen=True)
 class BookingRecord:
     id: str
+    order_code: str
     user_id: str
     string_id: str
     string_name: str

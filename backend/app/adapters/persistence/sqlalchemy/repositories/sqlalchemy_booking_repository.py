@@ -14,6 +14,7 @@ from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_booking_record
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.enums import BookingStatus
+from app.domain.booking.policies import booking_order_code
 from app.domain.store.policies import ACTIVE_QUEUE_STATUSES
 from app.shared.pagination import Page
 
@@ -120,10 +121,16 @@ class SqlAlchemyBookingRepository:
             count_query = count_query.where(status_filter)
 
         if search:
-            term = f"%{search.strip()}%"
+            search_term = search.strip()
+            term = f"%{search_term}%"
             query = query.join(Booking.string_item).join(Booking.user)
             count_query = count_query.join(Booking.string_item).join(Booking.user)
+            booking_id_term = term
+            normalized_code = search_term.upper()
+            if normalized_code.startswith("ORD-") and len(normalized_code) > 4:
+                booking_id_term = f"{normalized_code[4:]}%"
             search_filter = or_(
+                Booking.id.ilike(booking_id_term),
                 Booking.racket_brand.ilike(term),
                 Booking.racket_model.ilike(term),
                 StringCatalogItem.brand.ilike(term),
@@ -221,6 +228,19 @@ class SqlAlchemyBookingRepository:
             .all()
         )
         return [to_booking_record(item) for item in items]
+
+    def get_by_order_code(self, order_code: str) -> BookingRecord | None:
+        items = (
+            self.db.execute(self._detail_query())
+            .unique()
+            .scalars()
+            .all()
+        )
+        normalized = order_code.strip().upper()
+        for booking in items:
+            if booking_order_code(booking.id) == normalized:
+                return to_booking_record(booking)
+        return None
 
     def list_active_queue(self) -> list[BookingRecord]:
         items = (

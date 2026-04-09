@@ -147,6 +147,7 @@ export interface BackendBookingUpdate {
 
 export interface BackendBooking {
   id: string;
+  order_code?: string | null;
   user_id: string;
   string_id: string;
   string_name: string;

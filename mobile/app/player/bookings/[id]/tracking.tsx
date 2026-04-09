@@ -7,6 +7,7 @@ import { HeroText } from '../../../../components/ui/heroui';
 import { AppScreen } from '../../../../components/shared/AppScreen';
 import { AppSection } from '../../../../components/shared/AppSection';
 import { TrackingTimeline } from '../../../../components/tracking/TrackingTimeline';
+import { formatBookingOrderCode } from '../../../../lib/formatters';
 import { useBookings } from '../../../../store/appStore';
 
 export default function BookingTrackingScreen() {
@@ -27,6 +28,8 @@ export default function BookingTrackingScreen() {
     );
   }
 
+  const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
+
   return (
     <AppScreen
       headerVariant="secondary"
@@ -35,7 +38,7 @@ export default function BookingTrackingScreen() {
       showBackButton
       onBackPress={() => router.back()}
     >
-      <AppSection eyebrow="Timeline" title={`Booking ${booking.id}`}>
+      <AppSection eyebrow="Timeline" title={`Booking ${orderCode}`}>
         <TrackingTimeline timeline={booking.timeline} currentStatus={booking.status} />
       </AppSection>
     </AppScreen>

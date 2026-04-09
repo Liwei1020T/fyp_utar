@@ -110,6 +110,7 @@ export interface BookingUpdate {
 
 export interface Booking {
   id: string;
+  orderCode?: string;
   playerId: string;
   adminId: string;
   stringId: string;

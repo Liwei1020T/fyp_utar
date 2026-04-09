@@ -15,6 +15,7 @@ from app.domain.auth.entities import UserAccount
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
+from app.domain.booking.policies import booking_order_code
 from app.domain.profile.entities import PlayerProfile
 from app.domain.catalog.entities import StringItem
 from app.domain.recommendation.entities import RecommendationLogRecord
@@ -115,6 +116,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
     )
     return BookingRecord(
         id=booking.id,
+        order_code=booking_order_code(booking.id),
         user_id=booking.user_id,
         string_id=booking.string_id,
         string_name=f"{booking.string_item.brand} {booking.string_item.model_name}",

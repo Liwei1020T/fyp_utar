@@ -102,6 +102,8 @@ def test_auth_profile_booking_and_admin_status_flow():
     assert booking_response.status_code == 200
     assert booking_response.json()["status"] == "awaiting_dropoff"
     booking_id = booking_response.json()["id"]
+    order_code = booking_response.json()["order_code"]
+    assert order_code.startswith("ORD-")
 
     my_bookings_response = client.get(
         "/api/bookings",
@@ -110,6 +112,7 @@ def test_auth_profile_booking_and_admin_status_flow():
     assert my_bookings_response.status_code == 200
     assert my_bookings_response.json()["total"] == 1
     assert my_bookings_response.json()["items"][0]["id"] == booking_id
+    assert my_bookings_response.json()["items"][0]["order_code"] == order_code
 
     admin_token = login_admin()
     admin_list_response = client.get(
@@ -118,6 +121,15 @@ def test_auth_profile_booking_and_admin_status_flow():
     )
     assert admin_list_response.status_code == 200
     assert admin_list_response.json()["total"] == 1
+    assert admin_list_response.json()["items"][0]["order_code"] == order_code
+
+    admin_search_response = client.get(
+        "/api/admin/bookings",
+        headers=headers(admin_token),
+        params={"search": order_code},
+    )
+    assert admin_search_response.status_code == 200
+    assert admin_search_response.json()["total"] == 1
 
     update_response = client.patch(
         f"/api/admin/bookings/{booking_id}/status",
@@ -126,6 +138,7 @@ def test_auth_profile_booking_and_admin_status_flow():
     )
     assert update_response.status_code == 200
     assert update_response.json()["status"] == "in_progress"
+    assert update_response.json()["order_code"] == order_code
     assert len(update_response.json()["status_history"]) == 2
 
 
@@ -392,6 +405,7 @@ def test_admin_check_in_and_service_queue_flow():
     assert second_booking_response.status_code == 200
 
     booking_id = first_booking_response.json()["id"]
+    order_code = first_booking_response.json()["order_code"]
     reference = f"CHK-{booking_id[:8].upper()}"
 
     lookup_response = client.get(
@@ -401,6 +415,14 @@ def test_admin_check_in_and_service_queue_flow():
     assert lookup_response.status_code == 200
     assert lookup_response.json()["matched_by"] == "check_in_reference"
     assert lookup_response.json()["booking"]["id"] == booking_id
+
+    order_code_lookup_response = client.get(
+        f"/api/admin/check-in/lookup?reference={order_code}",
+        headers=headers(admin_token),
+    )
+    assert order_code_lookup_response.status_code == 200
+    assert order_code_lookup_response.json()["matched_by"] == "booking_id"
+    assert order_code_lookup_response.json()["booking"]["id"] == booking_id
 
     check_in_response = client.post(
         "/api/admin/check-in",

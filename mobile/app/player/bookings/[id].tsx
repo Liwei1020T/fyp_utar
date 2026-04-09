@@ -19,6 +19,7 @@ import {
 } from '../../../store/appStore';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
+  formatBookingOrderCode,
   formatBookingStatus,
   formatCurrency,
 } from '../../../lib/formatters';
@@ -88,11 +89,12 @@ export default function PlayerBookingDetailScreen() {
 
   const stringItem = getStringById(booking.stringId);
   const admin = getAdminById(booking.adminId);
+  const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
 
   return (
     <AppScreen
       headerVariant="secondary"
-      title={`Booking ${booking.id}`}
+      title={`Booking ${orderCode}`}
       subtitle="Booking info, drop-off details, admin updates, and service status in one player view."
       showBackButton
       onBackPress={() => router.back()}

@@ -72,6 +72,7 @@ class BookingUpdateOut(BaseModel):
 
 class BookingOut(BaseModel):
     id: str
+    order_code: str
     user_id: str
     string_id: str
     string_name: str
@@ -124,6 +125,7 @@ def booking_to_dto(
 ) -> BookingOut:
     return BookingOut(
         id=booking.id,
+        order_code=booking.order_code,
         user_id=booking.user_id,
         string_id=booking.string_id,
         string_name=booking.string_name,

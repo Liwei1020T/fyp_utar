@@ -27,7 +27,11 @@ import type {
   BackendSlot,
   BackendStoreBusinessHours,
 } from '../types/backend';
-import { formatLocalDateInputValue, formatLocalTimeValue } from '../lib/formatters';
+import {
+  formatBookingOrderCode,
+  formatLocalDateInputValue,
+  formatLocalTimeValue,
+} from '../lib/formatters';
 import { resolveBackendMediaUrl } from './backendApi';
 
 function titleCase(value: string) {
@@ -432,6 +436,7 @@ export function mapBackendBookingToBooking(
 
   return {
     id: booking.id,
+    orderCode: booking.order_code ?? formatBookingOrderCode(booking.id),
     playerId: booking.user_id,
     adminId,
     stringId: booking.string_id,
