@@ -112,13 +112,11 @@ export default function AdminInventoryDetailScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="secondary"
       title={`${stringItem.brand} ${stringItem.model}`}
       subtitle="Live inventory edit flow for price, stock level, availability, and shop notes."
-      headerLeft={
-        <Pressable onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Current state" title="Inventory health">
         <AppCard variant="highlighted" padding="md">

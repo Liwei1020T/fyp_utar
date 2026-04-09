@@ -67,15 +67,11 @@ export default function PlayerChatDetailScreen() {
 
   return (
     <AppScreen
+      headerVariant="secondary"
       title={conversation.title}
       subtitle="Conversation modes show whether AI or the admin desk is currently leading the thread."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" padding="lg">
         <View className="flex-row items-center justify-between gap-4">

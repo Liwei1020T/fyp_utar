@@ -97,15 +97,11 @@ export default function PaymentScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Payment"
       subtitle="Frontend-only for FYP 1, but structured so future real payment integration can replace it cleanly."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">

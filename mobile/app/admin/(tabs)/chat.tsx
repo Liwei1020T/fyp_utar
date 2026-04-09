@@ -30,7 +30,7 @@ export default function AdminChatQueueScreen() {
   );
 
   return (
-    <AppScreen title="Chat queue" subtitle="Service-related conversations assigned to the shop admin desk." scrollable={false}>
+    <AppScreen headerVariant="primary" title="Chat queue" subtitle="Service-related conversations assigned to the shop admin desk." scrollable={false}>
       <FlatList
         className="flex-1"
         data={adminConversations}

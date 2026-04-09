@@ -91,15 +91,11 @@ export default function PlayerBookingDetailScreen() {
 
   return (
     <AppScreen
+      headerVariant="secondary"
       title={`Booking ${booking.id}`}
       subtitle="Booking info, drop-off details, admin updates, and service status in one player view."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
         <View className="flex-row items-start justify-between gap-4">

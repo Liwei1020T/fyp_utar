@@ -28,15 +28,9 @@ export default function AdminServiceQueueScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="primary"
       title="Service queue"
       subtitle="Visual board of active service jobs."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
     >
       {lanes.map((lane) => (
         <AppSection key={lane.title} eyebrow="Queue lane" title={lane.title}>

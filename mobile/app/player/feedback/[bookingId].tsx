@@ -19,13 +19,11 @@ export default function FeedbackScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Rate your service"
       subtitle="Collect post-service and post-string feedback in a demo-ready way."
-      headerLeft={
-        <Pressable onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Booking" title={`Feedback for ${params.bookingId ?? 'recent booking'}`}>
         <AppCard variant="highlighted" padding="lg">

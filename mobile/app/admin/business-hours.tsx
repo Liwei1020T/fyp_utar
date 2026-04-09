@@ -152,15 +152,11 @@ export default function AdminBusinessHoursScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="secondary"
       title="Business hours"
       subtitle="Backend-connected store schedule used to generate player booking slots."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Schedule" title="Weekly operating pattern">
         <View className="gap-3">

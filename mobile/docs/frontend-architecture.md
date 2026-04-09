@@ -379,6 +379,7 @@ These components define the product’s look and feel:
 `components/shared/` contains layout building blocks:
 
 - `AppScreen` for page shell, safe area handling, optional header chrome, and bottom inset logic
+- `AppPageHeader` for the unified mobile header system used by `AppScreen`
 - `AppSection` for section headings, eyebrows, and spacing
 
 These two components are the main reason screens feel visually consistent despite covering many different workflows.
@@ -515,6 +516,7 @@ Admin-specific screens model the operational back office:
 - role-specific page surfaces
 - tab bar colors
 - layout metrics
+- header metrics
 - performance accent themes
 - chip variants for booking and payment statuses
 
@@ -526,19 +528,139 @@ The current theme intentionally separates:
 
 That separation is reinforced by route-group layouts and screen-level hero cards.
 
-## 13. Screen Composition Pattern
+## 13. Unified Header System
+
+The app now uses exactly three header types across player and admin pages.
+
+### Visual direction
+
+- Light premium sporty UI
+- Soft blue accent on off-white and light grey surfaces
+- Rounded containers with compact proportions
+- Clean mobile-first spacing and alignment
+- No oversized hero-like header chrome
+
+### Header types
+
+1. `primary`
+- Use for top-level list, queue, and dashboard pages.
+- Structure: title, short subtitle, optional right-side action.
+- No back button by default.
+- Visual role: lighter, more dashboard-like card.
+
+2. `secondary`
+- Use for detail and functional edit pages.
+- Structure: back button, title, optional right-side action, optional short subtitle.
+- Visual role: compact and functional.
+
+3. `flow`
+- Use for recommendation, booking, payment, comparison, and other task-oriented screens.
+- Structure: back button, task title, short subtitle.
+- Visual role: directional and decision-focused.
+
+### Back button rules
+
+- Show the back button on `secondary` and `flow` headers unless there is truly no meaningful previous step.
+- Hide the back button on `primary` headers by default, even if the router technically can go back.
+- For tab-root pages, prefer no back button to keep the information architecture stable.
+
+### Right-side action rules
+
+- At most one right-side action in the header.
+- Use it for high-value actions only: notifications, share, edit, preferences, or logout.
+- Avoid right-side actions on `flow` headers unless the task genuinely needs it; the default is no action to preserve focus.
+
+### Typography hierarchy
+
+- `primary` title: strongest emphasis in the system, single-line when possible.
+- `primary` subtitle: 1 to 2 short lines, summary-level only.
+- `secondary` title: compact functional title.
+- `secondary` subtitle: optional and brief.
+- `flow` title: task language first, written as an action or decision context.
+- `flow` subtitle: short next-step guidance, never paragraph-like.
+
+### Height and spacing guidance
+
+- `primary` header min height: about 92px
+- `secondary` header min height: about 76px
+- `flow` header min height: about 80px
+- Top spacing from safe area to header: 16px
+- Header internal horizontal padding: 16 to 20px depending on type
+- Gap between header and page content: 16px via the shared `AppScreen` content spacing
+- Subtitles should remain short enough to scan without pushing the header into hero-card territory
+
+### Page mapping
+
+Player `primary` pages:
+
+- `/player`
+- `/player/strings`
+- `/player/bookings`
+- `/player/results`
+- `/player/chat`
+- `/player/profile`
+- `/player/notifications`
+- `/player/wallet`
+- `/player/rackets`
+
+Player `secondary` pages:
+
+- `/player/strings/[id]`
+- `/player/bookings/[id]`
+- `/player/bookings/[id]/tracking`
+- `/player/recommend/explain/[id]`
+- `/player/chat/[id]`
+- `/player/rackets/[id]`
+
+Player `flow` pages:
+
+- `/player/recommend`
+- `/player/strings/compare`
+- `/player/bookings/new`
+- `/player/bookings/summary`
+- `/player/payments/[bookingId]`
+- `/player/payments/[bookingId]/result`
+- `/player/check-in`
+- `/player/feedback/[bookingId]`
+- `/player/profile/edit`
+- `/player/notifications/preferences`
+- `/player/wallet/top-up`
+
+Admin `primary` pages:
+
+- `/admin`
+- `/admin/bookings`
+- `/admin/inventory`
+- `/admin/chat`
+- `/admin/analytics`
+- `/admin/payments`
+- `/admin/service-queue`
+
+Admin `secondary` pages:
+
+- `/admin/bookings/[id]`
+- `/admin/inventory/[id]`
+- `/admin/chat/[id]`
+- `/admin/business-hours`
+- `/admin/settings`
+
+Admin `flow` pages:
+
+- `/admin/check-in`
+
+## 14. Screen Composition Pattern
 
 Most screens follow the same structure:
 
 1. `AppScreen`
-2. top hero or summary card
+2. unified `AppPageHeader` chrome selected through `AppScreen`
 3. one or more `AppSection` blocks
 4. feature-specific cards, chips, and buttons
 5. CTA group near the bottom
 
 This pattern makes the app easy to extend because new screens can remain visually consistent without introducing new layout systems.
 
-## 14. Current Architectural Strengths
+## 15. Current Architectural Strengths
 
 - Clear role separation between player and admin experiences
 - Good domain typing in `types/domain.ts`
@@ -547,7 +669,7 @@ This pattern makes the app easy to extend because new screens can remain visuall
 - Route guards keep access control centralized
 - Store actions capture meaningful product flows instead of only low-level field updates
 
-## 15. Current Architectural Constraints
+## 16. Current Architectural Constraints
 
 - Data access is split across store state, mock services, and direct mock imports
 - React Query is initialized but not yet the primary data-fetching mechanism
@@ -555,7 +677,7 @@ This pattern makes the app easy to extend because new screens can remain visuall
 - Some business logic lives directly inside screens, especially ranking and feature-specific derivations
 - The test surface is currently very thin; the repo only includes a small HeroUI compatibility smoke component in `tests/heroui-compat.smoke.tsx`
 
-## 16. Recommended Evolution Path
+## 17. Recommended Evolution Path
 
 When this frontend moves beyond FYP mock mode, the cleanest migration path is:
 
@@ -566,7 +688,7 @@ When this frontend moves beyond FYP mock mode, the cleanest migration path is:
 5. Keep `components/ui` and `components/shared` as the stable design-system layer
 6. Preserve Expo Router route groups and role guards; they already map well to product boundaries
 
-## 17. Directory Guide
+## 18. Directory Guide
 
 ### `app/`
 
@@ -608,7 +730,7 @@ Formatting and lightweight navigation helpers.
 
 Small compatibility smoke coverage.
 
-## 18. Summary
+## 19. Summary
 
 The current frontend is a role-based Expo Router application with:
 

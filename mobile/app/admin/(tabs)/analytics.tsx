@@ -20,7 +20,7 @@ export default function AdminAnalyticsScreen() {
   const analytics = getAdminAnalytics(user.id);
 
   return (
-    <AppScreen tone="admin" title="Admin analytics" subtitle="Admin operations analytics UI for trends, busy slots, popular strings, payments, and workload." >
+    <AppScreen tone="admin" headerVariant="primary" title="Admin analytics" subtitle="Operations trends, busy slots, popular strings, and payment workload." >
       <AppSection eyebrow="Metrics" title="Shop performance">
         <View className="flex-row flex-wrap gap-3">
           <MetricStatCard title="Weekly bookings" value={String(analytics?.weeklyBookings ?? 0)} icon={<BarChart3 size={20} color="#2F64B6" />} />

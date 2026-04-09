@@ -24,15 +24,9 @@ export default function NotificationsScreen() {
 
   return (
     <AppScreen
+      headerVariant="primary"
       title="Notifications"
       subtitle="In-app alerts for bookings, payments, chat replies, and recommendation nudges."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
       headerRight={
         <AppIconButton
           icon={<Settings2 size={20} color="#475569" />}

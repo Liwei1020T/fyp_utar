@@ -222,15 +222,11 @@ export default function NewBookingScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="New booking"
       subtitle="Configure the stringing request and reserve a believable drop-off window."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="highlighted" className="rounded-[32px]" padding="lg">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">

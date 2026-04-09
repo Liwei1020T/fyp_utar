@@ -115,13 +115,11 @@ export default function CompareStringsScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Compare strings"
       subtitle="Review specs, ratings, strengths, and booking fit in one place."
-      headerLeft={
-        <Pressable onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       {/* 1. Compare Summary Strip - Redesigned to stacked catalog style */}
       <View className="gap-3 mt-4">

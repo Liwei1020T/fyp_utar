@@ -101,15 +101,11 @@ export default function BookingSummaryScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Booking summary"
       subtitle="Review your string, drop-off timing, and booking photo before confirming."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Summary" title="Service request">
         <AppCard variant="highlighted" padding="lg">

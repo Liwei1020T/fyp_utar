@@ -3,7 +3,7 @@ import { HeroButton, type HeroButtonProps } from './heroui';
 import { cn } from './heroui';
 import type { ButtonVariant } from 'heroui-native';
 
-type AppIconButtonVariant = 'surface' | 'auth' | 'primary' | 'ghost';
+type AppIconButtonVariant = 'surface' | 'auth' | 'primary' | 'ghost' | 'header';
 type AppIconButtonSize = 'md' | 'lg';
 
 interface AppIconButtonProps
@@ -28,6 +28,7 @@ export function AppIconButton({
     auth: 'outline',
     primary: 'primary',
     ghost: 'ghost',
+    header: 'outline',
   };
 
   const variantStyles = {
@@ -35,6 +36,7 @@ export function AppIconButton({
     auth: 'border-[#E4EBE5] bg-white',
     primary: 'border-primary-600 bg-primary-600 shadow-glow',
     ghost: 'border-transparent bg-transparent',
+    header: 'border-[#D9E4F1] bg-[#F8FBFF] shadow-none',
   };
 
   const sizeStyles = {

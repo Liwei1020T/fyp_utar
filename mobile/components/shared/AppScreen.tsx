@@ -2,9 +2,9 @@ import React from 'react';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { ScrollView, View, ViewProps } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HeroText } from '../ui/heroui';
 import { cn } from '../ui/heroui';
 import { appChromeColors, appLayoutMetrics } from '../ui/theme';
+import { AppHeaderVariant, AppPageHeader } from './AppPageHeader';
 
 type AppScreenTone = 'default' | 'auth' | 'player' | 'admin';
 
@@ -13,12 +13,15 @@ interface AppScreenProps extends ViewProps {
   scrollable?: boolean;
   title?: string;
   subtitle?: string;
-  eyebrow?: string;
   headerRight?: React.ReactNode;
-  headerLeft?: React.ReactNode;
+  headerVariant?: AppHeaderVariant;
+  showBackButton?: boolean;
+  onBackPress?: () => void;
+  backAccessibilityLabel?: string;
   className?: string;
   contentContainerClassName?: string;
   tone?: AppScreenTone;
+  footer?: React.ReactNode;
 }
 
 export function useBottomContentInset(extra = 0) {
@@ -33,9 +36,11 @@ export function AppScreen({
   scrollable = true,
   title,
   subtitle,
-  eyebrow,
   headerRight,
-  headerLeft,
+  headerVariant = 'primary',
+  showBackButton = false,
+  onBackPress,
+  backAccessibilityLabel,
   footer,
   className,
   contentContainerClassName,
@@ -49,20 +54,6 @@ export function AppScreen({
     admin: appChromeColors.pageAdmin,
   };
 
-  const headerStyles = {
-    default: 'border-white/90 bg-white/72',
-    auth: 'border-[#E0E8F1] bg-[#EDF3F9]',
-    player: 'border-white/90 bg-white/72',
-    admin: 'border-white/90 bg-[#EAF4F3]',
-  };
-
-  const headerCoreStyles = {
-    default: 'bg-app-surface border-[#E8EEF6]',
-    auth: 'bg-app-surface border-[#E1EAF3]',
-    player: 'bg-app-surface border-[#E8EEF6]',
-    admin: 'bg-app-surface border-[#D9ECE8]',
-  };
-
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);
 
   return (
@@ -72,48 +63,16 @@ export function AppScreen({
       edges={['top', 'left', 'right', 'bottom']}
     >
       <View className="flex-1">
-        {(title || headerRight || headerLeft) && (
-          <View className="px-5 pt-4">
-            <View
-              className={cn(
-                'w-full self-center rounded-[28px] border p-1 shadow-soft',
-                headerStyles[tone]
-              )}
-              style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
-            >
-              <View
-                className={cn(
-                  'rounded-[24px] border px-4 py-3',
-                  headerCoreStyles[tone]
-                )}
-              >
-                <View className="flex-row items-center justify-between gap-4">
-                  <View className="min-w-0 flex-1 flex-row items-center gap-3">
-                    {headerLeft}
-                    <View className="min-w-0 flex-1">
-                      {eyebrow ? (
-                        <HeroText className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
-                          {eyebrow}
-                        </HeroText>
-                      ) : null}
-                      {title ? (
-                        <HeroText className="text-[20px] font-bold tracking-tight text-neutral-950">
-                          {title}
-                        </HeroText>
-                      ) : null}
-                      {subtitle ? (
-                        <HeroText className="mt-0.5 text-[13px] leading-5 text-neutral-500">
-                          {subtitle}
-                        </HeroText>
-                      ) : null}
-                    </View>
-                  </View>
-                  <View>{headerRight}</View>
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
+        <AppPageHeader
+          title={title}
+          subtitle={subtitle}
+          headerRight={headerRight}
+          variant={headerVariant}
+          showBackButton={showBackButton}
+          onBackPress={onBackPress}
+          backAccessibilityLabel={backAccessibilityLabel}
+          tone={tone}
+        />
         {scrollable ? (
           <ScrollView
             className={cn('flex-1', className)}

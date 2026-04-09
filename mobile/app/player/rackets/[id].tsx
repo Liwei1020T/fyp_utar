@@ -28,15 +28,11 @@ export default function RacketPassportDetailScreen() {
 
   return (
     <AppScreen
+      headerVariant="secondary"
       title={racket.nickname}
       subtitle="Racket profile, string history, tensions used, and simple trend stats."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" padding="lg">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">

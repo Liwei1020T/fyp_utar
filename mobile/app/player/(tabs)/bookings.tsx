@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import * as React from 'react';
+import { useMemo, useState } from 'react';
+import { FlatList, View, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, ChevronLeft } from 'lucide-react-native';
+import { Plus, Search, ChevronLeft, Info } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { BookingCard } from '../../../components/booking/BookingCard';
 import { useBookings, useCurrentUser } from '../../../store/appStore';
@@ -26,7 +28,7 @@ export default function BookingsListScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
-  const bottomContentInset = useBottomContentInset(18);
+  const bottomContentInset = useBottomContentInset(24);
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
   const [search, setSearch] = useState('');
 
@@ -40,35 +42,34 @@ export default function BookingsListScreen() {
         if (item.playerId !== user.id) {
           return false;
         }
+
+        // Apply status filter
         const matchesFilter = filter === 'all' || item.status === filter;
+
+        // Apply search
         const matchesSearch =
           `${item.id} ${item.racketBrand} ${item.racketModel}`.toLowerCase().includes(search.toLowerCase());
+        
         return matchesFilter && matchesSearch;
       }),
     [bookings, filter, search, user.id]
   );
 
+  const activeCount = useMemo(
+    () => bookings.filter((b) => b.playerId === user.id && ['awaiting_dropoff', 'in_progress'].includes(b.status)).length,
+    [bookings, user.id]
+  );
+
+  const readyCount = useMemo(
+    () => bookings.filter((b) => b.playerId === user.id && b.status === 'ready_for_collection').length,
+    [bookings, user.id]
+  );
+
   return (
     <AppScreen
+      headerVariant="primary"
       title="My bookings"
-      subtitle="Track drop-off windows, admin updates, and service progress from one list."
-      headerLeft={
-        router.canGoBack() ? (
-          <AppIconButton
-            icon={<ChevronLeft size={20} color="#111827" />}
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-          />
-        ) : undefined
-      }
-      headerRight={
-        <AppIconButton
-          icon={<Plus size={20} color="white" />}
-          accessibilityLabel="Create a new booking"
-          variant="primary"
-          onPress={() => router.push('/player/bookings/new')}
-        />
-      }
+      subtitle="Track your racket services and status updates."
       scrollable={false}
     >
       <FlatList
@@ -78,41 +79,42 @@ export default function BookingsListScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         scrollIndicatorInsets={{ bottom: bottomContentInset }}
-        contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
+        contentContainerStyle={{ paddingBottom: bottomContentInset }}
         ListHeaderComponent={
-          <View className="gap-6 pb-6">
-            <AppCard variant="highlighted" padding="lg">
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
-                Booking center
+          <View className="gap-3 pb-4">
+            <View className="flex-row items-center gap-2 rounded-2xl bg-primary-50 px-4 py-2 border border-primary-100">
+              <Info size={14} color="#2F64B6" />
+              <HeroText className="text-[11px] font-semibold text-primary-900">
+                {activeCount} active bookings • {readyCount} ready for collection
               </HeroText>
-              <HeroText className="mt-2 text-[24px] font-bold tracking-tight text-neutral-950">
-                Keep every drop-off and service status in view.
-              </HeroText>
-              <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-                Filter by stage and jump into booking detail or tracking pages without losing context.
-              </HeroText>
-            </AppCard>
+            </View>
 
             <AppInput
+              variant="minimal"
               className="mb-0"
-              placeholder="Search by booking ID or racket..."
+              placeholder="Search ID or racket..."
               value={search}
               onChangeText={setSearch}
-              leftAdornment={<Search size={18} color="#94A3B8" />}
-              containerClassName="shadow-none"
+              leftAdornment={<Search size={18} color="#94A3B8" strokeWidth={2.5} />}
+              inputClassName="text-[15px] font-medium"
             />
 
-            <View className="flex-row flex-wrap gap-2">
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              className="-mx-5 px-5"
+              contentContainerStyle={{ gap: 8, paddingRight: 40 }}
+            >
               {filters.map((item) => (
                 <AppChip
                   key={item}
                   label={item === 'all' ? 'All' : formatBookingStatus(item)}
-                  size="md"
+                  size="sm"
                   variant={filter === item ? 'primary' : 'neutral'}
                   onPress={() => setFilter(item)}
                 />
               ))}
-            </View>
+            </ScrollView>
           </View>
         }
         renderItem={({ item }) => {
@@ -120,23 +122,21 @@ export default function BookingsListScreen() {
           const admin = getAdminById(item.adminId);
 
           return (
-            <View className="mb-4">
-              <BookingCard
-                booking={item}
-                stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
-                adminLabel={admin?.businessName}
-                onPress={() => router.push(`/player/bookings/${item.id}`)}
-              />
-            </View>
+            <BookingCard
+              booking={item}
+              stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
+              adminLabel={admin?.businessName}
+              onPress={() => router.push(`/player/bookings/${item.id}`)}
+            />
           );
         }}
         ListEmptyComponent={
           <AppCard variant="subtle" className="mt-4 items-center" padding="lg">
             <HeroText className="text-base font-semibold text-neutral-800">
-              No bookings in this view
+              No bookings found
             </HeroText>
             <HeroText className="mt-2 text-center text-sm leading-6 text-neutral-500">
-              Adjust your filters or start a new booking to build the next restring flow.
+              Adjust your filters or start a new booking.
             </HeroText>
           </AppCard>
         }

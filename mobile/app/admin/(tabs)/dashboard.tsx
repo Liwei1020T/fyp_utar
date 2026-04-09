@@ -28,19 +28,9 @@ export default function AdminDashboardScreen() {
   return (
     <AppScreen
       tone="admin"
-      headerLeft={
-        <View className="flex-row items-center gap-3">
-          <View className="h-11 w-11 items-center justify-center rounded-[18px] bg-[#E4F2F0]">
-            <Store size={20} color="#22766D" />
-          </View>
-          <View>
-            <HeroText className="text-xs text-neutral-500">Admin workspace</HeroText>
-            <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
-              {user.businessName}
-            </HeroText>
-          </View>
-        </View>
-      }
+      headerVariant="primary"
+      title="Admin overview"
+      subtitle={`${user.businessName} operations at a glance.`}
       headerRight={
         <AppIconButton
           icon={<LogOut size={20} color="#EF4444" />}

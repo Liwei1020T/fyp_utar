@@ -133,17 +133,11 @@ export default function RecommendationInputScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Recommendation lab"
       subtitle="Tune the logic before generating your shortlist."
-      headerLeft={
-        router.canGoBack() ? (
-          <AppIconButton
-            icon={<ChevronLeft size={20} color="#111827" />}
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-          />
-        ) : undefined
-      }
+      showBackButton={router.canGoBack()}
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" className="rounded-[24px]" padding="md">
         <View className="flex-row items-center justify-between gap-4">

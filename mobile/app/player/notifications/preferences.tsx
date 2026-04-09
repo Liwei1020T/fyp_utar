@@ -28,15 +28,11 @@ export default function NotificationPreferencesScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Notification preferences"
       subtitle="Frontend-only toggles that preview how notification controls could feel later."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <View className="gap-3">
         {Object.entries(settings)

@@ -26,15 +26,9 @@ export default function PlayerWalletScreen() {
 
   return (
     <AppScreen
+      headerVariant="primary"
       title="Wallet balance"
       subtitle="Stored balance for future checkout support and mock top-up behavior."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
       scrollable={false}
     >
       <FlatList

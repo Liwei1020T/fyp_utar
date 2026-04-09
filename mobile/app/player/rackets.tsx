@@ -23,15 +23,9 @@ export default function RacketPassportListScreen() {
 
   return (
     <AppScreen
+      headerVariant="primary"
       title="Racket passport"
       subtitle="Saved frames, string history, preferred tensions, and service notes."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
     >
       <AppSection eyebrow="Saved rackets" title="Your current lineup">
         <View className="gap-4">

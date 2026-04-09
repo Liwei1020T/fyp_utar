@@ -25,15 +25,11 @@ export default function WalletTopUpScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Top up wallet"
       subtitle="Frontend-only top-up flow to support future stored-balance checkout."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="highlighted" padding="lg">
         <HeroText className="text-sm leading-6 text-neutral-600">

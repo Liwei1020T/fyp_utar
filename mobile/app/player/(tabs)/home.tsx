@@ -73,19 +73,9 @@ export default function PlayerHomeScreen() {
   return (
     <AppScreen
       tone="player"
-      headerLeft={
-        <View className="flex-row items-center gap-3">
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-100 ring-2 ring-white shadow-sm">
-            <HeroText className="text-base font-bold text-primary-700">{user.avatarLabel}</HeroText>
-          </View>
-          <View>
-            <HeroText className="text-xs font-medium text-neutral-400">Welcome back,</HeroText>
-            <HeroText className="text-base font-bold tracking-tight text-neutral-900">
-              {user.name}
-            </HeroText>
-          </View>
-        </View>
-      }
+      headerVariant="primary"
+      title={`Welcome back, ${user.name.split(' ')[0]}`}
+      subtitle="Recommendations, bookings, and service updates in one place."
       headerRight={
         <Pressable 
           onPress={() => router.push('/player/notifications')}

@@ -36,15 +36,11 @@ export default function AdminChatDetailScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="secondary"
       title="Admin chat detail"
       subtitle="Reply as the shop, review linked booking context, and close the conversation when it is resolved."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Customer" title={player?.name ?? 'Player'}>
         <AppCard variant="highlighted" padding="md">

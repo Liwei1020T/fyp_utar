@@ -25,18 +25,10 @@ export default function PlayerChatThreadsScreen() {
 
   return (
     <AppScreen
+      headerVariant="primary"
       title="Chat and support"
-      subtitle="Start with AI, then request admin support when you need the shop to step in."
+      subtitle="Start with AI and hand off to the shop when needed."
       scrollable={false}
-      headerLeft={
-        router.canGoBack() ? (
-          <AppIconButton
-            icon={<ChevronLeft size={20} color="#111827" />}
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-          />
-        ) : undefined
-      }
     >
       <FlatList
         className="flex-1"

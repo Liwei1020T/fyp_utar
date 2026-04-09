@@ -145,15 +145,11 @@ export default function AdminSettingsScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="secondary"
       title="Store settings"
       subtitle="FYP1 store settings for contact info, support copy, address, and booking policy text."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Store" title="Public-facing details">
         <AppInput label="Store name" value={storeName} onChangeText={setStoreName} />

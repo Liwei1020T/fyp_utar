@@ -39,15 +39,11 @@ export default function AdminCheckInScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="flow"
       title="Check-in"
       subtitle="Manual booking reference entry and fake QR scan flow for admin use."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppInput label="Booking reference" value={reference} onChangeText={setReference} />
       <View className="flex-row gap-3">

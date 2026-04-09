@@ -24,15 +24,11 @@ export default function PlayerCheckInScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="QR check-in"
       subtitle="Show your booking token and drop-off instructions at the counter."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">

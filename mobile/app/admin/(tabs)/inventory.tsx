@@ -14,7 +14,7 @@ export default function AdminInventoryScreen() {
   const strings = useStrings();
 
   return (
-    <AppScreen title="Inventory" subtitle="Manage available strings, pricing, stock-like status, and shop notes." scrollable={false}>
+    <AppScreen headerVariant="primary" title="Inventory" subtitle="Manage available strings, pricing, stock-like status, and shop notes." scrollable={false}>
       <FlatList
         className="flex-1"
         data={strings}

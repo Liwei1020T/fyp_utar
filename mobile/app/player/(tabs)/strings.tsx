@@ -16,6 +16,7 @@ import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { FloatingCompareTray } from '../../../components/shared/FloatingCompareTray';
@@ -29,7 +30,12 @@ const sortOptions = [
   { id: 'control', label: 'Control' },
 ] as const;
 
-type DisplayMode = 'all' | 'brand';
+const modeOptions = [
+  { id: 'all', label: 'All Strings', icon: LayoutGrid },
+  { id: 'brand', label: 'By Brand', icon: Tags },
+] as const;
+
+type DisplayMode = (typeof modeOptions)[number]['id'];
 
 export default function StringsCatalogScreen() {
   const router = useRouter();
@@ -83,57 +89,25 @@ export default function StringsCatalogScreen() {
     return Object.entries(groups).map(([name, data]) => ({ name, data }));
   }, [filteredStrings, displayMode]);
 
-  const renderModeSwitch = () => (
-    <View className="flex-row bg-neutral-100/80 p-1 rounded-[16px] mb-4 border border-neutral-200/50">
-      <Pressable 
-        onPress={() => setDisplayMode('all')}
-        className={cn(
-          "flex-1 flex-row items-center justify-center gap-2 py-1.5 rounded-[12px]",
-          displayMode === 'all' ? "bg-white shadow-sm border border-neutral-200/40" : ""
-        )}
-      >
-        <LayoutGrid size={14} color={displayMode === 'all' ? '#0F172A' : '#64748B'} strokeWidth={2.5} />
-        <HeroText className={cn(
-          "text-[12px] font-bold tracking-tight",
-          displayMode === 'all' ? "text-slate-900" : "text-slate-500"
-        )}>
-          All Strings
-        </HeroText>
-      </Pressable>
-      <Pressable 
-        onPress={() => setDisplayMode('brand')}
-        className={cn(
-          "flex-1 flex-row items-center justify-center gap-2 py-1.5 rounded-[12px]",
-          displayMode === 'brand' ? "bg-white shadow-sm border border-neutral-200/40" : ""
-        )}
-      >
-        <Tags size={14} color={displayMode === 'brand' ? '#0F172A' : '#64748B'} strokeWidth={2.5} />
-        <HeroText className={cn(
-          "text-[12px] font-bold tracking-tight",
-          displayMode === 'brand' ? "text-slate-900" : "text-slate-500"
-        )}>
-          By Brand
-        </HeroText>
-      </Pressable>
-    </View>
-  );
-
   const renderHeaderComponent = () => (
     <View className="pb-3">
-      {renderModeSwitch()}
+      <AppSegmentedControl
+        options={modeOptions}
+        selectedId={displayMode}
+        onSelect={setDisplayMode}
+        className="mb-4"
+      />
 
       <View className="flex-row items-center gap-3 mb-5">
-        <View className="flex-1 h-11 flex-row items-center bg-white border border-neutral-200 rounded-full px-4 shadow-sm">
-          <Search size={18} color="#94A3B8" strokeWidth={2.5} />
-          <HeroTextField
-            placeholder="Search models or brands..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            className="flex-1 ml-3 h-full border-0 bg-transparent text-[15px] font-medium text-slate-900"
-            selectionColorClassName="accent-primary-600"
-            placeholderColorClassName="field-placeholder"
-          />
-        </View>
+        <AppInput
+          variant="minimal"
+          placeholder="Search models or brands..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          leftAdornment={<Search size={18} color="#94A3B8" strokeWidth={2.5} />}
+          className="flex-1 mb-0"
+          inputClassName="text-[15px] font-medium"
+        />
         <AppIconButton
           icon={<SlidersHorizontal size={18} color={showFilters ? '#2563EB' : '#475569'} strokeWidth={2.5} />}
           onPress={() => setShowFilters(!showFilters)}
@@ -270,18 +244,10 @@ export default function StringsCatalogScreen() {
   return (
     <View className="flex-1 bg-[#F8FAFC]">
       <AppScreen
+        headerVariant="primary"
         title="String catalog"
-        subtitle="Unified, compact product browsing."
+        subtitle="Browse, filter, and compare strings with a compact view."
         scrollable={false}
-        headerLeft={
-          router.canGoBack() ? (
-            <AppIconButton
-              icon={<ChevronLeft size={20} color="#1E293B" />}
-              onPress={() => router.back()}
-              className="h-9 w-9 bg-white border border-slate-200"
-            />
-          ) : undefined
-        }
       >
         <FlatList
           className="flex-1"

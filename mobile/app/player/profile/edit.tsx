@@ -152,15 +152,11 @@ export default function ProfileEditScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Player profile"
       subtitle="Make onboarding feel premium and keep recommendations grounded in real preferences."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="highlighted" className="rounded-[32px]" padding="lg">
         <View className="flex-row items-start justify-between gap-4">

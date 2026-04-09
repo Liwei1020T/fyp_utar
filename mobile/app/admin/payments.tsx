@@ -31,15 +31,9 @@ export default function AdminPaymentsScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="primary"
       title="Payments monitor"
       subtitle="Frontend-only view for successful, failed, and wallet-related payment activity."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
       scrollable={false}
     >
       <FlatList

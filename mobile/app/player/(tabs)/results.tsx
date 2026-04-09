@@ -52,15 +52,9 @@ export default function RecommendationResultsScreen() {
   return (
     <View className="flex-1">
       <AppScreen
+        headerVariant="primary"
         title="Shortlist"
         subtitle="Ranked matches explaining fit and trade-offs."
-        headerLeft={
-          <AppIconButton
-            icon={<ChevronLeft size={20} color="#111827" />}
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-          />
-        }
       >
         {isLive && liveResults.length === 0 ? (
           <AppCard variant="subtle" className="mt-6" padding="lg">

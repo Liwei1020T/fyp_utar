@@ -29,15 +29,11 @@ export default function BookingTrackingScreen() {
 
   return (
     <AppScreen
+      headerVariant="secondary"
       title="Service tracking"
       subtitle="Follow the drop-off journey from booking confirmation to collection."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Timeline" title={`Booking ${booking.id}`}>
         <TrackingTimeline timeline={booking.timeline} currentStatus={booking.status} />

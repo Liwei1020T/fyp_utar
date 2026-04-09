@@ -43,13 +43,11 @@ export default function RecommendationExplanationScreen() {
 
   return (
     <AppScreen
+      headerVariant="secondary"
       title="Recommendation explanation"
       subtitle="Break down why this string fits your current player profile."
-      headerLeft={
-        <Pressable onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">

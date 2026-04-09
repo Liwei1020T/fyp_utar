@@ -41,7 +41,7 @@ export default function AdminBookingsScreen() {
   );
 
   return (
-    <AppScreen title="Admin bookings" subtitle="Operational list of shop bookings with filters, search, and quick drill-in." scrollable={false}>
+    <AppScreen headerVariant="primary" title="Admin bookings" subtitle="Operational list of shop bookings with filters, search, and quick drill-in." scrollable={false}>
       <FlatList
         className="flex-1"
         data={filtered}
@@ -64,20 +64,21 @@ export default function AdminBookingsScreen() {
                 </View>
               </View>
             </AppCard>
-            <View className="flex-row items-start gap-3">
+            <View className="flex-row items-center gap-3">
               <AppInput
+                variant="minimal"
                 className="mb-0 flex-1"
                 placeholder="Search by booking or racket..."
                 value={search}
                 onChangeText={setSearch}
-                containerClassName="shadow-none"
-                leftAdornment={<Search size={18} color="#94A3B8" />}
+                leftAdornment={<Search size={18} color="#94A3B8" strokeWidth={2.5} />}
+                inputClassName="text-[15px] font-medium"
               />
               <AppIconButton
                 icon={<SlidersHorizontal size={20} color="#475569" />}
                 accessibilityLabel={showFilters ? 'Hide filters' : 'Show filters'}
                 onPress={() => setShowFilters((current) => !current)}
-                className="mt-1 h-14 w-14 rounded-[24px]"
+                className="h-11 w-11 rounded-full border border-neutral-200 shadow-sm"
               />
             </View>
             {showFilters ? (

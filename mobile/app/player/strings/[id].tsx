@@ -126,14 +126,10 @@ export default function StringDetailScreen() {
 
   return (
     <AppScreen
+      headerVariant="secondary"
       title={`${selectedString.brand} ${selectedString.model}`}
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
       headerRight={
         <AppIconButton
           icon={<Share2 size={20} color="#475569" />}

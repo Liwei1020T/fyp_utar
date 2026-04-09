@@ -42,17 +42,9 @@ export default function PlayerProfileScreen() {
 
   return (
     <AppScreen
+      headerVariant="primary"
       title="Profile"
-      subtitle="Your player identity, saved preferences, and product shortcuts."
-      headerLeft={
-        router.canGoBack() ? (
-          <AppIconButton
-            icon={<ChevronLeft size={20} color="#475569" />}
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
-          />
-        ) : undefined
-      }
+      subtitle="Player identity, saved preferences, and quick shortcuts."
       headerRight={
         <AppIconButton
           icon={<Settings size={20} color="#475569" />}

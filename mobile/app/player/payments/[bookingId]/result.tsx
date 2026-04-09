@@ -41,13 +41,11 @@ export default function PaymentResultScreen() {
 
   return (
     <AppScreen
+      headerVariant="flow"
       title="Payment result"
       subtitle="Use this page in the demo to show success, failure, and cancellation states."
-      headerLeft={
-        <Pressable onPress={() => router.replace('/player/bookings')}>
-          <ChevronLeft size={24} color="#111827" />
-        </Pressable>
-      }
+      showBackButton
+      onBackPress={() => router.replace('/player/bookings')}
     >
       <AppCard variant={meta.variant} className="rounded-[32px]" padding="lg">
         <View className="items-center">

@@ -182,15 +182,11 @@ export default function AdminBookingDetailScreen() {
   return (
     <AppScreen
       tone="admin"
+      headerVariant="secondary"
       title={`Booking ${booking.id}`}
       subtitle="Admin detail view for service status, customer summary, booking comments, and photos."
-      headerLeft={
-        <AppIconButton
-          icon={<ChevronLeft size={20} color="#111827" />}
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        />
-      }
+      showBackButton
+      onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Customer" title="Player summary">
         <AppCard variant="highlighted" padding="lg">
