@@ -36,12 +36,12 @@ export function AppIconButton({
     auth: 'border-[#E4EBE5] bg-white',
     primary: 'border-primary-600 bg-primary-600 shadow-glow',
     ghost: 'border-transparent bg-transparent',
-    header: 'border-[#D9E4F1] bg-[#F8FBFF] shadow-none',
+    header: 'border-[#D2D2D7] bg-[#FAFAFC] shadow-none',
   };
 
   const sizeStyles = {
-    md: 'h-11 w-11 rounded-full',
-    lg: 'h-12 w-12 rounded-full',
+    md: 'h-10 w-10 rounded-full',
+    lg: 'h-11 w-11 rounded-full',
   };
 
   return (

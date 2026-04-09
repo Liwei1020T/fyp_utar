@@ -534,11 +534,11 @@ The app now uses exactly three header types across player and admin pages.
 
 ### Visual direction
 
-- Light premium sporty UI
-- Soft blue accent on off-white and light grey surfaces
-- Rounded containers with compact proportions
-- Clean mobile-first spacing and alignment
-- No oversized hero-like header chrome
+- Apple-inspired light UI with restrained, product-first chrome
+- Light gray surfaces using `#F5F5F7` and near-black text using `#1D1D1F`
+- Blue reserved mainly for interactive elements and task affordances
+- Compact rounded containers with flatter presentation and minimal shadow
+- Clean mobile-first spacing, no oversized hero-like header chrome
 
 ### Header types
 
@@ -546,17 +546,17 @@ The app now uses exactly three header types across player and admin pages.
 - Use for top-level list, queue, and dashboard pages.
 - Structure: title, short subtitle, optional right-side action.
 - No back button by default.
-- Visual role: lighter, more dashboard-like card.
+- Visual role: lighter, flatter, dashboard-like container.
 
 2. `secondary`
 - Use for detail and functional edit pages.
 - Structure: back button, title, optional right-side action, optional short subtitle.
-- Visual role: compact and functional.
+- Visual role: compact, functional, and quiet.
 
 3. `flow`
 - Use for recommendation, booking, payment, comparison, and other task-oriented screens.
 - Structure: back button, task title, short subtitle.
-- Visual role: directional and decision-focused.
+- Visual role: directional and decision-focused, with the only explicit blue progress accent.
 
 ### Back button rules
 
@@ -568,26 +568,28 @@ The app now uses exactly three header types across player and admin pages.
 
 - At most one right-side action in the header.
 - Use it for high-value actions only: notifications, share, edit, preferences, or logout.
+- Prefer blue icon affordances instead of decorative colored containers.
 - Avoid right-side actions on `flow` headers unless the task genuinely needs it; the default is no action to preserve focus.
 
 ### Typography hierarchy
 
-- `primary` title: strongest emphasis in the system, single-line when possible.
+- `primary` title: strongest emphasis in the system, about 20px semibold with tight tracking.
 - `primary` subtitle: 1 to 2 short lines, summary-level only.
-- `secondary` title: compact functional title.
+- `secondary` title: compact functional title, about 17px semibold.
 - `secondary` subtitle: optional and brief.
 - `flow` title: task language first, written as an action or decision context.
 - `flow` subtitle: short next-step guidance, never paragraph-like.
 
 ### Height and spacing guidance
 
-- `primary` header min height: about 92px
-- `secondary` header min height: about 76px
-- `flow` header min height: about 80px
+- `primary` header min height: about 88px
+- `secondary` header min height: about 72px
+- `flow` header min height: about 76px
 - Top spacing from safe area to header: 16px
 - Header internal horizontal padding: 16 to 20px depending on type
 - Gap between header and page content: 16px via the shared `AppScreen` content spacing
 - Subtitles should remain short enough to scan without pushing the header into hero-card territory
+- Keep borders subtle and shadows minimal; elevation should come mostly from tone contrast, not floating-card effects
 
 ### Page mapping
 

@@ -20,25 +20,18 @@ interface AppPageHeaderProps {
 }
 
 const appHeaderMetrics = {
-  primaryMinHeight: 92,
-  secondaryMinHeight: 76,
-  flowMinHeight: 80,
+  primaryMinHeight: 88,
+  secondaryMinHeight: 72,
+  flowMinHeight: 76,
 } as const;
 
 const baseContainerStyles =
-  'w-full self-center overflow-hidden border shadow-soft';
+  'w-full self-center overflow-hidden border';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[30px] border-[#DCE7F2] bg-[#FAFCFF]',
-  secondary: 'rounded-[26px] border-[#E1E9F2] bg-white',
-  flow: 'rounded-[26px] border-[#D8E6F7] bg-[#F7FBFF]',
-};
-
-const toneAccentStyles: Record<AppScreenTone, string> = {
-  default: 'border-l-[#7FB6FF]',
-  auth: 'border-l-[#9EB7D5]',
-  player: 'border-l-[#7FB6FF]',
-  admin: 'border-l-[#8FD4CB]',
+  primary: 'rounded-[18px] border-[#E5E5EA] bg-[#F5F5F7]',
+  secondary: 'rounded-[16px] border-[#E5E5EA] bg-[#F5F5F7]',
+  flow: 'rounded-[16px] border-[#DCE6F5] bg-[#F5F5F7]',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
@@ -48,15 +41,15 @@ const contentStyles: Record<AppHeaderVariant, string> = {
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[23px] font-bold tracking-tight text-neutral-950',
-  secondary: 'text-[18px] font-bold tracking-tight text-neutral-950',
-  flow: 'text-[18px] font-bold tracking-tight text-[#163A66]',
+  primary: 'text-[20px] font-semibold tracking-[-0.03em] text-[#1D1D1F]',
+  secondary: 'text-[17px] font-semibold tracking-[-0.02em] text-[#1D1D1F]',
+  flow: 'text-[17px] font-semibold tracking-[-0.02em] text-[#1D1D1F]',
 };
 
 const subtitleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[13px] leading-5 text-neutral-500',
-  secondary: 'text-[12px] leading-[18px] text-neutral-500',
-  flow: 'text-[12px] leading-[18px] text-[#58708E]',
+  primary: 'text-[14px] leading-[20px] tracking-[-0.01em] text-[rgba(29,29,31,0.72)]',
+  secondary: 'text-[12px] leading-[18px] tracking-[-0.01em] text-[rgba(29,29,31,0.68)]',
+  flow: 'text-[12px] leading-[18px] tracking-[-0.01em] text-[rgba(29,29,31,0.68)]',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {
@@ -90,14 +83,13 @@ export function AppPageHeader({
       >
         <View
           className={cn(
-            'flex-row items-center gap-3 border-l-4',
-            contentStyles[variant],
-            toneAccentStyles[tone]
+            'flex-row items-center gap-3',
+            contentStyles[variant]
           )}
         >
           {showBackButton ? (
             <AppIconButton
-              icon={<ChevronLeft size={20} color={variant === 'flow' ? '#163A66' : '#0F172A'} />}
+              icon={<ChevronLeft size={18} color="#0071E3" />}
               accessibilityLabel={backAccessibilityLabel}
               onPress={onBackPress}
               variant="header"
@@ -126,11 +118,11 @@ export function AppPageHeader({
         </View>
         {variant === 'flow' ? (
           <View
-            className="mx-4 mb-3 h-1.5 rounded-full"
-            style={{ backgroundColor: `${appChromeColors.primary}1A` }}
+            className="mx-4 mb-3 h-px"
+            style={{ backgroundColor: 'rgba(0, 113, 227, 0.18)' }}
           >
             <View
-              className="h-full w-16 rounded-full"
+              className="h-full w-12"
               style={{ backgroundColor: appChromeColors.primary }}
             />
           </View>
