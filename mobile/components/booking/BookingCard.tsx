@@ -1,6 +1,14 @@
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
-import { CalendarDays, ChevronRight, Clock3, ArrowRightCircle } from 'lucide-react-native';
+import {
+  CalendarDays,
+  ChevronRight,
+  ArrowRightCircle,
+  CheckCircle2,
+  PackageCheck,
+  TimerReset,
+  CircleDashed,
+} from 'lucide-react-native';
 import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
@@ -9,6 +17,7 @@ import {
   formatBookingOrderCode,
   formatBookingStatus,
   formatCurrency,
+  formatDateLabel,
 } from '../../lib/formatters';
 import type { Booking, BookingStatus } from '../../types/domain';
 
@@ -25,13 +34,13 @@ const getNextStep = (status: BookingStatus, date?: string, time?: string): strin
       return 'Next: Awaiting vendor confirmation';
     case 'confirmed':
     case 'awaiting_dropoff':
-      return `Next: Drop off your racket at ${time || 'scheduled time'}`;
+      return `Next: Drop off before ${time || 'scheduled time'}`;
     case 'in_progress':
       return 'Next: Waiting for stringing completion';
     case 'ready_for_collection':
       return 'Next: Ready for collection';
     case 'completed':
-      return `Completed on ${date || ''}`;
+      return `Completed on ${date ? formatDateLabel(date) : 'scheduled date'}`;
     case 'cancelled':
       return 'This booking was cancelled';
     case 'pending_payment':
@@ -41,55 +50,123 @@ const getNextStep = (status: BookingStatus, date?: string, time?: string): strin
   }
 };
 
+const getBookingPriceLabel = (booking: Booking): string => {
+  if (booking.totalAmount > 0) {
+    return formatCurrency(booking.totalAmount);
+  }
+
+  switch (booking.status) {
+    case 'awaiting_dropoff':
+      return 'Quoted at shop';
+    case 'in_progress':
+      return 'Vendor quote';
+    default:
+      return 'Price pending';
+  }
+};
+
+const getStatusStripTone = (status: BookingStatus) => {
+  switch (status) {
+    case 'awaiting_dropoff':
+      return {
+        container: 'bg-secondary-50 border-secondary-100',
+        text: 'text-secondary-800',
+        iconColor: '#B7791F',
+        Icon: TimerReset,
+      };
+    case 'ready_for_collection':
+      return {
+        container: 'bg-durability-50 border-durability-100',
+        text: 'text-durability-800',
+        iconColor: '#1E8058',
+        Icon: PackageCheck,
+      };
+    case 'completed':
+      return {
+        container: 'bg-[#EEF5F1] border-[#D7E8DE]',
+        text: 'text-[#4E6B5D]',
+        iconColor: '#5F7D6C',
+        Icon: CheckCircle2,
+      };
+    case 'pending':
+    case 'pending_payment':
+      return {
+        container: 'bg-primary-50 border-primary-100',
+        text: 'text-primary-800',
+        iconColor: '#2F64B6',
+        Icon: CircleDashed,
+      };
+    case 'confirmed':
+    case 'in_progress':
+    default:
+      return {
+        container: 'bg-primary-50 border-primary-100',
+        text: 'text-primary-800',
+        iconColor: '#2F64B6',
+        Icon: ArrowRightCircle,
+      };
+  }
+};
+
 export function BookingCard({ booking, stringLabel, adminLabel, onPress }: BookingCardProps) {
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
+  const stripTone = getStatusStripTone(booking.status);
+  const StatusIcon = stripTone.Icon;
+  const stringSpec = `${stringLabel} • ${booking.requestedTension} lbs`;
+  const racketName = `${booking.racketBrand} ${booking.racketModel}`;
+  const bookingDateLabel = formatDateLabel(booking.dropOffDate);
+  const priceLabel = getBookingPriceLabel(booking);
   const content = (
     <AppCard variant="elevated" padding="sm">
-      <View className="gap-2">
-        <View className="flex-row items-center justify-between">
-          <HeroText className="text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-400">
+      <View className="gap-2.5">
+        <View className="flex-row items-start justify-between gap-3">
+          <HeroText className="flex-1 pr-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
             #{orderCode}
           </HeroText>
           <AppChip
             label={formatBookingStatus(booking.status)}
             variant={getBookingStatusVariant(booking.status)}
             size="sm"
+            className="shrink-0"
           />
         </View>
 
-        <View className="flex-row justify-between gap-4">
-          <View className="flex-1">
-            <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
-              {booking.racketBrand} {booking.racketModel}
+        <View className="flex-row items-start gap-3">
+          <View className="min-w-0 flex-1">
+            <HeroText className="text-base font-bold tracking-tight text-neutral-950">
+              {racketName}
             </HeroText>
-            <HeroText className="text-xs text-neutral-500">
-              {stringLabel} • {booking.requestedTension} lbs
+            <HeroText className="mt-0.5 text-[12px] font-medium text-neutral-600">
+              {stringSpec}
             </HeroText>
             {adminLabel ? (
-              <HeroText className="text-xs font-medium text-primary-600">
+              <HeroText className="mt-1 text-[11px] font-medium text-neutral-500">
                 {adminLabel}
               </HeroText>
             ) : null}
           </View>
-          <View className="items-end">
-            <HeroText className="text-sm font-bold text-neutral-900">
-              {formatCurrency(booking.totalAmount)}
+
+          <View className="min-w-[110px] items-end rounded-2xl bg-neutral-50 px-3 py-2">
+            <HeroText className="text-[13px] font-bold text-neutral-900">
+              {priceLabel}
             </HeroText>
-            <View className="mt-1 flex-row items-center gap-1">
+            <View className="mt-1 flex-row items-center gap-1.5">
               <CalendarDays size={10} color="#94A3B8" />
-              <HeroText className="text-[10px] font-medium text-neutral-500">
-                {booking.dropOffDate}
+              <HeroText className="text-[10px] font-semibold text-neutral-500">
+                {bookingDateLabel}
               </HeroText>
             </View>
           </View>
         </View>
 
-        <View className="mt-1 flex-row items-center gap-2 rounded-xl bg-primary-50 px-3 py-2">
-          <ArrowRightCircle size={14} color="#2F64B6" />
-          <HeroText className="flex-1 text-[11px] font-semibold text-primary-800">
+        <View
+          className={`flex-row items-center gap-2 rounded-[18px] border px-3 py-2 ${stripTone.container}`}
+        >
+          <StatusIcon size={14} color={stripTone.iconColor} />
+          <HeroText className={`flex-1 text-[11px] font-semibold ${stripTone.text}`}>
             {getNextStep(booking.status, booking.dropOffDate, booking.dropOffTime)}
           </HeroText>
-          {onPress && <ChevronRight size={14} color="#2F64B6" />}
+          {onPress ? <ChevronRight size={14} color={stripTone.iconColor} /> : null}
         </View>
       </View>
     </AppCard>
