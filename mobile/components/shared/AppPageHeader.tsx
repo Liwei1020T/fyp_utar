@@ -13,6 +13,7 @@ interface AppPageHeaderProps {
   subtitle?: string;
   headerRight?: React.ReactNode;
   variant?: AppHeaderVariant;
+  compact?: boolean;
   showBackButton?: boolean;
   onBackPress?: () => void;
   backAccessibilityLabel?: string;
@@ -63,6 +64,7 @@ export function AppPageHeader({
   subtitle,
   headerRight,
   variant = 'primary',
+  compact = false,
   showBackButton = false,
   onBackPress,
   backAccessibilityLabel = 'Go back',
@@ -78,13 +80,15 @@ export function AppPageHeader({
         className={cn(baseContainerStyles, variantStyles[variant])}
         style={{
           maxWidth: appLayoutMetrics.contentMaxWidth,
-          minHeight: minHeights[variant],
+          minHeight: compact ? Math.max(minHeights[variant] - 12, 56) : minHeights[variant],
         }}
       >
         <View
           className={cn(
             'flex-row items-center gap-3',
-            contentStyles[variant]
+            contentStyles[variant],
+            compact && variant === 'primary' ? 'px-4 py-3' : undefined,
+            compact && variant !== 'primary' ? 'px-3.5 py-2.5' : undefined
           )}
         >
           {showBackButton ? (

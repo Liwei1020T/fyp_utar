@@ -15,6 +15,7 @@ interface AppScreenProps extends ViewProps {
   subtitle?: string;
   headerRight?: React.ReactNode;
   headerVariant?: AppHeaderVariant;
+  compactHeader?: boolean;
   showBackButton?: boolean;
   onBackPress?: () => void;
   backAccessibilityLabel?: string;
@@ -38,6 +39,7 @@ export function AppScreen({
   subtitle,
   headerRight,
   headerVariant = 'primary',
+  compactHeader = false,
   showBackButton = false,
   onBackPress,
   backAccessibilityLabel,
@@ -68,6 +70,7 @@ export function AppScreen({
           subtitle={subtitle}
           headerRight={headerRight}
           variant={headerVariant}
+          compact={compactHeader}
           showBackButton={showBackButton}
           onBackPress={onBackPress}
           backAccessibilityLabel={backAccessibilityLabel}
