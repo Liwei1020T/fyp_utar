@@ -45,8 +45,17 @@ export function formatConversationMode(mode: ConversationMode) {
   return formatLabel(mode);
 }
 
-export function formatMessageRole(role: ChatMessageRole) {
-  return role === 'ai' ? 'AI' : role.charAt(0).toUpperCase() + role.slice(1);
+export function formatPlayFrequency(value: string) {
+  switch (value) {
+    case 'Social':
+      return '1 day / week';
+    case 'Weekly':
+      return '2-3 days / week';
+    case 'Tournament':
+      return '4+ days / week';
+    default:
+      return value;
+  }
 }
 
 export function formatAvailability(availability: InventoryAvailability) {

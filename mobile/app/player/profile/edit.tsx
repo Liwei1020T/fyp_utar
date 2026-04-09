@@ -18,6 +18,7 @@ import {
   useBackendAccessToken,
   useCurrentUser,
 } from '../../../store/appStore';
+import { formatPlayFrequency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   buildBackendProfilePayload,
@@ -277,7 +278,7 @@ export default function ProfileEditScreen() {
                 {(['Social', 'Weekly', 'Tournament'] as const).map((frequency) => (
                   <AppChip
                     key={frequency}
-                    label={frequency}
+                    label={formatPlayFrequency(frequency)}
                     size="md"
                     variant={value === frequency ? 'info' : 'neutral'}
                     onPress={() => onChange(frequency)}

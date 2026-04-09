@@ -20,6 +20,7 @@ import {
   useBookings,
   useCurrentUser,
 } from '../../../store/appStore';
+import { formatPlayFrequency } from '../../../lib/formatters';
 
 export default function PlayerProfileScreen() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function PlayerProfileScreen() {
               variant="warning"
               className="bg-secondary-50 border-secondary-100"
             />
-            <AppChip label={user.playFrequency} variant="neutral" />
+            <AppChip label={formatPlayFrequency(user.playFrequency)} variant="neutral" />
           </View>
           <HeroText className="mt-4 text-[13px] leading-6 text-neutral-500 font-medium">
             Current focus: Use your saved profile to generate a grounded

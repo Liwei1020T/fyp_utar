@@ -15,6 +15,7 @@ import {
   useCurrentUser,
   useStrings,
 } from '../../../store/appStore';
+import { formatPlayFrequency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   buildRecommendationPayload,
@@ -71,11 +72,11 @@ export default function RecommendationInputScreen() {
   );
   const [priorities, setPriorities] = useState(user.priorities);
 
-  const strongestPriority = useMemo(
-    () =>
-      Object.entries(priorities).sort((left, right) => right[1] - left[1])[0]?.[0] ?? 'power',
-    [priorities]
-  );
+  const strongestPriority = useMemo(() => {
+    const top = Object.entries(priorities).sort((left, right) => right[1] - left[1])[0];
+    const label = priorityLabels.find((l) => l.key === top?.[0]);
+    return label ? label.title.split(' ')[0] : 'Power';
+  }, [priorities]);
 
   const handleGenerate = async () => {
     setSubmitError(null);
@@ -122,10 +123,18 @@ export default function RecommendationInputScreen() {
     }
   };
 
+  const topThreePriorities = useMemo(() => {
+    return Object.entries(priorities)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key]) => priorityLabels.find((p) => p.key === key)?.title.split(' ')[0])
+      .join(', ');
+  }, [priorities]);
+
   return (
     <AppScreen
       title="Recommendation lab"
-      subtitle="Shape the session profile before generating your shortlist."
+      subtitle="Tune the logic before generating your shortlist."
       headerLeft={
         router.canGoBack() ? (
           <AppIconButton
@@ -136,103 +145,110 @@ export default function RecommendationInputScreen() {
         ) : undefined
       }
     >
-      <AppCard variant="dark" className="rounded-[32px]" padding="lg">
-        <View className="flex-row items-start justify-between gap-4">
+      <AppCard variant="dark" className="rounded-[24px]" padding="md">
+        <View className="flex-row items-center justify-between gap-4">
           <View className="flex-1">
-            <AppChip label="AI MATCH INPUT" variant="secondary" className="self-start" />
-            <HeroText className="mt-4 text-[26px] font-bold tracking-tight text-white leading-[32px]">
-              Build today&apos;s string profile.
-            </HeroText>
-            <HeroText className="mt-3 text-sm leading-6 text-primary-100">
-              Adjust the player context first so the shortlist feels grounded and believable.
+            <AppChip label="RECOMMENDATION" variant="secondary" size="sm" className="self-start" />
+            <HeroText className="mt-2 text-xl font-bold tracking-tight text-white">
+              Build your profile.
             </HeroText>
           </View>
-          <View className="h-14 w-14 items-center justify-center rounded-[22px] bg-white/12">
-            <WandSparkles size={24} color="white" />
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-white/12">
+            <WandSparkles size={20} color="white" />
           </View>
         </View>
 
-        <View className="mt-7 flex-row gap-3">
-          <View className="min-h-[100px] flex-1 rounded-[26px] border border-white/20 bg-white/12 p-4">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-100/80">
-              Default tension
+        <View className="mt-4 flex-row gap-2">
+          <View className="flex-1 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/60">
+              Tension
             </HeroText>
-            <HeroText className="mt-2 text-lg font-bold text-white">
+            <HeroText className="mt-1 text-base font-bold text-white">
               {user.preferredTension} lbs
             </HeroText>
           </View>
-          <View className="min-h-[100px] flex-1 rounded-[26px] border border-white/20 bg-white/12 p-4">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-100/80">
-              Strongest priority
+          <View className="flex-1 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/60">
+              Priority
             </HeroText>
-            <HeroText className="mt-2 text-lg font-bold text-white">
+            <HeroText className="mt-1 text-base font-bold text-white">
               {strongestPriority}
             </HeroText>
           </View>
         </View>
       </AppCard>
 
-      <AppSection eyebrow="Profile overlay" title="Adjust today’s playing context" subtitle="Keep the recommendation inputs easy to read in the demo.">
-        <AppCard variant="elevated" padding="lg">
-          <HeroText className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-400">
-            Playing style
-          </HeroText>
-          <View className="mt-4 flex-row flex-wrap gap-2">
-            {styleOptions.map((style) => (
-              <AppChip
-                key={style.value}
-                label={style.label}
-                size="md"
-                variant={playingStyle === style.value ? 'primary' : 'neutral'}
-                onPress={() => setPlayingStyle(style.value)}
-              />
-            ))}
-          </View>
-
-          <HeroText className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-400">
-            Skill level
-          </HeroText>
-          <View className="mt-4 flex-row flex-wrap gap-2">
-            {skillOptions.map((level) => (
-              <AppChip
-                key={level}
-                label={level}
-                size="md"
-                variant={skillLevel === level ? 'info' : 'neutral'}
-                onPress={() => setSkillLevel(level)}
-              />
-            ))}
-          </View>
-
-          <HeroText className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-400">
-            Play frequency
-          </HeroText>
-          <View className="mt-4">
-            <AppChip
-              label={`${user.playFrequency} (from saved profile)`}
-              size="md"
-              variant="secondary"
-            />
+      <AppSection title="Live Profile Summary" className="mt-2">
+        <AppCard variant="subtle" padding="sm" className="border-dashed border-neutral-200">
+          <View className="flex-row flex-wrap gap-y-2">
+            <View className="w-1/2 pr-2">
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Style</HeroText>
+              <HeroText className="text-sm font-medium text-neutral-800">{playingStyle}</HeroText>
+            </View>
+            <View className="w-1/2">
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Skill</HeroText>
+              <HeroText className="text-sm font-medium text-neutral-800">{skillLevel}</HeroText>
+            </View>
+            <View className="w-full mt-1">
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Top Priorities</HeroText>
+              <HeroText className="text-sm font-medium text-primary-600">{topThreePriorities}</HeroText>
+            </View>
           </View>
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Priority mixer" title="Refine what matters most" subtitle="Make the weighting explicit so every recommendation feels explainable.">
-        <View className="gap-4">
+      <AppSection eyebrow="Context" title="Player Context">
+        <AppCard variant="elevated" padding="md" className="gap-4">
+          <View>
+            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Playing style</HeroText>
+            <View className="mt-2 flex-row flex-wrap gap-2">
+              {styleOptions.map((style) => (
+                <AppChip
+                  key={style.value}
+                  label={style.label}
+                  size="sm"
+                  variant={playingStyle === style.value ? 'primary' : 'neutral'}
+                  onPress={() => setPlayingStyle(style.value)}
+                />
+              ))}
+            </View>
+          </View>
+
+          <View>
+            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Skill level</HeroText>
+            <View className="mt-2 flex-row flex-wrap gap-2">
+              {skillOptions.map((level) => (
+                <AppChip
+                  key={level}
+                  label={level}
+                  size="sm"
+                  variant={skillLevel === level ? 'info' : 'neutral'}
+                  onPress={() => setSkillLevel(level)}
+                />
+              ))}
+            </View>
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Play frequency</HeroText>
+            <AppChip label={formatPlayFrequency(user.playFrequency)} size="sm" variant="secondary" />
+          </View>
+        </AppCard>
+      </AppSection>
+
+      <AppSection eyebrow="Mixer" title="Priority Weights">
+        <View className="gap-3">
           {priorityLabels.map((item) => (
-            <AppCard key={item.key} variant="elevated" padding="md">
-              <View className="flex-row items-center justify-between gap-4">
-                <View>
-                  <HeroText className="text-base font-semibold text-neutral-900">
-                    {item.title}
-                  </HeroText>
-                  <HeroText className="mt-1 text-xs uppercase tracking-[0.2em] text-neutral-400">
-                    Priority weight
-                  </HeroText>
-                </View>
-                <AppChip label={`${priorities[item.key]}/10`} variant="primary" />
+            <AppCard key={item.key} variant="elevated" padding="sm" className="px-4 py-3">
+              <View className="flex-row items-center justify-between">
+                <HeroText className="text-sm font-bold text-neutral-900">
+                  {item.title}
+                </HeroText>
+                <HeroText className="text-sm font-black text-primary-600">
+                  {priorities[item.key]}/10
+                </HeroText>
               </View>
-              <View className="mt-5">
+              <View className="mt-3">
                 <HeroSlider
                   value={priorities[item.key]}
                   onValueChange={(nextValue) => setPriorities((current) => ({ ...current, [item.key]: nextValue }))}
@@ -246,12 +262,12 @@ export default function RecommendationInputScreen() {
         </View>
       </AppSection>
 
-      <AppSection eyebrow="Context" title="What will this recommendation consider?">
-        <AppCard variant="subtle" padding="md">
-          <View className="flex-row gap-3">
-            <Info size={18} color="#0891B2" />
-            <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-              Style, skill level, play frequency, preferred tension, and your five weighted priorities feed the ranking engine shown on the next screen.
+      <AppSection>
+        <AppCard variant="subtle" padding="sm" className="bg-primary-50/50 border-0">
+          <View className="flex-row items-center gap-2">
+            <Info size={14} color="#0891B2" />
+            <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
+              The shortlist is generated from your player profile and the five priority weights you set above.
             </HeroText>
           </View>
         </AppCard>
@@ -265,7 +281,7 @@ export default function RecommendationInputScreen() {
         </AppCard>
       ) : null}
 
-      <View className="mt-10">
+      <View className="mt-8 mb-6">
         <AppButton
           label="Generate recommendation"
           size="lg"
@@ -273,8 +289,8 @@ export default function RecommendationInputScreen() {
           isLoading={isGenerating}
         />
         <Pressable className="mt-4 items-center" onPress={() => router.push('/player/profile/edit')}>
-          <HeroText className="text-sm font-semibold text-primary-700">
-            Edit my saved player profile
+          <HeroText className="text-xs font-bold text-primary-700 uppercase tracking-widest">
+            Edit saved player profile
           </HeroText>
         </Pressable>
       </View>
