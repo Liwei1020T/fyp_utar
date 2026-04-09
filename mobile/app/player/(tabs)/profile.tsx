@@ -41,7 +41,9 @@ export default function PlayerProfileScreen() {
     user.playingStyle === 'Defensive'
       ? 'Control / Defensive'
       : user.playingStyle;
-  const profileSummarySentence = `${apiAlignedSkillLevel} player leaning ${user.playingStyle.toLowerCase()} with a preferred ${user.preferredTension} lbs setup for ${formatPlayFrequency(user.playFrequency).toLowerCase()} sessions.`;
+  const budgetRange = user.budgetRange ?? 'RM30–RM50';
+  const preferredFeel = user.preferredFeel ?? 'Balanced';
+  const profileSummarySentence = `${apiAlignedSkillLevel} player leaning ${user.playingStyle.toLowerCase()} with a ${preferredFeel.toLowerCase()} impact feel, ${budgetRange.toLowerCase()} budget, and a preferred ${user.preferredTension} lbs setup for ${formatPlayFrequency(user.playFrequency).toLowerCase()} sessions.`;
   const profileChips = [
     apiAlignedSkillLevel,
     user.playingStyle,
@@ -77,6 +79,8 @@ export default function PlayerProfileScreen() {
   const profileFacts = [
     { label: 'Skill level', value: apiAlignedSkillLevel },
     { label: 'Playing style', value: apiAlignedPlayingStyle },
+    { label: 'Budget range', value: budgetRange },
+    { label: 'Preferred feel', value: preferredFeel },
     { label: 'Preferred tension', value: `${user.preferredTension} lbs` },
     { label: 'Play frequency', value: formatPlayFrequency(user.playFrequency) },
   ];

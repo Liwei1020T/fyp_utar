@@ -5,10 +5,12 @@ import type {
   BookingStatusEntry,
   BookingUpdate,
   BookingSlot,
+  BudgetRange,
   BusinessHours,
   PlayerProfile,
   PlayFrequency,
   PlayingStyle,
+  PreferredFeel,
   RecommendationMatch,
   SkillLevel,
   StringItem,
@@ -149,6 +151,46 @@ export function mapPlayFrequencyToBackend(value: PlayFrequency): number {
   }
 }
 
+export function mapBackendBudgetRange(
+  minimum: number | null | undefined,
+  maximum: number | null | undefined,
+): BudgetRange {
+  if (maximum != null && maximum <= 30) {
+    return 'Below RM30';
+  }
+  if (minimum != null && minimum >= 50) {
+    return 'RM50+';
+  }
+  return 'RM30–RM50';
+}
+
+function mapBudgetRangeToBackend(
+  value: BudgetRange,
+): { budgetMin: number; budgetMax: number } {
+  switch (value) {
+    case 'Below RM30':
+      return { budgetMin: 0, budgetMax: 30 };
+    case 'RM50+':
+      return { budgetMin: 50, budgetMax: 999 };
+    case 'RM30–RM50':
+    default:
+      return { budgetMin: 30, budgetMax: 50 };
+  }
+}
+
+export function mapBackendPreferredFeel(profile?: BackendProfile | null): PreferredFeel {
+  if ((profile?.pref_comfort ?? 0) >= 4) {
+    return 'Soft';
+  }
+  if ((profile?.pref_attack ?? 0) >= 4 && (profile?.preferred_tension ?? 0) >= 27) {
+    return 'Hard';
+  }
+  if ((profile?.pref_attack ?? 0) >= 4 || (profile?.pref_sound ?? 0) >= 4) {
+    return 'Crisp';
+  }
+  return 'Balanced';
+}
+
 export function mapBackendUserToPlayerProfile(
   user: BackendAuthUser,
   profile?: BackendProfile | null,
@@ -163,6 +205,8 @@ export function mapBackendUserToPlayerProfile(
     skillLevel: mapBackendSkillLevel(profile?.skill_level),
     playingStyle: mapBackendPlayingStyle(profile?.playing_style),
     playFrequency: mapFrequencyToPlayFrequency(profile?.frequency_per_week),
+    budgetRange: mapBackendBudgetRange(profile?.budget_min, profile?.budget_max),
+    preferredFeel: mapBackendPreferredFeel(profile),
     preferredTension: profile?.preferred_tension ?? 24,
     priorities: {
       power: toTenScale(profile?.pref_attack),
@@ -477,13 +521,16 @@ export function buildBackendProfilePayload(
   player: Pick<
     PlayerProfile,
     'skillLevel' | 'playingStyle' | 'playFrequency' | 'preferredTension' | 'priorities'
+    | 'budgetRange'
   >,
 ): BackendProfilePayload {
+  const budget = mapBudgetRangeToBackend(player.budgetRange);
+
   return {
     skill_level: mapFrontendSkillLevel(player.skillLevel),
     playing_style: mapFrontendPlayingStyle(player.playingStyle),
-    budget_min: 0,
-    budget_max: 999,
+    budget_min: budget.budgetMin,
+    budget_max: budget.budgetMax,
     preferred_tension: player.preferredTension,
     game_type: 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(player.playFrequency),
@@ -507,17 +554,26 @@ export function buildRecommendationPayload(input: {
   playingStyle: PlayingStyle;
   preferredTension: number;
   playFrequency: PlayFrequency;
+  budgetRange?: BudgetRange;
   priorities: PlayerProfile['priorities'];
   gameType?: string;
   budgetMin?: number;
   budgetMax?: number;
 }): BackendRecommendationPayload {
+  const budget = input.budgetRange
+    ? mapBudgetRangeToBackend(input.budgetRange)
+    : { budgetMin: 0, budgetMax: 999 };
+
   return {
     user_id: input.userId,
     skill_level: mapFrontendSkillLevel(input.skillLevel),
     playing_style: mapFrontendPlayingStyle(input.playingStyle),
-    budget_min: input.budgetMin ?? 0,
-    budget_max: input.budgetMax ?? 999,
+    budget_min:
+      input.budgetMin
+      ?? budget.budgetMin,
+    budget_max:
+      input.budgetMax
+      ?? budget.budgetMax,
     preferred_tension: input.preferredTension,
     game_type: input.gameType ?? 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),

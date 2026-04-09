@@ -4,12 +4,11 @@ import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChevronLeft, Sparkles } from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 import { HeroSlider, HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
@@ -29,6 +28,8 @@ const profileSchema = z.object({
   name: z.string().min(2, 'Please enter your name'),
   skillLevel: z.enum(['Beginner', 'Intermediate', 'Advanced']),
   playingStyle: z.enum(['Attacking', 'Balanced', 'Control']),
+  budgetRange: z.enum(['Below RM30', 'RM30–RM50', 'RM50+']),
+  preferredFeel: z.enum(['Soft', 'Balanced', 'Crisp', 'Hard']),
   preferredTension: z.coerce.number().min(18).max(32),
   playFrequency: z.enum(['Social', 'Weekly', 'Tournament']),
   recentGoal: z.string().min(8, 'Tell us what you want from your next setup'),
@@ -64,6 +65,8 @@ const styleOptions = [
 ] as const;
 
 const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
+const budgetOptions = ['Below RM30', 'RM30–RM50', 'RM50+'] as const;
+const preferredFeelOptions = ['Soft', 'Balanced', 'Crisp', 'Hard'] as const;
 
 export default function ProfileEditScreen() {
   const router = useRouter();
@@ -84,6 +87,8 @@ export default function ProfileEditScreen() {
     user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
       ? user.skillLevel
       : 'Advanced';
+  const savedBudgetRange = user.budgetRange ?? 'RM30–RM50';
+  const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
 
   const [priorities, setPriorities] = useState(user.priorities);
 
@@ -97,6 +102,8 @@ export default function ProfileEditScreen() {
       name: user.name,
       skillLevel: normalizedSkillLevel,
       playingStyle: normalizedPlayingStyle,
+      budgetRange: savedBudgetRange,
+      preferredFeel: savedPreferredFeel,
       preferredTension: user.preferredTension,
       playFrequency: user.playFrequency,
       recentGoal: user.recentGoal,
@@ -115,6 +122,7 @@ export default function ProfileEditScreen() {
             skillLevel: data.skillLevel,
             playingStyle: data.playingStyle,
             playFrequency: data.playFrequency,
+            budgetRange: data.budgetRange,
             preferredTension: data.preferredTension,
             priorities,
           }),
@@ -168,7 +176,7 @@ export default function ProfileEditScreen() {
               Capture the feel your game actually needs.
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              Skill level, style, priorities, and tension preference feed every recommendation, comparison, and booking shortcut.
+              Skill level, style, budget, feel, priorities, and tension preference feed every recommendation, comparison, and booking shortcut.
             </HeroText>
           </View>
           <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary-600">
@@ -286,7 +294,59 @@ export default function ProfileEditScreen() {
         </View>
       </AppSection>
 
-      <AppSection eyebrow="Feel" title="Tension and priority weighting">
+      <AppSection
+        eyebrow="BUDGET"
+        title="Choose your price range"
+        subtitle="Used to balance recommendation quality and affordability."
+      >
+        <Controller
+          control={control}
+          name="budgetRange"
+          render={({ field: { onChange, value } }) => (
+            <View className="flex-row flex-wrap gap-2">
+              {budgetOptions.map((option) => (
+                <AppChip
+                  key={option}
+                  label={option}
+                  size="md"
+                  variant={value === option ? 'primary' : 'neutral'}
+                  onPress={() => onChange(option)}
+                />
+              ))}
+            </View>
+          )}
+        />
+      </AppSection>
+
+      <AppSection
+        eyebrow="FEEL"
+        title="How should the string feel on impact?"
+        subtitle="This helps the system match strings to your preferred hitting sensation."
+      >
+        <Controller
+          control={control}
+          name="preferredFeel"
+          render={({ field: { onChange, value } }) => (
+            <View className="flex-row flex-wrap gap-2">
+              {preferredFeelOptions.map((option) => (
+                <AppChip
+                  key={option}
+                  label={option}
+                  size="md"
+                  variant={value === option ? 'primary' : 'neutral'}
+                  onPress={() => onChange(option)}
+                />
+              ))}
+            </View>
+          )}
+        />
+      </AppSection>
+
+      <AppSection
+        eyebrow="TENSION"
+        title="Preferred tension"
+        subtitle="Your usual restring tension in lbs."
+      >
         <Controller
           control={control}
           name="preferredTension"
@@ -301,7 +361,13 @@ export default function ProfileEditScreen() {
             />
           )}
         />
+      </AppSection>
 
+      <AppSection
+        eyebrow="PRIORITIES"
+        title="What matters most in your setup?"
+        subtitle="Adjust the weighting used in recommendations."
+      >
         <View className="mt-2 gap-4">
           {priorityKeys.map((item) => (
             <AppCard key={item.key} variant="elevated" padding="md">

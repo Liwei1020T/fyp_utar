@@ -335,6 +335,8 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       skillLevel: 'Beginner',
       playingStyle: 'Balanced',
       playFrequency: 'Weekly',
+      budgetRange: 'RM30–RM50',
+      preferredFeel: 'Balanced',
       preferredTension: 24,
       priorities: {
         power: 6,

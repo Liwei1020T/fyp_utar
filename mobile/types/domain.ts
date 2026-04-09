@@ -3,6 +3,8 @@ export type UserRole = 'player' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'Competitive';
 export type PlayingStyle = 'Attacking' | 'Balanced' | 'Control' | 'Defensive';
 export type PlayFrequency = 'Social' | 'Weekly' | 'Tournament';
+export type BudgetRange = 'Below RM30' | 'RM30–RM50' | 'RM50+';
+export type PreferredFeel = 'Soft' | 'Balanced' | 'Crisp' | 'Hard';
 export type PriorityKey = 'power' | 'control' | 'durability' | 'comfort' | 'sound';
 
 export interface UserIdentity {
@@ -19,6 +21,8 @@ export interface PlayerProfile extends UserIdentity {
   skillLevel: SkillLevel;
   playingStyle: PlayingStyle;
   playFrequency: PlayFrequency;
+  budgetRange: BudgetRange;
+  preferredFeel: PreferredFeel;
   preferredTension: number;
   priorities: Record<PriorityKey, number>;
   homeVenue: string;

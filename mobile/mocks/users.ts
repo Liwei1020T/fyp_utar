@@ -11,6 +11,8 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
     skillLevel: 'Intermediate',
     playingStyle: 'Attacking',
     playFrequency: 'Weekly',
+    budgetRange: 'RM30–RM50',
+    preferredFeel: 'Crisp',
     preferredTension: 26,
     priorities: {
       power: 9,
@@ -33,6 +35,8 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
     skillLevel: 'Advanced',
     playingStyle: 'Balanced',
     playFrequency: 'Tournament',
+    budgetRange: 'RM50+',
+    preferredFeel: 'Balanced',
     preferredTension: 25,
     priorities: {
       power: 7,
@@ -55,6 +59,8 @@ export const MOCK_PLAYERS: PlayerProfile[] = [
     skillLevel: 'Beginner',
     playingStyle: 'Control',
     playFrequency: 'Social',
+    budgetRange: 'Below RM30',
+    preferredFeel: 'Soft',
     preferredTension: 23,
     priorities: {
       power: 4,

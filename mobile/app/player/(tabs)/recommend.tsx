@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Info, Sparkles, WandSparkles, ChevronLeft } from 'lucide-react-native';
+import { Info, WandSparkles } from 'lucide-react-native';
 import { HeroSlider, HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import {
@@ -63,6 +62,8 @@ export default function RecommendationInputScreen() {
     user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
       ? user.skillLevel
       : 'Advanced';
+  const savedBudgetRange = user.budgetRange ?? 'RM30–RM50';
+  const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
 
   const [playingStyle, setPlayingStyle] = useState<(typeof styleOptions)[number]['value']>(
     normalizedPlayingStyle,
@@ -105,6 +106,7 @@ export default function RecommendationInputScreen() {
           playingStyle,
           preferredTension: user.preferredTension,
           playFrequency: user.playFrequency,
+          budgetRange: savedBudgetRange,
           priorities,
         }),
       );
@@ -186,6 +188,14 @@ export default function RecommendationInputScreen() {
             <View className="w-full mt-1">
               <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Top Priorities</HeroText>
               <HeroText className="text-sm font-medium text-primary-600">{topThreePriorities}</HeroText>
+            </View>
+            <View className="w-1/2 mt-1 pr-2">
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Budget</HeroText>
+              <HeroText className="text-sm font-medium text-neutral-800">{savedBudgetRange}</HeroText>
+            </View>
+            <View className="w-1/2 mt-1">
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Feel</HeroText>
+              <HeroText className="text-sm font-medium text-neutral-800">{savedPreferredFeel}</HeroText>
             </View>
           </View>
         </AppCard>
