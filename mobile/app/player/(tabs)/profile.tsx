@@ -2,11 +2,13 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  ChevronLeft,
   ChevronRight,
+  Gauge,
   LogOut,
+  NotebookText,
+  Settings2,
   Settings,
-  Star,
+  Sparkles,
 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -39,12 +41,51 @@ export default function PlayerProfileScreen() {
     user.playingStyle === 'Defensive'
       ? 'Control / Defensive'
       : user.playingStyle;
+  const profileSummarySentence = `${apiAlignedSkillLevel} player leaning ${user.playingStyle.toLowerCase()} with a preferred ${user.preferredTension} lbs setup for ${formatPlayFrequency(user.playFrequency).toLowerCase()} sessions.`;
+  const profileChips = [
+    apiAlignedSkillLevel,
+    user.playingStyle,
+    `${user.preferredTension} lbs`,
+    formatPlayFrequency(user.playFrequency).replace(' / ', '/'),
+  ];
+  const shortcutItems = [
+    {
+      title: 'Edit onboarding profile',
+      subtitle: 'Update skill level, style, priorities, and preferred tension.',
+      icon: <Sparkles size={18} color="#2F64B6" />,
+      route: '/player/profile/edit',
+    },
+    {
+      title: 'My bookings',
+      subtitle: 'Check current orders, collection status, and service history.',
+      icon: <NotebookText size={18} color="#2F64B6" />,
+      route: '/player/bookings',
+    },
+    {
+      title: 'Recommendation setup',
+      subtitle: 'Refresh your recommendation flow with your latest preferences.',
+      icon: <Gauge size={18} color="#2F64B6" />,
+      route: '/player/recommend',
+    },
+    {
+      title: 'App settings',
+      subtitle: 'Manage notification preferences and prototype app controls.',
+      icon: <Settings2 size={18} color="#2F64B6" />,
+      route: '/player/notifications/preferences',
+    },
+  ] as const;
+  const profileFacts = [
+    { label: 'Skill level', value: apiAlignedSkillLevel },
+    { label: 'Playing style', value: apiAlignedPlayingStyle },
+    { label: 'Preferred tension', value: `${user.preferredTension} lbs` },
+    { label: 'Play frequency', value: formatPlayFrequency(user.playFrequency) },
+  ];
 
   return (
     <AppScreen
       headerVariant="primary"
       title="Profile"
-      subtitle="Player identity, saved preferences, and quick shortcuts."
+      subtitle="Your badminton preferences, activity snapshot, and quick actions."
       headerRight={
         <AppIconButton
           icon={<Settings size={20} color="#475569" />}
@@ -53,79 +94,97 @@ export default function PlayerProfileScreen() {
         />
       }
     >
-      <AppCard variant="dark" className="rounded-[40px] pt-10 pb-9" padding="lg">
-        <View className="flex-row items-center gap-6 px-1">
-          <View className="h-24 w-24 items-center justify-center rounded-full bg-white/10 shadow-sm">
-            <HeroText className="text-[34px] font-bold text-white leading-none">
+      <AppCard variant="elevated" className="rounded-[30px]" padding="md">
+        <View className="flex-row items-start gap-4">
+          <View className="h-16 w-16 items-center justify-center rounded-full bg-primary-100">
+            <HeroText className="text-[22px] font-bold text-primary-700 leading-none">
               {user.avatarLabel}
             </HeroText>
           </View>
           <View className="min-w-0 flex-1">
-            <View className="self-start rounded-full bg-white/10 border border-white/5 px-4 py-2">
-              <HeroText className="text-[10px] font-bold tracking-[0.08em] text-secondary-300">
-                PLAYER PROFILE
-              </HeroText>
-            </View>
-            <HeroText className="mt-5 text-[34px] font-bold tracking-tight text-white leading-[38px]">
+            <HeroText className="text-[20px] font-bold tracking-tight text-neutral-950 leading-tight">
               {user.name}
             </HeroText>
-            <HeroText className="mt-1 text-base text-white/70 font-medium tracking-wide">
+            <HeroText className="mt-1 text-[13px] text-neutral-500 font-medium">
               {user.phone || user.email}
             </HeroText>
-          </View>
-        </View>
-
-        <View className="mt-9 flex-row gap-4">
-          {[
-            { value: playerBookings.length, label: 'Bookings' },
-            { value: user.preferredTension, label: 'Fav lbs' },
-          ].map((stat, index) => (
-            <View key={index} className="flex-1">
-              <View className="rounded-[30px] border border-white/10 p-1 bg-white/5 shadow-sm">
-                <View className="items-center justify-center rounded-[24px] bg-white/10 py-5 px-2">
-                  <HeroText className="text-3xl font-bold text-white">
-                    {stat.value}
-                  </HeroText>
-                  <HeroText className="mt-1.5 text-[10px] uppercase font-bold tracking-[0.16em] text-white/40">
-                    {stat.label}
-                  </HeroText>
-                </View>
-              </View>
+            <View className="mt-3 flex-row flex-wrap gap-2">
+              {profileChips.map((chip) => (
+                <AppChip
+                  key={chip}
+                  label={chip}
+                  variant={chip === `${user.preferredTension} lbs` ? 'warning' : 'primary'}
+                  className={chip === `${user.preferredTension} lbs` ? undefined : 'bg-primary-50 border-primary-100'}
+                />
+              ))}
             </View>
-          ))}
+          </View>
         </View>
       </AppCard>
 
-      <AppSection eyebrow="SAVED PROFILE" title="Player snapshot">
+      <AppSection eyebrow="ACTIVITY" title="Your quick stats" variant="compact">
+        <View className="flex-row gap-3">
+          {[
+            { value: playerBookings.length, label: 'Bookings' },
+            { value: `${user.preferredTension} lbs`, label: 'Fav tension' },
+          ].map((stat) => (
+            <AppCard
+              key={stat.label}
+              variant="elevated"
+              padding="md"
+              className="flex-1 rounded-[24px]"
+            >
+              <HeroText className="text-[22px] font-bold tracking-tight text-neutral-950">
+                {stat.value}
+              </HeroText>
+              <HeroText className="mt-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                {stat.label}
+              </HeroText>
+            </AppCard>
+          ))}
+        </View>
+      </AppSection>
+
+      <AppSection eyebrow="SAVED PROFILE" title="Preference summary">
         <AppCard variant="elevated" padding="md" className="rounded-[28px]">
-          <View className="flex-row flex-wrap gap-2">
-            <AppChip label={apiAlignedSkillLevel} variant="primary" />
-            <AppChip label={apiAlignedPlayingStyle} variant="info" />
-            <AppChip
-              label={`${user.preferredTension} lbs`}
-              variant="warning"
-              className="bg-secondary-50 border-secondary-100"
-            />
-            <AppChip label={formatPlayFrequency(user.playFrequency)} variant="neutral" />
+          <View className="flex-row flex-wrap">
+            {profileFacts.map((fact, index) => (
+              <View
+                key={fact.label}
+                className={[
+                  'w-1/2 pb-4',
+                  index % 2 === 0 ? 'pr-2' : 'pl-2',
+                  index >= profileFacts.length - 2 ? 'pb-0' : '',
+                ].join(' ')}
+              >
+                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                  {fact.label}
+                </HeroText>
+                <HeroText className="mt-1.5 text-[15px] font-bold tracking-tight text-neutral-900">
+                  {fact.value}
+                </HeroText>
+              </View>
+            ))}
           </View>
-          <HeroText className="mt-4 text-[13px] leading-6 text-neutral-500 font-medium">
-            Current focus: Use your saved profile to generate a grounded
-            shortlist for the next restring.
-          </HeroText>
+
+          <View className="mt-4 rounded-[22px] bg-[#F5F8FC] px-4 py-3.5">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
+              Profile note
+            </HeroText>
+            <HeroText className="mt-1.5 text-[13px] leading-5 text-neutral-600 font-medium">
+              {profileSummarySentence}
+            </HeroText>
+          </View>
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="SHORTCUTS" title="Go straight to what matters">
+      <AppSection
+        eyebrow="SHORTCUTS"
+        title="Quick actions"
+        subtitle="Jump back into the parts of the app you use most."
+      >
         <View className="gap-3">
-          {[
-            {
-              title: 'Edit onboarding profile',
-              subtitle:
-                'Skill level, playing style, priorities, and preferred tension.',
-              icon: <Star size={18} color="#2F64B6" />,
-              route: '/player/profile/edit',
-            },
-          ].map((item) => (
+          {shortcutItems.map((item) => (
             <Pressable
               key={item.title}
               onPress={() => router.push(item.route as never)}
@@ -158,18 +217,21 @@ export default function PlayerProfileScreen() {
         </View>
       </AppSection>
 
-      <View className="mt-10 mb-6">
+      <View className="mt-8 mb-3">
+        <HeroText className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+          Account
+        </HeroText>
         <AppButton
           label="Log out"
-          variant="outline"
-          size="lg"
+          variant="ghost"
+          size="md"
           onPress={() => {
             logout();
             router.replace('/auth/welcome');
           }}
           leadingIcon={<LogOut size={18} color="#DC2626" />}
-          textClassName="text-red-600 font-bold"
-          className="border-red-100 h-[56px] rounded-[18px]"
+          textClassName="text-red-600 font-semibold"
+          className="h-[48px] justify-start rounded-[18px] border border-red-100/80 bg-white/70 px-4"
         />
       </View>
     </AppScreen>
