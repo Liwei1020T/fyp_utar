@@ -86,7 +86,8 @@ export function getAdminById(id?: string | null): AdminProfile | undefined {
 export function getStringById(id?: string | null): StringItem | undefined {
   const state = useAppStore.getState();
   if (state.sessionSource === 'backend') {
-    return state.liveStrings.find((item) => item.id === id);
+    const liveMatch = state.liveStrings.find((item) => item.id === id);
+    if (liveMatch) return liveMatch;
   }
   return MOCK_STRINGS.find((item) => item.id === id);
 }

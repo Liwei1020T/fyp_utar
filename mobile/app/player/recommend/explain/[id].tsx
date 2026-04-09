@@ -35,7 +35,7 @@ export default function RecommendationExplanationScreen() {
           <HeroText className="text-lg font-bold text-neutral-900">
             We couldn&apos;t find this recommendation.
           </HeroText>
-          <AppButton label="Back to results" className="mt-6" onPress={() => router.replace('/player/recommend/results')} />
+          <AppButton label="Back to results" className="mt-6" onPress={() => router.replace('/player/results')} />
         </AppCard>
       </AppScreen>
     );

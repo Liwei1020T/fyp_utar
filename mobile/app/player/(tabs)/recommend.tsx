@@ -82,7 +82,7 @@ export default function RecommendationInputScreen() {
     setSubmitError(null);
 
     if (!token) {
-      router.push('/player/recommend/results');
+      router.push('/player/results');
       return;
     }
 
@@ -111,7 +111,7 @@ export default function RecommendationInputScreen() {
       setLiveRecommendationResults(
         mapRecommendationResponse(response, availableStrings),
       );
-      router.push('/player/recommend/results');
+      router.push('/player/results');
     } catch (error) {
       setSubmitError(
         error instanceof BackendApiError

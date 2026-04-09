@@ -36,6 +36,7 @@ export function AppScreen({
   eyebrow,
   headerRight,
   headerLeft,
+  footer,
   className,
   contentContainerClassName,
   tone = 'default',
@@ -70,73 +71,86 @@ export function AppScreen({
       style={{ backgroundColor: toneBackgrounds[tone] }}
       edges={['top', 'left', 'right', 'bottom']}
     >
-      {(title || headerRight || headerLeft) && (
-        <View className="px-5 pt-4">
-          <View
-            className={cn(
-              'w-full self-center rounded-[28px] border p-1 shadow-soft',
-              headerStyles[tone]
-            )}
-            style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
-          >
+      <View className="flex-1">
+        {(title || headerRight || headerLeft) && (
+          <View className="px-5 pt-4">
             <View
               className={cn(
-                'rounded-[24px] border px-4 py-3',
-                headerCoreStyles[tone]
+                'w-full self-center rounded-[28px] border p-1 shadow-soft',
+                headerStyles[tone]
               )}
+              style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
             >
-              <View className="flex-row items-center justify-between gap-4">
-                <View className="min-w-0 flex-1 flex-row items-center gap-3">
-                  {headerLeft}
-                  <View className="min-w-0 flex-1">
-                    {eyebrow ? (
-                      <HeroText className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
-                        {eyebrow}
-                      </HeroText>
-                    ) : null}
-                    {title ? (
-                      <HeroText className="text-[20px] font-bold tracking-tight text-neutral-950">
-                        {title}
-                      </HeroText>
-                    ) : null}
-                    {subtitle ? (
-                      <HeroText className="mt-0.5 text-[13px] leading-5 text-neutral-500">
-                        {subtitle}
-                      </HeroText>
-                    ) : null}
+              <View
+                className={cn(
+                  'rounded-[24px] border px-4 py-3',
+                  headerCoreStyles[tone]
+                )}
+              >
+                <View className="flex-row items-center justify-between gap-4">
+                  <View className="min-w-0 flex-1 flex-row items-center gap-3">
+                    {headerLeft}
+                    <View className="min-w-0 flex-1">
+                      {eyebrow ? (
+                        <HeroText className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
+                          {eyebrow}
+                        </HeroText>
+                      ) : null}
+                      {title ? (
+                        <HeroText className="text-[20px] font-bold tracking-tight text-neutral-950">
+                          {title}
+                        </HeroText>
+                      ) : null}
+                      {subtitle ? (
+                        <HeroText className="mt-0.5 text-[13px] leading-5 text-neutral-500">
+                          {subtitle}
+                        </HeroText>
+                      ) : null}
+                    </View>
                   </View>
+                  <View>{headerRight}</View>
                 </View>
-                <View>{headerRight}</View>
               </View>
             </View>
           </View>
-        </View>
-      )}
-      {scrollable ? (
-        <ScrollView
-          className={cn('flex-1', className)}
-          keyboardShouldPersistTaps="handled"
-          scrollIndicatorInsets={{ bottom: bottomContentInset }}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomContentInset }}
-          {...props}
-        >
-          <View
-            className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
-            style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
+        )}
+        {scrollable ? (
+          <ScrollView
+            className={cn('flex-1', className)}
+            keyboardShouldPersistTaps="handled"
+            scrollIndicatorInsets={{ bottom: bottomContentInset }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomContentInset }}
+            {...props}
           >
-            {children}
+            <View
+              className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
+              style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
+            >
+              {children}
+            </View>
+          </ScrollView>
+        ) : (
+          <View className={cn('flex-1', className)} {...props}>
+            <View
+              className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
+              style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
+            >
+              {children}
+            </View>
           </View>
-        </ScrollView>
-      ) : (
-        <View className={cn('flex-1', className)} {...props}>
-          <View
-            className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
-            style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
+        )}
+        {footer && (
+          <View 
+            className="w-full self-center px-5"
+            style={{ 
+              maxWidth: appLayoutMetrics.contentMaxWidth,
+              marginBottom: (React.useContext(BottomTabBarHeightContext) ?? 0) + 16,
+            }}
           >
-            {children}
+            {footer}
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </SafeAreaView>
   );
 }
