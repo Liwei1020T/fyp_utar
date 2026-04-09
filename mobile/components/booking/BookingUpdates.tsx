@@ -22,7 +22,7 @@ export function BookingUpdates({ updates }: BookingUpdatesProps) {
     return (
       <AppCard variant="subtle" padding="md">
         <HeroText className="text-sm leading-6 text-neutral-600">
-          No booking photos or comments have been added yet.
+          No service updates yet. The shop will post progress here after check-in.
         </HeroText>
       </AppCard>
     );
@@ -35,7 +35,7 @@ export function BookingUpdates({ updates }: BookingUpdatesProps) {
           <View className="gap-3">
             <View className="flex-row items-center justify-between gap-3">
               <AppChip
-                label={item.authorRole === 'admin' ? 'Admin update' : 'Player update'}
+                label={item.authorRole === 'admin' ? 'Admin update' : 'Player note'}
                 variant={item.authorRole === 'admin' ? 'primary' : 'secondary'}
               />
               <HeroText className="text-xs font-medium text-neutral-500">
@@ -50,7 +50,7 @@ export function BookingUpdates({ updates }: BookingUpdatesProps) {
             {item.photoUrl ? (
               <Image
                 source={{ uri: item.photoUrl }}
-                className="h-48 w-full rounded-[24px] bg-neutral-100"
+                className="h-40 w-full rounded-[24px] bg-neutral-100"
                 resizeMode="cover"
                 accessibilityLabel={item.photoOriginalName ?? 'Booking update photo'}
               />
