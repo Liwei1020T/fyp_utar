@@ -40,7 +40,7 @@ const getNextStep = (status: BookingStatus, date?: string, time?: string): strin
     case 'ready_for_collection':
       return 'Next: Ready for collection';
     case 'completed':
-      return `Completed on ${date ? formatDateLabel(date) : 'scheduled date'}`;
+      return `Completed on ${date || 'scheduled date'}`;
     case 'cancelled':
       return 'This booking was cancelled';
     case 'pending_payment':
@@ -114,7 +114,7 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
   const StatusIcon = stripTone.Icon;
   const stringSpec = `${stringLabel} • ${booking.requestedTension} lbs`;
   const racketName = `${booking.racketBrand} ${booking.racketModel}`;
-  const bookingDateLabel = formatDateLabel(booking.dropOffDate);
+  const bookingDateLabel = booking.dropOffDate || formatDateLabel(booking.dropOffDate);
   const priceLabel = getBookingPriceLabel(booking);
   const content = (
     <AppCard variant="elevated" padding="sm">
@@ -131,9 +131,9 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
           />
         </View>
 
-        <View className="flex-row items-start gap-3">
-          <View className="min-w-0 flex-1">
-            <HeroText className="text-base font-bold tracking-tight text-neutral-950">
+        <View className="gap-1.5">
+          <View className="min-w-0">
+            <HeroText className="text-[17px] font-bold tracking-tight text-neutral-950">
               {racketName}
             </HeroText>
             <HeroText className="mt-0.5 text-[12px] font-medium text-neutral-600">
@@ -145,22 +145,22 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
               </HeroText>
             ) : null}
           </View>
-
-          <View className="min-w-[110px] items-end rounded-2xl bg-neutral-50 px-3 py-2">
-            <HeroText className="text-[13px] font-bold text-neutral-900">
+          <View className="flex-row items-center gap-1.5">
+            <HeroText className="text-[12px] font-semibold text-neutral-700">
               {priceLabel}
             </HeroText>
-            <View className="mt-1 flex-row items-center gap-1.5">
-              <CalendarDays size={10} color="#94A3B8" />
-              <HeroText className="text-[10px] font-semibold text-neutral-500">
-                {bookingDateLabel}
-              </HeroText>
-            </View>
+            <HeroText className="text-[11px] font-semibold text-neutral-300">
+              •
+            </HeroText>
+            <CalendarDays size={11} color="#94A3B8" />
+            <HeroText className="text-[11px] font-semibold text-neutral-500">
+              {bookingDateLabel}
+            </HeroText>
           </View>
         </View>
 
         <View
-          className={`flex-row items-center gap-2 rounded-[18px] border px-3 py-2 ${stripTone.container}`}
+          className={`mt-0.5 flex-row items-center gap-2 rounded-[18px] border px-3 py-2 ${stripTone.container}`}
         >
           <StatusIcon size={14} color={stripTone.iconColor} />
           <HeroText className={`flex-1 text-[11px] font-semibold ${stripTone.text}`}>
