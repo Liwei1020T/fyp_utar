@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CalendarClock3, Route, TimerReset } from 'lucide-react-native';
+import { ArrowRight, CalendarClock, Clock3 } from 'lucide-react-native';
 import { View } from 'react-native';
 import { AppCard } from '../../../../components/ui/AppCard';
 import { AppChip } from '../../../../components/ui/AppChip';
@@ -114,7 +114,7 @@ export default function BookingTrackingScreen() {
             <View className="flex-row flex-wrap gap-2">
               <View className="min-w-[31%] flex-1 rounded-[18px] bg-[#F7FAFE] px-3 py-3">
                 <View className="flex-row items-center gap-2">
-                  <Route size={15} color="#2F64B6" />
+                  <Clock3 size={15} color="#2F64B6" />
                   <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
                     Current status
                   </HeroText>
@@ -126,7 +126,7 @@ export default function BookingTrackingScreen() {
 
               <View className="min-w-[31%] flex-1 rounded-[18px] bg-[#F7FAFE] px-3 py-3">
                 <View className="flex-row items-center gap-2">
-                  <TimerReset size={15} color="#2F64B6" />
+                  <ArrowRight size={15} color="#2F64B6" />
                   <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
                     Next expected step
                   </HeroText>
@@ -138,7 +138,7 @@ export default function BookingTrackingScreen() {
 
               <View className="min-w-[31%] flex-1 rounded-[18px] bg-[#F7FAFE] px-3 py-3">
                 <View className="flex-row items-center gap-2">
-                  <CalendarClock3 size={15} color="#2F64B6" />
+                  <CalendarClock size={15} color="#2F64B6" />
                   <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
                     Drop-off time
                   </HeroText>
