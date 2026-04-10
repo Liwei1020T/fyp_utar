@@ -117,7 +117,7 @@ export default function PlayerProfileScreen() {
                 <AppChip
                   key={chip}
                   label={chip}
-                  variant="primary"
+                  variant={chip === `${user.preferredTension} lbs` ? 'secondary' : 'primary'}
                 />
               ))}
             </View>
