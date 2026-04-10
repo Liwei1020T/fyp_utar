@@ -228,7 +228,7 @@ export default function PlayerHomeScreen() {
             <View className="flex-row gap-3">
               <View className="flex-1 rounded-[18px] bg-[#F7FAFD] px-3 py-2.5">
                 <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                  {latestBooking.status === 'ready_for_collection' ? 'Collected by' : 'Expected'}
+                  {latestBooking.status === 'ready_for_collection' ? 'Pickup by' : 'Expected ready'}
                 </HeroText>
                 <HeroText className="mt-1 text-[13px] font-semibold text-neutral-900">
                   {formatDateLabel(latestBooking.dropOffDate)}
@@ -236,7 +236,7 @@ export default function PlayerHomeScreen() {
               </View>
               <View className="flex-1 rounded-[18px] bg-[#F7FAFD] px-3 py-2.5">
                 <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                  Quote
+                  Price status
                 </HeroText>
                 <HeroText className="mt-1 text-[13px] font-semibold text-primary-700">
                   {getBookingPriceLabel(latestBooking)}
