@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Image, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CalendarClock, ChevronLeft, Store } from 'lucide-react-native';
+import { CalendarClock, Minus, Plus, Store, Upload } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -17,7 +17,6 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { SlotPicker } from '../../../components/booking/SlotPicker';
 import {
   useAppStore,
-  useBusinessHoursState,
   useBackendAccessToken,
   useCurrentUser,
   useStrings,
@@ -46,7 +45,6 @@ export default function NewBookingScreen() {
   const strings = useStrings();
   const token = useBackendAccessToken();
   const setBookingDraft = useAppStore((state) => state.setBookingDraft);
-  const businessHours = useBusinessHoursState();
 
   if (!user || user.role !== 'player') {
     return null;
@@ -88,7 +86,8 @@ export default function NewBookingScreen() {
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
   const selectedAdmin = getAdminById(adminId);
-  const adminHours = businessHours.find((item) => item.adminId === adminId);
+  const recommendedMin = selectedString?.recommendedTension[0] ?? 24;
+  const recommendedMax = selectedString?.recommendedTension[1] ?? 29;
 
   const {
     control,
@@ -103,6 +102,7 @@ export default function NewBookingScreen() {
       notes: '',
     },
   });
+  const watchedTension = useWatch({ control, name: 'requestedTension' });
 
   useEffect(() => {
     if (!token) {
@@ -220,56 +220,60 @@ export default function NewBookingScreen() {
     return null;
   }
 
+  const tensionValue = Number.isFinite(watchedTension) ? watchedTension : recommendedMin;
+  const selectedDateLabel = formatDateLabel(selectedSlot?.date ?? selectedDate);
+  const selectedTimeLabel = selectedSlot?.label ?? 'Select a slot';
+  const slotSupportCopy = slotsError
+    ? `${slotsError} Showing local fallback slots.`
+    : 'Times reflect current shop availability.';
+  const selectedCategoryLabel =
+    selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
+
   return (
     <AppScreen
       headerVariant="flow"
+      compactHeader
       title="New booking"
-      subtitle="Configure the stringing request and reserve a believable drop-off window."
+      subtitle="Configure your restring request."
       showBackButton
       onBackPress={() => router.back()}
     >
-      <AppCard variant="highlighted" className="rounded-[32px]" padding="lg">
+      <AppCard variant="highlighted" className="rounded-[28px]" padding="md">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
           Selected string
         </HeroText>
-        <HeroText className="mt-2 text-[26px] font-bold tracking-tight text-neutral-950">
+        <HeroText className="mt-1.5 text-[22px] font-bold tracking-tight text-neutral-950">
           {selectedString.brand} {selectedString.model}
         </HeroText>
-        <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-          Recommended at {selectedString.recommendedTension[0]} to {selectedString.recommendedTension[1]} lbs.
+        <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+          Recommended at {recommendedMin}–{recommendedMax} lbs
         </HeroText>
-        <View className="mt-4 flex-row flex-wrap gap-2">
+        <View className="mt-3 flex-row flex-wrap gap-2">
           <AppChip label={selectedString.gauge} variant="neutral" />
-          <AppChip label={selectedString.category} variant="primary" />
+          <AppChip label={selectedCategoryLabel} variant="primary" />
         </View>
       </AppCard>
 
-      <AppSection eyebrow="Store" title="Service desk">
-        <AppCard variant="highlighted" padding="md">
-          <View className="flex-row items-start gap-4">
-            <View className="h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50">
+      <AppSection eyebrow="Store" title="Service desk" variant="compact">
+        <AppCard variant="elevated" padding="md">
+          <View className="flex-row items-start gap-3">
+            <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50">
               <Store size={20} color="#2F64B6" />
             </View>
             <View className="flex-1">
-              <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
+              <HeroText className="text-[17px] font-bold tracking-tight text-neutral-950">
                 {selectedAdmin?.businessName}
               </HeroText>
-              <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
-                {selectedAdmin?.city} • Avg turnaround {selectedAdmin?.averageTurnaroundHours} hours
-              </HeroText>
-              <HeroText className="mt-2 text-xs uppercase tracking-[0.18em] text-primary-700">
-                Single-store prototype
+              <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+                {selectedAdmin?.city} · Avg turnaround {selectedAdmin?.averageTurnaroundHours} hours
               </HeroText>
             </View>
           </View>
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Setup" title="Racket and tension">
-        <AppCard variant="elevated" padding="lg">
-          <HeroText className="mb-3 text-sm font-semibold text-neutral-900">
-            Enter the racket details for this booking.
-          </HeroText>
+      <AppSection eyebrow="Setup" title="Racket and tension" variant="compact">
+        <AppCard variant="elevated" padding="md">
           <Controller
             control={control}
             name="racketBrand"
@@ -300,15 +304,51 @@ export default function NewBookingScreen() {
             control={control}
             name="requestedTension"
             render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Requested tension"
-                placeholder="26"
-                keyboardType="numeric"
-                value={String(value)}
-                onChangeText={onChange}
-                error={errors.requestedTension?.message}
-                helperText={selectedString.tensionNote}
-              />
+              <View className="mb-4">
+                <HeroText className="mb-2 ml-1 text-sm font-semibold text-foreground">
+                  Requested tension
+                </HeroText>
+                <View className="rounded-[24px] border border-separator bg-surface-secondary p-1 shadow-soft">
+                  <View className="rounded-[20px] border border-field-border bg-field-background px-4 py-3">
+                    <View className="flex-row items-center justify-between gap-3">
+                      <AppIconButton
+                        icon={<Minus size={16} color="#2F64B6" />}
+                        accessibilityLabel="Decrease requested tension"
+                        variant="surface"
+                        onPress={() => onChange(Math.max(18, Number(value) - 1))}
+                      />
+                      <View className="items-center">
+                        <HeroText className="text-[28px] font-bold tracking-tight text-neutral-950">
+                          {value} lbs
+                        </HeroText>
+                        <HeroText className="mt-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
+                          Requested tension
+                        </HeroText>
+                      </View>
+                      <AppIconButton
+                        icon={<Plus size={16} color="#2F64B6" />}
+                        accessibilityLabel="Increase requested tension"
+                        variant="surface"
+                        onPress={() => onChange(Math.min(32, Number(value) + 1))}
+                      />
+                    </View>
+                    <AppInput
+                      className="mb-0 mt-3"
+                      label="Set exact value"
+                      placeholder="24"
+                      keyboardType="numeric"
+                      value={String(value)}
+                      onChangeText={onChange}
+                      error={errors.requestedTension?.message}
+                      containerClassName="border-0 bg-transparent p-0 shadow-none"
+                      innerContainerClassName="min-h-[44px] rounded-[18px] px-3 py-0"
+                    />
+                  </View>
+                </View>
+                <HeroText className="mt-2 ml-1 text-xs leading-5 text-muted">
+                  Recommended range: {recommendedMin}–{recommendedMax} lbs based on your saved profile.
+                </HeroText>
+              </View>
             )}
           />
           <Controller
@@ -316,29 +356,29 @@ export default function NewBookingScreen() {
             name="notes"
             render={({ field: { onChange, value } }) => (
               <AppInput
-                label="Notes"
+                label="Notes (optional)"
                 placeholder="Knots, logo alignment, feel preference, or special request..."
                 value={value}
                 onChangeText={onChange}
                 multiline
-                inputClassName="min-h-24"
+                inputClassName="min-h-20"
               />
             )}
           />
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Drop-off" title="Pick your date and time">
+      <AppSection eyebrow="Drop-off" title="Date and time" variant="compact">
         <View className="gap-4">
-          {slotsError ? (
-            <AppCard variant="highlighted" padding="md">
+          {slotsError && !isLoadingSlots ? (
+            <AppCard variant="highlighted" padding="sm">
               <HeroText className="text-sm leading-6 text-neutral-700">
-                {slotsError} Showing local fallback slots so you can continue the prototype flow.
+                {slotSupportCopy}
               </HeroText>
             </AppCard>
           ) : null}
           {isLoadingSlots ? (
-            <AppCard variant="subtle" padding="md">
+            <AppCard variant="subtle" padding="sm">
               <HeroText className="text-sm leading-6 text-neutral-600">
                 Loading live backend slots from the store business hours...
               </HeroText>
@@ -356,9 +396,9 @@ export default function NewBookingScreen() {
                   setSelectedSlotId(
                     sourceSlots.find(
                       (item) =>
-                        item.adminId === adminId
-                        && item.date === date
-                        && item.availableSpots > 0
+                        item.adminId === adminId &&
+                        item.date === date &&
+                        item.availableSpots > 0
                     )?.id
                   );
                   setSlotError(null);
@@ -375,41 +415,56 @@ export default function NewBookingScreen() {
             }}
           />
           {selectedSlot ? null : (
-            <AppCard variant="highlighted" padding="md">
+            <AppCard variant="highlighted" padding="sm">
               <HeroText className="text-sm leading-6 text-neutral-700">
                 {slotError ?? 'No drop-off slots are available on this date. Pick another date to continue.'}
               </HeroText>
             </AppCard>
           )}
-          <AppCard variant="subtle" padding="md">
+          <AppCard variant="subtle" padding="sm">
             <View className="flex-row items-center gap-3">
               <CalendarClock size={18} color="#2F64B6" />
-              <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                Available times are shown as if driven by admin business hours. Current schedule: {adminHours?.days.find((day) => day.day === selectedSlot?.dayLabel)?.openTime} to {adminHours?.days.find((day) => day.day === selectedSlot?.dayLabel)?.closeTime} on {selectedSlot?.dayLabel}.
+              <HeroText className="flex-1 text-sm leading-5 text-neutral-600">
+                {slotSupportCopy}
               </HeroText>
             </View>
           </AppCard>
         </View>
       </AppSection>
 
-      <AppSection eyebrow="Photo" title="Optional racket photo">
-        <AppCard variant="elevated" padding="lg">
-          <HeroText className="text-sm leading-6 text-neutral-600">
-            Add a photo of the racket or current string condition so the admin can review it with the booking.
+      <AppSection eyebrow="Summary" title="Booking summary" variant="compact">
+        <AppCard variant="subtle" padding="md">
+          <HeroText className="text-[15px] font-semibold tracking-tight text-neutral-950">
+            {selectedString.brand} {selectedString.model} · {tensionValue} lbs
+          </HeroText>
+          <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+            {selectedDateLabel} · {selectedTimeLabel}
+          </HeroText>
+          <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+            {selectedAdmin?.businessName}
+          </HeroText>
+        </AppCard>
+      </AppSection>
+
+      <AppSection eyebrow="Photo" title="Optional photo" variant="compact">
+        <AppCard variant="elevated" padding="md">
+          <HeroText className="text-sm leading-5 text-neutral-600">
+            Add a racket photo for admin review.
           </HeroText>
           {bookingPhoto ? (
             <Image
               source={{ uri: bookingPhoto.uri }}
-              className="mt-4 h-48 w-full rounded-[24px] bg-neutral-100"
+              className="mt-3 h-32 w-full rounded-[20px] bg-neutral-100"
               resizeMode="cover"
             />
           ) : null}
-          <View className="mt-4 flex-row gap-3">
+          <View className="mt-3 flex-row gap-3">
             <AppButton
               label={bookingPhoto ? 'Change photo' : 'Upload photo'}
               variant="outline"
               className="flex-1"
               onPress={pickBookingPhoto}
+              leadingIcon={<Upload size={16} color="#4B5563" />}
             />
             {bookingPhoto ? (
               <AppButton
@@ -423,7 +478,7 @@ export default function NewBookingScreen() {
         </AppCard>
       </AppSection>
 
-      <View className="mb-12 mt-8">
+      <View className="mb-12 mt-6">
         <AppButton
           label="Continue to summary"
           size="lg"
