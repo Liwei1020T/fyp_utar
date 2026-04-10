@@ -1,8 +1,13 @@
 import React, { useEffect } from 'react';
 import { Redirect, useSegments } from 'expo-router';
+import { View } from 'react-native';
 import { RoleGuard } from '../../components/roles/RoleGuard';
 import { useAppStore, useBackendAccessToken, useCurrentUser } from '../../store/appStore';
-import { backendApi } from '../../services/backendApi';
+import { appChromeColors } from '../../components/ui/theme';
+import {
+  backendApi,
+  isBackendAuthError,
+} from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
   mapBackendInventoryStringToStringItem,
@@ -18,9 +23,11 @@ const DEFERRED_ADMIN_SEGMENTS = new Set([
 
 export default function AdminLayout() {
   const segments = useSegments();
+  const hasHydrated = useAppStore((state) => state.hasHydrated);
   const token = useBackendAccessToken();
   const user = useCurrentUser();
   const sessionSource = useAppStore((state) => state.sessionSource);
+  const logout = useAppStore((state) => state.logout);
   const setBackendAdminSession = useAppStore(
     (state) => state.setBackendAdminSession,
   );
@@ -28,7 +35,7 @@ export default function AdminLayout() {
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
 
   useEffect(() => {
-    if (sessionSource !== 'backend' || !token || user?.role !== 'admin') {
+    if (!hasHydrated || sessionSource !== 'backend' || !token || user?.role !== 'admin') {
       return;
     }
 
@@ -62,6 +69,10 @@ export default function AdminLayout() {
         setLiveStrings(liveStrings);
         setLiveBookings(liveBookings);
       } catch (error) {
+        if (isBackendAuthError(error)) {
+          logout();
+          return;
+        }
         console.warn('Failed to hydrate live admin data', error);
       }
     };
@@ -72,6 +83,8 @@ export default function AdminLayout() {
       cancelled = true;
     };
   }, [
+    hasHydrated,
+    logout,
     sessionSource,
     setBackendAdminSession,
     setLiveBookings,
@@ -79,6 +92,10 @@ export default function AdminLayout() {
     token,
     user?.role,
   ]);
+
+  if (!hasHydrated) {
+    return <View style={{ flex: 1, backgroundColor: appChromeColors.page }} />;
+  }
 
   if (segments.some((segment) => DEFERRED_ADMIN_SEGMENTS.has(segment))) {
     return <Redirect href="/admin" />;

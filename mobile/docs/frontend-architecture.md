@@ -87,6 +87,7 @@ Responsibilities:
 - wraps the app in `GestureHandlerRootView`
 - creates the global `QueryClient`
 - injects `HeroUINativeProvider`
+- revalidates persisted backend sessions before auth redirects resolve
 - renders an Expo Router `Stack` with hidden native headers
 
 This file is the composition root for the frontend.
@@ -180,7 +181,7 @@ The frontend’s mutable source of truth is `store/appStore.ts`.
 
 The store owns:
 
-- current session state (persisted via Zustand middleware to `localStorage` for web)
+- current session state, including refresh-time backend session bootstrap state
 - backend player session bridge
 - live player profile, strings, bookings, and recommendation results
 - users
@@ -203,7 +204,7 @@ The store owns:
 The store handles all user-visible prototype mutations:
 
 - auth login, quick login, logout, player registration
-- backend player session hydration and persistence
+- backend player session hydration, refresh-time revalidation, and persistence
 - player profile updates
 - booking draft creation and clearing
 - full booking payment flow

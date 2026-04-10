@@ -166,6 +166,7 @@ interface AppStoreState {
   login: (email: string) => UserRole | null;
   loginAsUser: (userId: string) => UserRole | null;
   registerPlayer: (input: RegisterPlayerInput) => string;
+  markHydrated: () => void;
   setBackendPlayerSession: (input: {
     accessToken: string;
     player: PlayerProfile;
@@ -250,10 +251,41 @@ function extractPersistedState(state: AppStoreState): PersistedAppState {
   };
 }
 
-const persistedState = readPersistedState();
+function normalizePersistedState(
+  state: Partial<PersistedAppState>,
+): Partial<PersistedAppState> {
+  if (state.sessionSource !== 'backend') {
+    return state;
+  }
+
+  if (
+    typeof state.backendAccessToken === 'string' &&
+    state.backendAccessToken.trim().length > 0
+  ) {
+    return state;
+  }
+
+  return {
+    ...state,
+    sessionSource: null,
+    backendAccessToken: null,
+    currentUserId: null,
+    livePlayerProfile: null,
+    liveAdminProfile: null,
+    liveStrings: [],
+    liveBookings: [],
+    liveRecommendationResults: [],
+  };
+}
+
+const persistedState = normalizePersistedState(readPersistedState());
+const requiresBackendSessionBootstrap =
+  persistedState.sessionSource === 'backend' &&
+  typeof persistedState.backendAccessToken === 'string' &&
+  persistedState.backendAccessToken.trim().length > 0;
 
 export const useAppStore = create<AppStoreState>((set, get) => ({
-  hasHydrated: true,
+  hasHydrated: !requiresBackendSessionBootstrap,
   sessionSource: persistedState.sessionSource ?? null,
   backendAccessToken: persistedState.backendAccessToken ?? null,
   currentUserId: persistedState.currentUserId ?? null,
@@ -277,6 +309,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   compareSelection: [],
   bookingDraft: null,
   lastPaymentOutcome: null,
+  markHydrated: () => set({ hasHydrated: true }),
   login: (email) => {
     const user = get().users.find((item) => item.email.toLowerCase() === email.toLowerCase());
 
@@ -285,6 +318,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     }
 
     set({
+      hasHydrated: true,
       currentUserId: user.id,
       sessionSource: 'mock',
       backendAccessToken: null,
@@ -304,6 +338,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     }
 
     set({
+      hasHydrated: true,
       currentUserId: user.id,
       sessionSource: 'mock',
       backendAccessToken: null,
@@ -351,6 +386,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     };
 
     set({
+      hasHydrated: true,
       users: [newPlayer, ...state.users],
       currentUserId: newPlayer.id,
       sessionSource: 'mock',
@@ -381,6 +417,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   },
   setBackendPlayerSession: ({ accessToken, player }) =>
     set({
+      hasHydrated: true,
       sessionSource: 'backend',
       backendAccessToken: accessToken,
       currentUserId: player.id,
@@ -390,6 +427,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     }),
   setBackendAdminSession: ({ accessToken, admin }) =>
     set({
+      hasHydrated: true,
       sessionSource: 'backend',
       backendAccessToken: accessToken,
       currentUserId: admin.id,
@@ -408,6 +446,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   clearLiveRecommendationResults: () => set({ liveRecommendationResults: [] }),
   logout: () => {
     set({
+      hasHydrated: true,
       sessionSource: null,
       backendAccessToken: null,
       currentUserId: null,

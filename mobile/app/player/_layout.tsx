@@ -1,9 +1,18 @@
 import React from 'react';
 import { useEffect } from 'react';
 import { Redirect, useSegments } from 'expo-router';
+import { View } from 'react-native';
 import { RoleGuard } from '../../components/roles/RoleGuard';
-import { useAppStore, useBackendAccessToken } from '../../store/appStore';
-import { backendApi } from '../../services/backendApi';
+import { appChromeColors } from '../../components/ui/theme';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useCurrentUser,
+} from '../../store/appStore';
+import {
+  backendApi,
+  isBackendAuthError,
+} from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
   mapBackendStringToStringItem,
@@ -23,8 +32,11 @@ const DEFERRED_PLAYER_SEGMENTS = new Set([
 
 export default function PlayerLayout() {
   const segments = useSegments();
+  const user = useCurrentUser();
+  const hasHydrated = useAppStore((state) => state.hasHydrated);
   const token = useBackendAccessToken();
   const sessionSource = useAppStore((state) => state.sessionSource);
+  const logout = useAppStore((state) => state.logout);
   const setBackendPlayerSession = useAppStore(
     (state) => state.setBackendPlayerSession,
   );
@@ -32,7 +44,7 @@ export default function PlayerLayout() {
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
 
   useEffect(() => {
-    if (sessionSource !== 'backend' || !token) {
+    if (!hasHydrated || sessionSource !== 'backend' || !token || user?.role !== 'player') {
       return;
     }
 
@@ -66,6 +78,10 @@ export default function PlayerLayout() {
         setLiveStrings(liveStrings);
         setLiveBookings(liveBookings);
       } catch (error) {
+        if (isBackendAuthError(error)) {
+          logout();
+          return;
+        }
         console.warn('Failed to hydrate live player data', error);
       }
     };
@@ -76,12 +92,19 @@ export default function PlayerLayout() {
       cancelled = true;
     };
   }, [
+    hasHydrated,
+    logout,
     sessionSource,
     setBackendPlayerSession,
     setLiveBookings,
     setLiveStrings,
     token,
+    user?.role,
   ]);
+
+  if (!hasHydrated) {
+    return <View style={{ flex: 1, backgroundColor: appChromeColors.page }} />;
+  }
 
   if (segments.some((segment) => DEFERRED_PLAYER_SEGMENTS.has(segment))) {
     return <Redirect href="/player" />;

@@ -36,6 +36,13 @@ export class BackendApiError extends Error {
   }
 }
 
+export function isBackendAuthError(error: unknown): error is BackendApiError {
+  return (
+    error instanceof BackendApiError &&
+    (error.statusCode === 401 || error.statusCode === 403)
+  );
+}
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH';
   body?: unknown;
