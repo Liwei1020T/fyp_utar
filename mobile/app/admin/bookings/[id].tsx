@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, View } from 'react-native';
+import { Alert, Image, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -266,8 +266,9 @@ export default function AdminBookingDetailScreen() {
   const priceState = getPriceStateLabel(booking);
   const workflowCTA = getWorkflowActionLabel(status);
   const isWorkflowUnchanged = status === booking.status;
+  const isBookingCompleted = booking.status === 'completed';
 
-  const saveStatus = async () => {
+  const applyStatusChange = async () => {
     setError(null);
 
     if (status === booking.status) {
@@ -290,14 +291,39 @@ export default function AdminBookingDetailScreen() {
         bookings.map((item) => (item.id === mapped.id ? mapped : item)),
       );
     } catch (saveError) {
-      setError(
-        saveError instanceof BackendApiError
-          ? saveError.message
-          : 'Failed to update booking status.',
-      );
+      const message = saveError instanceof BackendApiError
+        ? saveError.message
+        : 'Failed to update booking status.';
+      setError(message);
+      Alert.alert('Status update failed', message);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const saveStatus = () => {
+    setError(null);
+
+    if (isBookingCompleted) {
+      Alert.alert(
+        'Booking already completed',
+        'Completed bookings are locked so the workflow cannot be changed accidentally.',
+      );
+      return;
+    }
+
+    if (status === booking.status) {
+      return;
+    }
+
+    Alert.alert(
+      'Confirm status update',
+      `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Confirm', onPress: () => void applyStatusChange() },
+      ],
+    );
   };
 
   const pickUpdatePhoto = async () => {
@@ -433,7 +459,7 @@ export default function AdminBookingDetailScreen() {
                   key={item}
                   variant={isCurrent || isSelected ? 'highlighted' : 'subtle'}
                   padding="sm"
-                  onPress={() => setStatus(item)}
+                  onPress={isBookingCompleted ? undefined : () => setStatus(item)}
                   className="min-w-[148px] flex-1"
                 >
                   <View className="gap-1.5">
@@ -446,7 +472,13 @@ export default function AdminBookingDetailScreen() {
                       {isCurrent ? <CheckCircle2 size={15} color="#2F64B6" /> : null}
                     </View>
                     <HeroText className="text-[11px] font-medium leading-4 text-neutral-500">
-                      {isCurrent ? 'Current workflow state' : isSelected ? 'Selected next state' : 'Tap to select'}
+                      {isBookingCompleted
+                        ? 'Workflow locked'
+                        : isCurrent
+                          ? 'Current workflow state'
+                          : isSelected
+                            ? 'Selected next state'
+                            : 'Tap to select'}
                     </HeroText>
                   </View>
                 </AppCard>
@@ -460,13 +492,19 @@ export default function AdminBookingDetailScreen() {
             </HeroText>
           ) : null}
 
+          {isBookingCompleted ? (
+            <HeroText className="text-sm font-semibold text-neutral-500">
+              This booking is completed. Status changes are disabled to prevent accidental edits.
+            </HeroText>
+          ) : null}
+
           <AppButton
             label={isWorkflowUnchanged ? `Current status: ${formatBookingStatus(booking.status)}` : workflowCTA}
             size="lg"
             className="mt-1"
             onPress={saveStatus}
             isLoading={isSaving}
-            isDisabled={isWorkflowUnchanged}
+            isDisabled={isWorkflowUnchanged || isBookingCompleted}
           />
         </View>
       </AppSection>
