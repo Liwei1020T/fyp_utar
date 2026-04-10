@@ -97,31 +97,45 @@ export default function AdminDashboardScreen() {
       }
     >
       <View className="gap-5">
-        <AppCard variant="dark" className="rounded-[30px]" padding="md">
-          <View className="flex-row items-start justify-between gap-4">
-            <View className="min-w-0 flex-1">
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-100">
-                Counter desk
-              </HeroText>
-              <HeroText className="mt-1 text-[22px] font-bold tracking-tight text-white">
-                Run today&apos;s drop-offs and service queue.
-              </HeroText>
-              <HeroText className="mt-2 text-sm leading-5 text-primary-100">
-                Keep high-frequency actions within one tap.
-              </HeroText>
-            </View>
-            <AppChip
-              label={`${awaitingDropOffCount} awaiting`}
-              variant="warning"
-              className="mt-1"
+        <AppSection eyebrow="Today" title="Operational snapshot" variant="compact">
+          <View className="flex-row flex-wrap gap-3">
+            <MetricStatCard
+              title="Today bookings"
+              value={String(adminBookings.length)}
+              icon={<CalendarRange size={20} color="#2F64B6" />}
+            />
+            <MetricStatCard
+              title="Awaiting drop-off"
+              value={String(awaitingDropOffCount)}
+              icon={<Undo2 size={20} color="#B67D21" />}
+              accentClassName="bg-warning-50"
+            />
+            <MetricStatCard
+              title="In progress"
+              value={String(inProgressCount)}
+              icon={<TimerReset size={20} color="#22766D" />}
+              accentClassName="bg-[#E4F2F0]"
+            />
+            <MetricStatCard
+              title="Ready pickup"
+              value={String(readyForCollectionCount)}
+              icon={<Store size={20} color="#6550B8" />}
+              accentClassName="bg-[#ECE7FA]"
             />
           </View>
-        </AppCard>
+        </AppSection>
 
         <AppSection
           eyebrow="Primary actions"
           title="Start with the counter flow"
           subtitle="Move the most common shop tasks to the top."
+          rightAction={
+            <AppChip
+              label={`${awaitingDropOffCount} awaiting`}
+              variant="warning"
+              className="mt-1"
+            />
+          }
           variant="compact"
         >
           <View className="gap-3">
@@ -163,34 +177,6 @@ export default function AdminDashboardScreen() {
                 </AppCard>
               );
             })}
-          </View>
-        </AppSection>
-
-        <AppSection eyebrow="Today" title="Operational snapshot" variant="compact">
-          <View className="flex-row flex-wrap gap-3">
-            <MetricStatCard
-              title="Today bookings"
-              value={String(adminBookings.length)}
-              icon={<CalendarRange size={20} color="#2F64B6" />}
-            />
-            <MetricStatCard
-              title="Awaiting drop-off"
-              value={String(awaitingDropOffCount)}
-              icon={<Undo2 size={20} color="#B67D21" />}
-              accentClassName="bg-warning-50"
-            />
-            <MetricStatCard
-              title="In progress"
-              value={String(inProgressCount)}
-              icon={<TimerReset size={20} color="#22766D" />}
-              accentClassName="bg-[#E4F2F0]"
-            />
-            <MetricStatCard
-              title="Ready pickup"
-              value={String(readyForCollectionCount)}
-              icon={<Store size={20} color="#6550B8" />}
-              accentClassName="bg-[#ECE7FA]"
-            />
           </View>
         </AppSection>
 
