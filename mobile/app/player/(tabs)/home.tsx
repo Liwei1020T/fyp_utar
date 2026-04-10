@@ -110,16 +110,16 @@ export default function PlayerHomeScreen() {
           </View>
 
           <View className="mt-4 flex-row gap-2.5">
-            <View className="flex-1 rounded-[18px] border border-white/10 bg-white/5 px-3 py-2.5">
-              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-200/70">
+            <View className="flex-1 rounded-[18px] border border-white/18 bg-white/8 px-3 py-2.5">
+              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-100/75">
                 Tension
               </HeroText>
               <HeroText className="mt-1 text-[17px] font-bold tracking-[-0.02em] text-white">
                 {user.preferredTension} lbs
               </HeroText>
             </View>
-            <View className="flex-1 rounded-[18px] border border-white/10 bg-white/5 px-3 py-2.5">
-              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-200/70">
+            <View className="flex-1 rounded-[18px] border border-white/18 bg-white/8 px-3 py-2.5">
+              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-100/75">
                 Bookings
               </HeroText>
               <HeroText className="mt-1 text-[17px] font-bold tracking-[-0.02em] text-white">
@@ -132,7 +132,7 @@ export default function PlayerHomeScreen() {
             label="Generate Recommendation"
             variant="primary"
             size="md"
-            className="mt-4 w-full rounded-[18px]"
+            className="mt-4 w-full rounded-[18px] border-primary-700 bg-primary-700 shadow-[0_14px_30px_rgba(20,35,60,0.22)]"
             trailingIcon={<ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />}
             onPress={() => router.push('/player/recommend')}
           />

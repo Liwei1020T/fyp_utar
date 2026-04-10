@@ -155,16 +155,16 @@ export default function RecommendationInputScreen() {
         </View>
 
         <View className="mt-4 flex-row gap-2">
-          <View className="flex-1 rounded-2xl border border-white/10 bg-white/5 p-3">
-            <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/60">
+          <View className="flex-1 rounded-2xl border border-white/18 bg-white/8 p-3">
+            <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/75">
               Tension
             </HeroText>
             <HeroText className="mt-1 text-base font-bold text-white">
               {user.preferredTension} lbs
             </HeroText>
           </View>
-          <View className="flex-1 rounded-2xl border border-white/10 bg-white/5 p-3">
-            <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/60">
+          <View className="flex-1 rounded-2xl border border-white/18 bg-white/8 p-3">
+            <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/75">
               Priority
             </HeroText>
             <HeroText className="mt-1 text-base font-bold text-white">

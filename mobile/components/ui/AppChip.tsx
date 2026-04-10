@@ -33,7 +33,7 @@ export function AppChip({
   const variantStyles = {
     primary: 'bg-primary-50 border-primary-100',
     secondary: 'bg-secondary-50 border-secondary-100',
-    accent: 'bg-accent-50 border-accent-100',
+    accent: 'bg-[#FFF2D6] border-[#E8D29C]',
     neutral: 'bg-neutral-100 border-neutral-200',
     complete: 'bg-complete-50 border-complete-100',
     success: 'bg-success-50 border-success-100',
@@ -46,7 +46,7 @@ export function AppChip({
   const textStyles = {
     primary: 'text-primary-700 font-semibold text-xs',
     secondary: 'text-secondary-700 font-semibold text-xs',
-    accent: 'text-accent-700 font-semibold text-xs',
+    accent: 'text-[#9A6B17] font-semibold text-xs',
     neutral: 'text-neutral-600 font-medium text-xs',
     complete: 'text-complete-700 font-semibold text-xs',
     success: 'text-success-700 font-semibold text-xs',

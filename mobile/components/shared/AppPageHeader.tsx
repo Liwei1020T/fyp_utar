@@ -30,9 +30,9 @@ const baseContainerStyles =
   'w-full self-center overflow-hidden border';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[18px] border-[#E5E5EA] bg-[#F5F5F7]',
-  secondary: 'rounded-[16px] border-[#E5E5EA] bg-[#F5F5F7]',
-  flow: 'rounded-[16px] border-[#DCE6F5] bg-[#F5F5F7]',
+  primary: 'rounded-[18px] border-[#E6EDF5] bg-[#F7F8FB]',
+  secondary: 'rounded-[16px] border-[#E6EDF5] bg-[#F7F8FB]',
+  flow: 'rounded-[16px] border-[#E1EAF5] bg-[#F7F8FB]',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
@@ -98,7 +98,7 @@ export function AppPageHeader({
               onPress={onBackPress}
               variant="header"
               size="md"
-              className={cn(variant === 'flow' ? 'bg-[#EDF5FF]' : undefined)}
+              className={cn(variant === 'flow' ? 'bg-[#F0F5FD]' : undefined)}
             />
           ) : null}
 
@@ -123,7 +123,7 @@ export function AppPageHeader({
         {variant === 'flow' ? (
           <View
             className="mx-4 mb-3 h-px"
-            style={{ backgroundColor: 'rgba(0, 113, 227, 0.18)' }}
+            style={{ backgroundColor: 'rgba(47, 100, 182, 0.12)' }}
           >
             <View
               className="h-full w-12"

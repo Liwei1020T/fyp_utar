@@ -118,6 +118,7 @@ export default function PlayerProfileScreen() {
                   key={chip}
                   label={chip}
                   variant={chip === `${user.preferredTension} lbs` ? 'accent' : 'primary'}
+                  className={chip === `${user.preferredTension} lbs` ? 'shadow-none' : undefined}
                 />
               ))}
             </View>
