@@ -195,14 +195,6 @@ export default function NewBookingScreen() {
     );
   }, [availableSlots, selectedSlotId, slotError, slots]);
 
-  useEffect(() => {
-    const slotForPeriod = slots.find((item) => item.id === selectedSlotId) ?? availableSlots[0] ?? slots[0];
-
-    if (slotForPeriod) {
-      setSelectedPeriod(getSlotPeriod(slotForPeriod));
-    }
-  }, [availableSlots, selectedSlotId, slots]);
-
   const onSubmit = async (data: BookingForm) => {
     if (!selectedString || !selectedAdmin || !selectedSlot || selectedSlot.availableSpots < 1) {
       setSlotError('Select an available drop-off slot before continuing.');
@@ -263,6 +255,24 @@ export default function NewBookingScreen() {
   const visibleSlots = showPeriodFilter
     ? slots.filter((item) => getSlotPeriod(item) === selectedPeriod)
     : slots;
+
+  useEffect(() => {
+    if (!showPeriodFilter) {
+      return;
+    }
+
+    const hasVisibleSlots = slots.some((item) => getSlotPeriod(item) === selectedPeriod);
+
+    if (hasVisibleSlots) {
+      return;
+    }
+
+    const fallbackSlot = slots.find((item) => item.id === selectedSlotId) ?? availableSlots[0] ?? slots[0];
+
+    if (fallbackSlot) {
+      setSelectedPeriod(getSlotPeriod(fallbackSlot));
+    }
+  }, [availableSlots, selectedPeriod, selectedSlotId, showPeriodFilter, slots]);
 
   return (
     <AppScreen
@@ -463,6 +473,7 @@ export default function NewBookingScreen() {
             selectedSlotId={selectedSlotId}
             onSelect={(slot) => {
               setSelectedSlotId(slot.id);
+              setSelectedPeriod(getSlotPeriod(slot));
               setSlotError(null);
             }}
           />
