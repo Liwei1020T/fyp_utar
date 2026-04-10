@@ -7,6 +7,7 @@ import type { ButtonVariant } from 'heroui-native';
 export type AppButtonVariant =
   | 'primary'
   | 'secondary'
+  | 'accent'
   | 'outline'
   | 'ghost'
   | 'danger'
@@ -39,6 +40,7 @@ export function AppButton({
   const nativeVariantMap: Record<AppButtonVariant, ButtonVariant> = {
     primary: 'primary',
     secondary: 'secondary',
+    accent: 'secondary',
     outline: 'outline',
     ghost: 'ghost',
     danger: 'danger',
@@ -49,16 +51,18 @@ export function AppButton({
   const variantStyles = {
     primary: 'bg-primary-600 border-primary-600 shadow-glow',
     secondary: 'bg-secondary-100 border-secondary-200',
+    accent: 'bg-accent-100 border-accent-200',
     outline: 'bg-white/90 border-neutral-200',
     ghost: 'bg-transparent border-transparent',
     danger: 'bg-red-600 border-red-600',
-    success: 'bg-durability-600 border-durability-600',
+    success: 'bg-success-600 border-success-600',
     dark: 'bg-app-hero border-app-hero shadow-soft',
   };
 
   const textStyles = {
     primary: 'text-white font-semibold tracking-tight',
-    secondary: 'text-secondary-900 font-semibold tracking-tight',
+    secondary: 'text-primary-700 font-semibold tracking-tight',
+    accent: 'text-accent-900 font-semibold tracking-tight',
     outline: 'text-neutral-700 font-semibold tracking-tight',
     ghost: 'text-neutral-600 font-medium tracking-tight',
     danger: 'text-white font-semibold tracking-tight',
@@ -75,6 +79,7 @@ export function AppButton({
   const trailingIslandStyles = {
     primary: 'bg-white/14',
     secondary: 'bg-secondary-200/80',
+    accent: 'bg-accent-200/80',
     outline: 'bg-neutral-100',
     ghost: 'bg-neutral-100',
     danger: 'bg-white/14',

@@ -32,29 +32,29 @@ const quickActions = [
     title: 'Get recommendation',
     route: '/player/recommend',
     icon: Zap,
-    color: '#3B82F6',
-    bgColor: '#EFF6FF',
+    color: '#2F64B6',
+    bgColor: '#EAF2FF',
   },
   {
     title: 'Book restring',
     route: '/player/bookings/new',
     icon: CalendarClock,
-    color: '#D97706',
-    bgColor: '#FFFBEB',
+    color: '#2F64B6',
+    bgColor: '#EAF2FF',
   },
   {
     title: 'Browse strings',
     route: '/player/strings',
     icon: Search,
-    color: '#10B981',
-    bgColor: '#ECFDF5',
+    color: '#2F64B6',
+    bgColor: '#EAF2FF',
   },
   {
     title: 'Track service',
     route: '/player/bookings',
     icon: Activity,
-    color: '#8B5CF6',
-    bgColor: '#F5F3FF',
+    color: '#2F64B6',
+    bgColor: '#EAF2FF',
   },
 ] as const;
 
@@ -94,7 +94,7 @@ export default function PlayerHomeScreen() {
             <View className="flex-1">
               <AppChip
                 label="Smart advisor"
-                variant="secondary"
+                variant="accent"
                 className="self-start opacity-95"
               />
               <HeroText className="mt-3 text-[25px] font-bold leading-[30px] tracking-[-0.03em] text-white">
@@ -130,10 +130,10 @@ export default function PlayerHomeScreen() {
 
           <AppButton
             label="Generate Recommendation"
-            variant="secondary"
+            variant="primary"
             size="md"
             className="mt-4 w-full rounded-[18px]"
-            trailingIcon={<ChevronRight size={18} color="#78350F" strokeWidth={2.5} />}
+            trailingIcon={<ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />}
             onPress={() => router.push('/player/recommend')}
           />
         </AppCard>
@@ -204,8 +204,8 @@ export default function PlayerHomeScreen() {
           <AppCard variant="elevated" padding="md" className="rounded-[30px] border border-neutral-100">
             <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1 flex-row items-start gap-3">
-                <View className="h-11 w-11 items-center justify-center rounded-full border border-blue-100 bg-blue-50">
-                  <Activity size={20} color="#3B82F6" />
+                <View className="h-11 w-11 items-center justify-center rounded-full border border-primary-100 bg-primary-50">
+                  <Activity size={20} color="#2F64B6" />
                 </View>
                 <View className="min-w-0 flex-1">
                   <HeroText className="text-[15px] font-semibold leading-[20px] tracking-[-0.02em] text-neutral-950">

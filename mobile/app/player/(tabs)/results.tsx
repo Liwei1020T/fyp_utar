@@ -74,7 +74,7 @@ export default function RecommendationResultsScreen() {
           <AppCard variant="subtle" className="mb-6 rounded-2xl border border-primary-100" padding="md">
             <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-                <Sparkles size={20} color="#0284c7" />
+                <Sparkles size={20} color="#2F64B6" />
               </View>
               <View className="flex-1">
                 <HeroText className="text-base font-bold text-neutral-900">
@@ -132,7 +132,7 @@ export default function RecommendationResultsScreen() {
                       </HeroText>
                     </View>
                     <View className="flex-row items-start gap-2">
-                      <View className="mt-1.5 h-1.5 w-1.5 rounded-full bg-orange-400" />
+                      <View className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent-400" />
                       <HeroText className="flex-1 text-sm leading-5 text-neutral-700">
                         <HeroText className="font-bold">Trade-off:</HeroText> {item.tradeOffs[0]}
                       </HeroText>
@@ -141,7 +141,7 @@ export default function RecommendationResultsScreen() {
 
                   <View className="mt-4 flex-row flex-wrap gap-2">
                     {item.strengths.slice(0, 3).map((strength) => (
-                      <AppChip key={strength} label={strength} variant="secondary" size="sm" />
+                      <AppChip key={strength} label={strength} variant="primary" size="sm" />
                     ))}
                   </View>
 
@@ -172,7 +172,7 @@ export default function RecommendationResultsScreen() {
                         variant={isSelected ? 'secondary' : 'ghost'}
                         size="sm"
                         className="flex-1"
-                        leadingIcon={<Scale size={14} color={isSelected ? '#78350F' : '#64748b'} />}
+                        leadingIcon={<Scale size={14} color={isSelected ? '#2F64B6' : '#64748b'} />}
                         onPress={() => toggleCompareSelection(item.id)}
                       />
                     </View>
@@ -226,7 +226,7 @@ export default function RecommendationResultsScreen() {
                         </HeroText>
                       </View>
                       <View className="flex-row items-start gap-2">
-                        <View className="mt-1.5 h-1.5 w-1.5 rounded-full bg-orange-400" />
+                        <View className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent-400" />
                         <HeroText className="flex-1 text-sm leading-5 text-neutral-700">
                           <HeroText className="font-bold">Trade-off:</HeroText> Slightly lower fit confidence than the top match.
                         </HeroText>
@@ -235,7 +235,7 @@ export default function RecommendationResultsScreen() {
 
                     <View className="mt-4 flex-row flex-wrap gap-2">
                       {topAspectLabels.map((label) => (
-                        <AppChip key={label} label={label} variant="secondary" size="sm" />
+                        <AppChip key={label} label={label} variant="primary" size="sm" />
                       ))}
                     </View>
 
@@ -268,7 +268,7 @@ export default function RecommendationResultsScreen() {
                           variant={isSelected ? 'secondary' : 'ghost'}
                           size="sm"
                           className="flex-1"
-                          leadingIcon={<Scale size={14} color={isSelected ? '#78350F' : '#64748b'} />}
+                          leadingIcon={<Scale size={14} color={isSelected ? '#2F64B6' : '#64748b'} />}
                           isDisabled={!item.stringId}
                           onPress={() => item.stringId && toggleCompareSelection(item.stringId)}
                         />

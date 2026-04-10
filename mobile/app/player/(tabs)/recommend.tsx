@@ -144,7 +144,7 @@ export default function RecommendationInputScreen() {
       <AppCard variant="dark" className="rounded-[24px]" padding="md">
         <View className="flex-row items-center justify-between gap-4">
           <View className="flex-1">
-            <AppChip label="RECOMMENDATION" variant="secondary" size="sm" className="self-start" />
+            <AppChip label="RECOMMENDATION" variant="accent" size="sm" className="self-start" />
             <HeroText className="mt-2 text-xl font-bold tracking-tight text-white">
               Build your profile.
             </HeroText>
@@ -226,7 +226,7 @@ export default function RecommendationInputScreen() {
                   key={level}
                   label={level}
                   size="sm"
-                  variant={skillLevel === level ? 'info' : 'neutral'}
+                  variant={skillLevel === level ? 'primary' : 'neutral'}
                   onPress={() => setSkillLevel(level)}
                 />
               ))}
@@ -269,7 +269,7 @@ export default function RecommendationInputScreen() {
       <AppSection>
         <AppCard variant="subtle" padding="sm" className="bg-primary-50/50 border-0">
           <View className="flex-row items-center gap-2">
-            <Info size={14} color="#0891B2" />
+            <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
               The shortlist is generated from your player profile and the five priority weights you set above.
             </HeroText>

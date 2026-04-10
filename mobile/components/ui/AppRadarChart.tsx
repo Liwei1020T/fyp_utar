@@ -96,8 +96,8 @@ export function AppRadarChart({ data, size = 320 }: RadarChartProps) {
           {/* Data Polygon */}
           <Polygon
             points={dataPointsStr}
-            fill="rgba(59, 130, 246, 0.12)" // light premium blue
-            stroke="#3B82F6" // athletic blue outline
+            fill="rgba(47, 100, 182, 0.12)"
+            stroke="#2F64B6"
             strokeWidth="2"
           />
 
@@ -111,7 +111,7 @@ export function AppRadarChart({ data, size = 320 }: RadarChartProps) {
                 cx={x}
                 cy={y}
                 r="3.5"
-                fill="#3B82F6"
+                fill="#2F64B6"
                 stroke="white"
                 strokeWidth="1.5"
               />

@@ -21,7 +21,7 @@ function AdminTabIcon({
     <View
       className={cn(
         'h-10 w-10 items-center justify-center rounded-2xl',
-        focused ? 'bg-control-50' : 'bg-transparent'
+        focused ? 'bg-primary-50' : 'bg-transparent'
       )}
     >
       <Icon size={size} color={color} strokeWidth={focused ? 2.1 : 1.9} />
@@ -39,7 +39,7 @@ export default function AdminTabsLayout() {
         headerShown: false,
         sceneStyle: { backgroundColor: appChromeColors.pageAdmin },
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: '#22766D',
+        tabBarActiveTintColor: appChromeColors.primary,
         tabBarInactiveTintColor: appChromeColors.inactive,
         tabBarStyle: {
           backgroundColor: appChromeColors.tabBar,

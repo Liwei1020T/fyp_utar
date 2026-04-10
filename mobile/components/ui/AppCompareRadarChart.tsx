@@ -104,7 +104,7 @@ export function AppCompareRadarChart({ dataA, dataB, size = 320 }: AppCompareRad
           <Polygon
             points={dataPointsB}
             fill="rgba(100, 116, 139, 0.1)"
-            stroke="#64748B"
+            stroke="#7D94BC"
             strokeWidth="2"
             strokeDasharray="4,4"
           />
@@ -112,8 +112,8 @@ export function AppCompareRadarChart({ dataA, dataB, size = 320 }: AppCompareRad
           {/* String A - Primary */}
           <Polygon
             points={dataPointsA}
-            fill="rgba(59, 130, 246, 0.12)"
-            stroke="#3B82F6"
+            fill="rgba(47, 100, 182, 0.12)"
+            stroke="#2F64B6"
             strokeWidth="2"
           />
 

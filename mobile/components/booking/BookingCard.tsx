@@ -69,23 +69,23 @@ const getStatusStripTone = (status: BookingStatus) => {
   switch (status) {
     case 'awaiting_dropoff':
       return {
-        container: 'bg-secondary-50 border-secondary-100',
-        text: 'text-secondary-800',
-        iconColor: '#B7791F',
+        container: 'bg-warning-50 border-warning-100',
+        text: 'text-warning-700',
+        iconColor: '#B67D21',
         Icon: TimerReset,
       };
     case 'ready_for_collection':
       return {
-        container: 'bg-durability-50 border-durability-100',
-        text: 'text-durability-800',
-        iconColor: '#1E8058',
+        container: 'bg-success-50 border-success-100',
+        text: 'text-success-700',
+        iconColor: '#2F7A58',
         Icon: PackageCheck,
       };
     case 'completed':
       return {
-        container: 'bg-[#EEF5F1] border-[#D7E8DE]',
-        text: 'text-[#4E6B5D]',
-        iconColor: '#5F7D6C',
+        container: 'bg-complete-50 border-complete-100',
+        text: 'text-complete-700',
+        iconColor: '#6D8477',
         Icon: CheckCircle2,
       };
     case 'pending':

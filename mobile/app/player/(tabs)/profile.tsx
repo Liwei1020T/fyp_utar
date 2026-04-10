@@ -117,8 +117,7 @@ export default function PlayerProfileScreen() {
                 <AppChip
                   key={chip}
                   label={chip}
-                  variant={chip === `${user.preferredTension} lbs` ? 'warning' : 'primary'}
-                  className={chip === `${user.preferredTension} lbs` ? undefined : 'bg-primary-50 border-primary-100'}
+                  variant={chip === `${user.preferredTension} lbs` ? 'accent' : 'primary'}
                 />
               ))}
             </View>
@@ -171,7 +170,7 @@ export default function PlayerProfileScreen() {
             ))}
           </View>
 
-          <View className="mt-4 rounded-[22px] bg-[#F5F8FC] px-4 py-3.5">
+          <View className="mt-4 rounded-[22px] bg-secondary-50 px-4 py-3.5">
             <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700">
               Profile note
             </HeroText>

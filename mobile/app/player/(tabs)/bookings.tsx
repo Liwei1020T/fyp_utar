@@ -84,7 +84,7 @@ export default function BookingsListScreen() {
         contentContainerStyle={{ paddingBottom: bottomContentInset }}
         ListHeaderComponent={
           <View className="gap-3 pb-4">
-            <View className="flex-row items-center gap-2 rounded-2xl bg-primary-50 px-4 py-2 border border-primary-100">
+            <View className="flex-row items-center gap-2 rounded-2xl border border-secondary-100 bg-secondary-50 px-4 py-2">
               <Info size={14} color="#2F64B6" />
               <HeroText className="text-[11px] font-semibold text-primary-900">
                 {activeCount} active bookings • {readyCount} ready for collection

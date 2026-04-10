@@ -53,25 +53,25 @@ const TRACKING_SEQUENCE: TimelineStepDefinition[] = [
 
 const NODE_STYLES: Record<TimelineVisualState, { shell: string; core: string; line: string; iconColor: string; accent: string }> = {
   completed: {
-    shell: 'border-[#D9E9E1] bg-[#F4FAF6]',
-    core: 'bg-[#5E8E78]',
-    line: 'bg-[#C6DCCE]',
+    shell: 'border-complete-100 bg-complete-50',
+    core: 'bg-complete-500',
+    line: 'bg-complete-100',
     iconColor: '#FFFFFF',
-    accent: '#5E8E78',
+    accent: '#6D8477',
   },
   current: {
-    shell: 'border-[#D9E7F9] bg-[#EDF5FF]',
+    shell: 'border-primary-100 bg-primary-50',
     core: 'bg-[#2F64B6]',
-    line: 'bg-[#AFC8EE]',
+    line: 'bg-primary-200',
     iconColor: '#FFFFFF',
     accent: '#2F64B6',
   },
   future: {
-    shell: 'border-[#E8E2D2] bg-[#FCF8ED]',
-    core: 'bg-[#D7C4A3]',
-    line: 'bg-[#E6DCC6]',
-    iconColor: '#7A684E',
-    accent: '#B8925F',
+    shell: 'border-warning-100 bg-warning-50',
+    core: 'bg-warning-500',
+    line: 'bg-warning-100',
+    iconColor: '#FFFFFF',
+    accent: '#B67D21',
   },
 };
 
@@ -176,10 +176,10 @@ export function TrackingTimeline({ timeline, currentStatus }: TrackingTimelinePr
                 <View
                   className={`rounded-[24px] border px-4 py-3 ${
                     step.visualState === 'current'
-                      ? 'border-[#D6E4F8] bg-[#F6FAFF]'
+                      ? 'border-primary-100 bg-primary-50/60'
                       : step.visualState === 'completed'
-                        ? 'border-[#E1EAE4] bg-[#F9FCFA]'
-                        : 'border-[#ECE6DA] bg-[#FCFAF5]'
+                        ? 'border-complete-100 bg-complete-50/70'
+                        : 'border-warning-100 bg-warning-50/60'
                   }`}
                 >
                   <View className="flex-row items-start justify-between gap-3">

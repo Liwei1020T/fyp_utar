@@ -74,12 +74,12 @@ export default function CompareStringsScreen() {
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
             <View className={cn(
-              "px-1.5 py-0.5 rounded-full",
-              isBest ? "bg-primary-500" : "bg-slate-200"
-            )}>
+                "px-1.5 py-0.5 rounded-full",
+                isBest ? "bg-primary-500" : "bg-secondary-100"
+              )}>
               <HeroText className={cn(
                 "text-[8px] font-black uppercase",
-                isBest ? "text-white" : "text-slate-600"
+                isBest ? "text-white" : "text-secondary-700"
               )}>
                 {label}
               </HeroText>
@@ -153,8 +153,8 @@ export default function CompareStringsScreen() {
                 <View className="w-2 h-2 rounded-full bg-primary-500" />
                 <HeroText className="text-[10px] font-bold text-neutral-600">{stringA.model}</HeroText>
               </View>
-              <View className="flex-row items-center gap-1.5 ml-4">
-                <View className="w-2 h-2 rounded-full bg-slate-400" />
+            <View className="flex-row items-center gap-1.5 ml-4">
+                <View className="w-2 h-2 rounded-full bg-secondary-400" />
                 <HeroText className="text-[10px] font-bold text-neutral-600">{stringB.model}</HeroText>
               </View>
             </View>
@@ -183,7 +183,7 @@ export default function CompareStringsScreen() {
             </View>
 
             <View className="mt-4 pt-4 border-t border-neutral-100 flex-row items-start gap-2">
-              <Info size={14} color="#3B82F6" className="mt-0.5" />
+              <Info size={14} color="#2F64B6" className="mt-0.5" />
               <HeroText className="text-[11px] text-neutral-600 leading-relaxed italic">
                 {stringA.ratings.power > stringB.ratings.power 
                   ? `${stringA.model} leads in power, while ${stringB.model} is stronger in ${stringB.ratings.durability > stringA.ratings.durability ? 'durability' : 'control'}.`
@@ -230,7 +230,7 @@ export default function CompareStringsScreen() {
               <View className="gap-1.5">
                 {stringA.bestFor.map((item) => (
                   <View key={item} className="flex-row items-center gap-1.5">
-                    <Target size={10} color="#3B82F6" />
+                    <Target size={10} color="#2F64B6" />
                     <HeroText className="text-[11px] text-neutral-600">{item}</HeroText>
                   </View>
                 ))}
@@ -243,7 +243,7 @@ export default function CompareStringsScreen() {
               <View className="gap-1.5">
                 {stringB.bestFor.map((item) => (
                   <View key={item} className="flex-row items-center gap-1.5">
-                    <Target size={10} color="#94A3B8" />
+                    <Target size={10} color="#7D94BC" />
                     <HeroText className="text-[11px] text-neutral-600">{item}</HeroText>
                   </View>
                 ))}
@@ -260,7 +260,7 @@ export default function CompareStringsScreen() {
             <View className="gap-2">
               {stringA.strengths.slice(0, 3).map((item) => (
                 <View key={item} className="flex-row items-start gap-2 bg-primary-50 p-2 rounded-xl">
-                  <ShieldCheck size={14} color="#3B82F6" className="mt-0.5" />
+                  <ShieldCheck size={14} color="#2F64B6" className="mt-0.5" />
                   <HeroText className="text-[11px] font-medium text-primary-900 flex-1 leading-tight">{item}</HeroText>
                 </View>
               ))}
@@ -308,7 +308,7 @@ export default function CompareStringsScreen() {
         <AppCard variant="highlighted" padding="lg">
           <View className="flex-row items-center gap-3 mb-4">
             <View className="h-10 w-10 items-center justify-center rounded-xl bg-primary-100">
-              <Zap size={20} color="#3B82F6" />
+              <Zap size={20} color="#2F64B6" />
             </View>
             <View className="flex-1">
               <HeroText className="text-sm font-bold text-neutral-900">Recommended setup</HeroText>
@@ -320,8 +320,8 @@ export default function CompareStringsScreen() {
               ? `${stringA.model} fits your current 24–29 lbs preference more directly and supports your aggressive style.`
               : `${stringB.model} supports your range but favors durability over rebound, ideal for long social sessions.`}
           </HeroText>
-          <View className="bg-white/50 p-3 rounded-xl border border-primary-100">
-            <HeroText className="text-[11px] font-bold text-primary-700 uppercase mb-1">Tension Note</HeroText>
+          <View className="rounded-xl border border-secondary-100 bg-white/50 p-3">
+            <HeroText className="mb-1 text-[11px] font-bold uppercase text-primary-700">Tension Note</HeroText>
             <HeroText className="text-xs text-neutral-600">{stringA.tensionNote}</HeroText>
           </View>
         </AppCard>
