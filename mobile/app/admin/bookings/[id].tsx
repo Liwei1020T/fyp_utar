@@ -3,14 +3,14 @@ import { Image, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
+  Boxes,
   CalendarClock,
   CheckCircle2,
+  Clock3,
   Circle,
-  ClipboardList,
-  ImagePlus,
-  Racket,
-  ReceiptText,
+  Store,
   TimerReset,
+  Upload,
 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -126,7 +126,7 @@ function AdminUpdateFeed({ updates }: { updates: BookingUpdate[] }) {
       <AppCard variant="subtle" padding="md">
         <View className="flex-row items-start gap-3">
           <View className="mt-0.5 h-10 w-10 items-center justify-center rounded-[16px] bg-primary-50">
-            <ClipboardList size={18} color="#2F64B6" />
+            <Boxes size={18} color="#2F64B6" />
           </View>
           <View className="flex-1">
             <HeroText className="text-[15px] font-semibold tracking-tight text-neutral-900">
@@ -394,7 +394,7 @@ export default function AdminBookingDetailScreen() {
                 </HeroText>
               </View>
               <View className="flex-row items-center gap-2">
-                <Racket size={15} color="#2F64B6" />
+                <Store size={15} color="#2F64B6" />
                 <HeroText className="text-[13px] font-semibold text-neutral-700">
                   {booking.racketBrand} {booking.racketModel}
                 </HeroText>
@@ -406,7 +406,7 @@ export default function AdminBookingDetailScreen() {
                 </HeroText>
               </View>
               <View className="flex-row items-center gap-2">
-                <ReceiptText size={15} color="#2F64B6" />
+                <Clock3 size={15} color="#2F64B6" />
                 <HeroText className="text-[13px] font-semibold text-neutral-700">
                   {priceState}
                 </HeroText>
@@ -556,7 +556,7 @@ export default function AdminBookingDetailScreen() {
               label={updatePhoto ? 'Change photo' : 'Attach photo'}
               variant="outline"
               className="flex-1"
-              leadingIcon={<ImagePlus size={16} color="#475569" />}
+              leadingIcon={<Upload size={16} color="#475569" />}
               onPress={pickUpdatePhoto}
             />
             {updatePhoto ? (
