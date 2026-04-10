@@ -12,6 +12,7 @@ import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { SlotPicker } from '../../../components/booking/SlotPicker';
@@ -37,6 +38,27 @@ const bookingSchema = z.object({
 
 type BookingForm = z.infer<typeof bookingSchema>;
 type BookingFormInput = z.input<typeof bookingSchema>;
+type SlotPeriod = 'morning' | 'afternoon' | 'evening';
+
+const SLOT_PERIOD_OPTIONS = [
+  { id: 'morning', label: 'Morning' },
+  { id: 'afternoon', label: 'Afternoon' },
+  { id: 'evening', label: 'Evening' },
+] as const;
+
+function getSlotPeriod(slot: BookingSlot): SlotPeriod {
+  const hour = Number(slot.time.split(':')[0] ?? '0');
+
+  if (hour < 12) {
+    return 'morning';
+  }
+
+  if (hour < 17) {
+    return 'afternoon';
+  }
+
+  return 'evening';
+}
 
 export default function NewBookingScreen() {
   const params = useLocalSearchParams<{ stringId?: string }>();
@@ -79,6 +101,7 @@ export default function NewBookingScreen() {
     availableSlots[0]?.id
   );
   const [slotError, setSlotError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<SlotPeriod>('morning');
   const availableDates = Array.from(
     new Set(sourceSlots.filter((item) => item.adminId === adminId).map((item) => item.date))
   );
@@ -172,6 +195,14 @@ export default function NewBookingScreen() {
     );
   }, [availableSlots, selectedSlotId, slotError, slots]);
 
+  useEffect(() => {
+    const slotForPeriod = slots.find((item) => item.id === selectedSlotId) ?? availableSlots[0] ?? slots[0];
+
+    if (slotForPeriod) {
+      setSelectedPeriod(getSlotPeriod(slotForPeriod));
+    }
+  }, [availableSlots, selectedSlotId, slots]);
+
   const onSubmit = async (data: BookingForm) => {
     if (!selectedString || !selectedAdmin || !selectedSlot || selectedSlot.availableSpots < 1) {
       setSlotError('Select an available drop-off slot before continuing.');
@@ -228,6 +259,10 @@ export default function NewBookingScreen() {
     : 'Times reflect current shop availability.';
   const selectedCategoryLabel =
     selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
+  const showPeriodFilter = slots.length > 6;
+  const visibleSlots = showPeriodFilter
+    ? slots.filter((item) => getSlotPeriod(item) === selectedPeriod)
+    : slots;
 
   return (
     <AppScreen
@@ -415,8 +450,16 @@ export default function NewBookingScreen() {
               />
             ))}
           </ScrollView>
+          {showPeriodFilter ? (
+            <AppSegmentedControl
+              options={SLOT_PERIOD_OPTIONS}
+              selectedId={selectedPeriod}
+              onSelect={setSelectedPeriod}
+              className="mt-0"
+            />
+          ) : null}
           <SlotPicker
-            slots={slots}
+            slots={visibleSlots}
             selectedSlotId={selectedSlotId}
             onSelect={(slot) => {
               setSelectedSlotId(slot.id);
