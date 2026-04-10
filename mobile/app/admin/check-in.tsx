@@ -255,7 +255,6 @@ export default function AdminCheckInScreen() {
     try {
       const updated = await backendApi.adminCheckIn(token, {
         booking_id: match.id,
-        reference: match.orderCode ?? formatBookingOrderCode(match.id),
         note: notes.trim() || null,
       });
       const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
