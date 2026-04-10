@@ -12,7 +12,7 @@ interface SlotPickerProps {
 
 export function SlotPicker({ slots, selectedSlotId, onSelect }: SlotPickerProps) {
   return (
-    <View className="flex-row flex-wrap gap-3">
+    <View className="flex-row flex-wrap gap-2.5">
       {slots.map((item) => {
         const isSelected = item.id === selectedSlotId;
         const isAvailable = item.availableSpots > 0;
@@ -27,13 +27,13 @@ export function SlotPicker({ slots, selectedSlotId, onSelect }: SlotPickerProps)
             accessibilityState={{ disabled: !isAvailable, selected: isSelected }}
             className={`min-w-[47%] flex-1 rounded-[24px] border ${
               isSelected && isAvailable
-                ? 'border-primary-500 bg-primary-50'
+                ? 'border-primary-500 bg-primary-50 shadow-sm'
                 : isAvailable
                   ? 'border-white bg-white/95'
                   : 'border-neutral-200 bg-neutral-100/80 opacity-70'
             }`}
           >
-            <View className="rounded-[24px] p-4">
+            <View className="rounded-[24px] px-4 py-3.5">
               <View className="flex-row items-start justify-between gap-3">
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2">
@@ -45,7 +45,7 @@ export function SlotPicker({ slots, selectedSlotId, onSelect }: SlotPickerProps)
                   <HeroText className="mt-2 text-[12px] leading-5 text-neutral-500">
                     {isAvailable
                       ? `${item.availableSpots} ${item.availableSpots === 1 ? 'slot' : 'slots'} left`
-                      : 'Fully booked'}
+                      : 'Full'}
                   </HeroText>
                 </View>
                 {isSelected && isAvailable ? (

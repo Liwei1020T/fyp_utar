@@ -395,6 +395,11 @@ export default function NewBookingScreen() {
                 label={formatDateLabel(date)}
                 size="md"
                 variant={selectedDate === date ? 'primary' : 'neutral'}
+                className={
+                  selectedDate === date
+                    ? 'border-primary-500 bg-primary-50 shadow-sm'
+                    : 'bg-white/95'
+                }
                 onPress={() => {
                   setSelectedDate(date);
                   setSelectedSlotId(
@@ -433,6 +438,11 @@ export default function NewBookingScreen() {
               </HeroText>
             </View>
           </AppCard>
+          <HeroText className="text-sm font-semibold tracking-tight text-neutral-700">
+            {selectedSlot
+              ? `Selected: ${selectedDateLabel} · ${selectedTimeLabel}`
+              : 'Select a time slot to continue'}
+          </HeroText>
         </View>
       </AppSection>
 
