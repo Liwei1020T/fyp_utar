@@ -235,9 +235,6 @@ export default function AdminBookingDetailScreen() {
           <HeroText className="text-sm leading-6 text-neutral-600">
             Drop-off window: {booking.dropOffDate} at {booking.dropOffTime}
           </HeroText>
-          <HeroText className="mt-2 text-sm leading-6 text-neutral-600">
-            Check-in reference: {booking.checkInReference}
-          </HeroText>
           {booking.queuePosition > 0 ? (
             <HeroText className="mt-2 text-sm leading-6 text-neutral-600">
               Queue position: #{booking.queuePosition}
