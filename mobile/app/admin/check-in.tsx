@@ -1,7 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowRight, CalendarClock, CircleCheck, ScanLine } from 'lucide-react-native';
+import {
+  CalendarClock,
+  Check,
+  CircleCheck,
+  ScanLine,
+  Search,
+} from 'lucide-react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
@@ -22,11 +28,35 @@ import { formatBookingOrderCode, formatBookingStatus } from '../../lib/formatter
 import { getBookingStatusVariant } from '../../components/ui/theme';
 import type { Booking } from '../../types/domain';
 
+type ChecklistKey = 'playerPresent' | 'racketReceived' | 'setupConfirmed';
+
+const CHECKLIST_ITEMS: Array<{
+  key: ChecklistKey;
+  label: string;
+  helper: string;
+}> = [
+  {
+    key: 'playerPresent',
+    label: 'Player present',
+    helper: 'Confirm the player is at the counter.',
+  },
+  {
+    key: 'racketReceived',
+    label: 'Racket received',
+    helper: 'Confirm the racket has been handed over.',
+  },
+  {
+    key: 'setupConfirmed',
+    label: 'Setup confirmed',
+    helper: 'Confirm string and tension before service starts.',
+  },
+];
+
 function formatDropOffDateTime(booking: Booking) {
   const date = new Date(`${booking.dropOffDate}T${booking.dropOffTime}:00`);
 
   if (Number.isNaN(date.getTime())) {
-    return `${booking.dropOffDate} at ${booking.dropOffTime}`;
+    return `${booking.dropOffDate} · ${booking.dropOffTime}`;
   }
 
   return date.toLocaleString('en-MY', {
@@ -35,17 +65,32 @@ function formatDropOffDateTime(booking: Booking) {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: false,
   });
+}
+
+function getTodayLocalDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getLookupTokens(booking: Booking) {
+  return [
+    booking.orderCode ?? formatBookingOrderCode(booking.id),
+    booking.id,
+  ].map((value) => value.trim().toUpperCase());
 }
 
 function getDropOffConfirmationStatus(booking: Booking) {
   if (booking.status === 'awaiting_dropoff' || booking.status === 'confirmed') {
-    return 'Ready to confirm';
+    return 'Awaiting drop-off';
   }
 
   if (booking.status === 'in_progress') {
-    return 'Already dropped off';
+    return 'Already received';
   }
 
   return formatBookingStatus(booking.status);
@@ -60,34 +105,80 @@ export default function AdminCheckInScreen() {
   const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
 
-  const awaitingDropOffBooking = useMemo(
-    () => bookings.find((item) => item.adminId === user?.id && item.status === 'awaiting_dropoff'),
-    [bookings, user?.id],
-  );
+  const todaysAwaitingDropOffBookings = useMemo(() => {
+    if (!user || user.role !== 'admin') {
+      return [];
+    }
 
-  const defaultOrderId = awaitingDropOffBooking
-    ? awaitingDropOffBooking.orderCode ?? formatBookingOrderCode(awaitingDropOffBooking.id)
+    const today = getTodayLocalDate();
+
+    return bookings
+      .filter(
+        (item) =>
+          item.adminId === user.id &&
+          item.status === 'awaiting_dropoff' &&
+          item.dropOffDate === today,
+      )
+      .sort((left, right) =>
+        `${left.dropOffDate} ${left.dropOffTime}`.localeCompare(
+          `${right.dropOffDate} ${right.dropOffTime}`,
+        ),
+      );
+  }, [bookings, user]);
+
+  const defaultBooking = todaysAwaitingDropOffBookings[0] ?? null;
+  const defaultOrderId = defaultBooking
+    ? defaultBooking.orderCode ?? formatBookingOrderCode(defaultBooking.id)
     : '';
 
   const [orderId, setOrderId] = useState(defaultOrderId);
-  const [match, setMatch] = useState<Booking | null>(awaitingDropOffBooking ?? null);
+  const [match, setMatch] = useState<Booking | null>(defaultBooking);
   const [lookupError, setLookupError] = useState<string | null>(null);
-  const [confirmationNote, setConfirmationNote] = useState('');
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [checklist, setChecklist] = useState<Record<ChecklistKey, boolean>>({
+    playerPresent: false,
+    racketReceived: false,
+    setupConfirmed: false,
+  });
 
   if (!user || user.role !== 'admin') {
     return null;
   }
 
+  const resetChecklist = () => {
+    setChecklist({
+      playerPresent: false,
+      racketReceived: false,
+      setupConfirmed: false,
+    });
+    setNotes('');
+  };
+
   const resolveLocalMatch = (value: string) => {
     const normalized = value.trim().toUpperCase();
 
-    return bookings.find((item) => {
-      const itemOrderId = (item.orderCode ?? formatBookingOrderCode(item.id)).toUpperCase();
-      return item.adminId === user.id && (itemOrderId.includes(normalized) || item.id.toUpperCase().includes(normalized));
-    }) ?? null;
+    return (
+      bookings.find((item) => {
+        if (item.adminId !== user.id) {
+          return false;
+        }
+
+        return getLookupTokens(item).some((token) => token.includes(normalized));
+      }) ?? null
+    );
+  };
+
+  const setSelectedBooking = (booking: Booking | null) => {
+    setMatch(booking);
+    setConfirmError(null);
+    resetChecklist();
+
+    if (booking) {
+      setOrderId(booking.orderCode ?? formatBookingOrderCode(booking.id));
+    }
   };
 
   const runLookup = async (input = orderId) => {
@@ -103,7 +194,7 @@ export default function AdminCheckInScreen() {
 
     if (!token) {
       const localMatch = resolveLocalMatch(normalized);
-      setMatch(localMatch);
+      setSelectedBooking(localMatch);
       if (!localMatch) {
         setLookupError('No booking matched that order ID.');
       }
@@ -121,7 +212,7 @@ export default function AdminCheckInScreen() {
           ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
           : [mapped, ...currentBookings],
       );
-      setMatch(mapped);
+      setSelectedBooking(mapped);
     } catch (error) {
       setMatch(null);
       setLookupError(
@@ -134,9 +225,16 @@ export default function AdminCheckInScreen() {
     }
   };
 
+  const allChecklistChecked = Object.values(checklist).every(Boolean);
+
   const confirmDropOff = async () => {
     if (!match) {
-      setConfirmError('Look up a booking before confirming drop-off.');
+      setConfirmError('Find a booking before confirming drop-off.');
+      return;
+    }
+
+    if (!allChecklistChecked) {
+      setConfirmError('Complete the counter checklist before confirming drop-off.');
       return;
     }
 
@@ -158,7 +256,7 @@ export default function AdminCheckInScreen() {
       const updated = await backendApi.adminCheckIn(token, {
         booking_id: match.id,
         reference: match.orderCode ?? formatBookingOrderCode(match.id),
-        note: confirmationNote.trim() || null,
+        note: notes.trim() || null,
       });
       const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
       const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
@@ -183,44 +281,30 @@ export default function AdminCheckInScreen() {
   const matchedOrderId = match ? match.orderCode ?? formatBookingOrderCode(match.id) : null;
   const matchedPlayer = match ? getUserById(match.playerId) : null;
   const matchedString = match ? getStringById(match.stringId) : null;
+  const matchedPlayerContact =
+    matchedPlayer && matchedPlayer.role === 'player' ? matchedPlayer.phone : '-';
 
   return (
     <AppScreen
       tone="admin"
       headerVariant="flow"
       compactHeader
-      title="Confirm drop-off"
-      subtitle="Use the order ID to verify the booking and continue the service."
+      title="Check-in"
+      subtitle="Confirm player drop-off by order ID"
       showBackButton
       onBackPress={() => router.back()}
       contentContainerClassName="pt-3"
     >
       <View className="gap-4">
-        <AppCard variant="dark" padding="md" className="rounded-[28px]">
-          <View className="gap-3">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-100">
-              Vendor drop-off
-            </HeroText>
-            <HeroText className="text-[24px] font-bold tracking-tight text-white">
-              Confirm racket handover from the player.
-            </HeroText>
-            <View className="rounded-[20px] bg-white/10 px-4 py-3">
-              <HeroText className="text-sm leading-6 text-primary-100">
-                The counter only needs the order ID to verify the booking and move it into service.
-              </HeroText>
-            </View>
-          </View>
-        </AppCard>
-
-        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
+        <AppCard variant="elevated" padding="md" className="rounded-[26px]">
           <View className="gap-3">
             <View className="flex-row items-start justify-between gap-3">
               <View className="min-w-0 flex-1">
                 <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-                  Lookup
+                  Search
                 </HeroText>
                 <HeroText className="mt-1 text-[16px] font-bold tracking-tight text-neutral-950">
-                  Find booking by Order ID
+                  Find booking by order ID
                 </HeroText>
               </View>
               <AppChip label="Order ID only" variant="primary" />
@@ -230,32 +314,61 @@ export default function AdminCheckInScreen() {
               label="Order ID"
               value={orderId}
               onChangeText={setOrderId}
-              placeholder="Enter ORD-xxxxx"
+              placeholder="Search order ID"
               autoCapitalize="characters"
+              leftAdornment={<Search size={16} color="#64748B" />}
             />
 
             <View className="flex-row gap-3">
               <AppButton
-                label="Use next drop-off"
+                label="Scan code"
                 variant="outline"
                 className="flex-1"
                 leadingIcon={<ScanLine size={16} color="#5E6B7D" />}
                 onPress={() => {
-                  if (!awaitingDropOffBooking) {
-                    return;
-                  }
-                  const nextOrderId = awaitingDropOffBooking.orderCode ?? formatBookingOrderCode(awaitingDropOffBooking.id);
-                  setOrderId(nextOrderId);
-                  void runLookup(nextOrderId);
+                  setLookupError('QR scan can be added later. Use the order ID for now.');
                 }}
               />
               <AppButton
-                label="Lookup"
+                label="Find booking"
                 className="flex-1"
-                trailingIcon={<ArrowRight size={16} color="#FFFFFF" />}
+                trailingIcon={<Search size={16} color="#FFFFFF" />}
                 onPress={() => void runLookup()}
                 isLoading={isLookingUp}
               />
+            </View>
+
+            <View className="flex-row flex-wrap gap-2">
+              <AppChip
+                label={
+                  todaysAwaitingDropOffBookings.length > 0
+                    ? `Awaiting today (${todaysAwaitingDropOffBookings.length})`
+                    : 'Awaiting today'
+                }
+                variant={todaysAwaitingDropOffBookings.length > 0 ? 'warning' : 'neutral'}
+                size="md"
+                onPress={() => {
+                  const nextBooking = todaysAwaitingDropOffBookings[0] ?? null;
+                  if (!nextBooking) {
+                    setLookupError('No awaiting drop-offs are scheduled for today.');
+                    return;
+                  }
+
+                  setLookupError(null);
+                  setSelectedBooking(nextBooking);
+                }}
+              />
+              {defaultBooking ? (
+                <AppChip
+                  label={`Next: ${defaultBooking.orderCode ?? formatBookingOrderCode(defaultBooking.id)}`}
+                  variant="secondary"
+                  size="md"
+                  onPress={() => {
+                    setLookupError(null);
+                    setSelectedBooking(defaultBooking);
+                  }}
+                />
+              ) : null}
             </View>
 
             {lookupError ? (
@@ -268,8 +381,8 @@ export default function AdminCheckInScreen() {
 
         {match ? (
           <>
-            <AppCard variant="highlighted" padding="md" className="rounded-[24px]">
-              <View className="gap-3">
+            <AppCard variant="highlighted" padding="md" className="rounded-[26px]">
+              <View className="gap-4">
                 <View className="flex-row items-start justify-between gap-3">
                   <View className="min-w-0 flex-1">
                     <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
@@ -281,51 +394,125 @@ export default function AdminCheckInScreen() {
                   </View>
                   <AppChip
                     label={getDropOffConfirmationStatus(match)}
-                    variant={match.status === 'in_progress' ? 'success' : getBookingStatusVariant(match.status)}
+                    variant={
+                      match.status === 'in_progress'
+                        ? 'success'
+                        : getBookingStatusVariant(match.status)
+                    }
                   />
                 </View>
 
-                <View className="gap-2">
-                  <HeroText className="text-[14px] font-semibold text-neutral-950">
-                    {matchedPlayer?.name ?? 'Player booking'}
-                  </HeroText>
-                  <HeroText className="text-[13px] leading-5 text-neutral-600">
-                    {match.racketBrand} {match.racketModel}
-                  </HeroText>
-                  <HeroText className="text-[13px] leading-5 text-neutral-600">
-                    {matchedString?.brand ?? 'Custom'} {matchedString?.model ?? 'String selection'} • {match.requestedTension} lbs
-                  </HeroText>
-                </View>
-
-                <View className="rounded-[18px] bg-white/70 px-4 py-3">
-                  <View className="flex-row items-center gap-2">
-                    <CalendarClock size={16} color="#2F64B6" />
-                    <HeroText className="text-[13px] font-medium text-neutral-700">
-                      Scheduled drop-off: {formatDropOffDateTime(match)}
+                <View className="gap-3 rounded-[20px] bg-white/80 px-4 py-4">
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">Player</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {matchedPlayer?.name ?? 'Player booking'}
+                    </HeroText>
+                  </View>
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">Contact</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {matchedPlayerContact}
+                    </HeroText>
+                  </View>
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">Racket</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {match.racketBrand} {match.racketModel}
+                    </HeroText>
+                  </View>
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">String</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {matchedString?.brand ?? 'Custom'} {matchedString?.model ?? 'String selection'}
+                    </HeroText>
+                  </View>
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">Tension</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {match.requestedTension} lbs
+                    </HeroText>
+                  </View>
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">Slot</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {formatDropOffDateTime(match)}
+                    </HeroText>
+                  </View>
+                  <View className="flex-row items-start justify-between gap-4">
+                    <HeroText className="text-sm font-medium text-neutral-500">Status</HeroText>
+                    <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
+                      {formatBookingStatus(match.status)}
                     </HeroText>
                   </View>
                 </View>
               </View>
             </AppCard>
 
-            <AppCard variant="elevated" padding="md" className="rounded-[24px]">
+            <AppCard variant="elevated" padding="md" className="rounded-[26px]">
               <View className="gap-3">
-                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-                  Confirmation note
-                </HeroText>
+                <View className="flex-row items-center gap-2">
+                  <CalendarClock size={16} color="#2F64B6" />
+                  <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                    Counter checklist
+                  </HeroText>
+                </View>
+
+                <View className="gap-3">
+                  {CHECKLIST_ITEMS.map((item) => {
+                    const isChecked = checklist[item.key];
+
+                    return (
+                      <Pressable
+                        key={item.key}
+                        onPress={() =>
+                          setChecklist((current) => ({
+                            ...current,
+                            [item.key]: !current[item.key],
+                          }))
+                        }
+                      >
+                        <AppCard variant="subtle" padding="md">
+                          <View className="flex-row items-center gap-3">
+                            <View
+                              className={
+                                isChecked
+                                  ? 'h-7 w-7 items-center justify-center rounded-full bg-success-600'
+                                  : 'h-7 w-7 items-center justify-center rounded-full border border-neutral-300 bg-white'
+                              }
+                            >
+                              {isChecked ? <Check size={15} color="#FFFFFF" /> : null}
+                            </View>
+                            <View className="flex-1">
+                              <HeroText className="text-[15px] font-semibold text-neutral-950">
+                                {item.label}
+                              </HeroText>
+                              <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+                                {item.helper}
+                              </HeroText>
+                            </View>
+                          </View>
+                        </AppCard>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
                 <AppInput
-                  label="Optional admin note"
-                  value={confirmationNote}
-                  onChangeText={setConfirmationNote}
+                  label="Notes (optional)"
+                  value={notes}
+                  onChangeText={setNotes}
                   multiline
                   inputClassName="min-h-24"
-                  placeholder="Frame condition, handed-over accessories, or check-in observations..."
+                  placeholder="Frame condition, urgent remarks, or handover notes..."
                 />
+
                 {confirmError ? (
                   <HeroText className="text-sm font-semibold text-danger-600">
                     {confirmError}
                   </HeroText>
                 ) : null}
+
                 <AppButton
                   label={match.status === 'in_progress' ? 'Open booking' : 'Confirm drop-off'}
                   size="lg"
@@ -336,7 +523,18 @@ export default function AdminCheckInScreen() {
               </View>
             </AppCard>
           </>
-        ) : null}
+        ) : (
+          <AppCard variant="subtle" padding="md" className="rounded-[26px]">
+            <View className="gap-2">
+              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                No booking selected
+              </HeroText>
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                Search an order ID or use the awaiting-today shortcut to start check-in.
+              </HeroText>
+            </View>
+          </AppCard>
+        )}
       </View>
     </AppScreen>
   );

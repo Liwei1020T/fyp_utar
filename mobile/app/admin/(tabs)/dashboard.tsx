@@ -1,15 +1,64 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowRight, CalendarRange, Clock3, LogOut, QrCode, Store, TimerReset } from 'lucide-react-native';
+import {
+  ArrowRight,
+  Boxes,
+  CalendarRange,
+  Clock3,
+  LogOut,
+  Settings2,
+  Store,
+  TimerReset,
+  Undo2,
+} from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
+import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { useAppStore, useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
+
+const PRIMARY_ACTIONS = [
+  {
+    title: 'Check-in',
+    subtitle: 'Confirm player racket drop-off at the counter.',
+    route: '/admin/check-in',
+    icon: Undo2,
+    variant: 'dark' as const,
+  },
+  {
+    title: 'Bookings',
+    subtitle: 'Update service status and monitor the queue.',
+    route: '/admin/bookings',
+    icon: CalendarRange,
+    variant: 'outline' as const,
+  },
+  {
+    title: 'Inventory',
+    subtitle: 'Review string stock and low-stock items.',
+    route: '/admin/inventory',
+    icon: Boxes,
+    variant: 'outline' as const,
+  },
+  {
+    title: 'Business hours',
+    subtitle: 'Adjust slots and store availability windows.',
+    route: '/admin/business-hours',
+    icon: Clock3,
+    variant: 'outline' as const,
+  },
+  {
+    title: 'Store settings',
+    subtitle: 'Edit store profile, notes, and policies.',
+    route: '/admin/settings',
+    icon: Settings2,
+    variant: 'outline' as const,
+  },
+];
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
@@ -23,6 +72,11 @@ export default function AdminDashboardScreen() {
   }
 
   const adminBookings = bookings.filter((item) => item.adminId === user.id);
+  const awaitingDropOffCount = adminBookings.filter((item) => item.status === 'awaiting_dropoff').length;
+  const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
+  const readyForCollectionCount = adminBookings.filter(
+    (item) => item.status === 'ready_for_collection',
+  ).length;
   const lowStockCount = strings.filter((item) => item.availability === 'low_stock').length;
 
   return (
@@ -30,7 +84,7 @@ export default function AdminDashboardScreen() {
       tone="admin"
       headerVariant="primary"
       title="Admin overview"
-      subtitle={`${user.businessName} operations at a glance.`}
+      subtitle={`${user.businessName} counter operations.`}
       headerRight={
         <AppIconButton
           icon={<LogOut size={20} color="#EF4444" />}
@@ -42,71 +96,133 @@ export default function AdminDashboardScreen() {
         />
       }
     >
-      <AppCard variant="dark" className="rounded-[32px]" padding="lg">
-        <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
-          Shop operations
-        </HeroText>
-        <HeroText className="mt-2 text-[28px] font-bold tracking-tight text-white">
-          Keep bookings, inventory, and store scheduling aligned for the FYP1 demo.
-        </HeroText>
-        <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-          Focus the dashboard on backend-connected booking, inventory, business-hours, and store-setting actions.
-        </HeroText>
-      </AppCard>
+      <View className="gap-5">
+        <AppCard variant="dark" className="rounded-[30px]" padding="md">
+          <View className="flex-row items-start justify-between gap-4">
+            <View className="min-w-0 flex-1">
+              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-100">
+                Counter desk
+              </HeroText>
+              <HeroText className="mt-1 text-[22px] font-bold tracking-tight text-white">
+                Run today&apos;s drop-offs and service queue.
+              </HeroText>
+              <HeroText className="mt-2 text-sm leading-5 text-primary-100">
+                Keep high-frequency actions within one tap.
+              </HeroText>
+            </View>
+            <AppChip
+              label={`${awaitingDropOffCount} awaiting`}
+              variant="warning"
+              className="mt-1"
+            />
+          </View>
+        </AppCard>
 
-      <AppSection eyebrow="Today" title="Operational snapshot">
-        <View className="flex-row flex-wrap gap-3">
-          <MetricStatCard title="Today bookings" value={String(adminBookings.length)} icon={<CalendarRange size={20} color="#2F64B6" />} />
-          <MetricStatCard title="Awaiting drop-off" value={String(adminBookings.filter((item) => item.status === 'awaiting_dropoff').length)} icon={<QrCode size={20} color="#2F64B6" />} />
-          <MetricStatCard title="In progress" value={String(adminBookings.filter((item) => item.status === 'in_progress').length)} icon={<TimerReset size={20} color="#22766D" />} accentClassName="bg-[#E4F2F0]" />
-          <MetricStatCard title="Ready pickup" value={String(adminBookings.filter((item) => item.status === 'ready_for_collection').length)} icon={<Store size={20} color="#6550B8" />} accentClassName="bg-[#ECE7FA]" />
-          <MetricStatCard title="Low stock" value={String(lowStockCount)} icon={<Clock3 size={20} color="#C98A2E" />} accentClassName="bg-secondary-50" />
-        </View>
-      </AppSection>
+        <AppSection
+          eyebrow="Primary actions"
+          title="Start with the counter flow"
+          subtitle="Move the most common shop tasks to the top."
+          variant="compact"
+        >
+          <View className="gap-3">
+            {PRIMARY_ACTIONS.map((action) => {
+              const Icon = action.icon;
 
-      <AppSection eyebrow="Quick actions" title="Manage the FYP1 flow">
-        <View className="gap-3">
-          {[
-            { title: 'Bookings', subtitle: 'Review and update real booking status.', route: '/admin/bookings' },
-            { title: 'Inventory', subtitle: 'Manage live string stock and notes.', route: '/admin/inventory' },
-            { title: 'Business hours', subtitle: 'Adjust slot-generating opening windows.', route: '/admin/business-hours' },
-            { title: 'Store settings', subtitle: 'Edit store contact, support, and booking policy copy.', route: '/admin/settings' },
-          ].map((item) => (
-            <Pressable key={item.title} onPress={() => router.push(item.route as never)}>
-              <AppCard variant="elevated" padding="md">
-                <View className="flex-row items-center justify-between gap-4">
-                  <View className="flex-1">
-                    <HeroText className="text-base font-semibold text-neutral-900">{item.title}</HeroText>
-                    <HeroText className="mt-1 text-sm leading-5 text-neutral-500">{item.subtitle}</HeroText>
+              return (
+                <AppCard
+                  key={action.title}
+                  variant={action.title === 'Check-in' ? 'highlighted' : 'elevated'}
+                  padding="md"
+                  onPress={() => router.push(action.route as never)}
+                >
+                  <View className="flex-row items-center justify-between gap-4">
+                    <View className="flex-row items-center gap-3 flex-1">
+                      <View
+                        className={
+                          action.title === 'Check-in'
+                            ? 'h-12 w-12 items-center justify-center rounded-[18px] bg-primary-600'
+                            : 'h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50'
+                        }
+                      >
+                        <Icon
+                          size={20}
+                          color={action.title === 'Check-in' ? '#FFFFFF' : '#2F64B6'}
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <HeroText className="text-[16px] font-semibold tracking-tight text-neutral-950">
+                          {action.title}
+                        </HeroText>
+                        <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+                          {action.subtitle}
+                        </HeroText>
+                      </View>
+                    </View>
+                    <ArrowRight size={16} color="#94A3B8" />
                   </View>
-                  <ArrowRight size={16} color="#94A3B8" />
-                </View>
-              </AppCard>
-            </Pressable>
-          ))}
-        </View>
-      </AppSection>
+                </AppCard>
+              );
+            })}
+          </View>
+        </AppSection>
 
-      <AppSection eyebrow="Highlights" title="What needs attention?" className="mb-12">
-        <View className="gap-3">
-          <AppCard variant="subtle" padding="md">
-            <View className="flex-row items-center gap-3">
-              <QrCode size={18} color="#2F64B6" />
-              <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                {adminBookings.filter((item) => item.status === 'awaiting_dropoff').length} bookings are waiting for counter drop-off today.
-              </HeroText>
-            </View>
-          </AppCard>
-          <AppCard variant="subtle" padding="md">
-            <View className="flex-row items-center gap-3">
-              <Clock3 size={18} color="#22766D" />
-              <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
-                {lowStockCount} strings are flagged as low stock and should be reviewed from inventory.
-              </HeroText>
-            </View>
-          </AppCard>
-        </View>
-      </AppSection>
+        <AppSection eyebrow="Today" title="Operational snapshot" variant="compact">
+          <View className="flex-row flex-wrap gap-3">
+            <MetricStatCard
+              title="Today bookings"
+              value={String(adminBookings.length)}
+              icon={<CalendarRange size={20} color="#2F64B6" />}
+            />
+            <MetricStatCard
+              title="Awaiting drop-off"
+              value={String(awaitingDropOffCount)}
+              icon={<Undo2 size={20} color="#B67D21" />}
+              accentClassName="bg-warning-50"
+            />
+            <MetricStatCard
+              title="In progress"
+              value={String(inProgressCount)}
+              icon={<TimerReset size={20} color="#22766D" />}
+              accentClassName="bg-[#E4F2F0]"
+            />
+            <MetricStatCard
+              title="Ready pickup"
+              value={String(readyForCollectionCount)}
+              icon={<Store size={20} color="#6550B8" />}
+              accentClassName="bg-[#ECE7FA]"
+            />
+          </View>
+        </AppSection>
+
+        <AppSection eyebrow="Highlights" title="What needs attention?" className="mb-12" variant="compact">
+          <View className="gap-3">
+            <AppCard variant="subtle" padding="md">
+              <View className="flex-row items-center gap-3">
+                <Undo2 size={18} color="#2F64B6" />
+                <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
+                  {awaitingDropOffCount} booking{awaitingDropOffCount === 1 ? '' : 's'} waiting for racket drop-off.
+                </HeroText>
+              </View>
+            </AppCard>
+            <AppCard variant="subtle" padding="md">
+              <View className="flex-row items-center gap-3">
+                <Clock3 size={18} color="#22766D" />
+                <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
+                  {inProgressCount} job{inProgressCount === 1 ? '' : 's'} currently on the stringing bench.
+                </HeroText>
+              </View>
+            </AppCard>
+            <AppCard variant="subtle" padding="md">
+              <View className="flex-row items-center gap-3">
+                <Boxes size={18} color="#C98A2E" />
+                <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
+                  {lowStockCount} string SKU{lowStockCount === 1 ? '' : 's'} flagged for stock review.
+                </HeroText>
+              </View>
+            </AppCard>
+          </View>
+        </AppSection>
+      </View>
     </AppScreen>
   );
 }

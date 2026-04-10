@@ -157,7 +157,7 @@ Additional operational stack screens:
 - payments monitor
 - settings
 - service queue
-- check-in
+- check-in for order-ID-based counter drop-off confirmation
 - chat detail
 
 `app/admin/index.tsx` redirects to `/admin/dashboard`.
@@ -410,7 +410,7 @@ Support modules branch off that main flow:
 
 The admin workspace is structured as an operations console:
 
-1. dashboard snapshot
+1. operations-first dashboard with compact counter actions
 2. booking queue
 3. inventory management
 4. chat queue
@@ -418,7 +418,7 @@ The admin workspace is structured as an operations console:
 
 Operational tools live outside the tabs:
 
-- check-in
+- check-in for direct `awaiting_dropoff -> in_progress` processing
 - service queue
 - business hours
 - payments monitor
@@ -649,6 +649,7 @@ Admin `secondary` pages:
 Admin `flow` pages:
 
 - `/admin/check-in`
+  Use for counter-side order lookup, drop-off checklist completion, and booking handover confirmation.
 
 ## 14. Screen Composition Pattern
 

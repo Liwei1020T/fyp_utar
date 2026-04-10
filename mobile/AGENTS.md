@@ -67,7 +67,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Player core journey:
   auth -> recommend/catalog -> string detail/compare -> booking draft -> payment -> booking detail/tracking -> feedback
 - Admin core journey:
-  auth -> dashboard -> bookings/chat/inventory -> booking or inventory detail -> operational updates
+  auth -> operations dashboard -> counter check-in/bookings/inventory -> booking or inventory detail -> operational updates
 - Shared state mutation hotspots:
   `submitBookingPayment`, `updateBookingStatus`, `appendChatMessage`, `requestAdminSupport`, `topUpWallet`, `updateBusinessHours`, `updateStringItem`
 
