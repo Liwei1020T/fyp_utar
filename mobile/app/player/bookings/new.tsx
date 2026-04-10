@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, View } from 'react-native';
+import { Image, ScrollView, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -384,7 +384,11 @@ export default function NewBookingScreen() {
               </HeroText>
             </AppCard>
           ) : null}
-          <View className="flex-row flex-wrap gap-2">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="gap-2 pr-2"
+          >
             {availableDates.map((date) => (
               <AppChip
                 key={date}
@@ -405,7 +409,7 @@ export default function NewBookingScreen() {
                 }}
               />
             ))}
-          </View>
+          </ScrollView>
           <SlotPicker
             slots={slots}
             selectedSlotId={selectedSlotId}
