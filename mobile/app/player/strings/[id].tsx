@@ -35,6 +35,7 @@ export default function StringDetailScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const selectedString = getStringById(params.id);
   const user = useCurrentUser();
+  const playerUser = user?.role === 'player' ? user : null;
   const liveResults = useLiveRecommendationResults();
   const compareSelection = useAppStore((state) => state.compareSelection);
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
@@ -256,7 +257,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Style Overlap</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  {liveResult?.reasons[0] ?? `Matches your ${user?.playingStyle || 'Balanced'} style with core ${selectedString.category} properties.`}
+                  {liveResult?.reasons[0] ?? `Matches your ${playerUser?.playingStyle || 'Balanced'} style with core ${selectedString.category} properties.`}
                 </HeroText>
               </View>
             </View>
@@ -280,7 +281,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Tension Fit</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  Optimal performance at {user?.preferredTension || 27} lbs falls right inside this string's sweet spot.
+                  Optimal performance at {playerUser?.preferredTension || 27} lbs falls right inside this string's sweet spot.
                 </HeroText>
               </View>
             </View>
@@ -300,7 +301,7 @@ export default function StringDetailScreen() {
           {isExplainOpen && (
             <View className="bg-white px-5 pb-6 pt-2">
               <HeroText className="text-sm leading-6 text-neutral-700">
-                As an <HeroText className="font-bold">{user?.playingStyle || 'Attacking'}</HeroText> player, our NLP engine identified that you prioritize <HeroText className="font-bold text-primary-700">Power</HeroText> and <HeroText className="font-bold text-primary-700">Sound</HeroText>.
+                As an <HeroText className="font-bold">{playerUser?.playingStyle || 'Attacking'}</HeroText> player, our NLP engine identified that you prioritize <HeroText className="font-bold text-primary-700">Power</HeroText> and <HeroText className="font-bold text-primary-700">Sound</HeroText>.
               </HeroText>
               <HeroText className="mt-4 text-sm leading-6 text-neutral-700">
                 The <HeroText className="font-bold">{selectedString.model}</HeroText> maps to these needs perfectly because 82% of similar players highlight its "instant snap" and "metallic ping" at higher tensions.

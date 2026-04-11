@@ -243,7 +243,10 @@ export default function NewBookingScreen() {
     return null;
   }
 
-  const tensionValue = Number.isFinite(watchedTension) ? watchedTension : recommendedMin;
+  const tensionValue =
+    typeof watchedTension === 'number' && Number.isFinite(watchedTension)
+      ? watchedTension
+      : recommendedMin;
   const selectedDateLabel = formatDateLabel(selectedSlot?.date ?? selectedDate);
   const selectedTimeLabel = selectedSlot?.label ?? 'Select a slot';
   const slotSupportCopy = slotsError
@@ -364,7 +367,7 @@ export default function NewBookingScreen() {
                       />
                       <View className="items-center">
                         <HeroText className="text-[28px] font-bold tracking-tight text-neutral-950">
-                          {value} lbs
+                          {String(value)} lbs
                         </HeroText>
                         <HeroText className="mt-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
                           Requested tension

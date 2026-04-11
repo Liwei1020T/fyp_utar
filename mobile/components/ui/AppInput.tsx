@@ -3,15 +3,17 @@ import { View } from 'react-native';
 import { HeroTextField, HeroText } from './heroui';
 import { cn, type HeroTextFieldProps } from './heroui';
 
-interface AppInputProps extends HeroTextFieldProps {
+interface AppInputProps extends Omit<HeroTextFieldProps, 'variant'> {
   label?: string;
   error?: string;
   helperText?: string;
   className?: string;
   containerClassName?: string;
   inputClassName?: string;
+  innerContainerClassName?: string;
   leftAdornment?: React.ReactNode;
   rightAdornment?: React.ReactNode;
+  variant?: 'default' | 'minimal';
 }
 
 export function AppInput({
@@ -21,10 +23,43 @@ export function AppInput({
   className,
   containerClassName,
   inputClassName,
+  innerContainerClassName,
   leftAdornment,
   rightAdornment,
+  variant = 'default',
   ...props
 }: AppInputProps) {
+  const isMinimal = variant === 'minimal';
+
+  if (isMinimal) {
+    return (
+      <View className={cn('mb-4', className)}>
+        <View
+          className={cn(
+            'flex-row items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 shadow-sm h-11',
+            containerClassName,
+            innerContainerClassName
+          )}
+        >
+          {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
+          <HeroTextField
+            variant="secondary"
+            isInvalid={Boolean(error)}
+            className={cn(
+              'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
+              props.multiline ? 'min-h-24 py-3' : '',
+              inputClassName
+            )}
+            selectionColorClassName="accent-primary-600"
+            placeholderColorClassName="field-placeholder"
+            {...props}
+          />
+          {rightAdornment ? <View className="shrink-0">{rightAdornment}</View> : null}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className={cn('mb-4', className)}>
       {label && (
@@ -42,7 +77,8 @@ export function AppInput({
         <View
           className={cn(
             'min-h-[52px] flex-row items-center gap-3 rounded-[20px] border px-4 py-1',
-            error ? 'border-danger/15 bg-danger/5' : 'border-field-border bg-field-background'
+            error ? 'border-danger/15 bg-danger/5' : 'border-field-border bg-field-background',
+            innerContainerClassName
           )}
         >
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}

@@ -23,6 +23,7 @@ import { FloatingCompareTray } from '../../../components/shared/FloatingCompareT
 import { useAppStore, useStrings } from '../../../store/appStore';
 import { formatLabel } from '../../../lib/formatters';
 import { cn } from '../../../components/ui/heroui';
+import type { StringItem } from '../../../types/domain';
 
 const sortOptions = [
   { id: 'power', label: 'Power' },
@@ -36,6 +37,12 @@ const modeOptions = [
 ] as const;
 
 type DisplayMode = (typeof modeOptions)[number]['id'];
+type BrandGroup = { name: string; data: StringItem[] };
+type CatalogListItem = StringItem | BrandGroup;
+
+function isBrandGroup(item: CatalogListItem): item is BrandGroup {
+  return 'data' in item;
+}
 
 export default function StringsCatalogScreen() {
   const router = useRouter();
@@ -80,7 +87,7 @@ export default function StringsCatalogScreen() {
   const groupedByBrand = useMemo(() => {
     if (displayMode !== 'brand') return [];
     
-    const groups: Record<string, typeof strings> = {};
+    const groups: Record<string, StringItem[]> = {};
     filteredStrings.forEach(item => {
       if (!groups[item.brand]) groups[item.brand] = [];
       groups[item.brand].push(item);
@@ -110,6 +117,7 @@ export default function StringsCatalogScreen() {
         />
         <AppIconButton
           icon={<SlidersHorizontal size={18} color={showFilters ? '#2563EB' : '#475569'} strokeWidth={2.5} />}
+          accessibilityLabel={showFilters ? 'Hide catalog filters' : 'Show catalog filters'}
           onPress={() => setShowFilters(!showFilters)}
           className={cn(
             "h-11 w-11 rounded-full border shadow-sm",
@@ -251,16 +259,16 @@ export default function StringsCatalogScreen() {
       >
         <FlatList
           className="flex-1"
-          data={displayMode === 'all' ? filteredStrings : groupedByBrand}
-          keyExtractor={(item) => (displayMode === 'all' ? (item as any).id : (item as any).name)}
+          data={(displayMode === 'all' ? filteredStrings : groupedByBrand) as CatalogListItem[]}
+          keyExtractor={(item) => (isBrandGroup(item) ? item.name : item.id)}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           scrollIndicatorInsets={{ bottom: bottomContentInset + 60 }}
           contentContainerStyle={{ paddingBottom: bottomContentInset + 80, paddingTop: 4 }}
           ListHeaderComponent={renderHeaderComponent}
           renderItem={({ item }) => {
-            if (displayMode === 'brand') {
-              const group = item as { name: string; data: typeof strings };
+            if (isBrandGroup(item)) {
+              const group = item;
               return (
                 <View className="mb-4">
                   <View className="flex-row items-center justify-between mb-1.5 px-1">
@@ -279,7 +287,7 @@ export default function StringsCatalogScreen() {
                 </View>
               );
             }
-            return <CompactStringCard item={item as any} />;
+            return <CompactStringCard item={item} />;
           }}
         />
       </AppScreen>

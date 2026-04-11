@@ -45,6 +45,10 @@ export function formatConversationMode(mode: ConversationMode) {
   return formatLabel(mode);
 }
 
+export function formatMessageRole(role: ChatMessageRole) {
+  return formatLabel(role);
+}
+
 export function formatPlayFrequency(value: string) {
   switch (value) {
     case 'Social':
