@@ -21,6 +21,7 @@ import type {
   BackendStoreSettingsPayload,
   BackendString,
 } from '../types/backend';
+import { Platform } from 'react-native';
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ||
@@ -184,7 +185,22 @@ async function requestFormJson<T>(
   return json as T;
 }
 
-function buildBookingUpdateForm(input: {
+async function normalizeUploadFile(file: BackendUploadFile) {
+  if (Platform.OS !== 'web') {
+    return file as unknown as Blob;
+  }
+
+  const response = await fetch(file.uri);
+  const blob = await response.blob();
+
+  if (typeof File === 'undefined') {
+    return blob;
+  }
+
+  return new File([blob], file.name, { type: file.type || blob.type });
+}
+
+async function buildBookingUpdateForm(input: {
   comment?: string;
   photo?: BackendUploadFile | null;
 }) {
@@ -193,7 +209,7 @@ function buildBookingUpdateForm(input: {
     formData.append('comment', input.comment.trim());
   }
   if (input.photo) {
-    formData.append('photo', input.photo as unknown as Blob);
+    formData.append('photo', await normalizeUploadFile(input.photo));
   }
   return formData;
 }
@@ -309,10 +325,12 @@ export const backendApi = {
     bookingId: string,
     input: { comment?: string; photo?: BackendUploadFile | null },
   ) {
-    return requestFormJson<BackendBooking>(`/admin/bookings/${bookingId}/updates`, {
-      formData: buildBookingUpdateForm(input),
-      token,
-    });
+    return buildBookingUpdateForm(input).then((formData) =>
+      requestFormJson<BackendBooking>(`/admin/bookings/${bookingId}/updates`, {
+        formData,
+        token,
+      }),
+    );
   },
   adminListInventoryStrings(
     token: string,
@@ -498,10 +516,12 @@ export const backendApi = {
     bookingId: string,
     input: { comment?: string; photo?: BackendUploadFile | null },
   ) {
-    return requestFormJson<BackendBooking>(`/bookings/${bookingId}/updates`, {
-      formData: buildBookingUpdateForm(input),
-      token,
-    });
+    return buildBookingUpdateForm(input).then((formData) =>
+      requestFormJson<BackendBooking>(`/bookings/${bookingId}/updates`, {
+        formData,
+        token,
+      }),
+    );
   },
   previewRecommendations(token: string, payload: BackendRecommendationPayload) {
     return requestJson<BackendRecommendationResponse>('/recommendations/preview', {
