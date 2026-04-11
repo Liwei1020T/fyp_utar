@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
   Boxes,
   CalendarClock,
   CheckCircle2,
+  X,
   Clock3,
   Circle,
   Store,
@@ -15,6 +16,7 @@ import {
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
+import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
@@ -139,7 +141,13 @@ function SummaryRow({
   );
 }
 
-function AdminUpdateFeed({ updates }: { updates: BookingUpdate[] }) {
+function AdminUpdateFeed({
+  updates,
+  onOpenPhoto,
+}: {
+  updates: BookingUpdate[];
+  onOpenPhoto: (update: BookingUpdate) => void;
+}) {
   if (updates.length === 0) {
     return (
       <AppCard variant="subtle" padding="md">
@@ -193,12 +201,22 @@ function AdminUpdateFeed({ updates }: { updates: BookingUpdate[] }) {
                 </HeroText>
               ) : null}
               {item.photoUrl ? (
-                <Image
-                  source={{ uri: item.photoUrl }}
-                  className="h-36 w-full rounded-[22px] bg-neutral-100"
-                  resizeMode="cover"
-                  accessibilityLabel={item.photoOriginalName ?? 'Booking update photo'}
-                />
+                <Pressable
+                  accessibilityRole="imagebutton"
+                  accessibilityLabel={`Open ${item.photoOriginalName ?? 'booking update photo'}`}
+                  onPress={() => onOpenPhoto(item)}
+                >
+                  <Image
+                    source={{ uri: item.photoUrl }}
+                    className="h-36 w-full rounded-[22px] bg-neutral-100"
+                    resizeMode="cover"
+                  />
+                  <View className="absolute bottom-2 right-2 rounded-full bg-black/55 px-3 py-1.5">
+                    <HeroText className="text-[11px] font-semibold text-white">
+                      View photo
+                    </HeroText>
+                  </View>
+                </Pressable>
               ) : null}
             </View>
           </View>
@@ -230,6 +248,7 @@ export default function AdminBookingDetailScreen() {
   const [updatePhotoType, setUpdatePhotoType] = useState<BackendBookingPhotoType>('racket');
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
+  const [previewUpdate, setPreviewUpdate] = useState<BookingUpdate | null>(null);
 
   useEffect(() => {
     if (booking) {
@@ -583,7 +602,7 @@ export default function AdminBookingDetailScreen() {
         subtitle="Track progress notes and photos in one feed."
         variant="compact"
       >
-        <AdminUpdateFeed updates={sortedUpdates} />
+        <AdminUpdateFeed updates={sortedUpdates} onOpenPhoto={setPreviewUpdate} />
       </AppSection>
 
       <AppSection
@@ -655,6 +674,46 @@ export default function AdminBookingDetailScreen() {
           />
         </AppCard>
       </AppSection>
+
+      <Modal
+        visible={Boolean(previewUpdate?.photoUrl)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewUpdate(null)}
+      >
+        <View className="flex-1 justify-center bg-black/80 px-5">
+          <View className="gap-4 rounded-[28px] bg-white p-4">
+            <View className="flex-row items-start justify-between gap-4">
+              <View className="flex-1">
+                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                  Uploaded photo
+                </HeroText>
+                <HeroText className="mt-1 text-[17px] font-bold tracking-tight text-neutral-950">
+                  {previewUpdate ? getUpdateMetaLabel(previewUpdate) : 'Booking photo'}
+                </HeroText>
+              </View>
+              <AppIconButton
+                icon={<X size={18} color="#475569" />}
+                accessibilityLabel="Close photo preview"
+                onPress={() => setPreviewUpdate(null)}
+              />
+            </View>
+            {previewUpdate?.photoUrl ? (
+              <Image
+                source={{ uri: previewUpdate.photoUrl }}
+                className="h-[420px] w-full rounded-[24px] bg-neutral-100"
+                resizeMode="contain"
+                accessibilityLabel={previewUpdate.photoOriginalName ?? 'Booking update photo'}
+              />
+            ) : null}
+            {previewUpdate?.comment ? (
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                {previewUpdate.comment}
+              </HeroText>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </AppScreen>
   );
 }
