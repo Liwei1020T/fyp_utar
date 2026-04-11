@@ -92,6 +92,12 @@ function getStatusHeroCopy(status: BookingStatus) {
 }
 
 function getUpdateMetaLabel(update: BookingUpdate) {
+  if (update.photoType === 'racket') {
+    return update.comment ? 'Racket photo and note added' : 'Racket photo added';
+  }
+  if (update.photoType === 'service_progress') {
+    return update.comment ? 'Progress photo and note added' : 'Progress photo added';
+  }
   if (update.photoUrl && update.comment) {
     return 'Photo and note added';
   }
@@ -358,10 +364,15 @@ export default function AdminBookingDetailScreen() {
 
     setIsSubmittingUpdate(true);
     try {
-      const updated = await backendApi.adminAddBookingUpdate(token, booking.id, {
-        comment: updateComment,
-        photo: updatePhoto,
-      });
+      const updated = updatePhoto
+        ? await backendApi.adminUploadBookingPhoto(token, booking.id, {
+            comment: updateComment,
+            photo: updatePhoto,
+            photoType: 'racket',
+          })
+        : await backendApi.adminAddBookingUpdate(token, booking.id, {
+            comment: updateComment,
+          });
       const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
       const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
       setLiveBookings(

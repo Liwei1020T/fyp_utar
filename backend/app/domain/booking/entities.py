@@ -25,6 +25,7 @@ class BookingUpdateEntry:
     photo_path: str | None
     photo_original_name: str | None
     photo_content_type: str | None
+    photo_type: str | None
     created_at: datetime | None
 
 

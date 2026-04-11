@@ -130,6 +130,7 @@ class BookingUpdate(Base):
         SAString(255), nullable=True
     )
     photo_content_type: Mapped[str | None] = mapped_column(SAString(120), nullable=True)
+    photo_type: Mapped[str | None] = mapped_column(SAString(40), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

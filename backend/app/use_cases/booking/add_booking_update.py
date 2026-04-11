@@ -23,6 +23,7 @@ class AddBookingUpdateUseCase:
         photo_path: str | None,
         photo_original_name: str | None,
         photo_content_type: str | None,
+        photo_type: str | None = None,
     ) -> BookingRecord:
         booking = self.booking_repository.get_by_id(booking_id)
         if booking is None:
@@ -42,4 +43,5 @@ class AddBookingUpdateUseCase:
             photo_path=photo_path,
             photo_original_name=photo_original_name,
             photo_content_type=photo_content_type,
+            photo_type=photo_type,
         )

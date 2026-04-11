@@ -745,7 +745,7 @@ def test_player_and_admin_can_add_booking_update_photos():
     player_update = client.post(
         f"/api/bookings/{booking_id}/updates",
         headers=headers(customer_token),
-        data={"comment": "Frame condition before drop-off."},
+        data={"comment": "Frame condition before drop-off.", "photo_type": "racket"},
         files={"photo": ("player-racket.jpg", b"player-photo", "image/jpeg")},
     )
     assert player_update.status_code == 200
@@ -753,22 +753,40 @@ def test_player_and_admin_can_add_booking_update_photos():
     assert player_update.json()["updates"][0]["photo_url"].startswith(
         "/media/booking-updates/"
     )
+    assert player_update.json()["updates"][0]["photo_type"] == "racket"
 
     admin_token = login_admin()
     admin_update = client.post(
         f"/api/admin/bookings/{booking_id}/updates",
         headers=headers(admin_token),
-        data={"comment": "Admin received the racket photo."},
+        data={
+            "comment": "Admin received the racket photo.",
+            "photo_type": "service_progress",
+        },
         files={"photo": ("admin-racket.png", b"admin-photo", "image/png")},
     )
     assert admin_update.status_code == 200
     updates = admin_update.json()["updates"]
     assert [item["author_role"] for item in updates] == ["customer", "admin"]
     assert updates[-1]["comment"] == "Admin received the racket photo."
+    assert updates[-1]["photo_type"] == "service_progress"
+
+    admin_photo_update = client.post(
+        f"/api/admin/bookings/{booking_id}/photos",
+        headers=headers(admin_token),
+        data={"comment": "Reference photo before collection.", "photo_type": "other"},
+        files={"photo": ("collection.webp", b"admin-photo-2", "image/webp")},
+    )
+    assert admin_photo_update.status_code == 200
+    updates = admin_photo_update.json()["updates"]
+    assert updates[-1]["author_role"] == "admin"
+    assert updates[-1]["comment"] == "Reference photo before collection."
+    assert updates[-1]["photo_type"] == "other"
+    assert updates[-1]["photo_url"].startswith("/media/booking-updates/")
 
     player_detail = client.get(
         f"/api/bookings/{booking_id}",
         headers=headers(customer_token),
     )
     assert player_detail.status_code == 200
-    assert len(player_detail.json()["updates"]) == 2
+    assert len(player_detail.json()["updates"]) == 3

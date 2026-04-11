@@ -67,6 +67,7 @@ class BookingUpdateOut(BaseModel):
     photo_url: str | None = None
     photo_original_name: str | None = None
     photo_content_type: str | None = None
+    photo_type: str | None = None
     created_at: str | None = None
 
 
@@ -113,6 +114,7 @@ def booking_update_to_dto(entry: BookingUpdateEntry) -> BookingUpdateOut:
         photo_url=f"/media/{entry.photo_path}" if entry.photo_path else None,
         photo_original_name=entry.photo_original_name,
         photo_content_type=entry.photo_content_type,
+        photo_type=entry.photo_type,
         created_at=isoformat_or_none(entry.created_at),
     )
 

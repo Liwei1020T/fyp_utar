@@ -116,6 +116,7 @@ Public unified Python endpoints:
 - `GET /api/admin/bookings/{id}`
 - `PATCH /api/admin/bookings/{id}/status`
 - `POST /api/admin/bookings/{id}/updates`
+- `POST /api/admin/bookings/{id}/photos`
 - `GET /api/admin/business-hours`
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`

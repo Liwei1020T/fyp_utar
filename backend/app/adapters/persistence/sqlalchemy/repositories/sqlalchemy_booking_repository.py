@@ -195,6 +195,7 @@ class SqlAlchemyBookingRepository:
         photo_path: str | None,
         photo_original_name: str | None,
         photo_content_type: str | None,
+        photo_type: str | None = None,
     ) -> BookingRecord:
         self.db.add(
             BookingUpdate(
@@ -205,6 +206,7 @@ class SqlAlchemyBookingRepository:
                 photo_path=photo_path,
                 photo_original_name=photo_original_name,
                 photo_content_type=photo_content_type,
+                photo_type=photo_type,
             )
         )
         self.db.commit()
@@ -230,12 +232,7 @@ class SqlAlchemyBookingRepository:
         return [to_booking_record(item) for item in items]
 
     def get_by_order_code(self, order_code: str) -> BookingRecord | None:
-        items = (
-            self.db.execute(self._detail_query())
-            .unique()
-            .scalars()
-            .all()
-        )
+        items = self.db.execute(self._detail_query()).unique().scalars().all()
         normalized = order_code.strip().upper()
         for booking in items:
             if booking_order_code(booking.id) == normalized:

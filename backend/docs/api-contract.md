@@ -238,6 +238,7 @@ Recommendation response:
 - `GET /api/admin/bookings/{id}`
 - `PATCH /api/admin/bookings/{id}/status`
 - `POST /api/admin/bookings/{id}/updates`
+- `POST /api/admin/bookings/{id}/photos`
 
 Canonical booking statuses:
 
@@ -278,8 +279,16 @@ Booking update endpoints accept `multipart/form-data` with at least one of:
 
 - `comment`: optional text comment
 - `photo`: optional JPG, PNG, or WEBP image up to 5 MB
+- `photo_type`: optional `racket`, `service_progress`, or `other`
+
+Admin photo uploads may also use `POST /api/admin/bookings/{id}/photos` with:
+
+- `photo`: required JPG, PNG, or WEBP image up to 5 MB
+- `comment`: optional admin note
+- `photo_type`: optional `racket`, `service_progress`, or `other`; defaults to `racket`
 
 Booking responses include:
 
 - `updates`: booking comments/photos from player or admin users
 - `photo_url`: relative media URL such as `/media/booking-updates/<file>`
+- `photo_type`: optional photo category for uploaded booking photos

@@ -142,6 +142,7 @@ export interface BackendBookingUpdate {
   photo_url: string | null;
   photo_original_name: string | null;
   photo_content_type: string | null;
+  photo_type: 'racket' | 'service_progress' | 'other' | null;
   created_at: string | null;
 }
 

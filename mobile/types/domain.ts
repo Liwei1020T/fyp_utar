@@ -109,6 +109,7 @@ export interface BookingUpdate {
   photoUrl?: string;
   photoOriginalName?: string;
   photoContentType?: string;
+  photoType?: 'racket' | 'service_progress' | 'other';
   createdAt: string;
 }
 

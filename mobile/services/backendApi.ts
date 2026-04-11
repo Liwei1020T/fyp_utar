@@ -56,6 +56,8 @@ export type BackendUploadFile = {
   type: string;
 };
 
+export type BackendBookingPhotoType = 'racket' | 'service_progress' | 'other';
+
 function apiRootUrl() {
   return API_BASE_URL.replace(/\/api\/?$/, '');
 }
@@ -203,10 +205,14 @@ async function normalizeUploadFile(file: BackendUploadFile) {
 async function buildBookingUpdateForm(input: {
   comment?: string;
   photo?: BackendUploadFile | null;
+  photoType?: BackendBookingPhotoType;
 }) {
   const formData = new FormData();
   if (input.comment?.trim()) {
     formData.append('comment', input.comment.trim());
+  }
+  if (input.photoType) {
+    formData.append('photo_type', input.photoType);
   }
   if (input.photo) {
     formData.append('photo', await normalizeUploadFile(input.photo));
@@ -323,10 +329,34 @@ export const backendApi = {
   adminAddBookingUpdate(
     token: string,
     bookingId: string,
-    input: { comment?: string; photo?: BackendUploadFile | null },
+    input: {
+      comment?: string;
+      photo?: BackendUploadFile | null;
+      photoType?: BackendBookingPhotoType;
+    },
   ) {
     return buildBookingUpdateForm(input).then((formData) =>
       requestFormJson<BackendBooking>(`/admin/bookings/${bookingId}/updates`, {
+        formData,
+        token,
+      }),
+    );
+  },
+  adminUploadBookingPhoto(
+    token: string,
+    bookingId: string,
+    input: {
+      photo: BackendUploadFile;
+      comment?: string;
+      photoType?: BackendBookingPhotoType;
+    },
+  ) {
+    return buildBookingUpdateForm({
+      comment: input.comment,
+      photo: input.photo,
+      photoType: input.photoType ?? 'racket',
+    }).then((formData) =>
+      requestFormJson<BackendBooking>(`/admin/bookings/${bookingId}/photos`, {
         formData,
         token,
       }),
@@ -514,7 +544,11 @@ export const backendApi = {
   addBookingUpdate(
     token: string,
     bookingId: string,
-    input: { comment?: string; photo?: BackendUploadFile | null },
+    input: {
+      comment?: string;
+      photo?: BackendUploadFile | null;
+      photoType?: BackendBookingPhotoType;
+    },
   ) {
     return buildBookingUpdateForm(input).then((formData) =>
       requestFormJson<BackendBooking>(`/bookings/${bookingId}/updates`, {

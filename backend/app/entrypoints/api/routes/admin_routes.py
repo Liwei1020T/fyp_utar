@@ -75,6 +75,21 @@ from app.use_cases.store.update_store_settings import UpdateStoreSettingsUseCase
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+BookingPhotoType = Literal["racket", "service_progress", "other"]
+
+
+async def save_update_photo_upload(
+    photo: UploadFile,
+) -> tuple[str, str | None, str | None]:
+    photo_content_type = photo.content_type
+    photo_original_name = photo.filename
+    photo_path = save_booking_update_photo(
+        content=await photo.read(),
+        content_type=photo.content_type,
+        original_name=photo.filename,
+    )
+    return photo_path, photo_original_name, photo_content_type
+
 
 @router.get("/strings", response_model=dict)
 def admin_list_strings(
@@ -270,6 +285,7 @@ async def admin_add_booking_update(
     booking_id: str,
     comment: str | None = Form(default=None),
     photo: UploadFile | None = File(default=None),
+    photo_type: BookingPhotoType = Form(default="other"),
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
 ) -> BookingOut:
@@ -277,13 +293,11 @@ async def admin_add_booking_update(
     photo_original_name = None
     photo_content_type = None
     if photo is not None:
-        photo_content_type = photo.content_type
-        photo_original_name = photo.filename
-        photo_path = save_booking_update_photo(
-            content=await photo.read(),
-            content_type=photo.content_type,
-            original_name=photo.filename,
-        )
+        (
+            photo_path,
+            photo_original_name,
+            photo_content_type,
+        ) = await save_update_photo_upload(photo)
 
     booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
         booking_id=booking_id,
@@ -293,6 +307,34 @@ async def admin_add_booking_update(
         photo_path=photo_path,
         photo_original_name=photo_original_name,
         photo_content_type=photo_content_type,
+        photo_type=photo_type if photo_path else None,
+    )
+    return booking_to_dto(booking, include_user=True, include_history=True)
+
+
+@router.post("/bookings/{booking_id}/photos", response_model=BookingOut)
+async def admin_upload_booking_photo(
+    booking_id: str,
+    photo: UploadFile = File(...),
+    comment: str | None = Form(default=None),
+    photo_type: BookingPhotoType = Form(default="racket"),
+    current_user: CurrentUser = Depends(get_current_admin),
+    booking_repository=Depends(get_booking_repository),
+) -> BookingOut:
+    (
+        photo_path,
+        photo_original_name,
+        photo_content_type,
+    ) = await save_update_photo_upload(photo)
+    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
+        booking_id=booking_id,
+        author_user_id=current_user.user_id,
+        author_role=current_user.role,
+        comment=comment,
+        photo_path=photo_path,
+        photo_original_name=photo_original_name,
+        photo_content_type=photo_content_type,
+        photo_type=photo_type,
     )
     return booking_to_dto(booking, include_user=True, include_history=True)
 

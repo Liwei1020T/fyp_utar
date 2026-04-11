@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
@@ -15,15 +17,17 @@ from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_current_customer
+from app.shared.errors import NotFoundError
 from app.shared.upload_storage import save_booking_update_photo
 from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
-from app.shared.errors import NotFoundError
 from app.use_cases.booking.create_booking import CreateBookingUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
 from app.use_cases.booking.list_my_bookings import ListMyBookingsUseCase
 
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
+
+BookingPhotoType = Literal["racket", "service_progress", "other"]
 
 
 @router.post("", response_model=BookingOut)
@@ -84,6 +88,7 @@ async def add_booking_update(
     booking_id: str,
     comment: str | None = Form(default=None),
     photo: UploadFile | None = File(default=None),
+    photo_type: BookingPhotoType = Form(default="other"),
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
 ) -> BookingOut:
@@ -107,5 +112,6 @@ async def add_booking_update(
         photo_path=photo_path,
         photo_original_name=photo_original_name,
         photo_content_type=photo_content_type,
+        photo_type=photo_type if photo_path else None,
     )
     return booking_to_dto(booking, include_user=False, include_history=True)

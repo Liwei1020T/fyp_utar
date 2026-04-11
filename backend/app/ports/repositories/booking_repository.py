@@ -58,6 +58,7 @@ class BookingRepository(Protocol):
         photo_path: str | None,
         photo_original_name: str | None,
         photo_content_type: str | None,
+        photo_type: str | None = None,
     ) -> BookingRecord: ...
 
     def list_slot_bookings(self) -> list[BookingRecord]: ...

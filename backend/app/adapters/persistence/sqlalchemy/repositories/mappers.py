@@ -155,6 +155,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
                 photo_path=entry.photo_path,
                 photo_original_name=entry.photo_original_name,
                 photo_content_type=entry.photo_content_type,
+                photo_type=entry.photo_type,
                 created_at=entry.created_at,
             )
             for entry in booking.updates

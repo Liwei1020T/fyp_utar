@@ -463,6 +463,7 @@ function mapBackendBookingUpdateToBookingUpdate(
     photoUrl: resolveBackendMediaUrl(item.photo_url),
     photoOriginalName: item.photo_original_name ?? undefined,
     photoContentType: item.photo_content_type ?? undefined,
+    photoType: item.photo_type ?? undefined,
     createdAt: item.created_at ?? new Date().toISOString(),
   };
 }
