@@ -36,7 +36,11 @@ import {
   formatDateTime,
 } from '../../../lib/formatters';
 import { getStringById, getUserById } from '../../../services/mockAppService';
-import { BackendApiError, backendApi } from '../../../services/backendApi';
+import {
+  BackendApiError,
+  backendApi,
+  type BackendBookingPhotoType,
+} from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
 
 const WORKFLOW_STATUSES = [
@@ -45,6 +49,15 @@ const WORKFLOW_STATUSES = [
   'ready_for_collection',
   'completed',
 ] as const;
+
+const PHOTO_TYPE_OPTIONS: {
+  value: BackendBookingPhotoType;
+  label: string;
+}[] = [
+  { value: 'racket', label: 'Racket' },
+  { value: 'service_progress', label: 'Progress' },
+  { value: 'other', label: 'Other' },
+];
 
 function getPriceStateLabel(booking: Booking) {
   if (booking.totalAmount > 0) {
@@ -214,6 +227,7 @@ export default function AdminBookingDetailScreen() {
     name: string;
     type: string;
   } | null>(null);
+  const [updatePhotoType, setUpdatePhotoType] = useState<BackendBookingPhotoType>('racket');
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
 
@@ -368,7 +382,7 @@ export default function AdminBookingDetailScreen() {
         ? await backendApi.adminUploadBookingPhoto(token, booking.id, {
             comment: updateComment,
             photo: updatePhoto,
-            photoType: 'racket',
+            photoType: updatePhotoType,
           })
         : await backendApi.adminAddBookingUpdate(token, booking.id, {
             comment: updateComment,
@@ -380,6 +394,7 @@ export default function AdminBookingDetailScreen() {
       );
       setUpdateComment('');
       setUpdatePhoto(null);
+      setUpdatePhotoType('racket');
     } catch (saveError) {
       setUpdateError(
         saveError instanceof BackendApiError
@@ -589,11 +604,23 @@ export default function AdminBookingDetailScreen() {
             placeholder="Add service notes, frame condition, or collection instructions..."
           />
           {updatePhoto ? (
-            <Image
-              source={{ uri: updatePhoto.uri }}
-              className="mt-3 h-36 w-full rounded-[22px] bg-neutral-100"
-              resizeMode="cover"
-            />
+            <View className="mt-3 gap-3">
+              <Image
+                source={{ uri: updatePhoto.uri }}
+                className="h-36 w-full rounded-[22px] bg-neutral-100"
+                resizeMode="cover"
+              />
+              <View className="flex-row flex-wrap gap-2">
+                {PHOTO_TYPE_OPTIONS.map((option) => (
+                  <AppChip
+                    key={option.value}
+                    label={option.label}
+                    variant={updatePhotoType === option.value ? 'primary' : 'neutral'}
+                    onPress={() => setUpdatePhotoType(option.value)}
+                  />
+                ))}
+              </View>
+            </View>
           ) : null}
           {updateError ? (
             <HeroText className="mt-3 text-sm font-semibold text-danger-600">
@@ -613,7 +640,10 @@ export default function AdminBookingDetailScreen() {
                 label="Remove"
                 variant="ghost"
                 className="px-4"
-                onPress={() => setUpdatePhoto(null)}
+                onPress={() => {
+                  setUpdatePhoto(null);
+                  setUpdatePhotoType('racket');
+                }}
               />
             ) : null}
           </View>

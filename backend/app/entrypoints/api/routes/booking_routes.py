@@ -18,6 +18,7 @@ from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_current_customer
 from app.shared.errors import NotFoundError
+from app.shared.upload_storage import delete_booking_update_photo
 from app.shared.upload_storage import save_booking_update_photo
 from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.use_cases.booking.create_booking import CreateBookingUseCase
@@ -28,6 +29,23 @@ from app.use_cases.booking.list_my_bookings import ListMyBookingsUseCase
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 BookingPhotoType = Literal["racket", "service_progress", "other"]
+
+
+def get_customer_owned_booking(
+    *,
+    booking_id: str,
+    current_user: CurrentUser,
+    booking_repository,
+):
+    booking = GetBookingUseCase(booking_repository=booking_repository).execute(
+        booking_id
+    )
+    if (
+        current_user.role == UserRole.CUSTOMER.value
+        and booking.user_id != current_user.user_id
+    ):
+        raise NotFoundError("Booking not found")
+    return booking
 
 
 @router.post("", response_model=BookingOut)
@@ -68,14 +86,11 @@ def get_booking(
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
 ) -> BookingOut:
-    booking = GetBookingUseCase(booking_repository=booking_repository).execute(
-        booking_id
+    booking = get_customer_owned_booking(
+        booking_id=booking_id,
+        current_user=current_user,
+        booking_repository=booking_repository,
     )
-    if (
-        current_user.role == UserRole.CUSTOMER.value
-        and booking.user_id != current_user.user_id
-    ):
-        raise NotFoundError("Booking not found")
     return booking_to_dto(
         booking,
         include_user=current_user.role != UserRole.CUSTOMER.value,
@@ -92,6 +107,11 @@ async def add_booking_update(
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
 ) -> BookingOut:
+    get_customer_owned_booking(
+        booking_id=booking_id,
+        current_user=current_user,
+        booking_repository=booking_repository,
+    )
     photo_path = None
     photo_original_name = None
     photo_content_type = None
@@ -104,14 +124,20 @@ async def add_booking_update(
             original_name=photo.filename,
         )
 
-    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
-        booking_id=booking_id,
-        author_user_id=current_user.user_id,
-        author_role=current_user.role,
-        comment=comment,
-        photo_path=photo_path,
-        photo_original_name=photo_original_name,
-        photo_content_type=photo_content_type,
-        photo_type=photo_type if photo_path else None,
-    )
+    try:
+        booking = AddBookingUpdateUseCase(
+            booking_repository=booking_repository
+        ).execute(
+            booking_id=booking_id,
+            author_user_id=current_user.user_id,
+            author_role=current_user.role,
+            comment=comment,
+            photo_path=photo_path,
+            photo_original_name=photo_original_name,
+            photo_content_type=photo_content_type,
+            photo_type=photo_type if photo_path else None,
+        )
+    except Exception:
+        delete_booking_update_photo(photo_path)
+        raise
     return booking_to_dto(booking, include_user=False, include_history=True)

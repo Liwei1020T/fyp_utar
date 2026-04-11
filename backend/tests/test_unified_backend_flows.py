@@ -52,6 +52,13 @@ def first_string_id(token: str) -> str:
     return response.json()["items"][0]["id"]
 
 
+def booking_update_file_names() -> set[str]:
+    upload_dir = get_settings().upload_root_path / "booking-updates"
+    if not upload_dir.exists():
+        return set()
+    return {item.name for item in upload_dir.iterdir() if item.is_file()}
+
+
 def enable_password_reset_preview(monkeypatch) -> None:
     settings = get_settings()
     monkeypatch.setattr(settings, "password_reset_dev_preview_enabled", True)
@@ -790,3 +797,46 @@ def test_player_and_admin_can_add_booking_update_photos():
     )
     assert player_detail.status_code == 200
     assert len(player_detail.json()["updates"]) == 3
+
+
+def test_rejected_booking_update_photo_does_not_leave_file():
+    owner_token = register_customer(
+        username="photo-owner",
+        phone_number="+60125550124",
+    )
+    other_token = register_customer(
+        username="photo-other",
+        phone_number="+60125550125",
+    )
+    string_id = first_string_id(owner_token)
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(owner_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Arcsaber 11",
+            "requested_tension": 24,
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    before_files = booking_update_file_names()
+    forbidden_update = client.post(
+        f"/api/bookings/{booking_id}/updates",
+        headers=headers(other_token),
+        data={"comment": "Trying to upload to another booking."},
+        files={"photo": ("forbidden.jpg", b"forbidden-photo", "image/jpeg")},
+    )
+    assert forbidden_update.status_code == 404
+    assert booking_update_file_names() == before_files
+
+    missing_admin_update = client.post(
+        "/api/admin/bookings/not-a-booking/photos",
+        headers=headers(login_admin()),
+        data={"comment": "Invalid booking upload."},
+        files={"photo": ("missing.png", b"missing-photo", "image/png")},
+    )
+    assert missing_admin_update.status_code == 404
+    assert booking_update_file_names() == before_files

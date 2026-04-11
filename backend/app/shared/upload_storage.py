@@ -37,3 +37,15 @@ def save_booking_update_photo(
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(content)
     return relative_path.as_posix()
+
+
+def delete_booking_update_photo(relative_path: str | None) -> None:
+    if not relative_path:
+        return
+
+    destination = get_settings().upload_root_path / relative_path
+    try:
+        destination.unlink(missing_ok=True)
+    except OSError:
+        # Upload cleanup is best-effort; the original request error should still win.
+        return
