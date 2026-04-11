@@ -6,6 +6,8 @@ export type PlayFrequency = 'Social' | 'Weekly' | 'Tournament';
 export type BudgetRange = 'Below RM30' | 'RM30–RM50' | 'RM50+';
 export type PreferredFeel = 'Soft' | 'Balanced' | 'Crisp' | 'Hard';
 export type PriorityKey = 'power' | 'control' | 'durability' | 'comfort' | 'sound';
+export type StringCategory = 'repulsion' | 'balanced' | 'control' | 'durable';
+export type InventoryPriceStatus = 'priced' | 'pending' | 'quoted_at_shop';
 
 export interface UserIdentity {
   id: string;
@@ -46,24 +48,70 @@ export type AppUser = PlayerProfile | AdminProfile;
 
 export type InventoryAvailability = 'in_stock' | 'low_stock' | 'out_of_stock';
 
+export interface StringPerformanceScores {
+  power: number;
+  control: number;
+  durability: number;
+  comfort: number;
+  sound: number;
+}
+
+export interface StringCatalogRecord {
+  id: string;
+  brand: string;
+  modelName: string;
+  localizedName?: string;
+  gaugeMinMm: number | null;
+  gaugeMaxMm: number | null;
+  material: string;
+  description: string;
+  mainTrait: string;
+  category: StringCategory;
+  tensionMinLbs: number | null;
+  tensionMaxLbs: number | null;
+  performanceScores: StringPerformanceScores;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface VendorInventoryRecord {
+  id: string;
+  vendorId?: string;
+  stringId: string;
+  stockQty: number;
+  price: number | null;
+  priceStatus: InventoryPriceStatus;
+  availabilityStatus: InventoryAvailability;
+  shopNote?: string;
+  updatedAt?: string;
+}
+
 export interface StringItem {
   id: string;
   brand: string;
   model: string;
-  category: 'repulsion' | 'balanced' | 'control' | 'durable';
+  localizedName?: string;
+  category: StringCategory;
+  mainTrait: string;
   gauge: string;
+  gaugeMinMm: number | null;
+  gaugeMaxMm: number | null;
   material: string;
   price: number;
+  priceStatus: InventoryPriceStatus;
   recommendedTension: [number, number];
-  ratings: {
-    power: number;
-    control: number;
-    durability: number;
-    comfort: number;
-    sound: number;
-  };
+  tensionMinLbs: number | null;
+  tensionMaxLbs: number | null;
+  ratings: StringPerformanceScores;
   tensionNote: string;
   description: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  inventoryUpdatedAt?: string;
   bestFor: string[];
   strengths: string[];
   tradeOffs: string[];
@@ -72,6 +120,8 @@ export interface StringItem {
   stockLevel: number;
   availability: InventoryAvailability;
   adminNote?: string;
+  catalog: StringCatalogRecord;
+  inventory: VendorInventoryRecord;
 }
 
 export type BookingStatus =

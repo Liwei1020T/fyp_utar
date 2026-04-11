@@ -49,12 +49,14 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
   Covers dashboard, bookings, inventory, chat, analytics, business hours, check-in, payments, queue, and settings.
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
+- Admin inventory components: `components/admin/inventory/**`
+  Shared thumbnail cards and preview cards for the admin inventory workbench and detail editor live here.
 - State and mutation boundary: `store/appStore.ts`
   Mutable runtime source of truth for session, bookings, payments, chat, notifications, wallet, rackets, admin settings, and drafts.
 - Read helpers: `services/mockAppService.ts`, `services/backendApi.ts`, `services/backendMappers.ts`
   Mock lookups stay available, while the player core flow can map live backend data into the app domain.
 - Data contracts: `types/domain.ts`
-  Canonical shared domain model.
+  Canonical shared domain model. For inventory work, treat `StringItem.catalog` as master string data and `StringItem.inventory` as vendor-specific shop data; legacy top-level fields remain compatibility mirrors for older screens.
 - Seed data: `mocks/**`
   Mock datasets for all feature domains.
 - Deep-dive reference: `docs/frontend-architecture.md`
@@ -81,6 +83,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
    If a pattern repeats across screens, promote it into a shared primitive instead of duplicating screen-local markup.
 4. Keep domain types centralized in `types/domain.ts`.
    Do not redefine booking, payment, chat, racket, or admin/store-operation shapes inside screens.
+   For inventory changes, preserve the separation between `catalog` master data and `inventory` shop data instead of flattening new admin logic into ad-hoc screen state.
 5. Keep mutable business behavior in the store, not scattered across screens.
    Screens may derive display state, but durable mutations should live in `store/appStore.ts`.
 6. Treat the player core flow as hybrid.

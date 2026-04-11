@@ -51,7 +51,22 @@ export interface BackendString {
   brand: string;
   model_name: string;
   normalized_name: string;
+  localized_name?: string | null;
   price_rm: number | null;
+  gauge_min_mm?: number | null;
+  gauge_max_mm?: number | null;
+  material?: string | null;
+  description?: string | null;
+  main_trait?: string | null;
+  category?: string | null;
+  tension_min_lbs?: number | null;
+  tension_max_lbs?: number | null;
+  power_score?: number | null;
+  control_score?: number | null;
+  durability_score?: number | null;
+  comfort_score?: number | null;
+  sound_score?: number | null;
+  image_url?: string | null;
   attack: number;
   comfort: number;
   control: number;
@@ -76,10 +91,20 @@ export type BackendInventoryAvailability =
   | 'low_stock'
   | 'out_of_stock';
 
+export type BackendInventoryPriceStatus =
+  | 'priced'
+  | 'pending'
+  | 'quoted_at_shop';
+
 export interface BackendAdminInventoryString extends BackendString {
+  inventory_id?: string | null;
+  vendor_id?: string | null;
   stock_level: number;
   availability: BackendInventoryAvailability;
+  price_status?: BackendInventoryPriceStatus | null;
+  availability_status?: BackendInventoryAvailability | null;
   admin_note: string | null;
+  shop_note?: string | null;
 }
 
 export interface BackendStoreBusinessHoursDay {

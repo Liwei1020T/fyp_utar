@@ -34,6 +34,13 @@ import {
   formatLocalDateInputValue,
   formatLocalTimeValue,
 } from '../lib/formatters';
+import {
+  deriveAvailabilityStatus,
+  derivePriceStatus,
+  formatGaugeRange,
+  formatTensionRange,
+  sanitizePerformanceScores,
+} from '../lib/inventory';
 import { resolveBackendMediaUrl } from './backendApi';
 
 function titleCase(value: string) {
@@ -272,40 +279,167 @@ function deriveStrengthLabels(item: BackendString) {
     .map(([label]) => label);
 }
 
+function normalizeCategory(item: BackendString): StringItem['category'] {
+  const rawCategory = item.category?.trim().toLowerCase();
+  if (
+    rawCategory === 'repulsion' ||
+    rawCategory === 'balanced' ||
+    rawCategory === 'control' ||
+    rawCategory === 'durable'
+  ) {
+    return rawCategory;
+  }
+  return deriveCategory(item);
+}
+
+function deriveGaugeBounds(
+  item: BackendString,
+  category: StringItem['category'],
+) {
+  if (item.gauge_min_mm != null || item.gauge_max_mm != null) {
+    return {
+      min: item.gauge_min_mm ?? item.gauge_max_mm ?? null,
+      max: item.gauge_max_mm ?? item.gauge_min_mm ?? null,
+    };
+  }
+
+  switch (category) {
+    case 'repulsion':
+      return { min: 0.65, max: 0.68 };
+    case 'durable':
+      return { min: 0.68, max: 0.7 };
+    case 'control':
+      return { min: 0.65, max: 0.67 };
+    case 'balanced':
+    default:
+      return { min: 0.66, max: 0.69 };
+  }
+}
+
+function deriveMainTrait(
+  item: BackendString,
+  category: StringItem['category'],
+  strengths: string[],
+) {
+  if (item.main_trait?.trim()) {
+    return item.main_trait.trim();
+  }
+
+  switch (category) {
+    case 'repulsion':
+      return 'Repulsion';
+    case 'control':
+      return 'Control';
+    case 'durable':
+      return 'Durable';
+    case 'balanced':
+    default:
+      return strengths[0] ?? 'Balanced';
+  }
+}
+
+function deriveMaterial(item: BackendString) {
+  return item.material?.trim() || 'Performance multifilament';
+}
+
+function deriveScores(item: BackendString) {
+  return sanitizePerformanceScores(
+    {
+      power:
+        item.power_score
+        ?? Math.round(((item.attack + item.elasticity) / 2) * 10),
+      control: item.control_score ?? Math.round(item.control * 10),
+      durability:
+        item.durability_score
+        ?? Math.round(((item.durability + item.tension_retention) / 2) * 10),
+      comfort: item.comfort_score ?? Math.round(item.comfort * 10),
+      sound: item.sound_score ?? Math.round(item.sound * 10),
+    },
+    {
+      power: 6,
+      control: 6,
+      durability: 6,
+      comfort: 6,
+      sound: 6,
+    },
+  );
+}
+
 export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const strengths = deriveStrengthLabels(item);
-  const category = deriveCategory(item);
+  const category = normalizeCategory(item);
   const recommendedTension = deriveRecommendedTension(item);
+  const gaugeBounds = deriveGaugeBounds(item, category);
+  const ratings = deriveScores(item);
+  const mainTrait = deriveMainTrait(item, category, strengths);
+  const tensionMinLbs = item.tension_min_lbs ?? recommendedTension[0];
+  const tensionMaxLbs = item.tension_max_lbs ?? recommendedTension[1];
+  const gauge = formatGaugeRange(gaugeBounds.min, gaugeBounds.max);
+  const priceStatus = derivePriceStatus(item.price_rm);
+  const availability = deriveAvailabilityStatus(item.is_active ? 8 : 0);
+  const imageUrl = resolveBackendMediaUrl(item.image_url);
+  const catalog = {
+    id: item.id,
+    brand: item.brand,
+    modelName: item.model_name,
+    localizedName: item.localized_name ?? undefined,
+    gaugeMinMm: gaugeBounds.min,
+    gaugeMaxMm: gaugeBounds.max,
+    material: deriveMaterial(item),
+    description:
+      item.description?.trim()
+      || `Built around ${strengths
+        .slice(0, 2)
+        .map((label) => label.toLowerCase())
+        .join(' and ')} with a ${titleCase(category)} leaning setup.`,
+    mainTrait,
+    category,
+    tensionMinLbs,
+    tensionMaxLbs,
+    performanceScores: ratings,
+    imageUrl,
+    isActive: item.is_active,
+    createdAt: item.created_at ?? undefined,
+    updatedAt: item.updated_at ?? undefined,
+  };
+  const inventory = {
+    id: item.id,
+    stringId: item.id,
+    stockQty: item.is_active ? 8 : 0,
+    price: item.price_rm ?? null,
+    priceStatus,
+    availabilityStatus: availability,
+    shopNote: item.source_url ?? undefined,
+    updatedAt: item.updated_at ?? undefined,
+  };
 
   return {
     id: item.id,
     brand: item.brand,
     model: item.model_name,
+    localizedName: catalog.localizedName,
     category,
-    gauge:
-      category === 'repulsion'
-        ? '0.65-0.68 mm'
-        : category === 'durable'
-          ? '0.68-0.70 mm'
-          : '0.66-0.69 mm',
-    material: 'Performance multifilament',
+    mainTrait,
+    gauge,
+    gaugeMinMm: gaugeBounds.min,
+    gaugeMaxMm: gaugeBounds.max,
+    material: catalog.material,
     price: item.price_rm ?? 0,
+    priceStatus,
     recommendedTension,
-    ratings: {
-      power: Math.max(1, Math.round(((item.attack + item.elasticity) / 2) * 10)),
-      control: Math.max(1, Math.round(item.control * 10)),
-      durability: Math.max(
-        1,
-        Math.round(((item.durability + item.tension_retention) / 2) * 10),
-      ),
-      comfort: Math.max(1, Math.round(item.comfort * 10)),
-      sound: Math.max(1, Math.round(item.sound * 10)),
-    },
-    tensionNote: `Suggested range ${recommendedTension[0]}-${recommendedTension[1]} lbs based on the current backend profile.`,
-    description: `Built around ${strengths
-      .slice(0, 2)
-      .map((label) => label.toLowerCase())
-      .join(' and ')} with a ${titleCase(category)} leaning setup.`,
+    tensionMinLbs,
+    tensionMaxLbs,
+    ratings,
+    tensionNote: `Suggested range ${formatTensionRange(
+      tensionMinLbs,
+      tensionMaxLbs,
+    )} based on the current backend profile.`,
+    description: catalog.description,
+    imageUrl,
+    isActive: catalog.isActive,
+    createdAt: catalog.createdAt,
+    updatedAt: catalog.updatedAt,
+    inventoryUpdatedAt: inventory.updatedAt,
     bestFor: [
       category === 'repulsion'
         ? 'Players chasing faster rebound'
@@ -323,21 +457,45 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
       .slice(-2)
       .map((label) => `Lower emphasis on ${label.toLowerCase()} than the top-matched options.`),
     reviewHighlight: `Current rules engine highlights ${strengths[0].toLowerCase()} as the lead fit.`,
-    inventoryTags: [titleCase(category), ...strengths.slice(0, 2)],
-    stockLevel: item.is_active ? 8 : 0,
-    availability: item.is_active ? 'in_stock' : 'out_of_stock',
-    adminNote: item.source_url ?? undefined,
+    inventoryTags: [titleCase(mainTrait), titleCase(category), ...strengths.slice(0, 1)],
+    stockLevel: inventory.stockQty,
+    availability,
+    adminNote: inventory.shopNote,
+    catalog,
+    inventory,
   };
 }
 
 export function mapBackendInventoryStringToStringItem(
   item: BackendAdminInventoryString,
 ): StringItem {
+  const mapped = mapBackendStringToStringItem(item);
+  const availability = deriveAvailabilityStatus(
+    item.stock_level,
+    item.availability_status ?? item.availability,
+  );
+  const priceStatus = derivePriceStatus(item.price_rm, item.price_status ?? undefined);
+  const inventory = {
+    ...mapped.inventory,
+    id: item.inventory_id ?? mapped.inventory.id,
+    vendorId: item.vendor_id ?? mapped.inventory.vendorId,
+    stockQty: item.stock_level,
+    price: item.price_rm ?? null,
+    priceStatus,
+    availabilityStatus: availability,
+    shopNote: item.shop_note ?? item.admin_note ?? undefined,
+    updatedAt: item.updated_at ?? undefined,
+  };
+
   return {
-    ...mapBackendStringToStringItem(item),
-    stockLevel: item.stock_level,
-    availability: item.availability,
-    adminNote: item.admin_note ?? undefined,
+    ...mapped,
+    price: inventory.price ?? 0,
+    priceStatus,
+    stockLevel: inventory.stockQty,
+    availability,
+    adminNote: inventory.shopNote,
+    inventoryUpdatedAt: inventory.updatedAt,
+    inventory,
   };
 }
 

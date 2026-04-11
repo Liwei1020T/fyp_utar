@@ -328,6 +328,19 @@ Core shared interfaces are defined in `types/domain.ts`.
 - `BookingSlot`
 - `AdminAnalyticsSummary`
 
+### Inventory modeling note
+
+`StringItem` remains the compatibility model used across the app, but admin inventory now treats two nested records as the source of truth:
+
+- `catalog`
+- `inventory`
+
+`catalog` holds string master data such as names, gauges, material, description, performance scores, image, and visibility state.
+
+`inventory` holds vendor-specific data such as stock quantity, price, price status, availability status, and shop note.
+
+Legacy top-level string fields remain available so existing player flows do not need a wide refactor yet.
+
 ### Important enums and unions
 
 - `UserRole`
@@ -503,11 +516,13 @@ Admin-specific screens model the operational back office:
 
 - dashboard metrics
 - bookings management
-- inventory detail and stock controls
+- inventory workbench, attention triage, and master-detail editing
 - service queue
 - business hours
 - payments monitor
 - shop settings
+
+Supporting inventory UI now lives in `components/admin/inventory/`, where shared thumbnail cards and preview cards keep the list and detail editor aligned.
 
 ## 12. Styling and Theming
 
