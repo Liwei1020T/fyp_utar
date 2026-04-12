@@ -318,6 +318,7 @@ Recommendation response:
 `GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.
 
 `GET /api/recommendations/{user_id}/{catalog_id}` returns one cached recommendation result with the full rationale payload.
+The returned `algorithm_version` is read from the cached recommendation row, not inferred from the currently deployed code version.
 
 ### Bookings
 

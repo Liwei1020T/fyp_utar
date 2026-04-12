@@ -6,6 +6,9 @@ import pytest
 
 from app.domain.catalog.entities import InventorySnapshot
 from app.domain.catalog.entities import StringItem
+from app.domain.catalog.recommendation_features import (
+    RECOMMENDATION_FEATURE_DEFINITIONS,
+)
 from app.domain.recommendation.entities import CachedRecommendationRecord
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationRequestModel
@@ -225,7 +228,11 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     assert {entry["feature_key"] for entry in repository.preference_entries} >= {
         "attack",
         "gauge_mm",
+        "hitting_sound",
         "price_rm",
+    }
+    assert "sound" not in {
+        entry["feature_key"] for entry in repository.preference_entries
     }
     assert repository.cached[0].catalog_id == "yonex-bg80"
     assert repository.cached[0].preference_match_score is not None
@@ -243,10 +250,23 @@ def test_cached_recommendation_detail_returns_rationale() -> None:
 
     detail = use_case.execute_detail(user_id="user-1", catalog_id="yonex-bg80")
 
-    assert detail.catalog_id == "yonex-bg80"
-    assert detail.rationale_payload is not None
-    assert detail.score_breakdown is not None
-    assert detail.score_breakdown["final_score"] == detail.score
+    assert detail.algorithm_version == ALGORITHM_VERSION
+    assert detail.result.catalog_id == "yonex-bg80"
+    assert detail.result.rationale_payload is not None
+    assert detail.result.score_breakdown is not None
+    assert detail.result.score_breakdown["final_score"] == detail.result.score
+
+
+def test_preference_vector_uses_defined_storage_feature_keys() -> None:
+    defined_keys = {item["feature_key"] for item in RECOMMENDATION_FEATURE_DEFINITIONS}
+    vector_rows = HybridRecommendationScorer().build_preference_vector(
+        user_id="user-1",
+        request=_attacking_request(),
+    )
+
+    assert {row["feature_key"] for row in vector_rows}.issubset(defined_keys)
+    assert "hitting_sound" in {row["feature_key"] for row in vector_rows}
+    assert "sound" not in {row["feature_key"] for row in vector_rows}
 
 
 def _attacking_request() -> RecommendationRequestModel:

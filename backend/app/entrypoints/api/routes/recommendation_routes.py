@@ -19,7 +19,6 @@ from app.shared.errors import ForbiddenError
 from app.use_cases.recommendation.generate_recommendation import (
     GenerateRecommendationUseCase,
 )
-from app.domain.recommendation.scoring import ALGORITHM_VERSION
 
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
@@ -109,8 +108,9 @@ def get_cached_recommendation_detail(
         recommendation_log_repository=recommendation_log_repository,
     ).execute_detail(user_id=target_user_id, catalog_id=catalog_id)
     return recommendation_detail_to_dto(
-        algorithm_version=ALGORITHM_VERSION,
-        result=result,
+        algorithm_version=result.algorithm_version,
+        result=result.result,
+        generated_at=result.generated_at,
     )
 
 

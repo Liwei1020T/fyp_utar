@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from dataclasses import field
 
 from app.domain.recommendation.entities import CachedRecommendationRecord
+from app.domain.recommendation.entities import RecommendationDetailModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
@@ -115,14 +116,18 @@ class GenerateRecommendationUseCase:
         *,
         user_id: str,
         catalog_id: str,
-    ) -> RecommendationResultModel:
+    ) -> RecommendationDetailModel:
         cached = self.recommendation_repository.get_cached_result_detail(
             user_id=user_id,
             catalog_id=catalog_id,
         )
         if cached is None:
             raise NotFoundError("No cached recommendation detail found")
-        return self._record_to_result(cached)
+        return RecommendationDetailModel(
+            algorithm_version=cached.algorithm_version,
+            result=self._record_to_result(cached),
+            generated_at=cached.generated_at,
+        )
 
     def _execute(
         self,

@@ -53,6 +53,13 @@ class RecommendationResponseModel:
 
 
 @dataclass(frozen=True)
+class RecommendationDetailModel:
+    algorithm_version: str
+    result: RecommendationResultModel
+    generated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
 class UserPreferenceVectorEntry:
     user_id: str
     feature_key: str

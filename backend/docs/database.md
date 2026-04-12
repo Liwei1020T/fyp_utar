@@ -156,9 +156,12 @@ Canonical NLP feature keys now include:
 
 Stores the user-side recommendation vector derived from profile/onboarding data. The active profile-derived rows use `source_layer='profile_onboarding_v1'`.
 
+Current persisted feature rows use canonical storage feature keys from `recommendation_feature_definitions`.
+For example, the app-facing `sound` preference is stored as `hitting_sound` to match the NLP matrix and feature-definition schema.
+
 Current persisted feature rows include:
 
-- primary preference weights: `attack`, `comfort`, `control`, `durability`, `elasticity`, `hitting_sound`/`sound`, `string_movement`, `tension_retention`, and `value_for_money`
+- primary preference weights: `attack`, `comfort`, `control`, `durability`, `elasticity`, `hitting_sound`, `string_movement`, `tension_retention`, and `value_for_money`
 - structured range preferences: `gauge_mm`
 - budget range preference: `price_rm`
 

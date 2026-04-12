@@ -22,6 +22,13 @@ PRIMARY_FEATURES = (
     "tension_retention",
     "value_for_money",
 )
+DOMAIN_TO_STORAGE_FEATURE_KEY = {
+    "sound": "hitting_sound",
+}
+STORAGE_TO_DOMAIN_FEATURE_KEY = {
+    storage_key: domain_key
+    for domain_key, storage_key in DOMAIN_TO_STORAGE_FEATURE_KEY.items()
+}
 DERIVED_FEATURES = (
     "stability_score",
     "all_round_score",
@@ -73,7 +80,7 @@ class HybridRecommendationScorer:
         total_weight = sum(raw_weights.values()) or 1.0
         rows = [
             {
-                "feature_key": feature_key,
+                "feature_key": _storage_feature_key(feature_key),
                 "preference_weight": round(weight / total_weight, 4),
                 "preferred_min": None,
                 "preferred_max": None,
@@ -409,7 +416,7 @@ def _preference_match_score(
     weighted_total = 0.0
     total_weight = 0.0
     for row in preference_rows:
-        feature_key = str(row["feature_key"])
+        feature_key = _domain_feature_key(str(row["feature_key"]))
         weight = float(row.get("preference_weight") or 0)
         if feature_key in PRIMARY_FEATURES:
             weighted_total += fused_scores.get(feature_key, 0.5) * weight
@@ -440,7 +447,7 @@ def _nlp_review_score(
     weighted_total = 0.0
     total_weight = 0.0
     for row in preference_rows:
-        feature_key = str(row["feature_key"])
+        feature_key = _domain_feature_key(str(row["feature_key"]))
         weight = float(row.get("preference_weight") or 0)
         if feature_key not in PRIMARY_FEATURES:
             continue
@@ -593,7 +600,7 @@ def _top_weighted_preference_reasons(
     }
     ranked = []
     for row in preference_rows:
-        feature_key = str(row["feature_key"])
+        feature_key = _domain_feature_key(str(row["feature_key"]))
         if feature_key not in PRIMARY_FEATURES:
             continue
         weight = float(row.get("preference_weight") or 0)
@@ -648,6 +655,14 @@ def _unique(values: list[str]) -> list[str]:
             seen.add(value)
             ordered.append(value)
     return ordered
+
+
+def _storage_feature_key(feature_key: str) -> str:
+    return DOMAIN_TO_STORAGE_FEATURE_KEY.get(feature_key, feature_key)
+
+
+def _domain_feature_key(feature_key: str) -> str:
+    return STORAGE_TO_DOMAIN_FEATURE_KEY.get(feature_key, feature_key)
 
 
 def clamp01(value: float) -> float:

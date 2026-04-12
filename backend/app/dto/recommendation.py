@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -121,11 +122,12 @@ def recommendation_detail_to_dto(
     *,
     algorithm_version: str,
     result: RecommendationResultModel,
+    generated_at: datetime | None = None,
 ) -> RecommendationDetailDto:
     return RecommendationDetailDto(
         algorithm_version=algorithm_version,
         result=recommendation_result_to_dto(result),
-        generated_at=isoformat_or_none(result.generated_at),
+        generated_at=isoformat_or_none(generated_at or result.generated_at),
     )
 
 

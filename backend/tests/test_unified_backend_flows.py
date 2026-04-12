@@ -244,8 +244,10 @@ def test_recommendations_logs_and_admin_string_controls():
         assert {row.feature_key for row in preference_rows} >= {
             "attack",
             "gauge_mm",
+            "hitting_sound",
             "price_rm",
         }
+        assert "sound" not in {row.feature_key for row in preference_rows}
         assert len(cache_rows) == 3
         assert cache_rows[0].preference_match_score is not None
         assert cache_rows[0].budget_fit_score is not None
