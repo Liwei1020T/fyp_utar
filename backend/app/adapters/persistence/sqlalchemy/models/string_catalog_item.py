@@ -40,7 +40,9 @@ class Brand(Base):
         onupdate=func.now(),
     )
 
-    strings: Mapped[list["StringCatalogItem"]] = relationship(back_populates="brand_ref")
+    strings: Mapped[list["StringCatalogItem"]] = relationship(
+        back_populates="brand_ref"
+    )
 
 
 class StringCatalogItem(Base):
@@ -54,7 +56,9 @@ class StringCatalogItem(Base):
     )
     display_name: Mapped[str] = mapped_column(SAString(160), unique=True, index=True)
     model_name: Mapped[str] = mapped_column(SAString(120), index=True)
-    series_key: Mapped[str | None] = mapped_column(SAString(80), nullable=True, index=True)
+    series_key: Mapped[str | None] = mapped_column(
+        SAString(80), nullable=True, index=True
+    )
     series_label: Mapped[str | None] = mapped_column(SAString(120), nullable=True)
     is_hybrid: Mapped[bool] = mapped_column(Boolean, default=False)
     gauge_main_mm: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
@@ -72,7 +76,9 @@ class StringCatalogItem(Base):
     source_dataset_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_language: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     original_name: Mapped[str | None] = mapped_column(SAString(160), nullable=True)
-    original_brand_label: Mapped[str | None] = mapped_column(SAString(160), nullable=True)
+    original_brand_label: Mapped[str | None] = mapped_column(
+        SAString(160), nullable=True
+    )
     original_series: Mapped[str | None] = mapped_column(SAString(160), nullable=True)
     original_material: Mapped[str | None] = mapped_column(Text, nullable=True)
     original_color: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -218,7 +224,9 @@ class StringInventoryItem(Base):
         onupdate=func.now(),
     )
 
-    catalog_item: Mapped["StringCatalogItem"] = relationship(back_populates="inventory_item")
+    catalog_item: Mapped["StringCatalogItem"] = relationship(
+        back_populates="inventory_item"
+    )
     movements: Mapped[list["InventoryMovement"]] = relationship(
         back_populates="inventory_item",
         cascade="all, delete-orphan",
@@ -250,7 +258,9 @@ class InventoryMovement(Base):
         index=True,
     )
 
-    inventory_item: Mapped["StringInventoryItem"] = relationship(back_populates="movements")
+    inventory_item: Mapped["StringInventoryItem"] = relationship(
+        back_populates="movements"
+    )
 
 
 class RecommendationFeatureDefinition(Base):
@@ -291,7 +301,9 @@ class StringRecommendationMatrix(Base):
     )
     feature_key: Mapped[str] = mapped_column(
         SAString(80),
-        ForeignKey("recommendation_feature_definitions.feature_key", ondelete="CASCADE"),
+        ForeignKey(
+            "recommendation_feature_definitions.feature_key", ondelete="CASCADE"
+        ),
     )
     source_layer: Mapped[str] = mapped_column(SAString(40))
     raw_value: Mapped[float | None] = mapped_column(Numeric(8, 4), nullable=True)
@@ -330,10 +342,14 @@ class UserPreferenceMatrix(Base):
     )
     feature_key: Mapped[str] = mapped_column(
         SAString(80),
-        ForeignKey("recommendation_feature_definitions.feature_key", ondelete="CASCADE"),
+        ForeignKey(
+            "recommendation_feature_definitions.feature_key", ondelete="CASCADE"
+        ),
     )
     source_layer: Mapped[str] = mapped_column(SAString(40))
-    preference_weight: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    preference_weight: Mapped[float | None] = mapped_column(
+        Numeric(6, 4), nullable=True
+    )
     preferred_min: Mapped[float | None] = mapped_column(Numeric(8, 4), nullable=True)
     preferred_max: Mapped[float | None] = mapped_column(Numeric(8, 4), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
@@ -342,9 +358,7 @@ class UserPreferenceMatrix(Base):
         onupdate=func.now(),
     )
 
-    __table_args__ = (
-        PrimaryKeyConstraint("user_id", "feature_key", "source_layer"),
-    )
+    __table_args__ = (PrimaryKeyConstraint("user_id", "feature_key", "source_layer"),)
 
     user: Mapped["User"] = relationship()
     feature_definition: Mapped["RecommendationFeatureDefinition"] = relationship(
@@ -371,6 +385,19 @@ class RecommendationScoreCache(Base):
     )
     rule_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
     nlp_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    preference_match_score: Mapped[float | None] = mapped_column(
+        Numeric(6, 4),
+        nullable=True,
+    )
+    rule_fit_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    budget_fit_score: Mapped[float | None] = mapped_column(
+        Numeric(6, 4),
+        nullable=True,
+    )
+    nlp_review_score: Mapped[float | None] = mapped_column(
+        Numeric(6, 4),
+        nullable=True,
+    )
     final_score: Mapped[float] = mapped_column(Numeric(6, 4))
     rank_position: Mapped[int] = mapped_column(Integer)
     rationale: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)

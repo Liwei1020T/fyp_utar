@@ -10,6 +10,7 @@ from pydantic import model_validator
 from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
+from app.domain.recommendation.entities import RecommendationResultModel
 from app.shared.serialization import isoformat_or_none
 
 
@@ -46,12 +47,17 @@ class RecommendationResultDto(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     rank: int
+    catalog_id: str | None = None
     string_name: str
     brand: str
+    model_name: str | None = None
     score: float
     price_rm: float | None
     aspect_scores: dict[str, float]
     reasons: list[str]
+    score_breakdown: dict[str, float] | None = None
+    rationale_payload: dict[str, Any] | None = None
+    generated_at: str | None = None
 
 
 class RecommendationResponseDto(BaseModel):
@@ -59,6 +65,15 @@ class RecommendationResponseDto(BaseModel):
 
     algorithm_version: str
     results: list[RecommendationResultDto]
+    generated_at: str | None = None
+
+
+class RecommendationDetailDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    algorithm_version: str
+    result: RecommendationResultDto
+    generated_at: str | None = None
 
 
 class ProfileRecommendationPayload(BaseModel):
@@ -78,18 +93,39 @@ def recommendation_response_to_dto(
 ) -> RecommendationResponseDto:
     return RecommendationResponseDto(
         algorithm_version=response.algorithm_version,
-        results=[
-            RecommendationResultDto(
-                rank=item.rank,
-                string_name=item.string_name,
-                brand=item.brand,
-                score=item.score,
-                price_rm=item.price_rm,
-                aspect_scores=item.aspect_scores,
-                reasons=item.reasons,
-            )
-            for item in response.results
-        ],
+        results=[recommendation_result_to_dto(item) for item in response.results],
+        generated_at=isoformat_or_none(response.generated_at),
+    )
+
+
+def recommendation_result_to_dto(
+    item: RecommendationResultModel,
+) -> RecommendationResultDto:
+    return RecommendationResultDto(
+        rank=item.rank,
+        catalog_id=item.catalog_id,
+        string_name=item.string_name,
+        brand=item.brand,
+        model_name=item.model_name,
+        score=item.score,
+        price_rm=item.price_rm,
+        aspect_scores=item.aspect_scores,
+        reasons=item.reasons,
+        score_breakdown=item.score_breakdown,
+        rationale_payload=item.rationale_payload,
+        generated_at=isoformat_or_none(item.generated_at),
+    )
+
+
+def recommendation_detail_to_dto(
+    *,
+    algorithm_version: str,
+    result: RecommendationResultModel,
+) -> RecommendationDetailDto:
+    return RecommendationDetailDto(
+        algorithm_version=algorithm_version,
+        result=recommendation_result_to_dto(result),
+        generated_at=isoformat_or_none(result.generated_at),
     )
 
 

@@ -10,6 +10,7 @@ from app.dto.profile import profile_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_profile_repository
+from app.entrypoints.api.dependencies import get_recommendation_repository
 from app.use_cases.profile.get_my_profile import GetMyProfileUseCase
 from app.use_cases.profile.upsert_my_profile import UpsertMyProfileUseCase
 
@@ -33,8 +34,12 @@ def upsert_profile(
     payload: ProfilePayload,
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
+    recommendation_repository=Depends(get_recommendation_repository),
 ) -> ProfileOut:
-    profile = UpsertMyProfileUseCase(profile_repository=profile_repository).execute(
+    profile = UpsertMyProfileUseCase(
+        profile_repository=profile_repository,
+        recommendation_repository=recommendation_repository,
+    ).execute(
         PlayerProfile(
             user_id=current_user.user_id,
             created_at=None,
@@ -43,4 +48,3 @@ def upsert_profile(
         )
     )
     return profile_to_dto(profile)
-

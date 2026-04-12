@@ -71,7 +71,7 @@ The old `string_catalog_items` table was split into a normalized catalog subsyst
 - `user_preference_matrix`
   - user-side preference vectors
 - `recommendation_score_cache`
-  - cached recommendation results per user and algorithm version
+  - cached recommendation results per user and algorithm version, including the active score breakdown and rationale payload
 
 The migration keeps the legacy flat table only as historical migrated state during transition. The active runtime schema now reads catalog and inventory data from the normalized tables above.
 
@@ -151,6 +151,34 @@ Canonical NLP feature keys now include:
 - `attacking_fit`
 - `control_fit`
 - `beginner_fit`
+
+### `user_preference_matrix`
+
+Stores the user-side recommendation vector derived from profile/onboarding data. The active profile-derived rows use `source_layer='profile_onboarding_v1'`.
+
+Current persisted feature rows include:
+
+- primary preference weights: `attack`, `comfort`, `control`, `durability`, `elasticity`, `hitting_sound`/`sound`, `string_movement`, `tension_retention`, and `value_for_money`
+- structured range preferences: `gauge_mm`
+- budget range preference: `price_rm`
+
+These rows are regenerated when a complete profile is saved and when profile recommendations are generated.
+
+### `recommendation_score_cache`
+
+Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
+
+The active algorithm version is `hybrid_preference_rule_budget_nlp_v1`.
+
+Score fields:
+
+- `preference_match_score`
+- `rule_fit_score`
+- `budget_fit_score`
+- `nlp_review_score`
+- `final_score`
+
+Compatibility columns (`content_score`, `rule_score`, and `nlp_score`) remain populated where practical so older inspection/debug paths do not break. The `rationale` JSON stores score breakdown, feature source provenance, fused item feature scores, NLP review scores, rule events, profile context, and top human-readable reasons.
 
 ### `store_business_hours`
 

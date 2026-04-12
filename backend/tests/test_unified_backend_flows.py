@@ -4,8 +4,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
+from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
+from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.main import app
 
 
@@ -193,16 +196,59 @@ def test_recommendations_logs_and_admin_string_controls():
     assert profile_response.status_code == 200
 
     recommendation_response = client.post(
-        "/api/recommendations/profile",
+        "/api/recommendations/generate",
         headers=headers(customer_token),
         json={"top_n": 3},
     )
     assert recommendation_response.status_code == 200
-    assert (
-        recommendation_response.json()["algorithm_version"]
-        == "unified_python_rule_engine_v1"
-    )
+    assert recommendation_response.json()["algorithm_version"] == ALGORITHM_VERSION
     assert len(recommendation_response.json()["results"]) == 3
+    top_recommendation = recommendation_response.json()["results"][0]
+    assert top_recommendation["catalog_id"]
+    assert (
+        top_recommendation["score_breakdown"]["final_score"]
+        == top_recommendation["score"]
+    )
+    assert set(top_recommendation["score_breakdown"]) >= {
+        "preference_match",
+        "rule_fit",
+        "budget_fit",
+        "nlp_review_score",
+    }
+    assert top_recommendation["rationale_payload"]["feature_sources"]
+
+    cached_response = client.get(
+        "/api/recommendations/me",
+        headers=headers(customer_token),
+    )
+    assert cached_response.status_code == 200
+    assert (
+        cached_response.json()["results"][0]["catalog_id"]
+        == top_recommendation["catalog_id"]
+    )
+
+    detail_response = client.get(
+        f"/api/recommendations/me/{top_recommendation['catalog_id']}",
+        headers=headers(customer_token),
+    )
+    assert detail_response.status_code == 200
+    assert (
+        detail_response.json()["result"]["catalog_id"]
+        == top_recommendation["catalog_id"]
+    )
+    assert detail_response.json()["result"]["rationale_payload"]["score_breakdown"]
+
+    with SessionLocal() as db:
+        preference_rows = db.execute(select(UserPreferenceMatrix)).scalars().all()
+        cache_rows = db.execute(select(RecommendationScoreCache)).scalars().all()
+        assert {row.feature_key for row in preference_rows} >= {
+            "attack",
+            "gauge_mm",
+            "price_rm",
+        }
+        assert len(cache_rows) == 3
+        assert cache_rows[0].preference_match_score is not None
+        assert cache_rows[0].budget_fit_score is not None
 
     log_response = client.get(
         "/api/admin/recommendations/logs",
@@ -319,7 +365,9 @@ def test_public_string_filters_expose_normalized_catalog_fields():
     )
     assert yonex_strings.status_code == 200
     assert yonex_strings.json()["total"] >= 1
-    assert all("Yonex" in item["display_name"] for item in yonex_strings.json()["items"])
+    assert all(
+        "Yonex" in item["display_name"] for item in yonex_strings.json()["items"]
+    )
 
     narrow_gauge = client.get(
         "/api/strings",

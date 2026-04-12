@@ -106,6 +106,9 @@ Public unified Python endpoints:
 - `POST /api/bookings/{id}/updates`
 - `POST /api/recommendations/preview`
 - `POST /api/recommendations/profile`
+- `POST /api/recommendations/generate`
+- `GET /api/recommendations/{user_id}`
+- `GET /api/recommendations/{user_id}/{catalog_id}`
 - `GET /api/admin/strings`
 - `POST /api/admin/strings`
 - `PUT /api/admin/strings/{id}`
@@ -147,3 +150,23 @@ More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-cont
 - Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
 - The backend imports the recommendation CSV into `string_recommendation_matrix` with `source_layer='nlp_review'` and treats it as the primary item-side matrix layer over the older hybrid-derived fallback rows.
+
+## Recommendation Refactor Notes
+
+The current design review found that the backend already had the right normalized tables, but the live recommender was still mostly a rule/content scorer. The active flow now preserves the existing architecture while making `user_preference_matrix` and `recommendation_score_cache` runtime tables.
+
+Final score:
+
+```text
+FinalScore = 0.55 * PreferenceMatch
+           + 0.20 * RuleFit
+           + 0.15 * BudgetFit
+           + 0.10 * NLPReviewScore
+```
+
+- `PreferenceMatch` compares the user preference vector from profile/onboarding fields with fused item features.
+- `RuleFit` applies badminton-specific logic such as beginner thin-gauge penalties and attacking/control bonuses.
+- `BudgetFit` scores explicit alignment with the user's budget range.
+- `NLPReviewScore` uses only `string_recommendation_matrix` rows imported with `source_layer='nlp_review'`.
+- Item feature fusion prefers official/manual performance, then NLP review matrix values, then structured catalog heuristics, then community signals.
+- `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

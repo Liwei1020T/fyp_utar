@@ -190,6 +190,15 @@ RECOMMENDATION_FEATURE_DEFINITIONS: list[dict[str, Any]] = [
         "description": "Nominal string gauge.",
     },
     {
+        "feature_key": "price_rm",
+        "feature_label": "Price (RM)",
+        "feature_group": "catalog_structured",
+        "data_type": "number",
+        "min_value": 0,
+        "max_value": 999,
+        "description": "Current store selling price in MYR.",
+    },
+    {
         "feature_key": "skill_level_weight",
         "feature_label": "Skill Level Weight",
         "feature_group": "user_preference",

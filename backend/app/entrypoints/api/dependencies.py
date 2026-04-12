@@ -21,6 +21,9 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_profile_reposit
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_log_repository import (
     SqlAlchemyRecommendationLogRepository,
 )
+from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
+    SqlAlchemyRecommendationRepository,
+)
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_store_repository import (
     SqlAlchemyStoreRepository,
 )
@@ -94,15 +97,21 @@ def get_password_reset_repository(
     return SqlAlchemyPasswordResetRepository(db)
 
 
-def get_profile_repository(db: Session = Depends(get_db)) -> SqlAlchemyProfileRepository:
+def get_profile_repository(
+    db: Session = Depends(get_db),
+) -> SqlAlchemyProfileRepository:
     return SqlAlchemyProfileRepository(db)
 
 
-def get_catalog_repository(db: Session = Depends(get_db)) -> SqlAlchemyCatalogRepository:
+def get_catalog_repository(
+    db: Session = Depends(get_db),
+) -> SqlAlchemyCatalogRepository:
     return SqlAlchemyCatalogRepository(db)
 
 
-def get_booking_repository(db: Session = Depends(get_db)) -> SqlAlchemyBookingRepository:
+def get_booking_repository(
+    db: Session = Depends(get_db),
+) -> SqlAlchemyBookingRepository:
     return SqlAlchemyBookingRepository(db)
 
 
@@ -114,6 +123,12 @@ def get_recommendation_log_repository(
     db: Session = Depends(get_db),
 ) -> SqlAlchemyRecommendationLogRepository:
     return SqlAlchemyRecommendationLogRepository(db)
+
+
+def get_recommendation_repository(
+    db: Session = Depends(get_db),
+) -> SqlAlchemyRecommendationRepository:
+    return SqlAlchemyRecommendationRepository(db)
 
 
 def get_current_user(
@@ -141,4 +156,3 @@ def get_current_customer(user: CurrentUser = Depends(get_current_user)) -> Curre
 
 def get_current_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
     return require_roles(user, UserRole.ADMIN)
-

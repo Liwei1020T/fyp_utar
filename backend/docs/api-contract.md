@@ -221,6 +221,9 @@ Store-ops responses add:
 
 - `POST /api/recommendations/preview`
 - `POST /api/recommendations/profile`
+- `POST /api/recommendations/generate`
+- `GET /api/recommendations/{user_id}`
+- `GET /api/recommendations/{user_id}/{catalog_id}`
 - `GET /api/admin/recommendations/logs`
 
 Direct preview request:
@@ -259,12 +262,15 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "unified_python_rule_engine_v1",
+  "algorithm_version": "hybrid_preference_rule_budget_nlp_v1",
+  "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
       "rank": 1,
+      "catalog_id": "yonex-bg80",
       "string_name": "Yonex BG80",
       "brand": "Yonex",
+      "model_name": "BG80",
       "score": 0.84,
       "price_rm": 45.0,
       "aspect_scores": {
@@ -279,14 +285,39 @@ Recommendation response:
         "value_for_money": 0.59
       },
       "reasons": [
-        "Matches your attacking playing style",
-        "Falls within your budget range",
-        "Strong sound and elasticity scores"
-      ]
+        "matches your attack preference",
+        "within your budget range",
+        "fits your attacking playing style"
+      ],
+      "score_breakdown": {
+        "preference_match": 0.82,
+        "rule_fit": 0.75,
+        "budget_fit": 0.93,
+        "nlp_review_score": 0.81,
+        "final_score": 0.84
+      },
+      "rationale_payload": {
+        "feature_sources": {
+          "attack": "nlp_review",
+          "control": "nlp_review"
+        },
+        "profile_context": {
+          "skill_level": "intermediate",
+          "playing_style": "attacking"
+        },
+        "rule_events": []
+      },
+      "generated_at": "2026-04-12T14:10:00+00:00"
     }
   ]
 }
 ```
+
+`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
+
+`GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.
+
+`GET /api/recommendations/{user_id}/{catalog_id}` returns one cached recommendation result with the full rationale payload.
 
 ### Bookings
 

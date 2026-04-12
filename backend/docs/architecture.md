@@ -67,7 +67,7 @@ Explicitly avoided:
 - `store`
   - business hours, slots, check-in, service queue, store settings, analytics
 - `recommendation`
-  - preview/profile recommendation generation and recommendation logging
+  - preview/profile recommendation generation, preference-vector persistence, score caching, explainability, and recommendation logging
 
 ## Persistence Structure
 
@@ -96,10 +96,34 @@ Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/
 - Older `hybrid_derived` rows remain as compatibility fallback inputs, not as catalog truth
 - The current rule engine still returns the existing frontend-facing response shape, but it now reads item-side scores from matrix-backed domain objects rather than from catalog columns
 
+## Recommendation Design Review Summary
+
+The backend review found that the existing FastAPI/use-case/repository layering is clean and should be preserved. The catalog normalization is also already strong: master product truth, official performance, inventory, recommendation matrix rows, user preference vectors, and score cache rows are split into separate tables.
+
+The main weakness was runtime usage. Before this refactor, the public recommender still used a lightweight in-process rule engine and did not actively write `user_preference_matrix` or `recommendation_score_cache`. The safest path was therefore incremental: keep auth, bookings, store ops, catalog endpoints, seed logic, and matrix import stable, then activate the dormant recommendation tables through a recommendation-specific repository and scorer.
+
+## Recommendation Flow
+
+- Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile_onboarding_v1'`.
+- Active catalog candidates are loaded with official performance, inventory, community metadata, and matrix entries.
+- Item features are fused in this order:
+  - official/manual performance
+  - `nlp_review` matrix rows
+  - structured catalog heuristics such as gauge
+  - community signals
+  - `hybrid_derived` compatibility fallback rows
+- The scorer applies:
+  - `0.55 * PreferenceMatch`
+  - `0.20 * RuleFit`
+  - `0.15 * BudgetFit`
+  - `0.10 * NLPReviewScore`
+- Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
+- Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
+
 ## AI Boundary
 
-- The public recommendation flow now depends on `RecommendationEngine` through a port.
-- `app/adapters/services/ai/recommendation_engine_adapter.py` preserves the current in-process recommendation behavior while reading compatibility aspect scores from the normalized catalog domain mapping.
+- `ai_service/` remains preserved for standalone compatibility, review analysis, and RAG-style helper logic.
+- The active profile recommender now lives in `app/domain/recommendation/scoring.py` and reads normalized catalog/matrix persistence through `app/ports/repositories/recommendation_repository.py`.
 - Review analysis and RAG helpers are preserved as adapters over `ai_service.service.RecommendationService`.
 
 ## Validation Contract

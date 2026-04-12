@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from app.domain.catalog.entities import StringItem
+
 
 @dataclass(frozen=True)
 class RecommendationRequestModel:
@@ -36,12 +38,50 @@ class RecommendationResultModel:
     price_rm: float | None
     aspect_scores: dict[str, float]
     reasons: list[str]
+    catalog_id: str | None = None
+    model_name: str | None = None
+    score_breakdown: dict[str, float] | None = None
+    rationale_payload: dict[str, Any] | None = None
+    generated_at: datetime | None = None
 
 
 @dataclass(frozen=True)
 class RecommendationResponseModel:
     algorithm_version: str
     results: list[RecommendationResultModel]
+    generated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class UserPreferenceVectorEntry:
+    user_id: str
+    feature_key: str
+    source_layer: str
+    preference_weight: float | None
+    preferred_min: float | None
+    preferred_max: float | None
+    updated_at: datetime | None
+
+
+@dataclass(frozen=True)
+class RecommendationCandidateModel:
+    item: StringItem
+    matrix_by_source: dict[str, dict[str, float]]
+
+
+@dataclass(frozen=True)
+class CachedRecommendationRecord:
+    user_id: str
+    catalog_id: str
+    algorithm_version: str
+    preference_match_score: float | None
+    rule_fit_score: float | None
+    budget_fit_score: float | None
+    nlp_review_score: float | None
+    final_score: float
+    rank_position: int
+    rationale: dict[str, Any]
+    generated_at: datetime | None
 
 
 @dataclass(frozen=True)
@@ -54,4 +94,3 @@ class RecommendationLogRecord:
     recommendation: dict[str, Any]
     algorithm_version: str
     created_at: datetime | None
-
