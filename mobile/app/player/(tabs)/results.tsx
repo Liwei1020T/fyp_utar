@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowRight, ChevronLeft, Scale, Sparkles } from 'lucide-react-native';
+import { ArrowRight, Scale, Sparkles } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -15,17 +15,99 @@ import {
   useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
+  useStrings,
 } from '../../../store/appStore';
 import { MOCK_STRINGS } from '../../../mocks/strings';
 import { formatCurrency } from '../../../lib/formatters';
+import { BackendApiError, backendApi } from '../../../services/backendApi';
+import {
+  mapBackendStringToStringItem,
+  mapRecommendationResponse,
+} from '../../../services/backendMappers';
+
+function formatScore(value?: number) {
+  if (value == null) {
+    return '—';
+  }
+  return `${Math.round(value * 100)}%`;
+}
 
 export default function RecommendationResultsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
+  const strings = useStrings();
   const liveResults = useLiveRecommendationResults();
+  const setLiveStrings = useAppStore((state) => state.setLiveStrings);
+  const setLiveRecommendationResults = useAppStore(
+    (state) => state.setLiveRecommendationResults,
+  );
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
   const compareSelection = useAppStore((state) => state.compareSelection);
+  const [cacheError, setCacheError] = useState<string | null>(null);
+  const [isLoadingCache, setIsLoadingCache] = useState(false);
+
+  useEffect(() => {
+    if (!token || liveResults.length > 0 || isLoadingCache || cacheError) {
+      return;
+    }
+
+    const accessToken = token;
+    let isMounted = true;
+    setIsLoadingCache(true);
+    setCacheError(null);
+
+    async function loadCachedResults() {
+      try {
+        const availableStrings =
+          strings.length > 0
+            ? strings
+            : (await backendApi.listStrings(accessToken)).items.map((item) =>
+                mapBackendStringToStringItem(item),
+              );
+        if (!isMounted) {
+          return;
+        }
+        if (strings.length === 0) {
+          setLiveStrings(availableStrings);
+        }
+        const response = await backendApi.fetchCachedRecommendations(accessToken, 'me');
+        if (!isMounted) {
+          return;
+        }
+        setLiveRecommendationResults(
+          mapRecommendationResponse(response, availableStrings),
+        );
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+        setCacheError(
+          error instanceof BackendApiError
+            ? error.message
+            : 'Unable to load cached recommendations.',
+        );
+      } finally {
+        if (isMounted) {
+          setIsLoadingCache(false);
+        }
+      }
+    }
+
+    void loadCachedResults();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    cacheError,
+    isLoadingCache,
+    liveResults.length,
+    setLiveRecommendationResults,
+    setLiveStrings,
+    strings,
+    token,
+  ]);
 
   if (!user || user.role !== 'player') {
     return null;
@@ -45,6 +127,7 @@ export default function RecommendationResultsScreen() {
     .slice(0, 3);
 
   const isLive = Boolean(token);
+  const algorithmVersion = liveResults[0]?.algorithmVersion;
 
   const topPriority = Object.entries(user.priorities).sort((a, b) => b[1] - a[1])[0]?.[0];
   const recapLine = `Based on: ${user.playingStyle} · ${user.skillLevel} · ${user.preferredTension} lbs · ${topPriority} priority`;
@@ -59,10 +142,10 @@ export default function RecommendationResultsScreen() {
         {isLive && liveResults.length === 0 ? (
           <AppCard variant="subtle" className="mt-6" padding="lg">
             <HeroText className="text-lg font-bold text-neutral-900">
-              No backend results yet.
+              {isLoadingCache ? 'Loading cached recommendations...' : 'No backend results yet.'}
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              Generate a shortlist from the recommendation lab to see ranked results here.
+              {cacheError ?? 'Generate a shortlist from the recommendation lab to see ranked results here.'}
             </HeroText>
             <AppButton
               label="Back to recommendation lab"
@@ -83,6 +166,11 @@ export default function RecommendationResultsScreen() {
                 <HeroText className="text-xs text-neutral-500" numberOfLines={1}>
                   {recapLine}
                 </HeroText>
+                {algorithmVersion ? (
+                  <HeroText className="mt-1 text-[10px] font-bold uppercase tracking-widest text-primary-600">
+                    {algorithmVersion}
+                  </HeroText>
+                ) : null}
               </View>
             </View>
           </AppCard>
@@ -239,6 +327,36 @@ export default function RecommendationResultsScreen() {
                       ))}
                     </View>
 
+                    {item.scoreBreakdown ? (
+                      <View className="mt-4 rounded-2xl border border-primary-100 bg-primary-50/60 p-3">
+                        <HeroText className="text-[10px] font-bold uppercase tracking-widest text-primary-700">
+                          Score breakdown
+                        </HeroText>
+                        <View className="mt-3 flex-row flex-wrap gap-2">
+                          <AppChip
+                            label={`Preference ${formatScore(item.scoreBreakdown.preferenceMatch)}`}
+                            variant="primary"
+                            size="sm"
+                          />
+                          <AppChip
+                            label={`Rule ${formatScore(item.scoreBreakdown.ruleFit)}`}
+                            variant="secondary"
+                            size="sm"
+                          />
+                          <AppChip
+                            label={`Budget ${formatScore(item.scoreBreakdown.budgetFit)}`}
+                            variant="neutral"
+                            size="sm"
+                          />
+                          <AppChip
+                            label={`NLP ${formatScore(item.scoreBreakdown.nlpReviewScore)}`}
+                            variant="neutral"
+                            size="sm"
+                          />
+                        </View>
+                      </View>
+                    ) : null}
+
                     <View className="mt-4 rounded-xl bg-neutral-50 px-3 py-2">
                       <HeroText className="text-xs text-neutral-500">
                         Suggested tension: <HeroText className="font-bold text-neutral-700">{item.suggestedTensionRange}</HeroText>
@@ -260,8 +378,8 @@ export default function RecommendationResultsScreen() {
                           variant="ghost"
                           size="sm"
                           className="flex-1"
-                          isDisabled={!item.stringId}
-                          onPress={() => item.stringId ? router.push(`/player/recommend/explain/${item.stringId}`) : undefined}
+                          isDisabled={!item.catalogId}
+                          onPress={() => item.catalogId ? router.push(`/player/recommend/explain/${item.catalogId}`) : undefined}
                         />
                         <AppButton
                           label={isSelected ? 'Selected' : 'Compare'}

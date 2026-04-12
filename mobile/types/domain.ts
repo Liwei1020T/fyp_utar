@@ -195,6 +195,7 @@ export interface Booking {
 export interface RecommendationMatch {
   id: string;
   stringId: string | null;
+  catalogId: string | null;
   stringName: string;
   brand: string;
   modelName: string;
@@ -202,7 +203,44 @@ export interface RecommendationMatch {
   matchScore: number;
   reasons: string[];
   aspectScores: Record<string, number>;
+  scoreBreakdown?: RecommendationScoreBreakdown;
+  rationalePayload?: RecommendationRationalePayload | null;
+  algorithmVersion?: string;
+  generatedAt?: string | null;
   suggestedTensionRange: string;
+}
+
+export interface RecommendationScoreBreakdown {
+  preferenceMatch?: number;
+  ruleFit?: number;
+  budgetFit?: number;
+  nlpReviewScore?: number;
+  finalScore?: number;
+}
+
+export interface RecommendationRationalePayload {
+  score_breakdown?: {
+    preference_match?: number;
+    rule_fit?: number;
+    budget_fit?: number;
+    nlp_review_score?: number;
+    final_score?: number;
+  };
+  feature_sources?: Record<string, string>;
+  fused_feature_scores?: Record<string, number>;
+  nlp_review_scores?: Record<string, number>;
+  budget?: {
+    price_rm?: number | null;
+    budget_min?: number;
+    budget_max?: number;
+  };
+  rule_events?: Array<{
+    rule?: string;
+    delta?: number;
+    reason?: string;
+  }>;
+  profile_context?: Record<string, string | number | null>;
+  top_reasons?: string[];
 }
 
 export interface Payment {

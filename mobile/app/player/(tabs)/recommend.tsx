@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Info, WandSparkles } from 'lucide-react-native';
-import { HeroSlider, HeroText } from '../../../components/ui/heroui';
+import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -17,7 +17,6 @@ import {
 import { formatPlayFrequency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
-  buildRecommendationPayload,
   mapBackendStringToStringItem,
   mapRecommendationResponse,
 } from '../../../services/backendMappers';
@@ -65,13 +64,9 @@ export default function RecommendationInputScreen() {
   const savedBudgetRange = user.budgetRange ?? 'RM30–RM50';
   const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
 
-  const [playingStyle, setPlayingStyle] = useState<(typeof styleOptions)[number]['value']>(
-    normalizedPlayingStyle,
-  );
-  const [skillLevel, setSkillLevel] = useState<(typeof skillOptions)[number]>(
-    normalizedSkillLevel,
-  );
-  const [priorities, setPriorities] = useState(user.priorities);
+  const playingStyle = normalizedPlayingStyle;
+  const skillLevel = normalizedSkillLevel;
+  const priorities = user.priorities;
 
   const strongestPriority = useMemo(() => {
     const top = Object.entries(priorities).sort((left, right) => right[1] - left[1])[0];
@@ -98,18 +93,7 @@ export default function RecommendationInputScreen() {
       if (strings.length === 0) {
         setLiveStrings(availableStrings);
       }
-      const response = await backendApi.previewRecommendations(
-        token,
-        buildRecommendationPayload({
-          userId: user.id,
-          skillLevel,
-          playingStyle,
-          preferredTension: user.preferredTension,
-          playFrequency: user.playFrequency,
-          budgetRange: savedBudgetRange,
-          priorities,
-        }),
-      );
+      const response = await backendApi.generateRecommendations(token, 3);
       setLiveRecommendationResults(
         mapRecommendationResponse(response, availableStrings),
       );
@@ -137,7 +121,7 @@ export default function RecommendationInputScreen() {
     <AppScreen
       headerVariant="flow"
       title="Recommendation lab"
-      subtitle="Tune the logic before generating your shortlist."
+      subtitle="Generate a backend-scored shortlist from your saved player profile."
       showBackButton={router.canGoBack()}
       onBackPress={() => router.back()}
     >
@@ -146,7 +130,7 @@ export default function RecommendationInputScreen() {
           <View className="flex-1">
             <AppChip label="RECOMMENDATION" variant="accent" size="sm" className="self-start" />
             <HeroText className="mt-2 text-xl font-bold tracking-tight text-white">
-              Build your profile.
+              Use your saved profile.
             </HeroText>
           </View>
           <View className="h-10 w-10 items-center justify-center rounded-xl bg-white/12">
@@ -201,7 +185,7 @@ export default function RecommendationInputScreen() {
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Context" title="Player Context">
+      <AppSection eyebrow="Context" title="Saved Player Context">
         <AppCard variant="elevated" padding="md" className="gap-4">
           <View>
             <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Playing style</HeroText>
@@ -212,7 +196,6 @@ export default function RecommendationInputScreen() {
                   label={style.label}
                   size="sm"
                   variant={playingStyle === style.value ? 'primary' : 'neutral'}
-                  onPress={() => setPlayingStyle(style.value)}
                 />
               ))}
             </View>
@@ -227,7 +210,6 @@ export default function RecommendationInputScreen() {
                   label={level}
                   size="sm"
                   variant={skillLevel === level ? 'primary' : 'neutral'}
-                  onPress={() => setSkillLevel(level)}
                 />
               ))}
             </View>
@@ -240,7 +222,7 @@ export default function RecommendationInputScreen() {
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Mixer" title="Priority Weights">
+      <AppSection eyebrow="Matrix input" title="Saved Priority Weights">
         <View className="gap-3">
           {priorityLabels.map((item) => (
             <AppCard key={item.key} variant="elevated" padding="sm" className="px-4 py-3">
@@ -253,13 +235,12 @@ export default function RecommendationInputScreen() {
                 </HeroText>
               </View>
               <View className="mt-3">
-                <HeroSlider
-                  value={priorities[item.key]}
-                  onValueChange={(nextValue) => setPriorities((current) => ({ ...current, [item.key]: nextValue }))}
-                  minimumValue={1}
-                  maximumValue={10}
-                  step={1}
-                />
+                <View className="h-2 overflow-hidden rounded-full bg-neutral-100">
+                  <View
+                    className="h-full rounded-full bg-primary-600"
+                    style={{ width: `${Math.max(10, priorities[item.key] * 10)}%` }}
+                  />
+                </View>
               </View>
             </AppCard>
           ))}
@@ -271,7 +252,7 @@ export default function RecommendationInputScreen() {
           <View className="flex-row items-center gap-2">
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
-              The shortlist is generated from your player profile and the five priority weights you set above.
+              The backend converts this profile into a preference matrix, then scores every active string with Preference, Rule, Budget, and NLP Review signals.
             </HeroText>
           </View>
         </AppCard>

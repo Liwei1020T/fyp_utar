@@ -278,17 +278,56 @@ export interface BackendPage<T> {
 
 export interface BackendRecommendationResult {
   rank: number;
+  catalog_id?: string | null;
   string_name: string;
   brand: string;
+  model_name?: string | null;
   score: number;
   price_rm: number | null;
   aspect_scores: Record<string, number>;
   reasons: string[];
+  score_breakdown?: BackendRecommendationScoreBreakdown | null;
+  rationale_payload?: BackendRecommendationRationale | null;
+  generated_at?: string | null;
 }
 
 export interface BackendRecommendationResponse {
   algorithm_version: string;
   results: BackendRecommendationResult[];
+  generated_at?: string | null;
+}
+
+export interface BackendRecommendationDetailResponse {
+  algorithm_version: string;
+  result: BackendRecommendationResult;
+  generated_at?: string | null;
+}
+
+export interface BackendRecommendationScoreBreakdown {
+  preference_match?: number;
+  rule_fit?: number;
+  budget_fit?: number;
+  nlp_review_score?: number;
+  final_score?: number;
+}
+
+export interface BackendRecommendationRationale {
+  score_breakdown?: BackendRecommendationScoreBreakdown;
+  feature_sources?: Record<string, string>;
+  fused_feature_scores?: Record<string, number>;
+  nlp_review_scores?: Record<string, number>;
+  budget?: {
+    price_rm?: number | null;
+    budget_min?: number;
+    budget_max?: number;
+  };
+  rule_events?: Array<{
+    rule?: string;
+    delta?: number;
+    reason?: string;
+  }>;
+  profile_context?: Record<string, string | number | null>;
+  top_reasons?: string[];
 }
 
 export interface BackendProfilePayload {

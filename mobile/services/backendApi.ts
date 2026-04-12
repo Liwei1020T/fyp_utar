@@ -12,6 +12,7 @@ import type {
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
+  BackendRecommendationDetailResponse,
   BackendRecommendationResponse,
   BackendServiceQueue,
   BackendSlot,
@@ -570,5 +571,24 @@ export const backendApi = {
       body: { top_n },
       token,
     });
+  },
+  generateRecommendations(token: string, top_n = 3) {
+    return requestJson<BackendRecommendationResponse>('/recommendations/generate', {
+      method: 'POST',
+      body: { top_n },
+      token,
+    });
+  },
+  fetchCachedRecommendations(token: string, userId = 'me') {
+    return requestJson<BackendRecommendationResponse>(
+      `/recommendations/${encodeURIComponent(userId)}`,
+      { token },
+    );
+  },
+  fetchRecommendationDetail(token: string, userId: string, catalogId: string) {
+    return requestJson<BackendRecommendationDetailResponse>(
+      `/recommendations/${encodeURIComponent(userId)}/${encodeURIComponent(catalogId)}`,
+      { token },
+    );
   },
 };

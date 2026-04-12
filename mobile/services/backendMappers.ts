@@ -12,6 +12,7 @@ import type {
   PlayingStyle,
   PreferredFeel,
   RecommendationMatch,
+  RecommendationScoreBreakdown,
   SkillLevel,
   StringItem,
 } from '../types/domain';
@@ -757,26 +758,51 @@ export function mapRecommendationResponse(
 ): RecommendationMatch[] {
   return response.results.map((item) => {
     const matched =
+      strings.find((candidate) => candidate.id === item.catalog_id) ??
       strings.find(
         (candidate) =>
           `${candidate.brand} ${candidate.model}`.toLowerCase() ===
           item.string_name.toLowerCase(),
       ) ??
       strings.find((candidate) => candidate.brand === item.brand);
+    const catalogId = item.catalog_id ?? matched?.id ?? null;
 
     return {
-      id: matched?.id ?? `${item.brand}-${item.rank}`,
-      stringId: matched?.id ?? null,
+      id: catalogId ?? `${item.brand}-${item.rank}`,
+      stringId: matched?.id ?? catalogId,
+      catalogId,
       brand: item.brand,
-      modelName: matched?.model ?? item.string_name.replace(`${item.brand} `, ''),
+      modelName:
+        matched?.model ??
+        item.model_name ??
+        item.string_name.replace(`${item.brand} `, ''),
       stringName: item.string_name,
       price: item.price_rm ?? matched?.price ?? 0,
       matchScore: Math.round(item.score * 100),
       reasons: item.reasons,
       aspectScores: item.aspect_scores,
+      scoreBreakdown: mapRecommendationScoreBreakdown(item.score_breakdown),
+      rationalePayload: item.rationale_payload ?? null,
+      algorithmVersion: response.algorithm_version,
+      generatedAt: item.generated_at ?? response.generated_at ?? null,
       suggestedTensionRange: matched
         ? `${matched.recommendedTension[0]}-${matched.recommendedTension[1]} lbs`
         : '23-28 lbs',
     };
   });
+}
+
+function mapRecommendationScoreBreakdown(
+  value: BackendRecommendationResponse['results'][number]['score_breakdown'],
+): RecommendationScoreBreakdown | undefined {
+  if (!value) {
+    return undefined;
+  }
+  return {
+    preferenceMatch: value.preference_match,
+    ruleFit: value.rule_fit,
+    budgetFit: value.budget_fit,
+    nlpReviewScore: value.nlp_review_score,
+    finalScore: value.final_score,
+  };
 }
