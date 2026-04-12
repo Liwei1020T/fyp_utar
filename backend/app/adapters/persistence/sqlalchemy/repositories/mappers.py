@@ -200,12 +200,13 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         ),
         None,
     )
+    string_name = _booking_string_name(booking)
     return BookingRecord(
         id=booking.id,
         order_code=booking_order_code(booking.id),
         user_id=booking.user_id,
         string_id=booking.string_id,
-        string_name=booking.string_item.display_name,
+        string_name=string_name,
         customer_phone_number=booking.user.phone_number if booking.user else None,
         customer_username=booking.user.username if booking.user else None,
         racket_brand=booking.racket_brand,
@@ -319,3 +320,9 @@ def _collapsed_aspect_scores(
 
 def _normalized_name(brand_name: str, model_name: str) -> str:
     return " ".join(f"{brand_name} {model_name}".strip().lower().split())
+
+
+def _booking_string_name(booking: Booking) -> str:
+    if booking.string_item is not None:
+        return booking.string_item.display_name
+    return f"Archived string ({booking.string_id})"
