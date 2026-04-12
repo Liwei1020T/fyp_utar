@@ -92,7 +92,7 @@ Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/
 - Official/manual performance lives in `string_official_performance`
 - Store pricing and stock live in `inventory_items`
 - Recommendation features live in `string_recommendation_matrix`
-- The primary derived item-side matrix layer is the NLP/review CSV imported as `source_layer='nlp_review'`
+- The primary derived item-side matrix layer is the V9 NLP/review workbook imported as `source_layer='nlp_review'`
 - Older `hybrid_derived` rows remain compatibility data, not master catalog truth
 - The active scorer uses official performance plus NLP/review matrix values for PreferenceMatch; structured catalog data is reserved for RuleFit, filtering, and display
 

@@ -5,8 +5,12 @@ from fastapi.testclient import TestClient
 
 from app.adapters.persistence.sqlalchemy.models import RecommendationFeatureDefinition
 from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    import_recommendation_matrix_csv,
+)
 from app.adapters.persistence.sqlalchemy.seed import ensure_catalog_seeded
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
+from app.config.settings import BACKEND_ROOT
 from app.main import app
 
 
@@ -81,7 +85,7 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
     assert detail["catalog_id"] == "yonex-bg80"
     assert detail["official_performance"]["status"] == "pending_manual_fill"
     assert "nlp_review" in detail["matrix_by_source"]
-    assert detail["effective_scores"]["sound"] == pytest.approx(0.9625, abs=1e-4)
+    assert detail["effective_scores"]["sound"] == pytest.approx(0.8931, abs=1e-4)
 
     nlp_feature_keys = {
         item["feature_key"] for item in detail["matrix_by_source"]["nlp_review"]
@@ -91,17 +95,19 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
         "comfort",
         "control",
         "durability",
-        "elasticity",
         "sound",
+        "value_for_money",
+    }.issubset(nlp_feature_keys)
+    assert {
+        "elasticity",
         "string_movement",
         "tension_retention",
-        "value_for_money",
         "stability",
         "all_round",
         "attacking_fit",
         "control_fit",
         "beginner_fit",
-    }.issubset(nlp_feature_keys)
+    }.isdisjoint(nlp_feature_keys)
 
     import_response = client.post(
         "/api/admin/recommendation-matrix/import",
@@ -113,3 +119,47 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
     assert report["unmatched_strings"] == 0
     assert report["inserted_entries"] == 0
     assert report["updated_entries"] == 0
+
+
+def test_latest_v9_workbook_import_matches_catalog() -> None:
+    matrix_path = (
+        BACKEND_ROOT
+        / "../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx"
+    )
+    assert matrix_path.exists()
+
+    with SessionLocal() as db:
+        report = import_recommendation_matrix_csv(db, matrix_path)
+
+        assert report.total_csv_rows == 33
+        assert report.matched_strings == 33
+        assert report.unmatched_strings == 0
+        assert report.source_layer == "nlp_review"
+
+        aerobie_rows = {
+            row.feature_key
+            for row in db.query(StringRecommendationMatrix)
+            .filter(
+                StringRecommendationMatrix.catalog_id == "yonex-aerobite",
+                StringRecommendationMatrix.source_layer == "nlp_review",
+            )
+            .all()
+        }
+        assert {
+            "repulsion",
+            "comfort",
+            "control",
+            "durability",
+            "sound",
+            "value_for_money",
+        }.issubset(aerobie_rows)
+        assert {
+            "elasticity",
+            "string_movement",
+            "tension_retention",
+            "stability",
+            "all_round",
+            "attacking_fit",
+            "control_fit",
+            "beginner_fit",
+        }.isdisjoint(aerobie_rows)

@@ -209,6 +209,8 @@ Recommendation matrix import responses include:
 - `matched_by`
 - `warnings`
 
+The default runtime import source is the V9 workbook at `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
+
 Store-ops responses add:
 
 - business hours day configs in snake_case (`is_open`, `open_time`, `slot_duration_minutes`, `max_bookings_per_slot`)

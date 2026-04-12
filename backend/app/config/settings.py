@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         alias="APPROVED_STRINGS_SOURCE_PATH",
     )
     recommendation_matrix_source_path: str = Field(
-        default="data/patched_score_matrix_latest_rerun_v8.csv",
+        default="../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx",
         alias="RECOMMENDATION_MATRIX_SOURCE_PATH",
     )
     seed_admin_enabled: bool = Field(default=False, alias="SEED_ADMIN_ENABLED")

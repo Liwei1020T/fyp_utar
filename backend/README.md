@@ -146,7 +146,7 @@ More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-cont
 - Master catalog data now lives in normalized `brands` and `strings` tables.
 - Community metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
-- The default recommendation matrix source is `backend/data/patched_score_matrix_latest_rerun_v8.csv`.
+- The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
 - Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
 - The backend imports the recommendation CSV into `string_recommendation_matrix` with `source_layer='nlp_review'` and treats it as the primary item-side matrix layer over the older hybrid-derived fallback rows.
@@ -168,5 +168,5 @@ FinalScore = 0.60 * PreferenceMatch
 - Structured catalog fields such as gauge are excluded from direct PreferenceMatch and are used only by RuleFit, filtering, and display.
 - `RuleFit` applies badminton-specific logic such as beginner thin-gauge penalties and attacking/control bonuses.
 - `BudgetFit` scores explicit alignment with the user's budget range.
-- NLP/review signals are stored in `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings` or `string_official_performance`.
+- NLP/review signals are imported from the V9 workbench workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings` or `string_official_performance`.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

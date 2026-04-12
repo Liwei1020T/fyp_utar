@@ -126,7 +126,7 @@ Current seed/import behavior keeps two important layers separate:
 - `hybrid_derived`
   - compatibility fallback rows backfilled from the old flat catalog heuristics
 - `nlp_review`
-  - the primary item-side recommendation matrix imported from `backend/data/patched_score_matrix_latest_rerun_v8.csv`
+  - the primary item-side recommendation matrix imported from `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
 
 Important rules:
 
@@ -134,6 +134,8 @@ Important rules:
 - official/manual values stay in `string_official_performance`
 - recommendation matrix values do not get copied into `strings`
 - re-imports are idempotent on `(catalog_id, feature_key, source_layer)`
+- both CSV and XLSX practical matrix sources are supported; V9 XLSX is the current default runtime source
+- before import, the backend sanitizes the source file to a runtime whitelist so only the currently used live-scoring fields and matching metadata are written into the feature store
 
 Canonical NLP feature keys now include:
 

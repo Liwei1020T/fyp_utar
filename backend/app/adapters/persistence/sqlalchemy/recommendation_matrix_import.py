@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import csv
 import logging
+import re
+import zipfile
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -59,37 +62,43 @@ CSV_FEATURE_SPECS = (
         "durability_confidence",
         "durability_review_raw",
     ),
-    CsvFeatureSpec(
-        "elasticity",
-        "elasticity",
-        "elasticity_confidence",
-        "elasticity_review_raw",
-    ),
     CsvFeatureSpec("sound", "sound", "sound_confidence", "sound_review_raw"),
-    CsvFeatureSpec(
-        "string_movement",
-        "string_movement",
-        "string_movement_confidence",
-        "string_movement_review_raw",
-    ),
-    CsvFeatureSpec(
-        "tension_retention",
-        "tension_retention",
-        "tension_retention_confidence",
-        "tension_retention_review_raw",
-    ),
     CsvFeatureSpec(
         "value_for_money",
         "value_for_money",
         "value_for_money_confidence",
         "value_for_money_review_raw",
     ),
-    CsvFeatureSpec("stability_score", "stability"),
-    CsvFeatureSpec("all_round_score", "all_round"),
-    CsvFeatureSpec("attacking_fit_score", "attacking_fit"),
-    CsvFeatureSpec("control_fit_score", "control_fit"),
-    CsvFeatureSpec("beginner_fit_score", "beginner_fit"),
 )
+
+MATRIX_METADATA_COLUMNS = {
+    "string_id",
+    "string_name",
+    "brand",
+    "series",
+    "gauge_mm",
+    "material",
+    "price_rm",
+    "rating",
+    "review_count",
+    "budget_tier",
+    "attacking_fit_label",
+    "control_fit_label",
+    "durable_fit_label",
+    "crisp_sound_label",
+    "source_url",
+}
+
+MATRIX_RUNTIME_COLUMNS = MATRIX_METADATA_COLUMNS | {
+    column_name
+    for spec in CSV_FEATURE_SPECS
+    for column_name in (
+        spec.column,
+        spec.confidence_column,
+        spec.evidence_column,
+    )
+    if column_name
+}
 
 
 def ensure_recommendation_feature_definitions(db: Session) -> None:
@@ -161,7 +170,7 @@ def import_recommendation_matrix_csv(
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
 
-    rows = _load_csv_rows(csv_path)
+    rows = _sanitize_matrix_rows(_load_matrix_rows(csv_path))
     lookup = _build_catalog_lookup(db)
     match_counts: Counter[str] = Counter()
     warnings: list[str] = []
@@ -233,9 +242,121 @@ def import_recommendation_matrix_csv(
     )
 
 
-def _load_csv_rows(csv_path: Path) -> list[dict[str, str]]:
-    with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+def _load_matrix_rows(source_path: Path) -> list[dict[str, str]]:
+    suffix = source_path.suffix.lower()
+    if suffix == ".csv":
+        return _load_csv_rows(source_path)
+    if suffix == ".xlsx":
+        return _load_xlsx_rows(source_path)
+    raise ValueError(f"Unsupported recommendation matrix source: {source_path}")
+
+
+def _load_csv_rows(source_path: Path) -> list[dict[str, str]]:
+    with source_path.open("r", encoding="utf-8-sig", newline="") as handle:
         return [dict(row) for row in csv.DictReader(handle)]
+
+
+def _load_xlsx_rows(source_path: Path) -> list[dict[str, str]]:
+    with zipfile.ZipFile(source_path) as workbook:
+        shared_strings = _load_shared_strings(workbook)
+        sheet_name = _first_sheet_name(workbook)
+        sheet_xml = workbook.read(sheet_name)
+
+    namespace = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    root = ElementTree.fromstring(sheet_xml)
+    rows: list[list[str]] = []
+    for row in root.findall(".//main:sheetData/main:row", namespace):
+        values: list[str] = []
+        current_index = 0
+        for cell in row.findall("main:c", namespace):
+            cell_ref = cell.attrib.get("r", "")
+            cell_index = _column_index(cell_ref)
+            while current_index < cell_index:
+                values.append("")
+                current_index += 1
+            values.append(_cell_text(cell, shared_strings, namespace))
+            current_index += 1
+        rows.append(values)
+
+    if not rows:
+        return []
+    headers = [value.strip() for value in rows[0]]
+    return [
+        {
+            header: row[index].strip() if index < len(row) else ""
+            for index, header in enumerate(headers)
+            if header
+        }
+        for row in rows[1:]
+        if any(cell.strip() for cell in row)
+    ]
+
+
+def _sanitize_matrix_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    return [
+        {
+            key: value
+            for key, value in row.items()
+            if key in MATRIX_RUNTIME_COLUMNS
+        }
+        for row in rows
+    ]
+
+
+def _load_shared_strings(workbook: zipfile.ZipFile) -> list[str]:
+    try:
+        shared_xml = workbook.read("xl/sharedStrings.xml")
+    except KeyError:
+        return []
+    namespace = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    root = ElementTree.fromstring(shared_xml)
+    strings: list[str] = []
+    for item in root.findall("main:si", namespace):
+        parts = [
+            text.text or ""
+            for text in item.findall(".//main:t", namespace)
+        ]
+        strings.append("".join(parts))
+    return strings
+
+
+def _first_sheet_name(workbook: zipfile.ZipFile) -> str:
+    candidates = sorted(
+        name
+        for name in workbook.namelist()
+        if name.startswith("xl/worksheets/sheet") and name.endswith(".xml")
+    )
+    if not candidates:
+        raise ValueError("No worksheets found in recommendation matrix workbook")
+    return candidates[0]
+
+
+def _cell_text(
+    cell: ElementTree.Element,
+    shared_strings: list[str],
+    namespace: dict[str, str],
+) -> str:
+    cell_type = cell.attrib.get("t")
+    if cell_type == "inlineStr":
+        return "".join(
+            text.text or "" for text in cell.findall(".//main:t", namespace)
+        )
+    value = cell.find("main:v", namespace)
+    raw_value = value.text if value is not None and value.text is not None else ""
+    if cell_type == "s" and raw_value:
+        index = int(raw_value)
+        return shared_strings[index] if index < len(shared_strings) else ""
+    return raw_value
+
+
+def _column_index(cell_ref: str) -> int:
+    match = re.match(r"([A-Z]+)", cell_ref)
+    if match is None:
+        return 0
+    index = 0
+    for character in match.group(1):
+        index = (index * 26) + (ord(character) - ord("A") + 1)
+    return index - 1
 
 
 def _build_catalog_lookup(db: Session) -> list[CatalogLookupEntry]:
