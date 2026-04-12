@@ -167,6 +167,6 @@ FinalScore = 0.60 * PreferenceMatch
 - Effective item features use official performance when available and NLP/review matrix values as enrichment.
 - Structured catalog fields such as gauge are excluded from direct PreferenceMatch and are used only by RuleFit, filtering, and display.
 - `RuleFit` applies badminton-specific logic such as beginner thin-gauge penalties and attacking/control bonuses.
-- `BudgetFit` scores explicit alignment with the user's budget range.
+- `BudgetFit` scores explicit alignment with the user's chosen budget range and current price only.
 - NLP/review signals are imported from the V9 workbench workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings` or `string_official_performance`.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

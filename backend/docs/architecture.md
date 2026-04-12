@@ -113,6 +113,7 @@ The main weakness was runtime usage. Before this refactor, the public recommende
   - `0.60 * PreferenceMatch`
   - `0.25 * RuleFit`
   - `0.15 * BudgetFit`
+- `BudgetFit` is based on the user's chosen budget range and item price, not on a separate value-for-money matrix score.
 - Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 

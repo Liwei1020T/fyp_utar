@@ -96,9 +96,9 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
         "control",
         "durability",
         "sound",
-        "value_for_money",
     }.issubset(nlp_feature_keys)
     assert {
+        "value_for_money",
         "elasticity",
         "string_movement",
         "tension_retention",
@@ -151,9 +151,9 @@ def test_latest_v9_workbook_import_matches_catalog() -> None:
             "control",
             "durability",
             "sound",
-            "value_for_money",
         }.issubset(aerobie_rows)
         assert {
+            "value_for_money",
             "elasticity",
             "string_movement",
             "tension_retention",

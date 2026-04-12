@@ -313,6 +313,8 @@ Recommendation response:
 }
 ```
 
+`budget_fit` reflects price alignment against the user's selected budget range. It is not derived from a separate `value_for_money` runtime score.
+
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
 
 `GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.

@@ -11,6 +11,7 @@ from typing import Any
 from xml.etree import ElementTree
 
 from sqlalchemy import select
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import selectinload
 
@@ -63,12 +64,6 @@ CSV_FEATURE_SPECS = (
         "durability_review_raw",
     ),
     CsvFeatureSpec("sound", "sound", "sound_confidence", "sound_review_raw"),
-    CsvFeatureSpec(
-        "value_for_money",
-        "value_for_money",
-        "value_for_money_confidence",
-        "value_for_money_review_raw",
-    ),
 )
 
 MATRIX_METADATA_COLUMNS = {
@@ -179,6 +174,7 @@ def import_recommendation_matrix_csv(
     unchanged_entries = 0
     matched_strings = 0
     unmatched_strings = 0
+    matched_catalog_ids: set[str] = set()
 
     for row in rows:
         matched_entry, matched_by, warning = _match_catalog_row(row, lookup)
@@ -190,6 +186,7 @@ def import_recommendation_matrix_csv(
             continue
 
         matched_strings += 1
+        matched_catalog_ids.add(matched_entry.catalog_id)
         match_counts[matched_by] += 1
         for entry_payload in _build_matrix_entries(row, matched_entry.catalog_id):
             matrix_row = db.get(
@@ -226,6 +223,16 @@ def import_recommendation_matrix_csv(
                 updated_entries += 1
             else:
                 unchanged_entries += 1
+
+    allowed_feature_keys = {spec.feature_key for spec in CSV_FEATURE_SPECS}
+    if matched_catalog_ids:
+        db.execute(
+            delete(StringRecommendationMatrix).where(
+                StringRecommendationMatrix.source_layer == NLP_REVIEW_SOURCE_LAYER,
+                StringRecommendationMatrix.catalog_id.in_(matched_catalog_ids),
+                StringRecommendationMatrix.feature_key.not_in(allowed_feature_keys),
+            )
+        )
 
     db.flush()
     return RecommendationMatrixImportReport(

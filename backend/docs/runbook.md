@@ -50,7 +50,8 @@ cd backend
 - Complete profile saves and `POST /api/recommendations/generate` persist raw 1-to-10 scores plus normalized weights in `user_preference_matrix` with `source_layer='profile'`.
 - Generated profile recommendations are cached in `recommendation_score_cache` and can be inspected through `GET /api/recommendations/{user_id}` and `GET /api/recommendations/{user_id}/{catalog_id}`.
 - Startup seeding imports the V9 workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` and keeps it separate from official performance data.
-- Import first sanitizes the workbook to the live runtime whitelist: matching metadata plus `repulsion`, `comfort`, `control`, `durability`, `sound`, and `value_for_money`.
+- Import first sanitizes the workbook to the live runtime whitelist: matching metadata plus `repulsion`, `comfort`, `control`, `durability`, and `sound`.
+- `BudgetFit` follows the saved budget range directly; missing price falls back to a neutral budget score.
 - Structured catalog data such as gauge is used for RuleFit and filtering, not direct PreferenceMatch scoring.
 - Admin string write operations still require approved catalog membership.
 - Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.

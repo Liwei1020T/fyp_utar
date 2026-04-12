@@ -135,7 +135,7 @@ Important rules:
 - recommendation matrix values do not get copied into `strings`
 - re-imports are idempotent on `(catalog_id, feature_key, source_layer)`
 - both CSV and XLSX practical matrix sources are supported; V9 XLSX is the current default runtime source
-- before import, the backend sanitizes the source file to a runtime whitelist so only the currently used live-scoring fields and matching metadata are written into the feature store
+- before import, the backend sanitizes the source file to a runtime whitelist so only the currently used live-scoring fields and matching metadata are written into the feature store; stale `nlp_review` rows outside that whitelist are pruned on re-import
 
 Canonical NLP feature keys now include:
 

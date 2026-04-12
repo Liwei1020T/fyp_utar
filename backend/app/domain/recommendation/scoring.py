@@ -85,7 +85,6 @@ class HybridRecommendationScorer:
             budget_fit = _budget_fit_score(
                 candidate.item.price_rm,
                 request,
-                value_for_money=auxiliary_scores.get("value_for_money"),
             )
             rule_fit, rule_reasons, rule_events = _rule_fit_score(
                 item=candidate.item,
@@ -328,19 +327,16 @@ def _preference_match_score(
 def _budget_fit_score(
     price_rm: float | None,
     request: RecommendationRequestModel,
-    *,
-    value_for_money: float | None,
 ) -> float:
     if price_rm is None:
-        return clamp01(0.55 + ((value_for_money or 0.5) - 0.5) * 0.2)
+        return 0.5
     budget_min = request.budget_min
     budget_max = request.budget_max
     if budget_min <= price_rm <= budget_max:
         span = max(budget_max - budget_min, 10)
         midpoint = (budget_min + budget_max) / 2
         closeness = 1 - min(abs(price_rm - midpoint) / span, 1)
-        value_bonus = ((value_for_money or 0.5) - 0.5) * 0.12
-        return clamp01(max(0.8, closeness) + value_bonus)
+        return clamp01(max(0.8, closeness))
 
     gap = budget_min - price_rm if price_rm < budget_min else price_rm - budget_max
     tolerance = max((budget_max - budget_min) or budget_max or budget_min or 10, 10)
