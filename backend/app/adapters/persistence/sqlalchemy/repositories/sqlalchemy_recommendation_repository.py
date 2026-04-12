@@ -76,6 +76,7 @@ class SqlAlchemyRecommendationRepository:
                     user_id=user_id,
                     feature_key=str(entry["feature_key"]),
                     source_layer=source_layer,
+                    raw_score=entry.get("raw_score"),
                     preference_weight=entry.get("preference_weight"),
                     preferred_min=entry.get("preferred_min"),
                     preferred_max=entry.get("preferred_max"),
@@ -216,6 +217,7 @@ def _to_preference_entry(item: UserPreferenceMatrix) -> UserPreferenceVectorEntr
         user_id=item.user_id,
         feature_key=item.feature_key,
         source_layer=item.source_layer,
+        raw_score=number_to_float(item.raw_score),
         preference_weight=number_to_float(item.preference_weight),
         preferred_min=number_to_float(item.preferred_min),
         preferred_max=number_to_float(item.preferred_max),
@@ -254,10 +256,15 @@ def _matrix_by_source(
     for entry in entries:
         if entry.normalized_score is None:
             continue
-        grouped[entry.source_layer][domain_feature_key(entry.feature_key)] = float(
-            str(entry.normalized_score)
-        )
+        feature_key = _recommendation_feature_key(entry.feature_key)
+        grouped[entry.source_layer][feature_key] = float(str(entry.normalized_score))
     return {source_layer: dict(values) for source_layer, values in grouped.items()}
+
+
+def _recommendation_feature_key(feature_key: str) -> str:
+    if feature_key in {"attack", "elasticity"}:
+        return "repulsion"
+    return domain_feature_key(feature_key)
 
 
 def _float_or_none(value: object) -> float | None:

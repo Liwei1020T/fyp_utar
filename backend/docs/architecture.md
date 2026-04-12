@@ -93,8 +93,8 @@ Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/
 - Store pricing and stock live in `inventory_items`
 - Recommendation features live in `string_recommendation_matrix`
 - The primary derived item-side matrix layer is the NLP/review CSV imported as `source_layer='nlp_review'`
-- Older `hybrid_derived` rows remain as compatibility fallback inputs, not as catalog truth
-- The current rule engine still returns the existing frontend-facing response shape, but it now reads item-side scores from matrix-backed domain objects rather than from catalog columns
+- Older `hybrid_derived` rows remain compatibility data, not master catalog truth
+- The active scorer uses official performance plus NLP/review matrix values for PreferenceMatch; structured catalog data is reserved for RuleFit, filtering, and display
 
 ## Recommendation Design Review Summary
 
@@ -104,19 +104,15 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 
 ## Recommendation Flow
 
-- Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile_onboarding_v1'`.
-- Active catalog candidates are loaded with official performance, inventory, community metadata, and matrix entries.
-- Item features are fused in this order:
-  - official/manual performance
-  - `nlp_review` matrix rows
-  - structured catalog heuristics such as gauge
-  - community signals
-  - `hybrid_derived` compatibility fallback rows
+- Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile'`.
+- Raw 1-to-10 inputs are stored as `raw_score`; backend-normalized weights are stored as `preference_weight`.
+- Active catalog candidates are loaded with official performance, inventory, and matrix entries.
+- PreferenceMatch uses only effective item features from official/manual performance and `nlp_review` matrix rows.
+- Structured catalog heuristics such as gauge are excluded from PreferenceMatch and used only in RuleFit.
 - The scorer applies:
-  - `0.55 * PreferenceMatch`
-  - `0.20 * RuleFit`
+  - `0.60 * PreferenceMatch`
+  - `0.25 * RuleFit`
   - `0.15 * BudgetFit`
-  - `0.10 * NLPReviewScore`
 - Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 

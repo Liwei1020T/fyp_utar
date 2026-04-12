@@ -25,15 +25,15 @@ class ProfilePayload(BaseModel):
     preferred_tension: float | None = Field(default=None, ge=16, le=35)
     game_type: str | None = Field(default=None, pattern="^(singles|doubles)$")
     frequency_per_week: int | None = Field(default=None, ge=0, le=14)
-    pref_attack: int | None = Field(default=None, ge=1, le=5)
-    pref_comfort: int | None = Field(default=None, ge=1, le=5)
-    pref_control: int | None = Field(default=None, ge=1, le=5)
-    pref_durability: int | None = Field(default=None, ge=1, le=5)
-    pref_elasticity: int | None = Field(default=None, ge=1, le=5)
-    pref_sound: int | None = Field(default=None, ge=1, le=5)
-    pref_string_movement: int | None = Field(default=None, ge=1, le=5)
-    pref_tension_retention: int | None = Field(default=None, ge=1, le=5)
-    pref_value_for_money: int | None = Field(default=None, ge=1, le=5)
+    pref_attack: int | None = Field(default=None, ge=1, le=10)
+    pref_comfort: int | None = Field(default=None, ge=1, le=10)
+    pref_control: int | None = Field(default=None, ge=1, le=10)
+    pref_durability: int | None = Field(default=None, ge=1, le=10)
+    pref_elasticity: int | None = Field(default=None, ge=1, le=10)
+    pref_sound: int | None = Field(default=None, ge=1, le=10)
+    pref_string_movement: int | None = Field(default=None, ge=1, le=10)
+    pref_tension_retention: int | None = Field(default=None, ge=1, le=10)
+    pref_value_for_money: int | None = Field(default=None, ge=1, le=10)
 
     @model_validator(mode="after")
     def validate_budget(self) -> "ProfilePayload":
@@ -72,4 +72,3 @@ def profile_to_dto(profile: PlayerProfile) -> ProfileOut:
         created_at=isoformat_or_none(profile.created_at),
         updated_at=isoformat_or_none(profile.updated_at),
     )
-

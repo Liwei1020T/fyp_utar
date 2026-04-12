@@ -50,7 +50,7 @@ class CatalogLookupEntry:
 
 
 CSV_FEATURE_SPECS = (
-    CsvFeatureSpec("attack", "attack", "attack_confidence", "attack_review_raw"),
+    CsvFeatureSpec("attack", "repulsion", "attack_confidence", "attack_review_raw"),
     CsvFeatureSpec("comfort", "comfort", "comfort_confidence", "comfort_review_raw"),
     CsvFeatureSpec("control", "control", "control_confidence", "control_review_raw"),
     CsvFeatureSpec(
@@ -65,7 +65,7 @@ CSV_FEATURE_SPECS = (
         "elasticity_confidence",
         "elasticity_review_raw",
     ),
-    CsvFeatureSpec("sound", "hitting_sound", "sound_confidence", "sound_review_raw"),
+    CsvFeatureSpec("sound", "sound", "sound_confidence", "sound_review_raw"),
     CsvFeatureSpec(
         "string_movement",
         "string_movement",
@@ -392,7 +392,7 @@ def _build_evidence_note(row: dict[str, str], spec: CsvFeatureSpec) -> str | Non
         label = _clean_text(row.get("durable_fit_label"))
         if label:
             parts.append(f"durable_fit_label={label}")
-    elif spec.feature_key == "hitting_sound":
+    elif spec.feature_key == "sound":
         label = _clean_text(row.get("crisp_sound_label"))
         if label:
             parts.append(f"crisp_sound_label={label}")

@@ -4,7 +4,6 @@ from typing import Any
 
 
 LEGACY_TO_CANONICAL_FEATURE_KEY = {
-    "sound": "hitting_sound",
     "beginner_fit_score": "beginner_fit",
     "stability_score": "stability",
     "all_round_score": "all_round",
@@ -37,6 +36,7 @@ CANONICAL_MATRIX_FEATURE_KEYS = (
 )
 
 DOMAIN_ASPECT_FEATURE_KEYS = {
+    "repulsion",
     "attack",
     "comfort",
     "control",
@@ -54,6 +54,15 @@ DOMAIN_ASPECT_FEATURE_KEYS = {
 }
 
 RECOMMENDATION_FEATURE_DEFINITIONS: list[dict[str, Any]] = [
+    {
+        "feature_key": "repulsion",
+        "feature_label": "Repulsion",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Power and rebound response.",
+    },
     {
         "feature_key": "attack",
         "feature_label": "Attack",
@@ -98,6 +107,15 @@ RECOMMENDATION_FEATURE_DEFINITIONS: list[dict[str, Any]] = [
         "min_value": 0,
         "max_value": 1,
         "description": "Elastic rebound feel.",
+    },
+    {
+        "feature_key": "sound",
+        "feature_label": "Sound",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "User-facing hitting sound response.",
     },
     {
         "feature_key": "hitting_sound",

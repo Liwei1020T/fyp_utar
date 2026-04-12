@@ -64,6 +64,7 @@ class UserPreferenceVectorEntry:
     user_id: str
     feature_key: str
     source_layer: str
+    raw_score: float | None
     preference_weight: float | None
     preferred_min: float | None
     preferred_max: float | None

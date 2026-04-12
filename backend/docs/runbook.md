@@ -46,10 +46,11 @@ cd backend
 - The default approved source is `backend/data/string_catalog_db_ready.json`.
 - Relative `RECOMMENDATION_MATRIX_SOURCE_PATH` values also resolve from the backend root.
 - The default NLP review matrix source is `backend/data/patched_score_matrix_latest_rerun_v8.csv`.
-- Recommendation generation now uses the hybrid formula `0.55 * PreferenceMatch + 0.20 * RuleFit + 0.15 * BudgetFit + 0.10 * NLPReviewScore`.
-- Complete profile saves and `POST /api/recommendations/generate` persist `user_preference_matrix` rows with `source_layer='profile_onboarding_v1'`.
+- Recommendation generation now uses `0.60 * PreferenceMatch + 0.25 * RuleFit + 0.15 * BudgetFit`.
+- Complete profile saves and `POST /api/recommendations/generate` persist raw 1-to-10 scores plus normalized weights in `user_preference_matrix` with `source_layer='profile'`.
 - Generated profile recommendations are cached in `recommendation_score_cache` and can be inspected through `GET /api/recommendations/{user_id}` and `GET /api/recommendations/{user_id}/{catalog_id}`.
 - Startup seeding imports the CSV into `string_recommendation_matrix` with `source_layer='nlp_review'` and keeps it separate from official performance data.
+- Structured catalog data such as gauge is used for RuleFit and filtering, not direct PreferenceMatch scoring.
 - Admin string write operations still require approved catalog membership.
 - Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.
 - NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.

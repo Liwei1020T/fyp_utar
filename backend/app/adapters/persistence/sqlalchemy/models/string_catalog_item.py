@@ -347,6 +347,7 @@ class UserPreferenceMatrix(Base):
         ),
     )
     source_layer: Mapped[str] = mapped_column(SAString(40))
+    raw_score: Mapped[float | None] = mapped_column(Numeric(8, 4), nullable=True)
     preference_weight: Mapped[float | None] = mapped_column(
         Numeric(6, 4), nullable=True
     )

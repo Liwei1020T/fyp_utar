@@ -29,7 +29,7 @@ def login_admin() -> str:
     return response.json()["access_token"]
 
 
-def test_ensure_catalog_seeded_normalizes_legacy_matrix_feature_keys() -> None:
+def test_ensure_catalog_seeded_preserves_live_sound_feature_key() -> None:
     with SessionLocal() as db:
         db.merge(
             RecommendationFeatureDefinition(
@@ -60,20 +60,13 @@ def test_ensure_catalog_seeded_normalizes_legacy_matrix_feature_keys() -> None:
         ensure_catalog_seeded(db)
         db.commit()
 
-        assert db.get(RecommendationFeatureDefinition, "sound") is None
-        canonical_row = db.get(
+        assert db.get(RecommendationFeatureDefinition, "sound") is not None
+        sound_row = db.get(
             StringRecommendationMatrix,
-            ("yonex-bg80", "hitting_sound", "manual_rule"),
+            ("yonex-bg80", "sound", "manual_rule"),
         )
-        assert canonical_row is not None
-        assert float(canonical_row.normalized_score or 0) == pytest.approx(0.91)
-        assert (
-            db.get(
-                StringRecommendationMatrix,
-                ("yonex-bg80", "sound", "manual_rule"),
-            )
-            is None
-        )
+        assert sound_row is not None
+        assert float(sound_row.normalized_score or 0) == pytest.approx(0.91)
 
 
 def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
@@ -94,12 +87,12 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
         item["feature_key"] for item in detail["matrix_by_source"]["nlp_review"]
     }
     assert {
-        "attack",
+        "repulsion",
         "comfort",
         "control",
         "durability",
         "elasticity",
-        "hitting_sound",
+        "sound",
         "string_movement",
         "tension_retention",
         "value_for_money",

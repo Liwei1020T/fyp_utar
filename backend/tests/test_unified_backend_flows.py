@@ -213,7 +213,7 @@ def test_recommendations_logs_and_admin_string_controls():
         "preference_match",
         "rule_fit",
         "budget_fit",
-        "nlp_review_score",
+        "final_score",
     }
     assert top_recommendation["rationale_payload"]["feature_sources"]
 
@@ -242,12 +242,13 @@ def test_recommendations_logs_and_admin_string_controls():
         preference_rows = db.execute(select(UserPreferenceMatrix)).scalars().all()
         cache_rows = db.execute(select(RecommendationScoreCache)).scalars().all()
         assert {row.feature_key for row in preference_rows} >= {
-            "attack",
-            "gauge_mm",
-            "hitting_sound",
-            "price_rm",
+            "repulsion",
+            "control",
+            "durability",
+            "comfort",
+            "sound",
         }
-        assert "sound" not in {row.feature_key for row in preference_rows}
+        assert all(row.raw_score is not None for row in preference_rows)
         assert len(cache_rows) == 3
         assert cache_rows[0].preference_match_score is not None
         assert cache_rows[0].budget_fit_score is not None

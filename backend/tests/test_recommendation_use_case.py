@@ -115,7 +115,7 @@ class FakeRecommendationRepository:
                 preference_match_score=_required_float(item, "preference_match_score"),
                 rule_fit_score=_required_float(item, "rule_fit_score"),
                 budget_fit_score=_required_float(item, "budget_fit_score"),
-                nlp_review_score=_required_float(item, "nlp_review_score"),
+                nlp_review_score=_optional_float(item, "nlp_review_score"),
                 final_score=_required_float(item, "final_score"),
                 rank_position=_required_int(item, "rank_position"),
                 rationale=_required_mapping(item, "rationale"),
@@ -191,15 +191,14 @@ def test_hybrid_scorer_uses_required_formula_and_explainability() -> None:
 
     breakdown = result.score_breakdown or {}
     expected = (
-        (breakdown["preference_match"] * 0.55)
-        + (breakdown["rule_fit"] * 0.20)
+        (breakdown["preference_match"] * 0.60)
+        + (breakdown["rule_fit"] * 0.25)
         + (breakdown["budget_fit"] * 0.15)
-        + (breakdown["nlp_review_score"] * 0.10)
     )
     assert result.score == pytest.approx(expected, abs=1e-4)
     assert result.catalog_id == "yonex-bg80"
     assert "score_breakdown" in (result.rationale_payload or {})
-    assert any("attack" in reason.lower() for reason in result.reasons)
+    assert any("power and rebound" in reason.lower() for reason in result.reasons)
 
 
 def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
@@ -226,14 +225,21 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     )
     assert profile_result.results[0].catalog_id == "yonex-bg80"
     assert {entry["feature_key"] for entry in repository.preference_entries} >= {
-        "attack",
-        "gauge_mm",
-        "hitting_sound",
-        "price_rm",
+        "repulsion",
+        "control",
+        "durability",
+        "comfort",
+        "sound",
     }
-    assert "sound" not in {
-        entry["feature_key"] for entry in repository.preference_entries
+    assert {entry["raw_score"] for entry in repository.preference_entries} >= {
+        3.0,
+        4.0,
+        5.0,
     }
+    assert sum(
+        float(entry["preference_weight"] or 0)
+        for entry in repository.preference_entries
+    ) == pytest.approx(1.0, abs=1e-3)
     assert repository.cached[0].catalog_id == "yonex-bg80"
     assert repository.cached[0].preference_match_score is not None
 
@@ -265,8 +271,9 @@ def test_preference_vector_uses_defined_storage_feature_keys() -> None:
     )
 
     assert {row["feature_key"] for row in vector_rows}.issubset(defined_keys)
-    assert "hitting_sound" in {row["feature_key"] for row in vector_rows}
-    assert "sound" not in {row["feature_key"] for row in vector_rows}
+    assert "repulsion" in {row["feature_key"] for row in vector_rows}
+    assert "sound" in {row["feature_key"] for row in vector_rows}
+    assert all(row["raw_score"] is not None for row in vector_rows)
 
 
 def _attacking_request() -> RecommendationRequestModel:
@@ -354,6 +361,15 @@ def _string_item(
 
 def _required_float(values: dict[str, object], key: str) -> float:
     value = values[key]
+    if isinstance(value, int | float | str):
+        return float(value)
+    raise TypeError(f"Expected numeric value for {key}")
+
+
+def _optional_float(values: dict[str, object], key: str) -> float | None:
+    value = values.get(key)
+    if value is None:
+        return None
     if isinstance(value, int | float | str):
         return float(value)
     raise TypeError(f"Expected numeric value for {key}")

@@ -154,16 +154,14 @@ Canonical NLP feature keys now include:
 
 ### `user_preference_matrix`
 
-Stores the user-side recommendation vector derived from profile/onboarding data. The active profile-derived rows use `source_layer='profile_onboarding_v1'`.
+Stores the user-side recommendation vector derived from profile/onboarding data. The active profile-derived rows use `source_layer='profile'`.
 
-Current persisted feature rows use canonical storage feature keys from `recommendation_feature_definitions`.
-For example, the app-facing `sound` preference is stored as `hitting_sound` to match the NLP matrix and feature-definition schema.
+Current persisted feature rows use canonical scoring keys from `recommendation_feature_definitions`.
+Raw 1-to-10 UI inputs are stored in `raw_score`, and backend-normalized weights are stored in `preference_weight`.
 
 Current persisted feature rows include:
 
-- primary preference weights: `attack`, `comfort`, `control`, `durability`, `elasticity`, `hitting_sound`, `string_movement`, `tension_retention`, and `value_for_money`
-- structured range preferences: `gauge_mm`
-- budget range preference: `price_rm`
+- primary preference weights: `repulsion`, `control`, `durability`, `comfort`, and `sound`
 
 These rows are regenerated when a complete profile is saved and when profile recommendations are generated.
 
@@ -171,17 +169,16 @@ These rows are regenerated when a complete profile is saved and when profile rec
 
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
-The active algorithm version is `hybrid_preference_rule_budget_nlp_v1`.
+The active algorithm version is `preference_official_nlp_rule_budget_v2`.
 
 Score fields:
 
 - `preference_match_score`
 - `rule_fit_score`
 - `budget_fit_score`
-- `nlp_review_score`
 - `final_score`
 
-Compatibility columns (`content_score`, `rule_score`, and `nlp_score`) remain populated where practical so older inspection/debug paths do not break. The `rationale` JSON stores score breakdown, feature source provenance, fused item feature scores, NLP review scores, rule events, profile context, and top human-readable reasons.
+Compatibility columns (`content_score`, `rule_score`, `nlp_score`, and `nlp_review_score`) remain available for older inspection/debug paths, but NLP is now included inside effective item features rather than scored as a separate top-level component. The `rationale` JSON stores raw user scores, normalized weights, effective official+NLP feature scores, rule events, profile context, and top human-readable reasons.
 
 ### `store_business_hours`
 

@@ -158,15 +158,15 @@ The current design review found that the backend already had the right normalize
 Final score:
 
 ```text
-FinalScore = 0.55 * PreferenceMatch
-           + 0.20 * RuleFit
+FinalScore = 0.60 * PreferenceMatch
+           + 0.25 * RuleFit
            + 0.15 * BudgetFit
-           + 0.10 * NLPReviewScore
 ```
 
-- `PreferenceMatch` compares the user preference vector from profile/onboarding fields with fused item features.
+- `PreferenceMatch` compares normalized 1-to-10 user priorities against effective item features.
+- Effective item features use official performance when available and NLP/review matrix values as enrichment.
+- Structured catalog fields such as gauge are excluded from direct PreferenceMatch and are used only by RuleFit, filtering, and display.
 - `RuleFit` applies badminton-specific logic such as beginner thin-gauge penalties and attacking/control bonuses.
 - `BudgetFit` scores explicit alignment with the user's budget range.
-- `NLPReviewScore` uses only `string_recommendation_matrix` rows imported with `source_layer='nlp_review'`.
-- Item feature fusion prefers official/manual performance, then NLP review matrix values, then structured catalog heuristics, then community signals.
+- NLP/review signals are stored in `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings` or `string_official_performance`.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

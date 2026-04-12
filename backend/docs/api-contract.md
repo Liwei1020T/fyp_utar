@@ -262,7 +262,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "hybrid_preference_rule_budget_nlp_v1",
+  "algorithm_version": "preference_official_nlp_rule_budget_v2",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
@@ -274,18 +274,14 @@ Recommendation response:
       "score": 0.84,
       "price_rm": 45.0,
       "aspect_scores": {
-        "attack": 0.81,
-        "comfort": 0.58,
+        "repulsion": 0.81,
         "control": 0.72,
         "durability": 0.61,
-        "elasticity": 0.79,
-        "sound": 0.84,
-        "string_movement": 0.67,
-        "tension_retention": 0.63,
-        "value_for_money": 0.59
+        "comfort": 0.58,
+        "sound": 0.84
       },
       "reasons": [
-        "matches your attack preference",
+        "matches your power and rebound preference",
         "within your budget range",
         "fits your attacking playing style"
       ],
@@ -293,14 +289,16 @@ Recommendation response:
         "preference_match": 0.82,
         "rule_fit": 0.75,
         "budget_fit": 0.93,
-        "nlp_review_score": 0.81,
         "final_score": 0.84
       },
       "rationale_payload": {
         "feature_sources": {
-          "attack": "nlp_review",
+          "repulsion": "nlp_review",
           "control": "nlp_review"
         },
+        "user_preference_vector": [
+          { "feature_key": "repulsion", "raw_score": 6, "preference_weight": 0.1935 }
+        ],
         "profile_context": {
           "skill_level": "intermediate",
           "playing_style": "attacking"
