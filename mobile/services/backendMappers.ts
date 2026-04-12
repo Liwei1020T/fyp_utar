@@ -783,6 +783,8 @@ export function mapRecommendationResponse(
       aspectScores: item.aspect_scores,
       scoreBreakdown: mapRecommendationScoreBreakdown(item.score_breakdown),
       rationalePayload: item.rationale_payload ?? null,
+      fitAngle: item.rationale_payload?.primary_fit_angle,
+      tradeOffSummary: item.rationale_payload?.trade_off_summary,
       algorithmVersion: response.algorithm_version,
       generatedAt: item.generated_at ?? response.generated_at ?? null,
       suggestedTensionRange: matched

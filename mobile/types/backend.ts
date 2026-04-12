@@ -313,9 +313,18 @@ export interface BackendRecommendationScoreBreakdown {
 
 export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
+  primary_fit_angle?: string;
+  trade_off_summary?: string;
   feature_sources?: Record<string, string>;
+  effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
   nlp_review_scores?: Record<string, number>;
+  auxiliary_scores?: Record<string, number>;
+  user_preference_vector?: Array<{
+    feature_key?: string;
+    raw_score?: number | null;
+    preference_weight?: number | null;
+  }>;
   budget?: {
     price_rm?: number | null;
     budget_min?: number;

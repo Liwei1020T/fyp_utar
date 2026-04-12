@@ -24,6 +24,41 @@ function formatScore(value?: number) {
   return `${Math.round(value * 100)}%`;
 }
 
+function humanizeFeature(value: string) {
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function ScoreTile({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value?: number;
+  note: string;
+}) {
+  const percent = value == null ? 0 : Math.max(0, Math.min(100, Math.round(value * 100)));
+
+  return (
+    <AppCard variant="elevated" padding="sm" className="flex-1 min-w-[120px]">
+      <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+        {label}
+      </HeroText>
+      <HeroText className="mt-1 text-2xl font-black text-neutral-950">
+        {formatScore(value)}
+      </HeroText>
+      <View className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100">
+        <View className="h-full rounded-full bg-primary-600" style={{ width: `${percent}%` }} />
+      </View>
+      <HeroText className="mt-2 text-xs leading-5 text-neutral-500">
+        {note}
+      </HeroText>
+    </AppCard>
+  );
+}
+
 export default function RecommendationExplanationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -40,6 +75,15 @@ export default function RecommendationExplanationScreen() {
   );
   const detailResult = backendDetail ?? null;
   const rationale = detailResult?.rationale_payload ?? liveResult?.rationalePayload ?? null;
+  const fitAngle =
+    rationale?.primary_fit_angle ??
+    liveResult?.fitAngle ??
+    'Profile match';
+  const tradeOff =
+    rationale?.trade_off_summary ??
+    liveResult?.tradeOffSummary ??
+    'Balanced against your saved profile and current catalog signals.';
+  const matchScore = liveResult?.matchScore ?? (detailResult ? Math.round(detailResult.score * 100) : undefined);
   const suggestedTensionRange =
     liveResult?.suggestedTensionRange ??
     (stringItem
@@ -118,45 +162,60 @@ export default function RecommendationExplanationScreen() {
       onBackPress={() => router.back()}
     >
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
-        <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
-          {stringItem?.brand ?? detailResult?.brand ?? 'StringSense'}
-        </HeroText>
+        <View className="flex-row items-center justify-between gap-3">
+          <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
+            {stringItem?.brand ?? detailResult?.brand ?? 'StringSense'}
+          </HeroText>
+          {matchScore != null ? (
+            <View className="rounded-full bg-white/12 px-3 py-1.5">
+              <HeroText className="text-xs font-black text-white">{matchScore}%</HeroText>
+            </View>
+          ) : null}
+        </View>
         <HeroText className="mt-3 text-[30px] font-bold tracking-tight text-white">
           {stringItem?.model ?? detailResult?.model_name ?? detailResult?.string_name}
         </HeroText>
+        <AppChip label={fitAngle} variant="accent" className="mt-4 self-start" />
         <HeroText className="mt-3 text-sm leading-6 text-primary-100">
           This recommendation is anchored on your {user.playingStyle.toLowerCase()} style, {user.skillLevel.toLowerCase()} level, and preference for {Object.entries(user.priorities).sort((a, b) => b[1] - a[1])[0]?.[0]}.
         </HeroText>
       </AppCard>
 
+      <AppSection eyebrow="Verdict" title="Best reason">
+        <AppCard variant="highlighted" padding="md">
+          <HeroText className="text-base font-bold text-neutral-950">
+            {liveResult?.reasons[0] ?? detailResult?.reasons?.[0] ?? `${fitAngle} for your saved profile.`}
+          </HeroText>
+          <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
+            {tradeOff}
+          </HeroText>
+        </AppCard>
+      </AppSection>
+
       {scoreBreakdown ? (
-        <AppSection eyebrow="Score formula" title="Hybrid score breakdown">
-          <AppCard variant="highlighted" padding="md">
-            <View className="flex-row flex-wrap gap-2">
-              <AppChip label={`Preference ${formatScore(scoreBreakdown.preferenceMatch)}`} variant="primary" />
-              <AppChip label={`Rule ${formatScore(scoreBreakdown.ruleFit)}`} variant="secondary" />
-              <AppChip label={`Budget ${formatScore(scoreBreakdown.budgetFit)}`} variant="neutral" />
-              <AppChip label={`NLP ${formatScore(scoreBreakdown.nlpReviewScore)}`} variant="neutral" />
-            </View>
-            <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
-              Final score combines your saved preference vector, badminton fit rules, budget alignment, and review-derived NLP signals.
-            </HeroText>
-          </AppCard>
+        <AppSection eyebrow="Score formula" title="Three-part breakdown">
+          <View className="flex-row flex-wrap gap-3">
+            <ScoreTile
+              label="Preference"
+              value={scoreBreakdown.preferenceMatch}
+              note="Includes official and NLP review evidence."
+            />
+            <ScoreTile
+              label="Rule"
+              value={scoreBreakdown.ruleFit}
+              note="Uses gauge, style, skill, and frequency rules."
+            />
+            <ScoreTile
+              label="Budget"
+              value={scoreBreakdown.budgetFit}
+              note="Checks price against your saved range."
+            />
+          </View>
         </AppSection>
       ) : null}
 
-      <AppSection eyebrow="Why it fits" title="Match logic">
+      <AppSection eyebrow="What this means" title="Match logic">
         <View className="gap-3">
-          <AppCard variant="elevated" padding="md">
-            <HeroText className="text-base font-semibold text-neutral-950">
-              Style fit
-            </HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              {liveResult?.reasons[0] ??
-                `${stringItem?.bestFor[0] ?? 'This string'} aligns with how you currently describe your game.`}{' '}
-              The string stays lively without drifting too far from your preferred tension baseline.
-            </HeroText>
-          </AppCard>
           <AppCard variant="elevated" padding="md">
             <HeroText className="text-base font-semibold text-neutral-950">
               Priority fit
@@ -185,7 +244,7 @@ export default function RecommendationExplanationScreen() {
       {rationale?.rule_events?.length ? (
         <AppSection eyebrow="Rules" title="Badminton rule events">
           <View className="gap-3">
-            {rationale.rule_events.map((event, index) => (
+            {rationale.rule_events.slice(0, 3).map((event, index) => (
               <AppCard key={`${event.rule ?? 'rule'}-${index}`} variant="elevated" padding="sm">
                 <HeroText className="text-sm font-semibold text-neutral-900">
                   {event.reason ?? event.rule ?? 'Rule adjustment'}
@@ -202,35 +261,23 @@ export default function RecommendationExplanationScreen() {
       ) : null}
 
       {rationale?.feature_sources ? (
-        <AppSection eyebrow="Provenance" title="Feature sources">
+        <AppSection eyebrow="Evidence" title="Feature sources">
           <View className="flex-row flex-wrap gap-2">
-            {Object.entries(rationale.feature_sources).slice(0, 8).map(([feature, source]) => (
+            {Object.entries(rationale.feature_sources).slice(0, 4).map(([feature, source]) => (
               <AppChip
                 key={feature}
-                label={`${feature.replace(/_/g, ' ')} · ${source.replace(/_/g, ' ')}`}
+                label={`${humanizeFeature(feature)} · ${source.replace(/_/g, ' ')}`}
                 variant="neutral"
               />
             ))}
           </View>
+          <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
+            NLP review signals are blended into Preference Match rather than shown as a separate score.
+          </HeroText>
         </AppSection>
       ) : null}
 
-      <AppSection eyebrow="Strengths and trade-offs" title="What you gain and what you give up">
-        <View className="gap-3">
-          {(stringItem?.strengths ?? liveResult?.reasons ?? detailResult?.reasons ?? []).map((strength) => (
-            <AppCard key={strength} variant="highlighted" padding="sm">
-              <HeroText className="text-sm font-semibold text-neutral-900">{strength}</HeroText>
-            </AppCard>
-          ))}
-          {(stringItem?.tradeOffs ?? []).map((tradeOff) => (
-            <AppCard key={tradeOff} variant="subtle" padding="sm">
-              <HeroText className="text-sm leading-6 text-neutral-600">{tradeOff}</HeroText>
-            </AppCard>
-          ))}
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="For the demo" title="How to continue">
+      <AppSection eyebrow="Next step" title="How to continue">
         <View className="flex-row flex-wrap gap-2">
           <AppChip label="Compare with shortlist" variant="neutral" />
           <AppChip label="Book from here" variant="primary" />

@@ -205,6 +205,8 @@ export interface RecommendationMatch {
   aspectScores: Record<string, number>;
   scoreBreakdown?: RecommendationScoreBreakdown;
   rationalePayload?: RecommendationRationalePayload | null;
+  fitAngle?: string;
+  tradeOffSummary?: string;
   algorithmVersion?: string;
   generatedAt?: string | null;
   suggestedTensionRange: string;
@@ -226,9 +228,18 @@ export interface RecommendationRationalePayload {
     nlp_review_score?: number;
     final_score?: number;
   };
+  primary_fit_angle?: string;
+  trade_off_summary?: string;
   feature_sources?: Record<string, string>;
+  effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
   nlp_review_scores?: Record<string, number>;
+  auxiliary_scores?: Record<string, number>;
+  user_preference_vector?: Array<{
+    feature_key?: string;
+    raw_score?: number | null;
+    preference_weight?: number | null;
+  }>;
   budget?: {
     price_rm?: number | null;
     budget_min?: number;
