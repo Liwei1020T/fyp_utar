@@ -7,6 +7,8 @@ import type {
   BackendBooking,
   BackendForgotPasswordRequestResponse,
   BackendMessageResponse,
+  BackendOfficialPerformance,
+  BackendOfficialPerformancePayload,
   BackendPage,
   BackendPopularString,
   BackendProfile,
@@ -21,6 +23,7 @@ import type {
   BackendStoreSettings,
   BackendStoreSettingsPayload,
   BackendString,
+  BackendStringWritePayload,
 } from '../types/backend';
 import { Platform } from 'react-native';
 
@@ -520,6 +523,37 @@ export const backendApi = {
       `/admin/inventory/strings/${stringId}`,
       {
         method: 'PATCH',
+        body: payload,
+        token,
+      },
+    );
+  },
+  adminUpdateString(
+    token: string,
+    stringId: string,
+    payload: BackendStringWritePayload,
+  ) {
+    return requestJson<BackendString>(`/admin/strings/${stringId}`, {
+      method: 'PUT',
+      body: payload,
+      token,
+    });
+  },
+  adminFetchOfficialPerformance(token: string, stringId: string) {
+    return requestJson<BackendOfficialPerformance>(
+      `/admin/strings/${stringId}/official-performance`,
+      { token },
+    );
+  },
+  adminUpdateOfficialPerformance(
+    token: string,
+    stringId: string,
+    payload: BackendOfficialPerformancePayload,
+  ) {
+    return requestJson<BackendOfficialPerformance>(
+      `/admin/strings/${stringId}/official-performance`,
+      {
+        method: 'PUT',
         body: payload,
         token,
       },

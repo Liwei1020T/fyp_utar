@@ -46,27 +46,64 @@ export interface BackendProfile {
   updated_at: string | null;
 }
 
+export interface BackendCatalogTag {
+  tag_key: string;
+  tag_label: string;
+  tag_count: number;
+}
+
+export interface BackendOfficialPerformance {
+  catalog_id: string;
+  source_type: string | null;
+  source_name: string | null;
+  source_url: string | null;
+  source_region: string | null;
+  category: number | null;
+  feature: number | null;
+  feel: number | null;
+  repulsion_power: number | null;
+  durability: number | null;
+  hitting_sound: number | null;
+  shock_absorption: number | null;
+  control: number | null;
+  notes: string | null;
+  status: string;
+  updated_at: string | null;
+}
+
 export interface BackendString {
   id: string;
   brand: string;
+  brand_code: string;
+  display_name: string;
   model_name: string;
   normalized_name: string;
-  localized_name?: string | null;
   price_rm: number | null;
-  gauge_min_mm?: number | null;
-  gauge_max_mm?: number | null;
-  material?: string | null;
-  description?: string | null;
-  main_trait?: string | null;
-  category?: string | null;
-  tension_min_lbs?: number | null;
-  tension_max_lbs?: number | null;
-  power_score?: number | null;
-  control_score?: number | null;
-  durability_score?: number | null;
-  comfort_score?: number | null;
-  sound_score?: number | null;
-  image_url?: string | null;
+  series_key: string | null;
+  series_label: string | null;
+  is_hybrid: boolean;
+  gauge_main_mm: number | null;
+  gauge_cross_mm: number | null;
+  gauge_label: string | null;
+  material_summary_en: string | null;
+  color_options_en: string[];
+  short_description: string;
+  full_description: string;
+  official_performance_status: string;
+  source_item_id: string | null;
+  source_url: string | null;
+  source_language: string | null;
+  original_name: string | null;
+  original_brand_label: string | null;
+  original_series: string | null;
+  original_material: string | null;
+  original_color: string | null;
+  community_rating: number | null;
+  want_count: number;
+  used_count: number;
+  review_count: number;
+  tags: BackendCatalogTag[];
+  aspect_scores: Record<string, number>;
   attack: number;
   comfort: number;
   control: number;
@@ -77,34 +114,69 @@ export interface BackendString {
   tension_retention: number;
   value_for_money: number;
   beginner_fit_score: number;
+  attacking_fit_score: number;
+  control_fit_score: number;
   stability_score: number;
   all_round_score: number;
-  source_item_id: string | null;
-  source_url: string | null;
   is_active: boolean;
   created_at: string | null;
   updated_at: string | null;
 }
 
-export type BackendInventoryAvailability =
-  | 'in_stock'
-  | 'low_stock'
-  | 'out_of_stock';
-
-export type BackendInventoryPriceStatus =
-  | 'priced'
-  | 'pending'
-  | 'quoted_at_shop';
+export type BackendInventoryAvailability = 'in_stock' | 'low_stock' | 'out_of_stock';
 
 export interface BackendAdminInventoryString extends BackendString {
-  inventory_id?: string | null;
-  vendor_id?: string | null;
   stock_level: number;
+  current_stock: number;
+  reserved_stock: number;
+  available_stock: number;
+  reorder_level: number;
+  reorder_quantity: number;
+  cost_price: number | null;
+  selling_price: number | null;
   availability: BackendInventoryAvailability;
-  price_status?: BackendInventoryPriceStatus | null;
-  availability_status?: BackendInventoryAvailability | null;
   admin_note: string | null;
-  shop_note?: string | null;
+}
+
+export interface BackendStringWritePayload {
+  brand: string;
+  model_name: string;
+  price_rm?: number | null;
+  display_name?: string | null;
+  series_key?: string | null;
+  series_label?: string | null;
+  is_hybrid?: boolean | null;
+  gauge_main_mm?: number | null;
+  gauge_cross_mm?: number | null;
+  gauge_label?: string | null;
+  material_summary_en?: string | null;
+  color_options_en?: string[] | null;
+  short_description?: string | null;
+  full_description?: string | null;
+  source_language?: string | null;
+  original_name?: string | null;
+  original_brand_label?: string | null;
+  original_series?: string | null;
+  original_material?: string | null;
+  original_color?: string | null;
+  is_active?: boolean | null;
+}
+
+export interface BackendOfficialPerformancePayload {
+  source_type?: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  source_region?: string | null;
+  category?: number | null;
+  feature?: number | null;
+  feel?: number | null;
+  repulsion_power?: number | null;
+  durability?: number | null;
+  hitting_sound?: number | null;
+  shock_absorption?: number | null;
+  control?: number | null;
+  notes?: string | null;
+  status?: string | null;
 }
 
 export interface BackendStoreBusinessHoursDay {

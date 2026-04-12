@@ -22,6 +22,7 @@ import type {
   BackendBooking,
   BackendBookingStatusHistory,
   BackendBookingUpdate,
+  BackendOfficialPerformance,
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
@@ -281,14 +282,18 @@ function deriveStrengthLabels(item: BackendString) {
 }
 
 function normalizeCategory(item: BackendString): StringItem['category'] {
-  const rawCategory = item.category?.trim().toLowerCase();
-  if (
-    rawCategory === 'repulsion' ||
-    rawCategory === 'balanced' ||
-    rawCategory === 'control' ||
-    rawCategory === 'durable'
-  ) {
-    return rawCategory;
+  const normalizedTags = item.tags
+    .map((tag) => tag.tag_key.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (normalizedTags.includes('control')) {
+    return 'control';
+  }
+  if (normalizedTags.includes('durability') || normalizedTags.includes('durable')) {
+    return 'durable';
+  }
+  if (normalizedTags.includes('repulsion') || normalizedTags.includes('attack')) {
+    return 'repulsion';
   }
   return deriveCategory(item);
 }
@@ -297,10 +302,10 @@ function deriveGaugeBounds(
   item: BackendString,
   category: StringItem['category'],
 ) {
-  if (item.gauge_min_mm != null || item.gauge_max_mm != null) {
+  if (item.gauge_main_mm != null || item.gauge_cross_mm != null) {
     return {
-      min: item.gauge_min_mm ?? item.gauge_max_mm ?? null,
-      max: item.gauge_max_mm ?? item.gauge_min_mm ?? null,
+      min: item.gauge_main_mm ?? item.gauge_cross_mm ?? null,
+      max: item.gauge_cross_mm ?? item.gauge_main_mm ?? null,
     };
   }
 
@@ -322,8 +327,13 @@ function deriveMainTrait(
   category: StringItem['category'],
   strengths: string[],
 ) {
-  if (item.main_trait?.trim()) {
-    return item.main_trait.trim();
+  const highlightedTag = item.tags
+    .map((tag) => tag.tag_label?.trim())
+    .find((value) =>
+      value != null && ['Repulsion', 'Control', 'Durability', 'Balanced'].includes(value),
+    );
+  if (highlightedTag) {
+    return highlightedTag;
   }
 
   switch (category) {
@@ -340,21 +350,17 @@ function deriveMainTrait(
 }
 
 function deriveMaterial(item: BackendString) {
-  return item.material?.trim() || 'Performance multifilament';
+  return item.material_summary_en?.trim() || 'Performance multifilament';
 }
 
 function deriveScores(item: BackendString) {
   return sanitizePerformanceScores(
     {
-      power:
-        item.power_score
-        ?? Math.round(((item.attack + item.elasticity) / 2) * 10),
-      control: item.control_score ?? Math.round(item.control * 10),
-      durability:
-        item.durability_score
-        ?? Math.round(((item.durability + item.tension_retention) / 2) * 10),
-      comfort: item.comfort_score ?? Math.round(item.comfort * 10),
-      sound: item.sound_score ?? Math.round(item.sound * 10),
+      power: Math.round(((item.attack + item.elasticity) / 2) * 10),
+      control: Math.round(item.control * 10),
+      durability: Math.round(((item.durability + item.tension_retention) / 2) * 10),
+      comfort: Math.round(item.comfort * 10),
+      sound: Math.round(item.sound * 10),
     },
     {
       power: 6,
@@ -366,6 +372,26 @@ function deriveScores(item: BackendString) {
   );
 }
 
+export function mapOfficialPerformanceToPerformanceScores(
+  official: BackendOfficialPerformance | null | undefined,
+  fallback: StringItem['ratings'],
+) {
+  if (!official) {
+    return fallback;
+  }
+
+  return sanitizePerformanceScores(
+    {
+      power: official.repulsion_power ?? fallback.power,
+      control: official.control ?? fallback.control,
+      durability: official.durability ?? fallback.durability,
+      comfort: official.shock_absorption ?? fallback.comfort,
+      sound: official.hitting_sound ?? fallback.sound,
+    },
+    fallback,
+  );
+}
+
 export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const strengths = deriveStrengthLabels(item);
   const category = normalizeCategory(item);
@@ -373,22 +399,22 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const gaugeBounds = deriveGaugeBounds(item, category);
   const ratings = deriveScores(item);
   const mainTrait = deriveMainTrait(item, category, strengths);
-  const tensionMinLbs = item.tension_min_lbs ?? recommendedTension[0];
-  const tensionMaxLbs = item.tension_max_lbs ?? recommendedTension[1];
+  const tensionMinLbs = recommendedTension[0];
+  const tensionMaxLbs = recommendedTension[1];
   const gauge = formatGaugeRange(gaugeBounds.min, gaugeBounds.max);
   const priceStatus = derivePriceStatus(item.price_rm);
   const availability = deriveAvailabilityStatus(item.is_active ? 8 : 0);
-  const imageUrl = resolveBackendMediaUrl(item.image_url);
   const catalog = {
     id: item.id,
     brand: item.brand,
     modelName: item.model_name,
-    localizedName: item.localized_name ?? undefined,
+    localizedName: item.original_name ?? undefined,
     gaugeMinMm: gaugeBounds.min,
     gaugeMaxMm: gaugeBounds.max,
     material: deriveMaterial(item),
     description:
-      item.description?.trim()
+      item.full_description?.trim()
+      || item.short_description?.trim()
       || `Built around ${strengths
         .slice(0, 2)
         .map((label) => label.toLowerCase())
@@ -398,7 +424,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     tensionMinLbs,
     tensionMaxLbs,
     performanceScores: ratings,
-    imageUrl,
+    imageUrl: undefined,
     isActive: item.is_active,
     createdAt: item.created_at ?? undefined,
     updatedAt: item.updated_at ?? undefined,
@@ -410,7 +436,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     price: item.price_rm ?? null,
     priceStatus,
     availabilityStatus: availability,
-    shopNote: item.source_url ?? undefined,
+    shopNote: undefined,
     updatedAt: item.updated_at ?? undefined,
   };
 
@@ -436,7 +462,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
       tensionMaxLbs,
     )} based on the current backend profile.`,
     description: catalog.description,
-    imageUrl,
+    imageUrl: undefined,
     isActive: catalog.isActive,
     createdAt: catalog.createdAt,
     updatedAt: catalog.updatedAt,
@@ -471,20 +497,17 @@ export function mapBackendInventoryStringToStringItem(
   item: BackendAdminInventoryString,
 ): StringItem {
   const mapped = mapBackendStringToStringItem(item);
-  const availability = deriveAvailabilityStatus(
-    item.stock_level,
-    item.availability_status ?? item.availability,
-  );
-  const priceStatus = derivePriceStatus(item.price_rm, item.price_status ?? undefined);
+  const availability = deriveAvailabilityStatus(item.stock_level, item.availability);
+  const resolvedPrice = item.selling_price ?? item.price_rm;
+  const priceStatus = derivePriceStatus(resolvedPrice);
   const inventory = {
     ...mapped.inventory,
-    id: item.inventory_id ?? mapped.inventory.id,
-    vendorId: item.vendor_id ?? mapped.inventory.vendorId,
+    id: mapped.inventory.id,
     stockQty: item.stock_level,
-    price: item.price_rm ?? null,
+    price: resolvedPrice ?? null,
     priceStatus,
     availabilityStatus: availability,
-    shopNote: item.shop_note ?? item.admin_note ?? undefined,
+    shopNote: item.admin_note ?? undefined,
     updatedAt: item.updated_at ?? undefined,
   };
 

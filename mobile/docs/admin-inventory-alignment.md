@@ -75,8 +75,15 @@ The admin inventory flow should help the shop team:
 
 ### Backend truthfulness
 
-- Current backend integration can persist shop data today.
-- Catalog, score, media, and visibility edits are aligned in the frontend model and UI, but they need dedicated backend master-data endpoints for full server persistence.
+- Current admin editor now syncs three layers where backend support already exists:
+  - catalog master data through `PUT /api/admin/strings/{id}`
+  - performance scores through `PUT /api/admin/strings/{id}/official-performance`
+  - shop inventory through `PATCH /api/admin/inventory/strings/{id}`
+- A few frontend compatibility fields still remain local-only until dedicated backend storage is added:
+  - image/media asset references
+  - explicit price mode distinction between `pending` and `quoted_at_shop`
+  - manual availability override independent from stock-derived availability
+  - admin tension guidance fields used by the mobile app UI
 
 ## 4. Unified Inventory Card Design
 
@@ -103,11 +110,11 @@ Three information layers:
 
 | Frontend section | Domain boundary | Backend fields | Notes |
 | --- | --- | --- | --- |
-| String preview card | Mixed read model | `brand`, `model_name`, `localized_name`, `gauge_min_mm`, `gauge_max_mm`, `main_trait`, `image_url`, `stock_qty`, `price`, `price_status`, `availability_status` | Combines catalog and inventory for operational preview only |
-| Catalog information | String master data | `id`, `brand`, `model_name`, `localized_name`, `gauge_min_mm`, `gauge_max_mm`, `material`, `description`, `main_trait`, `category`, `tension_min_lbs`, `tension_max_lbs`, `is_active`, `updated_at` | Belongs in a string catalog or `strings` table |
-| Performance scores | String master data | `power_score`, `control_score`, `durability_score`, `comfort_score`, `sound_score` | Must stay consistent with recommendation and compare surfaces |
-| Media | String master data | `image_url` or image asset reference | Upload, replace, and remove should target master data, not shop inventory |
-| Shop data | Vendor inventory | `id`, `vendor_id`, `string_id`, `stock_qty`, `price`, `price_status`, `availability_status`, `shop_note`, `updated_at` | Belongs in a vendor inventory table |
+| String preview card | Mixed read model | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, derived `main_trait`, `stock_level`, `selling_price`, derived availability | Combines catalog and inventory for operational preview only |
+| Catalog information | String master data | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, `material_summary_en`, `full_description`, `is_active` | Saved through the admin string endpoint; frontend still keeps compatibility mirrors such as `mainTrait` and `category` |
+| Performance scores | Official performance | `repulsion_power`, `control`, `durability`, `shock_absorption`, `hitting_sound`, `status` | Frontend maps these onto the mobile app's 1-10 power/control/durability/comfort/sound controls |
+| Media | Frontend compatibility state | local `imageUrl` mirror until a backend media field exists | Upload, replace, and remove work in the mobile UI but still need dedicated backend asset storage |
+| Shop data | Inventory snapshot | `stock_level`, `selling_price`, `admin_note`, derived availability | Live backend persists stock, selling price, and note; explicit price mode/availability semantics still need dedicated fields |
 
 ### Frontend domain model
 
@@ -250,7 +257,8 @@ Legacy top-level fields remain for compatibility with existing player flows, but
 - [x] Expand inventory detail into catalog, scores, media, and shop-data sections
 - [x] Support upload, replace, and remove image actions in the frontend
 - [x] Document backend mapping and persistence boundaries
-- [ ] Add backend endpoints for catalog master-data updates
-- [ ] Add backend media upload or asset-reference handling for `image_url`
-- [ ] Add backend persistence for performance scores and visibility state
-- [ ] Add server-side validation for price status versus price value combinations
+- [x] Use existing backend endpoints for catalog master-data and official-performance sync
+- [ ] Add backend media upload or asset-reference handling for image assets
+- [ ] Add dedicated backend persistence for explicit price mode state
+- [ ] Add dedicated backend persistence for manual availability overrides
+- [ ] Add backend persistence for admin tension guidance fields
