@@ -12,6 +12,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import selectinload
 
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    import_recommendation_matrix_csv,
+)
 from app.adapters.persistence.sqlalchemy.models import InventoryMovement
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StringCatalogMetric
@@ -22,10 +25,18 @@ from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatri
 from app.adapters.persistence.sqlalchemy.repositories.mappers import (
     to_official_performance,
 )
+from app.adapters.persistence.sqlalchemy.repositories.mappers import (
+    to_recommendation_matrix_entry,
+)
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
+from app.config.settings import get_settings
 from app.domain.catalog.entities import InventoryMovementRecord
+from app.domain.catalog.entities import RecommendationMatrixImportReport
+from app.domain.catalog.entities import RecommendationMatrixInspectionRecord
 from app.domain.catalog.entities import StringItem
-from app.domain.catalog.entities import StringOfficialPerformance as OfficialPerformanceRecord
+from app.domain.catalog.entities import (
+    StringOfficialPerformance as OfficialPerformanceRecord,
+)
 from app.domain.catalog.policies import InventoryAvailability
 from app.shared.pagination import Page
 
@@ -179,9 +190,13 @@ class SqlAlchemyCatalogRepository:
         elif sort_by == "community_rating":
             query = query.outerjoin(StringCatalogItem.metrics)
         if sort_order == "desc":
-            query = query.order_by(sort_column.desc(), StringCatalogItem.display_name.asc())
+            query = query.order_by(
+                sort_column.desc(), StringCatalogItem.display_name.asc()
+            )
         else:
-            query = query.order_by(sort_column.asc(), StringCatalogItem.display_name.asc())
+            query = query.order_by(
+                sort_column.asc(), StringCatalogItem.display_name.asc()
+            )
 
         if limit is not None:
             query = query.limit(limit).offset(offset)
@@ -335,7 +350,9 @@ class SqlAlchemyCatalogRepository:
         inventory.current_stock = current_stock
         inventory.reserved_stock = reserved_stock
         inventory.available_stock = max(current_stock - reserved_stock, 0)
-        item.is_active = item.is_active and inventory.is_active and inventory.available_stock > 0
+        item.is_active = (
+            item.is_active and inventory.is_active and inventory.available_stock > 0
+        )
 
         note = values.get("admin_note")
         movement_type = values.get("movement_type") or "ADJUSTMENT"
@@ -352,7 +369,9 @@ class SqlAlchemyCatalogRepository:
                     quantity=inventory.available_stock,
                     reference_type=values.get("reference_type"),
                     reference_id=values.get("reference_id"),
-                    note=str(note).strip() if isinstance(note, str) and note.strip() else None,
+                    note=str(note).strip()
+                    if isinstance(note, str) and note.strip()
+                    else None,
                 )
             )
 
@@ -392,7 +411,9 @@ class SqlAlchemyCatalogRepository:
         offset: int,
     ) -> Page[InventoryMovementRecord]:
         inventory = self.db.execute(
-            select(StringInventoryItem).where(StringInventoryItem.catalog_id == string_id)
+            select(StringInventoryItem).where(
+                StringInventoryItem.catalog_id == string_id
+            )
         ).scalar_one_or_none()
         if inventory is None:
             return Page(items=[], total=0, limit=limit, offset=offset)
@@ -400,8 +421,10 @@ class SqlAlchemyCatalogRepository:
         query = select(InventoryMovement).where(
             InventoryMovement.inventory_id == inventory.inventory_id
         )
-        count_query = select(func.count()).select_from(InventoryMovement).where(
-            InventoryMovement.inventory_id == inventory.inventory_id
+        count_query = (
+            select(func.count())
+            .select_from(InventoryMovement)
+            .where(InventoryMovement.inventory_id == inventory.inventory_id)
         )
         total = self.db.execute(count_query).scalar_one()
         query = query.order_by(InventoryMovement.created_at.desc())
@@ -427,12 +450,53 @@ class SqlAlchemyCatalogRepository:
             offset=offset,
         )
 
+    def get_recommendation_matrix(
+        self,
+        string_id: str,
+    ) -> RecommendationMatrixInspectionRecord | None:
+        item = self.db.execute(
+            self._base_query().where(StringCatalogItem.catalog_id == string_id)
+        ).scalar_one_or_none()
+        if item is None:
+            return None
+        return RecommendationMatrixInspectionRecord(
+            catalog_id=item.catalog_id,
+            display_name=item.display_name,
+            effective_scores=to_string_item(item).aspect_scores,
+            official_performance=to_official_performance(item.official_performance),
+            matrix_entries=[
+                to_recommendation_matrix_entry(entry)
+                for entry in sorted(
+                    item.recommendation_entries,
+                    key=lambda row: (
+                        row.source_layer,
+                        row.feature_key,
+                    ),
+                )
+            ],
+        )
+
+    def import_recommendation_matrix(self) -> RecommendationMatrixImportReport:
+        report = import_recommendation_matrix_csv(
+            self.db,
+            get_settings().recommendation_matrix_path,
+        )
+        self.db.commit()
+        return report
+
     def list_active_catalog(self) -> list[StringItem]:
-        items = self.db.execute(
-            self._base_query()
-            .where(StringCatalogItem.is_active.is_(True))
-            .order_by(StringCatalogItem.brand_code.asc(), StringCatalogItem.display_name.asc())
-        ).scalars().all()
+        items = (
+            self.db.execute(
+                self._base_query()
+                .where(StringCatalogItem.is_active.is_(True))
+                .order_by(
+                    StringCatalogItem.brand_code.asc(),
+                    StringCatalogItem.display_name.asc(),
+                )
+            )
+            .scalars()
+            .all()
+        )
         return [to_string_item(item) for item in items]
 
     @staticmethod

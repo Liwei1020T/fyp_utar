@@ -64,6 +64,10 @@ class Settings(BaseSettings):
         default="data/string_catalog_db_ready.json",
         alias="APPROVED_STRINGS_SOURCE_PATH",
     )
+    recommendation_matrix_source_path: str = Field(
+        default="data/patched_score_matrix_latest_rerun_v8.csv",
+        alias="RECOMMENDATION_MATRIX_SOURCE_PATH",
+    )
     seed_admin_enabled: bool = Field(default=False, alias="SEED_ADMIN_ENABLED")
     seed_admin_username: str | None = Field(default=None, alias="SEED_ADMIN_USERNAME")
     seed_admin_phone_number: str | None = Field(
@@ -96,6 +100,13 @@ class Settings(BaseSettings):
     @property
     def approved_strings_path(self) -> Path:
         candidate = Path(self.approved_strings_source_path)
+        if candidate.is_absolute():
+            return candidate
+        return BACKEND_ROOT / candidate
+
+    @property
+    def recommendation_matrix_path(self) -> Path:
+        candidate = Path(self.recommendation_matrix_source_path)
         if candidate.is_absolute():
             return candidate
         return BACKEND_ROOT / candidate

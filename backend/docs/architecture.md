@@ -92,6 +92,8 @@ Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/
 - Official/manual performance lives in `string_official_performance`
 - Store pricing and stock live in `inventory_items`
 - Recommendation features live in `string_recommendation_matrix`
+- The primary derived item-side matrix layer is the NLP/review CSV imported as `source_layer='nlp_review'`
+- Older `hybrid_derived` rows remain as compatibility fallback inputs, not as catalog truth
 - The current rule engine still returns the existing frontend-facing response shape, but it now reads item-side scores from matrix-backed domain objects rather than from catalog columns
 
 ## AI Boundary

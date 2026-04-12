@@ -6,234 +6,34 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from app.domain.catalog.recommendation_features import (
+    CANONICAL_MATRIX_FEATURE_KEYS,
+)
+from app.domain.catalog.recommendation_features import (
+    RECOMMENDATION_FEATURE_DEFINITIONS,
+)
 
 AspectScoreMap = dict[str, float]
 
-FEATURE_DEFINITIONS: list[dict[str, Any]] = [
-    {
-        "feature_key": "attack",
-        "feature_label": "Attack",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Explosive offensive response.",
-    },
-    {
-        "feature_key": "comfort",
-        "feature_label": "Comfort",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Overall comfort and feel on impact.",
-    },
-    {
-        "feature_key": "control",
-        "feature_label": "Control",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Control-oriented response.",
-    },
-    {
-        "feature_key": "durability",
-        "feature_label": "Durability",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Resistance to snapping and wear.",
-    },
-    {
-        "feature_key": "elasticity",
-        "feature_label": "Elasticity",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Elastic rebound feel.",
-    },
-    {
-        "feature_key": "sound",
-        "feature_label": "Hitting Sound",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Crisp sound response.",
-    },
-    {
-        "feature_key": "string_movement",
-        "feature_label": "String Movement",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "String bed movement behaviour.",
-    },
-    {
-        "feature_key": "tension_retention",
-        "feature_label": "Tension Retention",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Ability to hold tension over time.",
-    },
-    {
-        "feature_key": "value_for_money",
-        "feature_label": "Value for Money",
-        "feature_group": "catalog_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Perceived value for price paid.",
-    },
-    {
-        "feature_key": "beginner_fit_score",
-        "feature_label": "Beginner Fit",
-        "feature_group": "derived_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Derived beginner-friendliness score.",
-    },
-    {
-        "feature_key": "stability_score",
-        "feature_label": "Stability",
-        "feature_group": "derived_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Derived stability score.",
-    },
-    {
-        "feature_key": "all_round_score",
-        "feature_label": "All Round",
-        "feature_group": "derived_aspect",
-        "data_type": "score",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Derived all-round playability score.",
-    },
-    {
-        "feature_key": "gauge_mm",
-        "feature_label": "Gauge (mm)",
-        "feature_group": "catalog_structured",
-        "data_type": "number",
-        "min_value": 0.5,
-        "max_value": 0.8,
-        "description": "Nominal string gauge.",
-    },
-    {
-        "feature_key": "skill_level_weight",
-        "feature_label": "Skill Level Weight",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Weight derived from player skill level.",
-    },
-    {
-        "feature_key": "playing_style_weight",
-        "feature_label": "Playing Style Weight",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Weight derived from playing style.",
-    },
-    {
-        "feature_key": "budget_weight",
-        "feature_label": "Budget Weight",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Weight derived from budget fit.",
-    },
-    {
-        "feature_key": "durability_preference",
-        "feature_label": "Durability Preference",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Player durability preference.",
-    },
-    {
-        "feature_key": "repulsion_preference",
-        "feature_label": "Repulsion Preference",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Player repulsion preference.",
-    },
-    {
-        "feature_key": "control_preference",
-        "feature_label": "Control Preference",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Player control preference.",
-    },
-    {
-        "feature_key": "sound_preference",
-        "feature_label": "Sound Preference",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Player sound preference.",
-    },
-    {
-        "feature_key": "comfort_preference",
-        "feature_label": "Comfort Preference",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Player comfort preference.",
-    },
-]
-
 TAG_EFFECTS: dict[str, AspectScoreMap] = {
-    "弹性好": {"attack": 0.18, "elasticity": 0.22, "sound": 0.12},
-    "耐打": {"durability": 0.25, "stability_score": 0.16, "tension_retention": 0.12},
-    "控球好": {"control": 0.24, "beginner_fit_score": 0.06},
-    "声音清脆": {"sound": 0.26, "attack": 0.08},
-    "性价比高": {"value_for_money": 0.28, "beginner_fit_score": 0.08},
+    "弹性好": {"attack": 0.18, "elasticity": 0.22, "hitting_sound": 0.12},
+    "耐打": {"durability": 0.25, "stability": 0.16, "tension_retention": 0.12},
+    "控球好": {"control": 0.24, "beginner_fit": 0.06},
+    "声音清脆": {"hitting_sound": 0.26, "attack": 0.08},
+    "性价比高": {"value_for_money": 0.28, "beginner_fit": 0.08},
     "性价比低": {"value_for_money": -0.24},
-    "掉磅快": {"tension_retention": -0.26, "stability_score": -0.10},
+    "掉磅快": {"tension_retention": -0.26, "stability": -0.10},
     "手感好": {"comfort": 0.20, "control": 0.08},
     "震手": {"comfort": -0.20},
     "粘手": {"string_movement": 0.14, "control": 0.08},
 }
 
-ASPECT_KEYS = (
-    "attack",
-    "comfort",
-    "control",
-    "durability",
-    "elasticity",
-    "sound",
-    "string_movement",
-    "tension_retention",
-    "value_for_money",
-    "beginner_fit_score",
-    "stability_score",
-    "all_round_score",
-)
+ASPECT_KEYS = CANONICAL_MATRIX_FEATURE_KEYS
 
 
 def normalize_catalog_name(brand: str, model_name: str) -> str:
     return " ".join(
-        f"{brand} {model_name}"
-        .strip()
+        f"{brand} {model_name}".strip()
         .lower()
         .replace("-", " ")
         .replace("_", " ")
@@ -261,7 +61,10 @@ def load_catalog_source(source_path: Path) -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def load_legacy_rows() -> dict[str, dict[str, Any]]:
-    raw_path = Path(__file__).resolve().parents[4] / "data/raw/badminton_strings_recommender.jsonl"
+    raw_path = (
+        Path(__file__).resolve().parents[4]
+        / "data/raw/badminton_strings_recommender.jsonl"
+    )
     if not raw_path.exists():
         return {}
     mapping: dict[str, dict[str, Any]] = {}
@@ -345,7 +148,9 @@ def approved_row_to_values(
             "color_options_en": list(row.get("color_options_en") or []),
             "short_description": str(row["short_description"]).strip(),
             "full_description": str(row["full_description"]).strip(),
-            "official_performance_status": as_string(row.get("official_performance_status"))
+            "official_performance_status": as_string(
+                row.get("official_performance_status")
+            )
             or "pending_manual_fill",
             "source_dataset_url": as_string(row.get("source_dataset_url")),
             "source_language": as_string(row.get("source_language")) or "en",
@@ -410,7 +215,7 @@ def seed_catalog_rows(source_path: Path) -> dict[str, Any]:
     return {
         "brands": payload.get("brands", []),
         "items": list(defaults.values()),
-        "feature_definitions": FEATURE_DEFINITIONS,
+        "feature_definitions": RECOMMENDATION_FEATURE_DEFINITIONS,
     }
 
 
@@ -486,20 +291,20 @@ def derive_aspect_scores(tags: list[str], gauge_mm: float | None) -> AspectScore
         if gauge_mm <= 0.65:
             scores["attack"] = clamp01(scores["attack"] + 0.16)
             scores["elasticity"] = clamp01(scores["elasticity"] + 0.18)
-            scores["sound"] = clamp01(scores["sound"] + 0.08)
+            scores["hitting_sound"] = clamp01(scores["hitting_sound"] + 0.08)
             scores["durability"] = clamp01(scores["durability"] - 0.08)
             scores["comfort"] = clamp01(scores["comfort"] - 0.05)
         elif gauge_mm >= 0.69:
             scores["durability"] = clamp01(scores["durability"] + 0.20)
-            scores["stability_score"] = clamp01(scores["stability_score"] + 0.16)
+            scores["stability"] = clamp01(scores["stability"] + 0.16)
             scores["tension_retention"] = clamp01(scores["tension_retention"] + 0.08)
             scores["comfort"] = clamp01(scores["comfort"] + 0.08)
             scores["attack"] = clamp01(scores["attack"] - 0.06)
         else:
             scores["control"] = clamp01(scores["control"] + 0.08)
-            scores["all_round_score"] = clamp01(scores["all_round_score"] + 0.12)
+            scores["all_round"] = clamp01(scores["all_round"] + 0.12)
 
-    scores["beginner_fit_score"] = clamp01(
+    scores["beginner_fit"] = clamp01(
         (
             scores["comfort"]
             + scores["control"]
@@ -508,7 +313,7 @@ def derive_aspect_scores(tags: list[str], gauge_mm: float | None) -> AspectScore
         )
         / 4
     )
-    scores["stability_score"] = clamp01(
+    scores["stability"] = clamp01(
         (
             scores["durability"]
             + scores["tension_retention"]
@@ -516,18 +321,32 @@ def derive_aspect_scores(tags: list[str], gauge_mm: float | None) -> AspectScore
         )
         / 3
     )
-    scores["all_round_score"] = clamp01(
+    scores["all_round"] = clamp01(
         (
             scores["attack"]
             + scores["comfort"]
             + scores["control"]
             + scores["durability"]
             + scores["elasticity"]
-            + scores["sound"]
+            + scores["hitting_sound"]
             + scores["tension_retention"]
             + scores["value_for_money"]
         )
         / 8
+    )
+    scores["attacking_fit"] = clamp01(
+        (
+            (scores["attack"] * 0.5)
+            + (scores["elasticity"] * 0.3)
+            + (scores["hitting_sound"] * 0.2)
+        )
+    )
+    scores["control_fit"] = clamp01(
+        (
+            (scores["control"] * 0.5)
+            + (scores["comfort"] * 0.25)
+            + (scores["durability"] * 0.25)
+        )
     )
     return {key: round(value, 2) for key, value in scores.items()}
 

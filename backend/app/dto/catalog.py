@@ -7,6 +7,9 @@ from pydantic import ConfigDict
 from pydantic import Field
 
 from app.domain.catalog.entities import InventoryMovementRecord
+from app.domain.catalog.entities import RecommendationMatrixEntryRecord
+from app.domain.catalog.entities import RecommendationMatrixImportReport
+from app.domain.catalog.entities import RecommendationMatrixInspectionRecord
 from app.domain.catalog.entities import StringItem
 from app.domain.catalog.entities import StringOfficialPerformance
 from app.domain.catalog.policies import inventory_availability
@@ -39,6 +42,8 @@ class StringOut(BaseModel):
     string_movement: float
     tension_retention: float
     value_for_money: float
+    attacking_fit_score: float
+    control_fit_score: float
     beginner_fit_score: float
     stability_score: float
     all_round_score: float
@@ -113,6 +118,43 @@ class InventoryMovementOut(BaseModel):
     reference_id: str | None = None
     note: str | None = None
     created_at: str | None = None
+
+
+class RecommendationMatrixEntryOut(BaseModel):
+    catalog_id: str
+    feature_key: str
+    feature_label: str | None = None
+    feature_group: str | None = None
+    source_layer: str
+    raw_value: float | None = None
+    normalized_score: float | None = None
+    confidence: float | None = None
+    evidence_note: str | None = None
+    source_ref: str | None = None
+    updated_at: str | None = None
+
+
+class RecommendationMatrixInspectionOut(BaseModel):
+    catalog_id: str
+    display_name: str
+    effective_scores: dict[str, float] = Field(default_factory=dict)
+    official_performance: OfficialPerformanceOut | None = None
+    matrix_by_source: dict[str, list[RecommendationMatrixEntryOut]] = Field(
+        default_factory=dict
+    )
+
+
+class RecommendationMatrixImportReportOut(BaseModel):
+    csv_path: str
+    source_layer: str
+    total_csv_rows: int
+    matched_strings: int
+    unmatched_strings: int
+    inserted_entries: int
+    updated_entries: int
+    unchanged_entries: int
+    matched_by: dict[str, int] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
 
 
 class StringWritePayload(BaseModel):
@@ -196,6 +238,8 @@ def string_to_dto(item: StringItem) -> StringOut:
         string_movement=item.string_movement,
         tension_retention=item.tension_retention,
         value_for_money=item.value_for_money,
+        attacking_fit_score=item.attacking_fit_score,
+        control_fit_score=item.control_fit_score,
         beginner_fit_score=item.beginner_fit_score,
         stability_score=item.stability_score,
         all_round_score=item.all_round_score,
@@ -287,4 +331,59 @@ def inventory_movement_to_dto(item: InventoryMovementRecord) -> InventoryMovemen
         reference_id=item.reference_id,
         note=item.note,
         created_at=isoformat_or_none(item.created_at),
+    )
+
+
+def recommendation_matrix_entry_to_dto(
+    item: RecommendationMatrixEntryRecord,
+) -> RecommendationMatrixEntryOut:
+    return RecommendationMatrixEntryOut(
+        catalog_id=item.catalog_id,
+        feature_key=item.feature_key,
+        feature_label=item.feature_label,
+        feature_group=item.feature_group,
+        source_layer=item.source_layer,
+        raw_value=item.raw_value,
+        normalized_score=item.normalized_score,
+        confidence=item.confidence,
+        evidence_note=item.evidence_note,
+        source_ref=item.source_ref,
+        updated_at=isoformat_or_none(item.updated_at),
+    )
+
+
+def recommendation_matrix_inspection_to_dto(
+    item: RecommendationMatrixInspectionRecord,
+) -> RecommendationMatrixInspectionOut:
+    grouped: dict[str, list[RecommendationMatrixEntryOut]] = {}
+    for entry in item.matrix_entries:
+        grouped.setdefault(entry.source_layer, []).append(
+            recommendation_matrix_entry_to_dto(entry)
+        )
+
+    return RecommendationMatrixInspectionOut(
+        catalog_id=item.catalog_id,
+        display_name=item.display_name,
+        effective_scores=item.effective_scores,
+        official_performance=official_performance_to_dto(item.official_performance)
+        if item.official_performance
+        else None,
+        matrix_by_source=grouped,
+    )
+
+
+def recommendation_matrix_import_report_to_dto(
+    item: RecommendationMatrixImportReport,
+) -> RecommendationMatrixImportReportOut:
+    return RecommendationMatrixImportReportOut(
+        csv_path=item.csv_path,
+        source_layer=item.source_layer,
+        total_csv_rows=item.total_csv_rows,
+        matched_strings=item.matched_strings,
+        unmatched_strings=item.unmatched_strings,
+        inserted_entries=item.inserted_entries,
+        updated_entries=item.updated_entries,
+        unchanged_entries=item.unchanged_entries,
+        matched_by=item.matched_by,
+        warnings=item.warnings,
     )

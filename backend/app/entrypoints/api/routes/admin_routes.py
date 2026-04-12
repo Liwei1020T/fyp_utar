@@ -19,11 +19,15 @@ from app.dto.catalog import AdminInventoryStringOut
 from app.dto.catalog import InventoryUpdatePayload
 from app.dto.catalog import OfficialPerformanceOut
 from app.dto.catalog import OfficialPerformancePayload
+from app.dto.catalog import RecommendationMatrixImportReportOut
+from app.dto.catalog import RecommendationMatrixInspectionOut
 from app.dto.catalog import StringOut
 from app.dto.catalog import StringWritePayload
 from app.dto.catalog import inventory_movement_to_dto
 from app.dto.catalog import inventory_string_to_dto
 from app.dto.catalog import official_performance_to_dto
+from app.dto.catalog import recommendation_matrix_import_report_to_dto
+from app.dto.catalog import recommendation_matrix_inspection_to_dto
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
 from app.dto.recommendation import recommendation_log_to_dict
@@ -60,6 +64,12 @@ from app.use_cases.catalog.create_string import CreateStringUseCase
 from app.use_cases.catalog.deactivate_string import DeactivateStringUseCase
 from app.use_cases.catalog.get_string import GetStringUseCase
 from app.use_cases.catalog.get_official_performance import GetOfficialPerformanceUseCase
+from app.use_cases.catalog.get_recommendation_matrix import (
+    GetRecommendationMatrixUseCase,
+)
+from app.use_cases.catalog.import_recommendation_matrix import (
+    ImportRecommendationMatrixUseCase,
+)
 from app.use_cases.catalog.list_inventory_movements import (
     ListInventoryMovementsUseCase,
 )
@@ -280,9 +290,7 @@ def admin_inventory_movement_history(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> dict[str, object]:
-    page = ListInventoryMovementsUseCase(
-        catalog_repository=catalog_repository
-    ).execute(
+    page = ListInventoryMovementsUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
         limit=limit,
         offset=offset,
@@ -299,9 +307,9 @@ def admin_get_official_performance(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> OfficialPerformanceOut:
-    item = GetOfficialPerformanceUseCase(
-        catalog_repository=catalog_repository
-    ).execute(string_id=string_id)
+    item = GetOfficialPerformanceUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id
+    )
     return official_performance_to_dto(item)
 
 
@@ -322,6 +330,35 @@ def admin_update_official_performance(
         values=payload.model_dump(exclude_none=True),
     )
     return official_performance_to_dto(item)
+
+
+@router.get(
+    "/strings/{string_id}/recommendation-matrix",
+    response_model=RecommendationMatrixInspectionOut,
+)
+def admin_get_recommendation_matrix(
+    string_id: str,
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> RecommendationMatrixInspectionOut:
+    item = GetRecommendationMatrixUseCase(
+        catalog_repository=catalog_repository
+    ).execute(string_id=string_id)
+    return recommendation_matrix_inspection_to_dto(item)
+
+
+@router.post(
+    "/recommendation-matrix/import",
+    response_model=RecommendationMatrixImportReportOut,
+)
+def admin_import_recommendation_matrix(
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> RecommendationMatrixImportReportOut:
+    report = ImportRecommendationMatrixUseCase(
+        catalog_repository=catalog_repository
+    ).execute()
+    return recommendation_matrix_import_report_to_dto(report)
 
 
 @router.get("/bookings", response_model=dict)

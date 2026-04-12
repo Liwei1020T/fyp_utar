@@ -121,7 +121,36 @@ Stores the current store-facing inventory and pricing state:
 ### `string_recommendation_matrix`
 
 Stores item-side recommendation features with explicit provenance via `source_layer`.
-Current migration backfills legacy flat aspect columns here as `hybrid_derived` compatibility values so the existing recommendation engine remains stable while the data model is cleaned up.
+Current seed/import behavior keeps two important layers separate:
+
+- `hybrid_derived`
+  - compatibility fallback rows backfilled from the old flat catalog heuristics
+- `nlp_review`
+  - the primary item-side recommendation matrix imported from `backend/data/patched_score_matrix_latest_rerun_v8.csv`
+
+Important rules:
+
+- `nlp_review` rows are derived recommendation inputs, not master catalog truth
+- official/manual values stay in `string_official_performance`
+- recommendation matrix values do not get copied into `strings`
+- re-imports are idempotent on `(catalog_id, feature_key, source_layer)`
+
+Canonical NLP feature keys now include:
+
+- `attack`
+- `comfort`
+- `control`
+- `durability`
+- `elasticity`
+- `hitting_sound`
+- `string_movement`
+- `tension_retention`
+- `value_for_money`
+- `stability`
+- `all_round`
+- `attacking_fit`
+- `control_fit`
+- `beginner_fit`
 
 ### `store_business_hours`
 

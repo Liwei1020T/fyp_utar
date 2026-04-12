@@ -14,13 +14,17 @@ from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatri
 from app.adapters.persistence.sqlalchemy.models import User
 from app.domain.auth.entities import PasswordResetCodeRecord
 from app.domain.auth.entities import UserAccount
+from app.domain.catalog.entities import RecommendationMatrixEntryRecord
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
+from app.domain.catalog.recommendation_features import domain_feature_key
 from app.domain.booking.policies import booking_order_code
 from app.domain.catalog.entities import InventorySnapshot
 from app.domain.catalog.entities import StringItem
-from app.domain.catalog.entities import StringOfficialPerformance as OfficialPerformanceRecord
+from app.domain.catalog.entities import (
+    StringOfficialPerformance as OfficialPerformanceRecord,
+)
 from app.domain.catalog.entities import StringTag
 from app.domain.profile.entities import PlayerProfile
 from app.domain.recommendation.entities import RecommendationLogRecord
@@ -33,8 +37,8 @@ from app.shared.serialization import number_to_float
 SOURCE_LAYER_PRIORITY = {
     "manual_rule": 0,
     "official_performance": 1,
-    "hybrid_derived": 2,
-    "nlp_review": 3,
+    "nlp_review": 2,
+    "hybrid_derived": 3,
     "community_signal": 4,
     "catalog_structured": 5,
 }
@@ -305,16 +309,16 @@ def _collapsed_aspect_scores(
     for entry in entries:
         if entry.normalized_score is None:
             continue
+        feature_key = domain_feature_key(entry.feature_key)
         priority = SOURCE_LAYER_PRIORITY.get(entry.source_layer, 99)
         confidence = float(entry.confidence or 0)
         score = float(entry.normalized_score)
-        current = selected.get(entry.feature_key)
+        current = selected.get(feature_key)
         current_key = (priority, -confidence, -score)
         if current is None or current_key < (current[0], -current[1], -current[2]):
-            selected[entry.feature_key] = (priority, confidence, score)
+            selected[feature_key] = (priority, confidence, score)
     return {
-        feature_key: round(score, 4)
-        for feature_key, (_, _, score) in selected.items()
+        feature_key: round(score, 4) for feature_key, (_, _, score) in selected.items()
     }
 
 
@@ -326,3 +330,22 @@ def _booking_string_name(booking: Booking) -> str:
     if booking.string_item is not None:
         return booking.string_item.display_name
     return f"Archived string ({booking.string_id})"
+
+
+def to_recommendation_matrix_entry(
+    entry: StringRecommendationMatrix,
+) -> RecommendationMatrixEntryRecord:
+    definition = entry.feature_definition
+    return RecommendationMatrixEntryRecord(
+        catalog_id=entry.catalog_id,
+        feature_key=entry.feature_key,
+        feature_label=definition.feature_label if definition else None,
+        feature_group=definition.feature_group if definition else None,
+        source_layer=entry.source_layer,
+        raw_value=number_to_float(entry.raw_value),
+        normalized_score=number_to_float(entry.normalized_score),
+        confidence=number_to_float(entry.confidence),
+        evidence_note=entry.evidence_note,
+        source_ref=entry.source_ref,
+        updated_at=entry.updated_at,
+    )

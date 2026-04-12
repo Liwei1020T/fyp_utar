@@ -3,21 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from app.domain.catalog.recommendation_features import DOMAIN_ASPECT_FEATURE_KEYS
 
-ASPECT_FEATURE_KEYS = {
-    "attack",
-    "comfort",
-    "control",
-    "durability",
-    "elasticity",
-    "sound",
-    "string_movement",
-    "tension_retention",
-    "value_for_money",
-    "beginner_fit_score",
-    "stability_score",
-    "all_round_score",
-}
+
+ASPECT_FEATURE_KEYS = DOMAIN_ASPECT_FEATURE_KEYS
 
 
 @dataclass(frozen=True)
@@ -72,6 +61,44 @@ class InventoryMovementRecord:
     reference_id: str | None
     note: str | None
     created_at: datetime | None
+
+
+@dataclass(frozen=True)
+class RecommendationMatrixEntryRecord:
+    catalog_id: str
+    feature_key: str
+    feature_label: str | None
+    feature_group: str | None
+    source_layer: str
+    raw_value: float | None
+    normalized_score: float | None
+    confidence: float | None
+    evidence_note: str | None
+    source_ref: str | None
+    updated_at: datetime | None
+
+
+@dataclass(frozen=True)
+class RecommendationMatrixInspectionRecord:
+    catalog_id: str
+    display_name: str
+    effective_scores: dict[str, float]
+    official_performance: StringOfficialPerformance | None
+    matrix_entries: list[RecommendationMatrixEntryRecord]
+
+
+@dataclass(frozen=True)
+class RecommendationMatrixImportReport:
+    csv_path: str
+    source_layer: str
+    total_csv_rows: int
+    matched_strings: int
+    unmatched_strings: int
+    inserted_entries: int
+    updated_entries: int
+    unchanged_entries: int
+    matched_by: dict[str, int]
+    warnings: list[str]
 
 
 @dataclass(frozen=True)
@@ -224,3 +251,11 @@ class StringItem:
     @property
     def all_round_score(self) -> float:
         return self.aspect_score("all_round_score")
+
+    @property
+    def attacking_fit_score(self) -> float:
+        return self.aspect_score("attacking_fit_score")
+
+    @property
+    def control_fit_score(self) -> float:
+        return self.aspect_score("control_fit_score")

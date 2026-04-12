@@ -132,6 +132,8 @@ Example profile request:
 - `GET /api/admin/inventory/strings/{id}/movements`
 - `GET /api/admin/strings/{id}/official-performance`
 - `PUT /api/admin/strings/{id}/official-performance`
+- `GET /api/admin/strings/{id}/recommendation-matrix`
+- `POST /api/admin/recommendation-matrix/import`
 - `GET /api/admin/business-hours`
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`
@@ -184,6 +186,28 @@ Official performance responses include:
 - `control`
 - `notes`
 - `status`
+
+Recommendation matrix inspection responses include:
+
+- `effective_scores`
+  - the current collapsed item-side scores after source-layer priority is applied
+- `official_performance`
+  - still returned separately from matrix rows
+- `matrix_by_source`
+  - raw matrix rows grouped by source layer such as `nlp_review` and `hybrid_derived`
+
+Recommendation matrix import responses include:
+
+- `csv_path`
+- `source_layer`
+- `total_csv_rows`
+- `matched_strings`
+- `unmatched_strings`
+- `inserted_entries`
+- `updated_entries`
+- `unchanged_entries`
+- `matched_by`
+- `warnings`
 
 Store-ops responses add:
 

@@ -41,7 +41,15 @@ class FakeCatalogRepository:
     def update_official_performance(self, string_id: str, values: dict[str, object]):
         raise NotImplementedError
 
-    def list_inventory_movements(self, string_id: str, *, limit: int | None, offset: int):
+    def list_inventory_movements(
+        self, string_id: str, *, limit: int | None, offset: int
+    ):
+        raise NotImplementedError
+
+    def get_recommendation_matrix(self, string_id: str):
+        raise NotImplementedError
+
+    def import_recommendation_matrix(self):
         raise NotImplementedError
 
     def list_active_catalog(self) -> list[StringItem]:

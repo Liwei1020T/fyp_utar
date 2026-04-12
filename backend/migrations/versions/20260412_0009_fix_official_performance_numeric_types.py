@@ -18,6 +18,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    if bind.dialect.name == "sqlite":
+        return
     for column_name in ("category", "feature", "feel"):
         op.execute(
             sa.text(
@@ -32,6 +35,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    if bind.dialect.name == "sqlite":
+        return
     for column_name in ("category", "feature", "feel"):
         op.execute(
             sa.text(

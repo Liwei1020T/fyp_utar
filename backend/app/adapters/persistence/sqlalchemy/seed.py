@@ -5,8 +5,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.catalog_seed import seed_catalog_rows
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    ensure_recommendation_feature_definitions,
+)
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    import_recommendation_matrix_csv,
+)
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    normalize_legacy_feature_keys,
+)
 from app.adapters.persistence.sqlalchemy.models import Brand
-from app.adapters.persistence.sqlalchemy.models import RecommendationFeatureDefinition
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
@@ -105,9 +113,7 @@ DEFAULT_STORE_SETTINGS = {
         "Ask us about tension pairing, string feel, or drop-off timing and "
         "we will reply from the admin operations desk."
     ),
-    "payment_notes": (
-        "Payment handling stays outside the FYP1 demo flow."
-    ),
+    "payment_notes": ("Payment handling stays outside the FYP1 demo flow."),
     "booking_notes": (
         "Drop-off slots are generated from business hours and slot capacity settings."
     ),
@@ -164,40 +170,41 @@ def ensure_seed_user(
 
 def ensure_catalog_seeded(db: Session) -> None:
     settings = get_settings()
-    count = db.execute(select(func.count()).select_from(StringCatalogItem)).scalar_one()
-    if count > 0:
-        return
-
     seed_rows = seed_catalog_rows(settings.approved_strings_path)
     for brand in seed_rows["brands"]:
         db.merge(Brand(**brand))
-    for feature in seed_rows["feature_definitions"]:
-        db.merge(RecommendationFeatureDefinition(**feature))
+    ensure_recommendation_feature_definitions(db)
+    normalize_legacy_feature_keys(db)
     db.flush()
 
-    for payload in seed_rows["items"]:
-        item = StringCatalogItem(**payload["catalog"])
-        item.metrics = StringCatalogMetric(
-            catalog_id=item.catalog_id,
-            **payload["metrics"],
-        )
-        item.tags = [
-            StringCatalogTag(catalog_id=item.catalog_id, **tag)
-            for tag in payload["tags"]
-        ]
-        item.official_performance = StringOfficialPerformance(
-            **payload["official_performance"]
-        )
-        item.inventory_item = StringInventoryItem(**payload["inventory"])
-        item.recommendation_entries = [
-            StringRecommendationMatrix(
+    count = db.execute(select(func.count()).select_from(StringCatalogItem)).scalar_one()
+    if count == 0:
+        for payload in seed_rows["items"]:
+            item = StringCatalogItem(**payload["catalog"])
+            item.metrics = StringCatalogMetric(
                 catalog_id=item.catalog_id,
-                **entry,
+                **payload["metrics"],
             )
-            for entry in payload["matrix_entries"]
-        ]
-        db.add(item)
-    db.flush()
+            item.tags = [
+                StringCatalogTag(catalog_id=item.catalog_id, **tag)
+                for tag in payload["tags"]
+            ]
+            item.official_performance = StringOfficialPerformance(
+                **payload["official_performance"]
+            )
+            item.inventory_item = StringInventoryItem(**payload["inventory"])
+            item.recommendation_entries = [
+                StringRecommendationMatrix(
+                    catalog_id=item.catalog_id,
+                    **entry,
+                )
+                for entry in payload["matrix_entries"]
+            ]
+            db.add(item)
+        db.flush()
+
+    if settings.recommendation_matrix_path.exists():
+        import_recommendation_matrix_csv(db, settings.recommendation_matrix_path)
 
 
 def ensure_store_defaults(db: Session) -> None:

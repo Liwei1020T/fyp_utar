@@ -88,12 +88,18 @@ class RecommendationEngineAdapter:
 
         if request.playing_style == "attacking":
             rule_adjustment += (
-                (item.attack * 0.10) + (item.elasticity * 0.08) + (item.sound * 0.05)
+                (item.attacking_fit_score * 0.10)
+                + (item.attack * 0.06)
+                + (item.elasticity * 0.06)
+                + (item.sound * 0.04)
             )
             reasons.append("Matches your attacking playing style")
         elif request.playing_style == "control_defensive":
             rule_adjustment += (
-                (item.control * 0.10) + (item.comfort * 0.08) + (item.durability * 0.05)
+                (item.control_fit_score * 0.10)
+                + (item.control * 0.06)
+                + (item.comfort * 0.06)
+                + (item.durability * 0.04)
             )
             reasons.append("Supports your control and defensive priorities")
         else:
@@ -136,4 +142,3 @@ class RecommendationEngineAdapter:
 
         final_score = max(0.0, min(1.0, (content_score * 0.78) + rule_adjustment))
         return final_score, reasons
-

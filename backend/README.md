@@ -25,6 +25,7 @@ Key variables:
 - `DATABASE_URL`: SQLAlchemy database URL for the unified Python backend
 - `JWT_SECRET_KEY`: signing key for bearer tokens
 - `APPROVED_STRINGS_SOURCE_PATH`: approved normalized catalog source; relative paths resolve from the backend root
+- `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix CSV; relative paths resolve from the backend root
 - `SEED_ADMIN_*`: optional admin seed controls
 - `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
 
@@ -112,6 +113,11 @@ Public unified Python endpoints:
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
+- `GET /api/admin/inventory/strings/{id}/movements`
+- `GET /api/admin/strings/{id}/official-performance`
+- `PUT /api/admin/strings/{id}/official-performance`
+- `GET /api/admin/strings/{id}/recommendation-matrix`
+- `POST /api/admin/recommendation-matrix/import`
 - `GET /api/admin/bookings`
 - `GET /api/admin/bookings/{id}`
 - `PATCH /api/admin/bookings/{id}/status`
@@ -137,5 +143,7 @@ More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-cont
 - Master catalog data now lives in normalized `brands` and `strings` tables.
 - Community metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
+- The default recommendation matrix source is `backend/data/patched_score_matrix_latest_rerun_v8.csv`.
 - Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
+- The backend imports the recommendation CSV into `string_recommendation_matrix` with `source_layer='nlp_review'` and treats it as the primary item-side matrix layer over the older hybrid-derived fallback rows.

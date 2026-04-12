@@ -44,10 +44,16 @@ cd backend
 - The unified backend seeds the normalized catalog from `APPROVED_STRINGS_SOURCE_PATH` when the catalog is empty.
 - Relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root.
 - The default approved source is `backend/data/string_catalog_db_ready.json`.
+- Relative `RECOMMENDATION_MATRIX_SOURCE_PATH` values also resolve from the backend root.
+- The default NLP review matrix source is `backend/data/patched_score_matrix_latest_rerun_v8.csv`.
 - Recommendation scoring now reads compatibility aspect scores from `string_recommendation_matrix`.
+- Startup seeding imports the CSV into `string_recommendation_matrix` with `source_layer='nlp_review'` and keeps it separate from official performance data.
 - Admin string write operations still require approved catalog membership.
 - Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.
 - NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.
+- Admin debug support:
+  - `GET /api/admin/strings/{id}/recommendation-matrix` shows effective scores plus raw matrix rows grouped by source layer.
+  - `POST /api/admin/recommendation-matrix/import` safely re-imports the CSV and reports matched, inserted, updated, and unmatched counts.
 - `AUTO_CREATE_SCHEMA=true` is meant for local development and tests; use Alembic migrations explicitly for controlled environments.
 - Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is configured with companion credentials.
 
