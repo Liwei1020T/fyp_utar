@@ -22,6 +22,7 @@ os.environ.setdefault("SEED_ADMIN_USERNAME", "system-admin")
 os.environ.setdefault("SEED_ADMIN_PHONE_NUMBER", "+60190000000")
 os.environ.setdefault("SEED_ADMIN_PASSWORD", "admin1234")
 os.environ.setdefault("AI_INTERNAL_API_KEY", "test-ai-internal-key")
+os.environ.setdefault("UPLOAD_ROOT_PATH", "/tmp/stringsense_test_uploads")
 
 
 @pytest.fixture(autouse=True)

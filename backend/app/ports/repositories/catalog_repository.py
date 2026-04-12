@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from app.domain.catalog.entities import InventoryMovementRecord
 from app.domain.catalog.entities import StringItem
+from app.domain.catalog.entities import StringOfficialPerformance
 from app.domain.catalog.policies import InventoryAvailability
 from app.shared.pagination import Page
 
@@ -20,6 +22,10 @@ class CatalogRepository(Protocol):
         *,
         is_active: bool | None,
         brand: str | None,
+        series: str | None,
+        gauge_min: float | None,
+        gauge_max: float | None,
+        is_hybrid: bool | None,
         search: str | None,
         sort_by: str,
         sort_order: str,
@@ -45,5 +51,23 @@ class CatalogRepository(Protocol):
 
     def update_inventory(self, string_id: str, values: dict[str, object]) -> StringItem: ...
 
-    def list_active_catalog(self) -> list[StringItem]: ...
+    def get_official_performance(
+        self,
+        string_id: str,
+    ) -> StringOfficialPerformance | None: ...
 
+    def update_official_performance(
+        self,
+        string_id: str,
+        values: dict[str, object],
+    ) -> StringOfficialPerformance: ...
+
+    def list_inventory_movements(
+        self,
+        string_id: str,
+        *,
+        limit: int | None,
+        offset: int,
+    ) -> Page[InventoryMovementRecord]: ...
+
+    def list_active_catalog(self) -> list[StringItem]: ...

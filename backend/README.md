@@ -24,7 +24,7 @@ Key variables:
 
 - `DATABASE_URL`: SQLAlchemy database URL for the unified Python backend
 - `JWT_SECRET_KEY`: signing key for bearer tokens
-- `APPROVED_STRINGS_SOURCE_PATH`: approved real catalog source; relative paths resolve from the backend root
+- `APPROVED_STRINGS_SOURCE_PATH`: approved normalized catalog source; relative paths resolve from the backend root
 - `SEED_ADMIN_*`: optional admin seed controls
 - `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
 
@@ -131,3 +131,11 @@ Public unified Python endpoints:
 - `GET /api/admin/recommendations/logs`
 
 More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-contract.md](./docs/api-contract.md), and [docs/database.md](./docs/database.md).
+
+## Catalog Refactor Notes
+
+- Master catalog data now lives in normalized `brands` and `strings` tables.
+- Community metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
+- The default seed source is `backend/data/string_catalog_db_ready.json`.
+- Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
+- Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.

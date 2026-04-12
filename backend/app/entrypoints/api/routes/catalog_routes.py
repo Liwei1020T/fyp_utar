@@ -20,6 +20,10 @@ router = APIRouter(prefix="/strings", tags=["strings"])
 def list_active_strings(
     search: str | None = Query(default=None, max_length=100),
     brand: str | None = Query(default=None, max_length=100),
+    series: str | None = Query(default=None, max_length=100),
+    gauge_min: float | None = Query(default=None, ge=0.4, le=1.2),
+    gauge_max: float | None = Query(default=None, ge=0.4, le=1.2),
+    is_hybrid: bool | None = Query(default=None),
     sort_by: str = Query(default="brand"),
     sort_order: str = Query(default="asc"),
     limit: int | None = Query(default=None, ge=1, le=100),
@@ -30,6 +34,10 @@ def list_active_strings(
     page = ListStringsUseCase(catalog_repository=catalog_repository).execute(
         is_active=True,
         brand=brand,
+        series=series,
+        gauge_min=gauge_min,
+        gauge_max=gauge_max,
+        is_hybrid=is_hybrid,
         search=search,
         sort_by=sort_by,
         sort_order=sort_order,

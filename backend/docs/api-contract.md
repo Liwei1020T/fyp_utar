@@ -129,6 +129,9 @@ Example profile request:
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
+- `GET /api/admin/inventory/strings/{id}/movements`
+- `GET /api/admin/strings/{id}/official-performance`
+- `PUT /api/admin/strings/{id}/official-performance`
 - `GET /api/admin/business-hours`
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`
@@ -141,13 +144,46 @@ Example profile request:
 - `GET /api/admin/analytics/summary`
 - `GET /api/admin/analytics/popular-strings`
 
-Only approved catalog strings can be created or updated.
+Only approved catalog strings from `backend/data/string_catalog_db_ready.json` can be created or updated.
+
+Public string listing now supports:
+
+- `brand`
+- `series`
+- `gauge_min`
+- `gauge_max`
+- `is_hybrid`
+- `search`
 
 Inventory responses extend the base string shape with:
 
 - `stock_level`
+- `current_stock`
+- `reserved_stock`
+- `available_stock`
+- `reorder_level`
+- `reorder_quantity`
+- `cost_price`
+- `selling_price`
 - `availability` (`in_stock`, `low_stock`, `out_of_stock`)
 - `admin_note`
+
+Official performance responses include:
+
+- `source_type`
+- `source_name`
+- `source_url`
+- `source_region`
+- `category`
+- `feature`
+- `feel`
+- `repulsion_power`
+- `durability`
+- `hitting_sound`
+- `shock_absorption`
+- `control`
+- `notes`
+- `status`
 
 Store-ops responses add:
 

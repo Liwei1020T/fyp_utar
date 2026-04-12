@@ -9,6 +9,8 @@ from app.adapters.persistence.sqlalchemy.models import RecommendationLog
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
+from app.adapters.persistence.sqlalchemy.models import StringOfficialPerformance
+from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
 from app.adapters.persistence.sqlalchemy.models import User
 from app.domain.auth.entities import PasswordResetCodeRecord
 from app.domain.auth.entities import UserAccount
@@ -16,13 +18,26 @@ from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.booking.policies import booking_order_code
-from app.domain.profile.entities import PlayerProfile
+from app.domain.catalog.entities import InventorySnapshot
 from app.domain.catalog.entities import StringItem
+from app.domain.catalog.entities import StringOfficialPerformance as OfficialPerformanceRecord
+from app.domain.catalog.entities import StringTag
+from app.domain.profile.entities import PlayerProfile
 from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.store.entities import BusinessHoursDay
 from app.domain.store.entities import StoreBusinessHoursRecord
 from app.domain.store.entities import StoreSettingsRecord
 from app.shared.serialization import number_to_float
+
+
+SOURCE_LAYER_PRIORITY = {
+    "manual_rule": 0,
+    "official_performance": 1,
+    "hybrid_derived": 2,
+    "nlp_review": 3,
+    "community_signal": 4,
+    "catalog_structured": 5,
+}
 
 
 def to_user_account(user: User) -> UserAccount:
@@ -77,30 +92,101 @@ def to_profile(profile: Profile) -> PlayerProfile:
 
 
 def to_string_item(item: StringCatalogItem) -> StringItem:
+    inventory = item.inventory_item
+    latest_note = None
+    if inventory and inventory.movements:
+        latest_note = next(
+            (
+                movement.note
+                for movement in inventory.movements
+                if movement.note and movement.note.strip()
+            ),
+            None,
+        )
+
     return StringItem(
-        id=item.id,
-        brand=item.brand,
+        id=item.catalog_id,
+        brand=item.brand_ref.brand_name,
+        brand_code=item.brand_code,
+        display_name=item.display_name,
         model_name=item.model_name,
-        normalized_name=item.normalized_name,
-        price_rm=number_to_float(item.price_rm),
-        attack=float(item.attack),
-        comfort=float(item.comfort),
-        control=float(item.control),
-        durability=float(item.durability),
-        elasticity=float(item.elasticity),
-        sound=float(item.sound),
-        string_movement=float(item.string_movement),
-        tension_retention=float(item.tension_retention),
-        value_for_money=float(item.value_for_money),
-        beginner_fit_score=float(item.beginner_fit_score),
-        stability_score=float(item.stability_score),
-        all_round_score=float(item.all_round_score),
-        source_item_id=item.source_item_id,
-        source_url=item.source_url,
-        stock_level=item.stock_level,
-        admin_note=item.admin_note,
+        normalized_name=_normalized_name(item.brand_ref.brand_name, item.model_name),
+        series_key=item.series_key,
+        series_label=item.series_label,
+        is_hybrid=item.is_hybrid,
+        gauge_main_mm=number_to_float(item.gauge_main_mm),
+        gauge_cross_mm=number_to_float(item.gauge_cross_mm),
+        gauge_label=item.gauge_label,
+        material_summary_en=item.material_summary_en,
+        color_options_en=list(item.color_options_en or []),
+        short_description=item.short_description,
+        full_description=item.full_description,
+        official_performance_status=item.official_performance_status,
+        source_dataset_url=item.source_dataset_url,
+        source_language=item.source_language,
+        original_name=item.original_name,
+        original_brand_label=item.original_brand_label,
+        original_series=item.original_series,
+        original_material=item.original_material,
+        original_color=item.original_color,
+        community_rating=number_to_float(item.metrics.community_rating)
+        if item.metrics
+        else None,
+        want_count=item.metrics.want_count if item.metrics else 0,
+        used_count=item.metrics.used_count if item.metrics else 0,
+        review_count=item.metrics.review_count if item.metrics else 0,
+        tags=[
+            StringTag(
+                tag_key=tag.tag_key,
+                tag_label=tag.tag_label,
+                tag_count=tag.tag_count,
+            )
+            for tag in item.tags
+        ],
+        official_performance=to_official_performance(item.official_performance),
+        inventory=InventorySnapshot(
+            inventory_id=inventory.inventory_id,
+            current_stock=inventory.current_stock,
+            reserved_stock=inventory.reserved_stock,
+            available_stock=inventory.available_stock,
+            reorder_level=inventory.reorder_level,
+            reorder_quantity=inventory.reorder_quantity,
+            cost_price=number_to_float(inventory.cost_price),
+            selling_price=number_to_float(inventory.selling_price),
+            is_active=inventory.is_active,
+            latest_note=latest_note,
+            updated_at=inventory.updated_at,
+        )
+        if inventory
+        else None,
+        aspect_scores=_collapsed_aspect_scores(item.recommendation_entries),
         is_active=item.is_active,
         created_at=item.created_at,
+        updated_at=item.updated_at,
+    )
+
+
+def to_official_performance(
+    item: StringOfficialPerformance | None,
+) -> OfficialPerformanceRecord | None:
+    if item is None:
+        return None
+    return OfficialPerformanceRecord(
+        catalog_id=item.catalog_id,
+        source_type=item.source_type,
+        source_name=item.source_name,
+        source_url=item.source_url,
+        source_region=item.source_region,
+        category=number_to_float(item.category),
+        feature=number_to_float(item.feature),
+        feel=number_to_float(item.feel),
+        repulsion_power=number_to_float(item.repulsion_power),
+        durability=number_to_float(item.durability),
+        hitting_sound=number_to_float(item.hitting_sound),
+        shock_absorption=number_to_float(item.shock_absorption),
+        control=number_to_float(item.control),
+        notes=item.notes,
+        status=item.status,
         updated_at=item.updated_at,
     )
 
@@ -119,7 +205,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         order_code=booking_order_code(booking.id),
         user_id=booking.user_id,
         string_id=booking.string_id,
-        string_name=f"{booking.string_item.brand} {booking.string_item.model_name}",
+        string_name=booking.string_item.display_name,
         customer_phone_number=booking.user.phone_number if booking.user else None,
         customer_username=booking.user.username if booking.user else None,
         racket_brand=booking.racket_brand,
@@ -209,3 +295,27 @@ def to_recommendation_log(item: RecommendationLog) -> RecommendationLogRecord:
         algorithm_version=item.algorithm_version,
         created_at=item.created_at,
     )
+
+
+def _collapsed_aspect_scores(
+    entries: list[StringRecommendationMatrix],
+) -> dict[str, float]:
+    selected: dict[str, tuple[int, float, float]] = {}
+    for entry in entries:
+        if entry.normalized_score is None:
+            continue
+        priority = SOURCE_LAYER_PRIORITY.get(entry.source_layer, 99)
+        confidence = float(entry.confidence or 0)
+        score = float(entry.normalized_score)
+        current = selected.get(entry.feature_key)
+        current_key = (priority, -confidence, -score)
+        if current is None or current_key < (current[0], -current[1], -current[2]):
+            selected[entry.feature_key] = (priority, confidence, score)
+    return {
+        feature_key: round(score, 4)
+        for feature_key, (_, _, score) in selected.items()
+    }
+
+
+def _normalized_name(brand_name: str, model_name: str) -> str:
+    return " ".join(f"{brand_name} {model_name}".strip().lower().split())

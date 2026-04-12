@@ -9,6 +9,198 @@ from typing import Any
 
 AspectScoreMap = dict[str, float]
 
+FEATURE_DEFINITIONS: list[dict[str, Any]] = [
+    {
+        "feature_key": "attack",
+        "feature_label": "Attack",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Explosive offensive response.",
+    },
+    {
+        "feature_key": "comfort",
+        "feature_label": "Comfort",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Overall comfort and feel on impact.",
+    },
+    {
+        "feature_key": "control",
+        "feature_label": "Control",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Control-oriented response.",
+    },
+    {
+        "feature_key": "durability",
+        "feature_label": "Durability",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Resistance to snapping and wear.",
+    },
+    {
+        "feature_key": "elasticity",
+        "feature_label": "Elasticity",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Elastic rebound feel.",
+    },
+    {
+        "feature_key": "sound",
+        "feature_label": "Hitting Sound",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Crisp sound response.",
+    },
+    {
+        "feature_key": "string_movement",
+        "feature_label": "String Movement",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "String bed movement behaviour.",
+    },
+    {
+        "feature_key": "tension_retention",
+        "feature_label": "Tension Retention",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Ability to hold tension over time.",
+    },
+    {
+        "feature_key": "value_for_money",
+        "feature_label": "Value for Money",
+        "feature_group": "catalog_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Perceived value for price paid.",
+    },
+    {
+        "feature_key": "beginner_fit_score",
+        "feature_label": "Beginner Fit",
+        "feature_group": "derived_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Derived beginner-friendliness score.",
+    },
+    {
+        "feature_key": "stability_score",
+        "feature_label": "Stability",
+        "feature_group": "derived_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Derived stability score.",
+    },
+    {
+        "feature_key": "all_round_score",
+        "feature_label": "All Round",
+        "feature_group": "derived_aspect",
+        "data_type": "score",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Derived all-round playability score.",
+    },
+    {
+        "feature_key": "gauge_mm",
+        "feature_label": "Gauge (mm)",
+        "feature_group": "catalog_structured",
+        "data_type": "number",
+        "min_value": 0.5,
+        "max_value": 0.8,
+        "description": "Nominal string gauge.",
+    },
+    {
+        "feature_key": "skill_level_weight",
+        "feature_label": "Skill Level Weight",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Weight derived from player skill level.",
+    },
+    {
+        "feature_key": "playing_style_weight",
+        "feature_label": "Playing Style Weight",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Weight derived from playing style.",
+    },
+    {
+        "feature_key": "budget_weight",
+        "feature_label": "Budget Weight",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Weight derived from budget fit.",
+    },
+    {
+        "feature_key": "durability_preference",
+        "feature_label": "Durability Preference",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Player durability preference.",
+    },
+    {
+        "feature_key": "repulsion_preference",
+        "feature_label": "Repulsion Preference",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Player repulsion preference.",
+    },
+    {
+        "feature_key": "control_preference",
+        "feature_label": "Control Preference",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Player control preference.",
+    },
+    {
+        "feature_key": "sound_preference",
+        "feature_label": "Sound Preference",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Player sound preference.",
+    },
+    {
+        "feature_key": "comfort_preference",
+        "feature_label": "Comfort Preference",
+        "feature_group": "user_preference",
+        "data_type": "weight",
+        "min_value": 0,
+        "max_value": 1,
+        "description": "Player comfort preference.",
+    },
+]
+
 TAG_EFFECTS: dict[str, AspectScoreMap] = {
     "弹性好": {"attack": 0.18, "elasticity": 0.22, "sound": 0.12},
     "耐打": {"durability": 0.25, "stability_score": 0.16, "tension_retention": 0.12},
@@ -39,71 +231,186 @@ ASPECT_KEYS = (
 
 
 def normalize_catalog_name(brand: str, model_name: str) -> str:
-    return (
-        (f"{brand} {model_name}".strip().lower().replace("-", " ").replace("_", " "))
-        .replace("  ", " ")
+    return " ".join(
+        f"{brand} {model_name}"
         .strip()
+        .lower()
+        .replace("-", " ")
+        .replace("_", " ")
+        .split()
     )
 
 
-def load_approved_rows(source_path: Path) -> list[dict[str, Any]]:
-    text = source_path.read_text(encoding="utf-8")
-    if source_path.suffix.lower() == ".jsonl":
-        return [json.loads(line) for line in text.splitlines() if line.strip()]
-    if source_path.suffix.lower() == ".json":
-        payload = json.loads(text)
-        if isinstance(payload, list):
-            return payload
-        if isinstance(payload, dict) and isinstance(payload.get("items"), list):
-            return payload["items"]
-    raise ValueError(f"Unsupported approved catalog source: {source_path}")
+def catalog_source_path(source_path: Path) -> Path:
+    if source_path.exists() and source_path.suffix.lower() == ".json":
+        return source_path
+    candidate = source_path.parent.parent / "string_catalog_db_ready.json"
+    if candidate.exists():
+        return candidate
+    return source_path
+
+
+@lru_cache(maxsize=4)
+def load_catalog_source(source_path: Path) -> dict[str, Any]:
+    resolved = catalog_source_path(source_path)
+    payload = json.loads(resolved.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not isinstance(payload.get("strings"), list):
+        raise ValueError(f"Unsupported normalized catalog source: {resolved}")
+    return payload
+
+
+@lru_cache(maxsize=1)
+def load_legacy_rows() -> dict[str, dict[str, Any]]:
+    raw_path = Path(__file__).resolve().parents[4] / "data/raw/badminton_strings_recommender.jsonl"
+    if not raw_path.exists():
+        return {}
+    mapping: dict[str, dict[str, Any]] = {}
+    for line in raw_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        original_name = as_string(row.get("name"))
+        if original_name:
+            mapping[original_name.lower()] = row
+    return mapping
 
 
 @lru_cache(maxsize=4)
 def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
-    rows = load_approved_rows(source_path)
+    payload = load_catalog_source(source_path)
+    legacy_rows = load_legacy_rows()
     mapping: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        payload = approved_row_to_values(row)
-        mapping[payload["normalized_name"]] = payload
+    for row in payload["strings"]:
+        item = approved_row_to_values(
+            row,
+            legacy_rows.get(str(row.get("original_name", "")).lower()),
+        )
+        mapping[item["normalized_name"]] = item
     return mapping
 
 
-def approved_row_to_values(row: dict[str, Any]) -> dict[str, Any]:
-    brand = as_string(row.get("brand")) or "Unknown"
-    model_name = (
-        as_string(row.get("name"))
-        or as_string(row.get("model_name"))
-        or as_string(row.get("id"))
-        or "Unknown"
-    )
-    normalized_name = normalize_catalog_name(brand, model_name)
-    gauge_mm = parse_gauge_mm(as_string(row.get("gauge")))
-    tags = parse_tag_list(row.get("top_tags")) + [
-        tag["name"] for tag in parse_structured_tags(row.get("tags"))
+def approved_row_to_values(
+    row: dict[str, Any],
+    legacy_row: dict[str, Any] | None,
+) -> dict[str, Any]:
+    brand_name = str(row["brand_name"]).strip()
+    model_name = str(row["model_name"]).strip()
+    normalized_name = normalize_catalog_name(brand_name, model_name)
+    scores = derive_scores_from_legacy_row(legacy_row)
+    price_rm = positive_number(legacy_row.get("price")) if legacy_row else None
+    gauge_mm = number_or_none(row.get("gauge_main_mm"))
+    gauge_score = normalize_gauge(gauge_mm)
+    catalog_id = str(row["catalog_id"]).strip()
+    matrix_entries = [
+        {
+            "feature_key": feature_key,
+            "source_layer": "hybrid_derived",
+            "raw_value": score,
+            "normalized_score": score,
+            "confidence": 0.55,
+            "evidence_note": "Backfilled from legacy gauge and community tag heuristics.",
+            "source_ref": legacy_row.get("source_url")
+            if legacy_row
+            else row.get("source_dataset_url"),
+        }
+        for feature_key, score in scores.items()
     ]
-    scores = derive_aspect_scores(tags, gauge_mm)
+    if gauge_score is not None:
+        matrix_entries.append(
+            {
+                "feature_key": "gauge_mm",
+                "source_layer": "catalog_structured",
+                "raw_value": gauge_mm,
+                "normalized_score": gauge_score,
+                "confidence": 0.9,
+                "evidence_note": "Normalized directly from catalog gauge metadata.",
+                "source_ref": row.get("source_dataset_url"),
+            }
+        )
 
     return {
-        "brand": brand,
-        "model_name": model_name,
         "normalized_name": normalized_name,
-        "price_rm": positive_number(row.get("price")),
-        "attack": scores["attack"],
-        "comfort": scores["comfort"],
-        "control": scores["control"],
-        "durability": scores["durability"],
-        "elasticity": scores["elasticity"],
-        "sound": scores["sound"],
-        "string_movement": scores["string_movement"],
-        "tension_retention": scores["tension_retention"],
-        "value_for_money": scores["value_for_money"],
-        "beginner_fit_score": scores["beginner_fit_score"],
-        "stability_score": scores["stability_score"],
-        "all_round_score": scores["all_round_score"],
-        "source_item_id": as_string(row.get("eid")) or as_string(row.get("id")),
-        "source_url": as_string(row.get("source_url")),
-        "is_active": True,
+        "catalog": {
+            "catalog_id": catalog_id,
+            "brand_code": str(row["brand_code"]).strip(),
+            "display_name": str(row["display_name"]).strip(),
+            "model_name": model_name,
+            "series_key": as_string(row.get("series_key")),
+            "series_label": as_string(row.get("series_label")),
+            "is_hybrid": bool(row.get("is_hybrid", False)),
+            "gauge_main_mm": gauge_mm,
+            "gauge_cross_mm": number_or_none(row.get("gauge_cross_mm")),
+            "gauge_label": as_string(row.get("gauge_label")),
+            "material_summary_en": as_string(row.get("material_summary_en")),
+            "color_options_en": list(row.get("color_options_en") or []),
+            "short_description": str(row["short_description"]).strip(),
+            "full_description": str(row["full_description"]).strip(),
+            "official_performance_status": as_string(row.get("official_performance_status"))
+            or "pending_manual_fill",
+            "source_dataset_url": as_string(row.get("source_dataset_url")),
+            "source_language": as_string(row.get("source_language")) or "en",
+            "original_name": as_string(row.get("original_name")),
+            "original_brand_label": as_string(row.get("original_brand_label")),
+            "original_series": as_string(row.get("original_series")),
+            "original_material": as_string(row.get("original_material")),
+            "original_color": as_string(row.get("original_color")),
+            "is_active": bool(row.get("is_active", True)),
+        },
+        "metrics": {
+            "community_rating": number_or_none(row.get("community_rating")),
+            "want_count": int(row.get("want_count", 0) or 0),
+            "used_count": int(row.get("used_count", 0) or 0),
+            "review_count": int(row.get("review_count", 0) or 0),
+        },
+        "tags": [
+            {
+                "tag_key": str(tag["tag_key"]).strip(),
+                "tag_label": str(tag["tag_label"]).strip(),
+                "tag_count": int(tag.get("tag_count", 0) or 0),
+            }
+            for tag in row.get("community_tags") or []
+        ],
+        "official_performance": {
+            "catalog_id": catalog_id,
+            "source_type": None,
+            "source_name": None,
+            "source_url": None,
+            "source_region": None,
+            "category": None,
+            "feature": None,
+            "feel": None,
+            "repulsion_power": None,
+            "durability": None,
+            "hitting_sound": None,
+            "shock_absorption": None,
+            "control": None,
+            "notes": None,
+            "status": as_string(row.get("official_performance_status"))
+            or "pending_manual_fill",
+        },
+        "inventory": {
+            "catalog_id": catalog_id,
+            "sku": build_sku(str(row["brand_code"]), model_name),
+            "current_stock": 8,
+            "reserved_stock": 0,
+            "available_stock": 8,
+            "reorder_level": 3,
+            "reorder_quantity": 8,
+            "cost_price": None,
+            "selling_price": price_rm,
+            "is_active": bool(row.get("is_active", True)),
+        },
+        "matrix_entries": matrix_entries,
+    }
+
+
+def seed_catalog_rows(source_path: Path) -> dict[str, Any]:
+    payload = load_catalog_source(source_path)
+    defaults = approved_catalog_defaults(source_path)
+    return {
+        "brands": payload.get("brands", []),
+        "items": list(defaults.values()),
+        "feature_definitions": FEATURE_DEFINITIONS,
     }
 
 
@@ -119,11 +426,51 @@ def merge_with_approved_defaults(
     if defaults is None:
         raise ValueError("Only approved catalog strings may be created or updated")
 
-    merged = {**defaults, **overrides}
-    merged["brand"] = brand.strip()
-    merged["model_name"] = model_name.strip()
-    merged["normalized_name"] = normalized_name
-    return merged
+    catalog_values = {
+        **defaults["catalog"],
+        **{
+            key: value
+            for key, value in overrides.items()
+            if key
+            in {
+                "display_name",
+                "series_key",
+                "series_label",
+                "is_hybrid",
+                "gauge_main_mm",
+                "gauge_cross_mm",
+                "gauge_label",
+                "material_summary_en",
+                "color_options_en",
+                "short_description",
+                "full_description",
+                "source_language",
+                "original_name",
+                "original_brand_label",
+                "original_series",
+                "original_material",
+                "original_color",
+                "is_active",
+            }
+        },
+    }
+    catalog_values["display_name"] = (
+        str(overrides.get("display_name")).strip()
+        if overrides.get("display_name")
+        else defaults["catalog"]["display_name"]
+    )
+    catalog_values["model_name"] = model_name.strip()
+    return {**defaults, "catalog": catalog_values, "normalized_name": normalized_name}
+
+
+def derive_scores_from_legacy_row(legacy_row: dict[str, Any] | None) -> AspectScoreMap:
+    if legacy_row is None:
+        return {key: 0.5 for key in ASPECT_KEYS}
+    gauge_mm = parse_gauge_mm(as_string(legacy_row.get("gauge")))
+    tags = parse_tag_list(legacy_row.get("top_tags")) + [
+        tag["name"] for tag in parse_structured_tags(legacy_row.get("tags"))
+    ]
+    return derive_aspect_scores(tags, gauge_mm)
 
 
 def derive_aspect_scores(tags: list[str], gauge_mm: float | None) -> AspectScoreMap:
@@ -218,6 +565,12 @@ def parse_gauge_mm(value: str | None) -> float | None:
     return gauge / 100 if gauge > 10 else gauge
 
 
+def normalize_gauge(value: float | None) -> float | None:
+    if value is None:
+        return None
+    return round(clamp01((value - 0.58) / 0.14), 4)
+
+
 def clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
 
@@ -232,9 +585,22 @@ def positive_number(value: Any) -> float | None:
     return None
 
 
+def number_or_none(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str) and value.strip():
+        return float(value)
+    return None
+
+
 def as_string(value: Any) -> str | None:
     if isinstance(value, str) and value.strip():
         return value.strip()
     if isinstance(value, (int, float)):
         return str(value)
     return None
+
+
+def build_sku(brand_code: str, model_name: str) -> str:
+    compact_model = re.sub(r"[^a-zA-Z0-9]+", "-", model_name.strip().lower()).strip("-")
+    return f"STR-{brand_code.upper()}-{compact_model.upper()}"

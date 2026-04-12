@@ -1,0 +1,1891 @@
+{
+  "version": "1.0",
+  "catalog_name": "StringSense string catalog",
+  "record_count": 33,
+  "notes": [
+    "Database-ready normalized catalog derived from the user's 33-string source dataset.",
+    "English names, descriptions, and normalized fields are provided.",
+    "Official performance fields remain pending for later manual entry from official sources.",
+    "NLP matrix scores are intentionally excluded from the catalog and should stay in the recommendation pipeline."
+  ],
+  "brands": [
+    {
+      "brand_code": "gosen",
+      "brand_name": "Gosen"
+    },
+    {
+      "brand_code": "kumpoo",
+      "brand_name": "Kumpoo"
+    },
+    {
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning"
+    },
+    {
+      "brand_code": "other",
+      "brand_name": "Other"
+    },
+    {
+      "brand_code": "victor",
+      "brand_name": "Victor"
+    },
+    {
+      "brand_code": "yonex",
+      "brand_name": "Yonex"
+    }
+  ],
+  "strings": [
+    {
+      "catalog_id": "yonex-bg80",
+      "display_name": "Yonex BG80",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "BG80",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.68,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.68 mm",
+      "material_summary_en": "Outer: specially braided high-polymer nylon fibre; core: Vectran fibre and nylon multifilament.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A firm-feeling offensive string designed for strong repulsion and a crisp impact sensation.",
+      "full_description": "A firm-feeling offensive string designed for strong repulsion and a crisp impact sensation. Gauge: 0.68 mm. Construction: Outer: specially braided high-polymer nylon fibre; core: Vectran fibre and nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 9.1,
+      "want_count": 5873,
+      "used_count": 1,
+      "review_count": 3109,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 1634
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 716
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 332
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 246
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=715",
+      "source_language": "en",
+      "original_name": "BG-80",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "侧丝：特殊高分子尼龙纤维编织、线芯： 维克特兰纤维和高分子尼龙复丝",
+      "original_color": "多种颜色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-bg65",
+      "display_name": "Yonex BG65",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "BG65",
+      "series_key": "durability",
+      "series_label": "Durability",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.7,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.70 mm",
+      "material_summary_en": "Outer string layer with a special braided structure.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A classic all-round durability string suited to players who prefer dependable and long-lasting performance.",
+      "full_description": "A classic all-round durability string suited to players who prefer dependable and long-lasting performance. Gauge: 0.70 mm. Construction: Outer string layer with a special braided structure.. Colours: Multiple Colours. Community signals: high durability, good value for money, good repulsion.",
+      "community_rating": 8.0,
+      "want_count": 980,
+      "used_count": 7684,
+      "review_count": 1506,
+      "community_tags": [
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 1057
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 654
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 146
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 45
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=401",
+      "source_language": "en",
+      "original_name": "BG-65",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "耐久性",
+      "original_material": "外裹特殊编织结构的侧丝",
+      "original_color": "多种颜色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-bg65-titanium",
+      "display_name": "Yonex BG65 Titanium",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "BG65 Titanium",
+      "series_key": "durability",
+      "series_label": "Durability",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.7,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.70 mm",
+      "material_summary_en": "Synthetic multi-layer resin core with titanium hydride coating on the fibre surface.",
+      "color_options_en": [
+        "Black",
+        "Blue",
+        "White",
+        "Red",
+        "Pink"
+      ],
+      "short_description": "A titanium-coated string developed for a sharper impact feel with solid durability.",
+      "full_description": "A titanium-coated string developed for a sharper impact feel with solid durability. Gauge: 0.70 mm. Construction: Synthetic multi-layer resin core with titanium hydride coating on the fibre surface.. Colours: Black, Blue, White, Red, Pink. Community signals: high durability, good value for money, good repulsion.",
+      "community_rating": 8.4,
+      "want_count": 655,
+      "used_count": 4209,
+      "review_count": 899,
+      "community_tags": [
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 546
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 366
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 160
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 33
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=716",
+      "source_language": "en",
+      "original_name": "BG-65Ti",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "耐久性",
+      "original_material": "线芯材料为化学合成多层成树脂，纤维表面采用新型氢钛合金涂覆技术",
+      "original_color": "黑、蓝、白、红、粉红 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-bg66-ultimax",
+      "display_name": "Yonex BG66 ULTIMAX",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "BG66 ULTIMAX",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "High-intensity nylon multifilament core with specially braided high-polymer nylon outer layer.",
+      "color_options_en": [
+        "Black",
+        "Yellow",
+        "White",
+        "Neon Pink",
+        "Mint Green",
+        "Sky Blue"
+      ],
+      "short_description": "A thin-gauge performance string designed for fast repulsion, sharp response, and strong overall control.",
+      "full_description": "A thin-gauge performance string designed for fast repulsion, sharp response, and strong overall control. Gauge: 0.65 mm. Construction: High-intensity nylon multifilament core with specially braided high-polymer nylon outer layer.. Colours: Black, Yellow, White, Neon Pink, Mint Green, Sky Blue. Community signals: good repulsion, good value for money, lower value for money.",
+      "community_rating": 8.6,
+      "want_count": 1468,
+      "used_count": 6387,
+      "review_count": 1331,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 808
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 214
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 142
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 79
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=4146",
+      "source_language": "en",
+      "original_name": "BG66 ULTIMAX",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "高强度尼龙复丝 外层包裹特殊编织的高聚合尼龙",
+      "original_color": "黑、黄、白、霓虹粉、薄荷绿、天蓝色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-bg80-power",
+      "display_name": "Yonex BG80 POWER",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "BG80 POWER",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.68,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.68 mm",
+      "material_summary_en": "Core: high-density nylon multifilament plus Vectran fibre; outer: high-polymer nylon with special braiding.",
+      "color_options_en": [
+        "White",
+        "Orange"
+      ],
+      "short_description": "A power-oriented string designed for hard-hitting players who want a solid and punchy response.",
+      "full_description": "A power-oriented string designed for hard-hitting players who want a solid and punchy response. Gauge: 0.68 mm. Construction: Core: high-density nylon multifilament plus Vectran fibre; outer: high-polymer nylon with special braiding.. Colours: White, Orange. Community signals: good repulsion, high durability, good value for money.",
+      "community_rating": 8.9,
+      "want_count": 1491,
+      "used_count": 5588,
+      "review_count": 1082,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 582
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 261
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 238
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 77
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6667",
+      "source_language": "en",
+      "original_name": "BG80 POWER",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "线芯【高密度尼龙复丝+维克兰特纤维】、侧丝【高聚合尼龙+特殊编织】",
+      "original_color": "白色、橙色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-aerosonic",
+      "display_name": "Yonex AEROSONIC",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "AEROSONIC",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.61,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.61 mm",
+      "material_summary_en": "Core: high-density nylon; outer: specially braided high-polymer nylon.",
+      "color_options_en": [
+        "Purple",
+        "White",
+        "Bright Pink"
+      ],
+      "short_description": "An ultra-thin string focused on explosive repulsion and a very sharp hitting sound.",
+      "full_description": "An ultra-thin string focused on explosive repulsion and a very sharp hitting sound. Gauge: 0.61 mm. Construction: Core: high-density nylon; outer: specially braided high-polymer nylon.. Colours: Purple, White, Bright Pink. Community signals: good repulsion, lower value for money, good value for money.",
+      "community_rating": 9.0,
+      "want_count": 655,
+      "used_count": 1524,
+      "review_count": 395,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 270
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 88
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 24
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 8
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6724",
+      "source_language": "en",
+      "original_name": "AEROSONIC",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "线芯-高密度尼龙；侧丝-高聚合尼龙 特殊编织",
+      "original_color": "紫、白、亮粉红 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-bg66-force",
+      "display_name": "Yonex BG66 FORCE",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "BG66 FORCE",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "High-polymer nylon multifilament with special braiding.",
+      "color_options_en": [
+        "White",
+        "Blue-Green",
+        "Yellow"
+      ],
+      "short_description": "A thin attacking string designed to combine quick response with strong smash performance.",
+      "full_description": "A thin attacking string designed to combine quick response with strong smash performance. Gauge: 0.65 mm. Construction: High-polymer nylon multifilament with special braiding.. Colours: White, Blue-Green, Yellow. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 9.3,
+      "want_count": 1518,
+      "used_count": 1066,
+      "review_count": 331,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 173
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 80
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 48
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 25
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6771",
+      "source_language": "en",
+      "original_name": "BG66 FORCE",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "高聚合尼龙 多纤丝 特殊编织",
+      "original_color": "白、蓝绿、黄 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-aerobite",
+      "display_name": "Yonex AEROBITE",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "AEROBITE",
+      "series_key": "control",
+      "series_label": "Control",
+      "is_hybrid": true,
+      "gauge_main_mm": 0.67,
+      "gauge_cross_mm": 0.61,
+      "gauge_label": "0.67/0.61 mm",
+      "material_summary_en": "Cross string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer. Main string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer and polyurethane coating.",
+      "color_options_en": [
+        "White/Green",
+        "White/Red",
+        "White/Blue"
+      ],
+      "short_description": "A hybrid string set designed for quick repulsion, sharper bite, and stronger control.",
+      "full_description": "A hybrid string set designed for quick repulsion, sharper bite, and stronger control. Gauge: 0.67/0.61 mm. Construction: Cross string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer. Main string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer and polyurethane coating.. Colours: White/Green, White/Red, White/Blue. Community signals: good repulsion, lower value for money, good value for money.",
+      "community_rating": 9.3,
+      "want_count": 2604,
+      "used_count": 5019,
+      "review_count": 1128,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 626
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 185
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 113
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 72
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6935",
+      "source_language": "en",
+      "original_name": "AEROBITE",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "控制性",
+      "original_material": "横线：线芯，高强度尼龙复丝；（外层）线衣，高聚合物尼龙编织。 竖线：线芯，高强度尼龙复丝；（外层）线衣，高聚合物尼龙编织；涂层，聚氨酯。",
+      "original_color": "白/绿 白/红 白/蓝 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-aerobite-boost",
+      "display_name": "Yonex AEROBITE BOOST",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "AEROBITE BOOST",
+      "series_key": "control",
+      "series_label": "Control",
+      "is_hybrid": true,
+      "gauge_main_mm": 0.72,
+      "gauge_cross_mm": 0.61,
+      "gauge_label": "0.72/0.61 mm",
+      "material_summary_en": "High-density nylon with high-polymer nylon and special braiding.",
+      "color_options_en": [
+        "Yellow/Grey",
+        "Red/Grey"
+      ],
+      "short_description": "A hybrid string set that targets more power while retaining the control-oriented characteristics of the AEROBITE series.",
+      "full_description": "A hybrid string set that targets more power while retaining the control-oriented characteristics of the AEROBITE series. Gauge: 0.72/0.61 mm. Construction: High-density nylon with high-polymer nylon and special braiding.. Colours: Yellow/Grey, Red/Grey. Community signals: good repulsion, high durability, lower value for money.",
+      "community_rating": 9.2,
+      "want_count": 974,
+      "used_count": 2133,
+      "review_count": 477,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 214
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 83
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 73
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 63
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6982",
+      "source_language": "en",
+      "original_name": "AEROBITE BOOST",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "控制性",
+      "original_material": "高密度尼龙 高聚合尼龙、特殊编织",
+      "original_color": "黄灰，红灰 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-exbolt-63",
+      "display_name": "Yonex EXBOLT 63",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "EXBOLT 63",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.63,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.63 mm",
+      "material_summary_en": "Core: high-intensity nylon multifilament; outer: forged fibre with special braiding.",
+      "color_options_en": [
+        "Yellow",
+        "Black",
+        "White",
+        "宝石红",
+        "Mint",
+        "Light Pink"
+      ],
+      "short_description": "A thin forged-fiber string designed for quick repulsion and a lively hitting feel.",
+      "full_description": "A thin forged-fiber string designed for quick repulsion and a lively hitting feel. Gauge: 0.63 mm. Construction: Core: high-intensity nylon multifilament; outer: forged fibre with special braiding.. Colours: Yellow, Black, White, 宝石红, Mint, Light Pink. Community signals: good repulsion, high durability, good value for money.",
+      "community_rating": 9.3,
+      "want_count": 2831,
+      "used_count": 6089,
+      "review_count": 1636,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 1102
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 335
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 278
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 212
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=8887",
+      "source_language": "en",
+      "original_name": "EXBOLT 63",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "线芯：高强度尼龙复丝 侧丝：锻造纤维、特殊编织",
+      "original_color": "黄色、黑色、白色、宝石红、薄荷色、浅粉色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-exbolt-65",
+      "display_name": "Yonex EXBOLT 65",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "EXBOLT 65",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "Core: high-intensity nylon multifilament; outer: forged fibre with special braiding; coating: elastic outer layer.",
+      "color_options_en": [
+        "White",
+        "Black",
+        "Yellow",
+        "Red",
+        "Blue",
+        "Purple"
+      ],
+      "short_description": "A balanced forged-fiber string focused on repulsion, control, and improved durability.",
+      "full_description": "A balanced forged-fiber string focused on repulsion, control, and improved durability. Gauge: 0.65 mm. Construction: Core: high-intensity nylon multifilament; outer: forged fibre with special braiding; coating: elastic outer layer.. Colours: White, Black, Yellow, Red, Blue, Purple. Community signals: good repulsion, high durability, good value for money.",
+      "community_rating": 8.7,
+      "want_count": 471,
+      "used_count": 1688,
+      "review_count": 443,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 247
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 126
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 90
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 42
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=12743",
+      "source_language": "en",
+      "original_name": "EXBOLT65",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "高弹性",
+      "original_material": "线芯-高强度尼龙复丝、侧丝-锻造纤维、特殊编织、涂层-弹力表层",
+      "original_color": "白色、黑色、黄色、红色、蓝色、紫色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "yonex-exbolt-68",
+      "display_name": "Yonex EXBOLT 68",
+      "brand_code": "yonex",
+      "brand_name": "Yonex",
+      "model_name": "EXBOLT 68",
+      "series_key": "durability",
+      "series_label": "Durability",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.68,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.68 mm",
+      "material_summary_en": "Core: high-intensity nylon multifilament; outer: oval forged fibre with special braiding; coating: elastic outer layer.",
+      "color_options_en": [
+        "Yellow",
+        "Black",
+        "White",
+        "Bright Red",
+        "Turquoise",
+        "Lime Green"
+      ],
+      "short_description": "A thicker EXBOLT option aimed at stronger durability and powerful smashes.",
+      "full_description": "A thicker EXBOLT option aimed at stronger durability and powerful smashes. Gauge: 0.68 mm. Construction: Core: high-intensity nylon multifilament; outer: oval forged fibre with special braiding; coating: elastic outer layer.. Colours: Yellow, Black, White, Bright Red, Turquoise, Lime Green. Community signals: high durability, good repulsion, good value for money.",
+      "community_rating": 8.2,
+      "want_count": 419,
+      "used_count": 877,
+      "review_count": 355,
+      "community_tags": [
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 154
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 138
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 89
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 49
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=19074",
+      "source_language": "en",
+      "original_name": "EXBOLT 68",
+      "original_brand_label": "尤尼克斯 YONEX",
+      "original_series": "耐久性",
+      "original_material": "线芯-高强度尼龙复丝、侧丝-椭圆形锻造纤维、特殊编织、涂层-弹力表层",
+      "original_color": "黄色、黑色、白色、鲜红、绿松石色、柠檬绿 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "gosen-ryzonic-65",
+      "display_name": "Gosen RYZONIC 65",
+      "brand_code": "gosen",
+      "brand_name": "Gosen",
+      "model_name": "RYZONIC 65",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "High-strength nylon with resin.",
+      "color_options_en": [
+        "White",
+        "Black",
+        "Yellow",
+        "Pink",
+        "Red"
+      ],
+      "short_description": "A RYZONIC-series string positioned for balanced performance and general all-round use.",
+      "full_description": "A RYZONIC-series string positioned for balanced performance and general all-round use. Gauge: 0.65 mm. Construction: High-strength nylon with resin.. Colours: White, Black, Yellow, Pink, Red. Community signals: good value for money, good repulsion, high durability.",
+      "community_rating": 8.9,
+      "want_count": 665,
+      "used_count": 1256,
+      "review_count": 517,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 272
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 267
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 138
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 15
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=17014",
+      "source_language": "en",
+      "original_name": "RYZONIC 65",
+      "original_brand_label": "高神 Gosen",
+      "original_series": "",
+      "original_material": "高强度尼龙+树脂",
+      "original_color": "白色、黑色、黄色、粉色、红色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-66-nano",
+      "display_name": "Victor VBS-66 NANO",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-66 NANO",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.66,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.66 mm",
+      "material_summary_en": "High-strength nylon multifilament core with nanotechnology applied throughout the string intersections.",
+      "color_options_en": [
+        "Ivory White",
+        "Vibrant Pink"
+      ],
+      "short_description": "A high-resilience string with a balanced feel and strong elasticity.",
+      "full_description": "A high-resilience string with a balanced feel and strong elasticity. Gauge: 0.66 mm. Construction: High-strength nylon multifilament core with nanotechnology applied throughout the string intersections.. Colours: Ivory White, Vibrant Pink. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 8.9,
+      "want_count": 4949,
+      "used_count": 1,
+      "review_count": 3461,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 2255
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 1851
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 1032
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 88
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6652",
+      "source_language": "en",
+      "original_name": "VBS-66 NANO",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "高弹",
+      "original_material": "VBS-66N以高强度尼龙复丝为内芯，通过纳米技术充分填充球线的每个交叉处",
+      "original_color": "颜色有象牙白、活力粉等11款 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-69-nano",
+      "display_name": "Victor VBS-69 NANO",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-69 NANO",
+      "series_key": "durability",
+      "series_label": "Durability",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.69,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.69 mm",
+      "material_summary_en": "High-strength nylon multifilament.",
+      "color_options_en": [
+        "Fluorescent Yellow",
+        "Orange",
+        "Black",
+        "Jewel Blue",
+        "Champagne Gold",
+        "Ivory White"
+      ],
+      "short_description": "A durability-focused string that aims to balance comfort, elasticity, and long-term use.",
+      "full_description": "A durability-focused string that aims to balance comfort, elasticity, and long-term use. Gauge: 0.69 mm. Construction: High-strength nylon multifilament.. Colours: Fluorescent Yellow, Orange, Black, Jewel Blue, Champagne Gold, Ivory White. Community signals: high durability, good repulsion, good value for money.",
+      "community_rating": 8.0,
+      "want_count": 167,
+      "used_count": 469,
+      "review_count": 132,
+      "community_tags": [
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 77
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 48
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 32
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 7
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7142",
+      "source_language": "en",
+      "original_name": "VBS-69 NANO",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "耐久",
+      "original_material": "高强度尼龙复丝",
+      "original_color": "荧光黄、橘色、黑色、宝石蓝、香槟金、象牙白 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-68",
+      "display_name": "Victor VBS-68",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-68",
+      "series_key": "control",
+      "series_label": "Control",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.68,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.68 mm",
+      "material_summary_en": "High-toughness Vectran fibre with a special flat yarn structure.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A control-oriented string designed to provide a firmer response and better shuttle hold.",
+      "full_description": "A control-oriented string designed to provide a firmer response and better shuttle hold. Gauge: 0.68 mm. Construction: High-toughness Vectran fibre with a special flat yarn structure.. Colours: Multiple Colours. Community signals: good value for money, good repulsion, high durability.",
+      "community_rating": 8.6,
+      "want_count": 391,
+      "used_count": 532,
+      "review_count": 155,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 61
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 43
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 36
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7218",
+      "source_language": "en",
+      "original_name": "VBS-68",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "控制",
+      "original_material": "高韧性Vectran 纤维与特殊扁平纱",
+      "original_color": "多彩 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-70",
+      "display_name": "Victor VBS-70",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-70",
+      "series_key": "durability",
+      "series_label": "Durability",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.7,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.70 mm",
+      "material_summary_en": "Nylon multifilament.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A user-friendly durability string suitable for all-round players.",
+      "full_description": "A user-friendly durability string suitable for all-round players. Gauge: 0.70 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Community signals: high durability, good value for money, good repulsion.",
+      "community_rating": 8.4,
+      "want_count": 614,
+      "used_count": 2763,
+      "review_count": 765,
+      "community_tags": [
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 543
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 387
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 82
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 10
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7220",
+      "source_language": "en",
+      "original_name": "VBS-70",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "耐久",
+      "original_material": "复丝尼龙",
+      "original_color": "多彩 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-61",
+      "display_name": "Victor VBS-61",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-61",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.61,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.61 mm",
+      "material_summary_en": null,
+      "color_options_en": [
+        "White",
+        "Yellow",
+        "Pink",
+        "Light Blue",
+        "红粉",
+        "Lavender",
+        "Emerald Green"
+      ],
+      "short_description": "A thin high-resilience string designed for fast rebound and a crisp acoustic response.",
+      "full_description": "A thin high-resilience string designed for fast rebound and a crisp acoustic response. Gauge: 0.61 mm. Colours: White, Yellow, Pink, Light Blue, 红粉, Lavender, Emerald Green. Community signals: good repulsion, lower value for money, good value for money.",
+      "community_rating": 7.6,
+      "want_count": 100,
+      "used_count": 383,
+      "review_count": 117,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 70
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 15
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 11
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 8
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=20064",
+      "source_language": "en",
+      "original_name": "VBS-61",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "高弹",
+      "original_material": "-",
+      "original_color": "白色、黄色、粉色、浅蓝、红粉、薰衣草、翠绿 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-63",
+      "display_name": "Victor VBS-63",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-63",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.63,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.63 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "White",
+        "Green",
+        "Pink",
+        "Blue",
+        "Red",
+        "Orange",
+        "Yellow"
+      ],
+      "short_description": "A thin string designed for speed-oriented play with lively elasticity and a slightly harder feel.",
+      "full_description": "A thin string designed for speed-oriented play with lively elasticity and a slightly harder feel. Gauge: 0.63 mm. Construction: Nylon.. Colours: White, Green, Pink, Blue, Red, Orange, Yellow. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 8.4,
+      "want_count": 437,
+      "used_count": 1694,
+      "review_count": 413,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 253
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 108
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 37
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 34
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7217",
+      "source_language": "en",
+      "original_name": "VBS-63",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "高弹",
+      "original_material": "尼龙",
+      "original_color": "白色、绿色、粉色、蓝色、红色、橙色、黄色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "victor-vbs-68-power",
+      "display_name": "Victor VBS-68 Power",
+      "brand_code": "victor",
+      "brand_name": "Victor",
+      "model_name": "VBS-68 Power",
+      "series_key": "control",
+      "series_label": "Control",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.68,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.68 mm",
+      "material_summary_en": "Nylon multifilament.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A softer control-oriented string designed to improve shuttle hold and touch.",
+      "full_description": "A softer control-oriented string designed to improve shuttle hold and touch. Gauge: 0.68 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 8.2,
+      "want_count": 450,
+      "used_count": 969,
+      "review_count": 273,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 108
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 90
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 86
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 14
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7219",
+      "source_language": "en",
+      "original_name": "VBS-68 Power",
+      "original_brand_label": "威克多 VICTOR",
+      "original_series": "控制",
+      "original_material": "复丝尼龙",
+      "original_color": "多彩 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "li-ning-no1",
+      "display_name": "Li-Ning No.1",
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning",
+      "model_name": "No.1",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "Heat-resistant high-strength nylon multifilament.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A flagship thin-gauge Li-Ning string known for high repulsion and a crisp response.",
+      "full_description": "A flagship thin-gauge Li-Ning string known for high repulsion and a crisp response. Gauge: 0.65 mm. Construction: Heat-resistant high-strength nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 7.7,
+      "want_count": 923,
+      "used_count": 4431,
+      "review_count": 961,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 524
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 241
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 118
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 83
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7015",
+      "source_language": "en",
+      "original_name": "李宁1号线",
+      "original_brand_label": "李宁 Lining",
+      "original_series": "高反弹",
+      "original_material": "耐热高强力尼龙复丝",
+      "original_color": "多种颜色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "li-ning-n65",
+      "display_name": "Li-Ning N65",
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning",
+      "model_name": "N65",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "Ivory White",
+        "雅黑",
+        "Vibrant Pink",
+        "Fluorescent Yellow",
+        "Coral Blue",
+        "Zircon Purple",
+        "Bright Orange",
+        "Fluorescent Acid Green",
+        "Light Pine Green"
+      ],
+      "short_description": "A softer-feeling Li-Ning string designed to balance rebound, comfort, and control.",
+      "full_description": "A softer-feeling Li-Ning string designed to balance rebound, comfort, and control. Gauge: 0.65 mm. Construction: Nylon.. Colours: Ivory White, 雅黑, Vibrant Pink, Fluorescent Yellow, Coral Blue, Zircon Purple, Bright Orange, Fluorescent Acid Green, Light Pine Green. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 8.5,
+      "want_count": 791,
+      "used_count": 3278,
+      "review_count": 789,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 458
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 265
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 144
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 45
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=9285",
+      "source_language": "en",
+      "original_name": "N65",
+      "original_brand_label": "李宁 Lining",
+      "original_series": "高反弹",
+      "original_material": "尼龙",
+      "original_color": "象牙白、雅黑、活力粉、荧光黄、珊瑚蓝、锆石紫、鲜明橙、荧光酸绿、浅松绿 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "li-ning-n68",
+      "display_name": "Li-Ning N68",
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning",
+      "model_name": "N68",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.68,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.68 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "Ivory White",
+        "Vibrant Orange",
+        "Coral Blue",
+        "Fluorescent Yellow",
+        "Light Pine Green",
+        "Light Blue Violet"
+      ],
+      "short_description": "A rebound-oriented Li-Ning string built for stronger smashes and practical durability.",
+      "full_description": "A rebound-oriented Li-Ning string built for stronger smashes and practical durability. Gauge: 0.68 mm. Construction: Nylon.. Colours: Ivory White, Vibrant Orange, Coral Blue, Fluorescent Yellow, Light Pine Green, Light Blue Violet. Community signals: good repulsion, good value for money, high durability.",
+      "community_rating": 8.6,
+      "want_count": 639,
+      "used_count": 1502,
+      "review_count": 515,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 242
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 194
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 110
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 27
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=10729",
+      "source_language": "en",
+      "original_name": "N68",
+      "original_brand_label": "李宁 Lining",
+      "original_series": "高反弹",
+      "original_material": "尼龙",
+      "original_color": "象牙白、活力橙、珊瑚蓝、荧光黄、浅松绿、浅兰紫 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "li-ning-n63",
+      "display_name": "Li-Ning N63",
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning",
+      "model_name": "N63",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.63,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.63 mm",
+      "material_summary_en": "Nylon fibre.",
+      "color_options_en": [
+        "Ivory White",
+        "Flame Red",
+        "Fluorescent Yellow",
+        "Dark Teal Green"
+      ],
+      "short_description": "A thin high-response Li-Ning string aimed at fast play and crisp performance.",
+      "full_description": "A thin high-response Li-Ning string aimed at fast play and crisp performance. Gauge: 0.63 mm. Construction: Nylon fibre.. Colours: Ivory White, Flame Red, Fluorescent Yellow, Dark Teal Green. Community signals: good repulsion, good value for money, lower value for money.",
+      "community_rating": 8.6,
+      "want_count": 311,
+      "used_count": 419,
+      "review_count": 110,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 70
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 19
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 15
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 8
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=11433",
+      "source_language": "en",
+      "original_name": "N63",
+      "original_brand_label": "李宁 Lining",
+      "original_series": "高反弹",
+      "original_material": "尼龙纤维",
+      "original_color": "象牙白、火焰红、荧光黄、青墨绿 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "li-ning-n61",
+      "display_name": "Li-Ning N61",
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning",
+      "model_name": "N61",
+      "series_key": "high_repulsion",
+      "series_label": "High Repulsion",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.61,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.61 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [],
+      "short_description": "A thin repulsion-focused Li-Ning string designed for speed and lively feedback.",
+      "full_description": "A thin repulsion-focused Li-Ning string designed for speed and lively feedback. Gauge: 0.61 mm. Construction: Nylon.. Community signals: good repulsion, lower value for money, good value for money.",
+      "community_rating": 7.8,
+      "want_count": 128,
+      "used_count": 589,
+      "review_count": 152,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 89
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 34
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 21
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 4
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=9284",
+      "source_language": "en",
+      "original_name": "N61",
+      "original_brand_label": "李宁 Lining",
+      "original_series": "高反弹",
+      "original_material": "尼龙",
+      "original_color": "- 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "kizuna-z61",
+      "display_name": "Kizuna Z61",
+      "brand_code": "other",
+      "brand_name": "Other",
+      "model_name": "Kizuna Z61",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.61,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.61 mm",
+      "material_summary_en": "High-polymer nylon multifilament.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A thin-gauge string designed for fast response and a lively feel.",
+      "full_description": "A thin-gauge string designed for fast response and a lively feel. Gauge: 0.61 mm. Construction: High-polymer nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, high durability, lower value for money.",
+      "community_rating": 8.9,
+      "want_count": 842,
+      "used_count": 649,
+      "review_count": 251,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 133
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 72
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 66
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 33
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7751",
+      "source_language": "en",
+      "original_name": "Kizuna Z61",
+      "original_brand_label": "其它品牌 Other",
+      "original_series": "",
+      "original_material": "高分子尼龙复丝",
+      "original_color": "多彩 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "kumpoo-js-63",
+      "display_name": "Kumpoo JS-63",
+      "brand_code": "kumpoo",
+      "brand_name": "Kumpoo",
+      "model_name": "JS-63",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.63,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.63 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "White",
+        "Ice Blue",
+        "Pink",
+        "Fluorescent Yellow"
+      ],
+      "short_description": "A thin Kumpoo string designed for faster response and a lively hitting feel.",
+      "full_description": "A thin Kumpoo string designed for faster response and a lively hitting feel. Gauge: 0.63 mm. Construction: Nylon.. Colours: White, Ice Blue, Pink, Fluorescent Yellow. Community signals: good value for money, good repulsion, high durability.",
+      "community_rating": 8.8,
+      "want_count": 542,
+      "used_count": 753,
+      "review_count": 391,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 230
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 217
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 61
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 6
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=22513",
+      "source_language": "en",
+      "original_name": "JS-63",
+      "original_brand_label": "薰风 kumpoo",
+      "original_series": "",
+      "original_material": "尼龙",
+      "original_color": "白色、冰蓝、粉色、荧光黄 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "gosen-ryzonic-69",
+      "display_name": "Gosen RYZONIC 69",
+      "brand_code": "gosen",
+      "brand_name": "Gosen",
+      "model_name": "RYZONIC 69",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.69,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.69 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "White"
+      ],
+      "short_description": "A thicker RYZONIC-series option intended for players who prefer greater durability and stability.",
+      "full_description": "A thicker RYZONIC-series option intended for players who prefer greater durability and stability. Gauge: 0.69 mm. Construction: Nylon.. Colours: White. Community signals: good value for money, high durability, good repulsion.",
+      "community_rating": 8.8,
+      "want_count": 78,
+      "used_count": 60,
+      "review_count": 44,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 23
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 18
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 15
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 4
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=24114",
+      "source_language": "en",
+      "original_name": "雷鸣69",
+      "original_brand_label": "高神 Gosen",
+      "original_series": "",
+      "original_material": "尼龙",
+      "original_color": "白 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "kumpoo-js-65",
+      "display_name": "Kumpoo JS-65",
+      "brand_code": "kumpoo",
+      "brand_name": "Kumpoo",
+      "model_name": "JS-65",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.65,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.65 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "White",
+        "Light Purple",
+        "Light Pink",
+        "Fluorescent Yellow"
+      ],
+      "short_description": "A balanced Kumpoo string designed to combine speed, touch, and practical durability.",
+      "full_description": "A balanced Kumpoo string designed to combine speed, touch, and practical durability. Gauge: 0.65 mm. Construction: Nylon.. Colours: White, Light Purple, Light Pink, Fluorescent Yellow. Community signals: good value for money, good repulsion, high durability.",
+      "community_rating": 8.7,
+      "want_count": 208,
+      "used_count": 221,
+      "review_count": 123,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 69
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 65
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 25
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 4
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=22523",
+      "source_language": "en",
+      "original_name": "JS-65",
+      "original_brand_label": "薰风 kumpoo",
+      "original_series": "",
+      "original_material": "尼龙",
+      "original_color": "白色、浅紫色、浅粉色、荧光黄 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "gosen-ryzonic-58",
+      "display_name": "Gosen RYZONIC 58",
+      "brand_code": "gosen",
+      "brand_name": "Gosen",
+      "model_name": "RYZONIC 58",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.58,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.58 mm",
+      "material_summary_en": "High-strength nylon with resin.",
+      "color_options_en": [
+        "White"
+      ],
+      "short_description": "A thin RYZONIC-series string intended for fast response and lively performance.",
+      "full_description": "A thin RYZONIC-series string intended for fast response and lively performance. Gauge: 0.58 mm. Construction: High-strength nylon with resin.. Colours: White. Community signals: good repulsion, good value for money, lower value for money.",
+      "community_rating": 7.8,
+      "want_count": 103,
+      "used_count": 314,
+      "review_count": 109,
+      "community_tags": [
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 57
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 26
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 18
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 5
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=17013",
+      "source_language": "en",
+      "original_name": "RYZONIC 58",
+      "original_brand_label": "高神 Gosen",
+      "original_series": "",
+      "original_material": "高强度尼龙+树脂",
+      "original_color": "白色 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "kumpoo-js-69",
+      "display_name": "Kumpoo JS-69",
+      "brand_code": "kumpoo",
+      "brand_name": "Kumpoo",
+      "model_name": "JS-69",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.69,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.69 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "White",
+        "Light Purple",
+        "Ice Blue",
+        "Fluorescent Yellow"
+      ],
+      "short_description": "A thicker Kumpoo string aimed at players who prefer stronger durability and a more stable response.",
+      "full_description": "A thicker Kumpoo string aimed at players who prefer stronger durability and a more stable response. Gauge: 0.69 mm. Construction: Nylon.. Colours: White, Light Purple, Ice Blue, Fluorescent Yellow. Community signals: good value for money, high durability, good repulsion.",
+      "community_rating": 9.5,
+      "want_count": 300,
+      "used_count": 175,
+      "review_count": 81,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 52
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 43
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 29
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=22524",
+      "source_language": "en",
+      "original_name": "JS-69",
+      "original_brand_label": "薰风 kumpoo",
+      "original_series": "",
+      "original_material": "尼龙",
+      "original_color": "白色、浅紫、冰蓝、荧光黄 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "kumpoo-js-67",
+      "display_name": "Kumpoo JS-67",
+      "brand_code": "kumpoo",
+      "brand_name": "Kumpoo",
+      "model_name": "JS-67",
+      "series_key": "unknown",
+      "series_label": "Unknown",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.67,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.67 mm",
+      "material_summary_en": "Nylon.",
+      "color_options_en": [
+        "White",
+        "Ice Blue",
+        "Pink",
+        "Fluorescent Yellow"
+      ],
+      "short_description": "A medium-gauge Kumpoo string designed for all-round performance.",
+      "full_description": "A medium-gauge Kumpoo string designed for all-round performance. Gauge: 0.67 mm. Construction: Nylon.. Colours: White, Ice Blue, Pink, Fluorescent Yellow. Community signals: good value for money, high durability, good repulsion.",
+      "community_rating": 8.6,
+      "want_count": 176,
+      "used_count": 144,
+      "review_count": 78,
+      "community_tags": [
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 38
+        },
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 28
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 26
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 5
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=22514",
+      "source_language": "en",
+      "original_name": "JS-67",
+      "original_brand_label": "薰风 kumpoo",
+      "original_series": "",
+      "original_material": "尼龙",
+      "original_color": "白色、冰蓝、粉色、荧光黄 来源:badmintoncn.com",
+      "is_active": true
+    },
+    {
+      "catalog_id": "li-ning-n69",
+      "display_name": "Li-Ning N69",
+      "brand_code": "li_ning",
+      "brand_name": "Li-Ning",
+      "model_name": "N69",
+      "series_key": "balanced",
+      "series_label": "Balanced",
+      "is_hybrid": false,
+      "gauge_main_mm": 0.69,
+      "gauge_cross_mm": null,
+      "gauge_label": "0.69 mm",
+      "material_summary_en": "Nylon multifilament.",
+      "color_options_en": [
+        "Multiple Colours"
+      ],
+      "short_description": "A balanced Li-Ning string designed for dependable durability and stable repulsion.",
+      "full_description": "A balanced Li-Ning string designed for dependable durability and stable repulsion. Gauge: 0.69 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Community signals: high durability, good repulsion, good value for money.",
+      "community_rating": 7.3,
+      "want_count": 86,
+      "used_count": 439,
+      "review_count": 121,
+      "community_tags": [
+        {
+          "tag_key": "high_durability",
+          "tag_label": "high durability",
+          "tag_count": 61
+        },
+        {
+          "tag_key": "good_repulsion",
+          "tag_label": "good repulsion",
+          "tag_count": 27
+        },
+        {
+          "tag_key": "good_value_for_money",
+          "tag_label": "good value for money",
+          "tag_count": 26
+        },
+        {
+          "tag_key": "lower_value_for_money",
+          "tag_label": "lower value for money",
+          "tag_count": 17
+        }
+      ],
+      "official_performance_status": "pending_manual_fill",
+      "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=9286",
+      "source_language": "en",
+      "original_name": "N69",
+      "original_brand_label": "李宁 Lining",
+      "original_series": "均衡型",
+      "original_material": "尼龙复丝",
+      "original_color": "多种颜色 来源:badmintoncn.com",
+      "is_active": true
+    }
+  ]
+}

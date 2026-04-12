@@ -61,7 +61,7 @@ Explicitly avoided:
 - `profile`
   - customer preference profile read/write
 - `catalog`
-  - public strings catalog plus admin inventory controls
+  - normalized master catalog, admin inventory controls, official performance persistence, and recommendation matrix inputs
 - `booking`
   - booking creation, retrieval, admin listing, status changes
 - `store`
@@ -76,6 +76,7 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/user.py`
 - `models/profile.py`
 - `models/string_catalog_item.py`
+  - now owns `brands`, `strings`, `string_catalog_metrics`, `string_catalog_tags`, `string_official_performance`, `inventory_items`, `inventory_movements`, `recommendation_feature_definitions`, `string_recommendation_matrix`, `user_preference_matrix`, and `recommendation_score_cache`
 - `models/booking.py`
 - `models/store_business_hours.py`
 - `models/store_settings.py`
@@ -84,10 +85,19 @@ The old monolithic ORM module was split into per-domain model files:
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
 
+## Catalog Boundary
+
+- Master catalog truth lives in `strings`
+- Community counts/tags live in `string_catalog_metrics` and `string_catalog_tags`
+- Official/manual performance lives in `string_official_performance`
+- Store pricing and stock live in `inventory_items`
+- Recommendation features live in `string_recommendation_matrix`
+- The current rule engine still returns the existing frontend-facing response shape, but it now reads item-side scores from matrix-backed domain objects rather than from catalog columns
+
 ## AI Boundary
 
 - The public recommendation flow now depends on `RecommendationEngine` through a port.
-- `app/adapters/services/ai/recommendation_engine_adapter.py` preserves the current in-process recommendation behavior.
+- `app/adapters/services/ai/recommendation_engine_adapter.py` preserves the current in-process recommendation behavior while reading compatibility aspect scores from the normalized catalog domain mapping.
 - Review analysis and RAG helpers are preserved as adapters over `ai_service.service.RecommendationService`.
 
 ## Validation Contract

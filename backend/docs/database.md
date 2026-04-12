@@ -43,14 +43,85 @@ Stores the canonical recommendation and profile fields:
 - `pref_tension_retention`
 - `pref_value_for_money`
 
-### `string_catalog_items`
+### Catalog Normalization
 
-Stores approved catalog string entries plus their normalized recommendation aspect scores.
-Also carries single-store inventory fields:
+The old `string_catalog_items` table was split into a normalized catalog subsystem:
 
-- `stock_level`
-- `admin_note`
-- `is_active` as the public availability gate
+- `brands`
+  - normalized brand master data
+- `strings`
+  - long-term master catalog rows in English
+  - one row per string model
+  - stores names, descriptions, gauge data, materials, colors, source traceability, and active status
+- `string_catalog_metrics`
+  - community counts and rating separated from master product truth
+- `string_catalog_tags`
+  - multi-tag community signals per string
+- `string_official_performance`
+  - official/manual performance values only
+  - intentionally separate from NLP or rule-derived scores
+- `inventory_items`
+  - current single-store stock, reorder settings, and pricing
+- `inventory_movements`
+  - append-only inventory adjustment history
+- `recommendation_feature_definitions`
+  - recommendation feature metadata
+- `string_recommendation_matrix`
+  - item-side feature matrix with explicit source layers
+- `user_preference_matrix`
+  - user-side preference vectors
+- `recommendation_score_cache`
+  - cached recommendation results per user and algorithm version
+
+The migration keeps the legacy flat table only as historical migrated state during transition. The active runtime schema now reads catalog and inventory data from the normalized tables above.
+
+### `strings`
+
+Stores the master string catalog only:
+
+- `catalog_id`
+- `brand_code`
+- `display_name`
+- `model_name`
+- `series_key` / `series_label`
+- `is_hybrid`
+- `gauge_main_mm` / `gauge_cross_mm` / `gauge_label`
+- `material_summary_en`
+- `color_options_en`
+- `short_description`
+- `full_description`
+- `official_performance_status`
+- `source_dataset_url`
+- `source_language`
+- `original_*` traceability fields
+- `is_active`
+
+Important rule:
+- recommendation-derived aspect scores do not live here
+- official/manual scores do not live here
+- inventory state does not live here
+
+### `string_official_performance`
+
+Stores only official or manually curated performance values. Missing values stay null and rows default to `pending_manual_fill`.
+
+### `inventory_items`
+
+Stores the current store-facing inventory and pricing state:
+
+- `current_stock`
+- `reserved_stock`
+- `available_stock`
+- `reorder_level`
+- `reorder_quantity`
+- `cost_price`
+- `selling_price`
+- `is_active`
+
+### `string_recommendation_matrix`
+
+Stores item-side recommendation features with explicit provenance via `source_layer`.
+Current migration backfills legacy flat aspect columns here as `hybrid_derived` compatibility values so the existing recommendation engine remains stable while the data model is cleaned up.
 
 ### `store_business_hours`
 

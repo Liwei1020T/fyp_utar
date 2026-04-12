@@ -296,6 +296,102 @@ def test_admin_inventory_string_update_controls_public_availability():
     assert public_lookup.status_code == 404
 
 
+def test_public_string_filters_expose_normalized_catalog_fields():
+    customer_token = register_customer(phone_number="+60127775555")
+
+    all_strings = client.get("/api/strings", headers=headers(customer_token))
+    assert all_strings.status_code == 200
+    assert all_strings.json()["total"] >= 30
+
+    hybrid_strings = client.get(
+        "/api/strings",
+        headers=headers(customer_token),
+        params={"is_hybrid": True},
+    )
+    assert hybrid_strings.status_code == 200
+    assert hybrid_strings.json()["total"] >= 1
+    assert all(item["is_hybrid"] is True for item in hybrid_strings.json()["items"])
+
+    yonex_strings = client.get(
+        "/api/strings",
+        headers=headers(customer_token),
+        params={"brand": "Yonex"},
+    )
+    assert yonex_strings.status_code == 200
+    assert yonex_strings.json()["total"] >= 1
+    assert all("Yonex" in item["display_name"] for item in yonex_strings.json()["items"])
+
+    narrow_gauge = client.get(
+        "/api/strings",
+        headers=headers(customer_token),
+        params={"gauge_max": 0.63},
+    )
+    assert narrow_gauge.status_code == 200
+    assert narrow_gauge.json()["total"] >= 1
+    assert all(
+        item["gauge_main_mm"] is not None and item["gauge_main_mm"] <= 0.63
+        for item in narrow_gauge.json()["items"]
+    )
+
+
+def test_admin_can_persist_official_performance_and_inventory_history():
+    customer_token = register_customer(phone_number="+60127776666")
+    admin_token = login_admin()
+    string_id = first_string_id(customer_token)
+
+    official_before = client.get(
+        f"/api/admin/strings/{string_id}/official-performance",
+        headers=headers(admin_token),
+    )
+    assert official_before.status_code == 200
+    assert official_before.json()["status"] == "pending_manual_fill"
+
+    official_update = client.put(
+        f"/api/admin/strings/{string_id}/official-performance",
+        headers=headers(admin_token),
+        json={
+            "source_type": "manual",
+            "source_name": "Yonex JP catalog",
+            "repulsion_power": 9.2,
+            "control": 8.4,
+            "status": "manually_curated",
+            "notes": "Initial official values entered by admin.",
+        },
+    )
+    assert official_update.status_code == 200
+    assert official_update.json()["source_name"] == "Yonex JP catalog"
+    assert official_update.json()["repulsion_power"] == 9.2
+    assert official_update.json()["status"] == "manually_curated"
+
+    inventory_update = client.patch(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+        json={
+            "current_stock": 12,
+            "reserved_stock": 2,
+            "selling_price": 52,
+            "movement_type": "RESTOCK",
+            "reference_type": "manual_restock",
+            "reference_id": "PO-2026-04-12",
+            "admin_note": "Restocked for weekend bookings.",
+        },
+    )
+    assert inventory_update.status_code == 200
+    assert inventory_update.json()["current_stock"] == 12
+    assert inventory_update.json()["reserved_stock"] == 2
+    assert inventory_update.json()["available_stock"] == 10
+    assert inventory_update.json()["price_rm"] == 52
+
+    movement_history = client.get(
+        f"/api/admin/inventory/strings/{string_id}/movements",
+        headers=headers(admin_token),
+    )
+    assert movement_history.status_code == 200
+    assert movement_history.json()["total"] >= 1
+    assert movement_history.json()["items"][0]["movement_type"] == "RESTOCK"
+    assert movement_history.json()["items"][0]["reference_id"] == "PO-2026-04-12"
+
+
 def test_admin_business_hours_settings_and_slots_flow():
     customer_token = register_customer(phone_number="+60125554444")
     admin_token = login_admin()

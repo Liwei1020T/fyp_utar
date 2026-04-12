@@ -17,9 +17,13 @@ from app.dto.booking import UpdateBookingStatusPayload
 from app.dto.booking import booking_to_dto
 from app.dto.catalog import AdminInventoryStringOut
 from app.dto.catalog import InventoryUpdatePayload
+from app.dto.catalog import OfficialPerformanceOut
+from app.dto.catalog import OfficialPerformancePayload
 from app.dto.catalog import StringOut
 from app.dto.catalog import StringWritePayload
+from app.dto.catalog import inventory_movement_to_dto
 from app.dto.catalog import inventory_string_to_dto
+from app.dto.catalog import official_performance_to_dto
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
 from app.dto.recommendation import recommendation_log_to_dict
@@ -55,10 +59,17 @@ from app.use_cases.booking.update_booking_status import UpdateBookingStatusUseCa
 from app.use_cases.catalog.create_string import CreateStringUseCase
 from app.use_cases.catalog.deactivate_string import DeactivateStringUseCase
 from app.use_cases.catalog.get_string import GetStringUseCase
+from app.use_cases.catalog.get_official_performance import GetOfficialPerformanceUseCase
+from app.use_cases.catalog.list_inventory_movements import (
+    ListInventoryMovementsUseCase,
+)
 from app.use_cases.catalog.list_inventory_strings import ListInventoryStringsUseCase
 from app.use_cases.catalog.list_strings import ListStringsUseCase
 from app.use_cases.catalog.prepare_string_values import PrepareStringValuesUseCase
 from app.use_cases.catalog.update_inventory_string import UpdateInventoryStringUseCase
+from app.use_cases.catalog.update_official_performance import (
+    UpdateOfficialPerformanceUseCase,
+)
 from app.use_cases.catalog.update_string import UpdateStringUseCase
 from app.use_cases.recommendation.list_recommendation_logs import (
     ListRecommendationLogsUseCase,
@@ -96,6 +107,10 @@ async def save_update_photo_upload(
 def admin_list_strings(
     search: str | None = Query(default=None, max_length=100),
     brand: str | None = Query(default=None, max_length=100),
+    series: str | None = Query(default=None, max_length=100),
+    gauge_min: float | None = Query(default=None, ge=0.4, le=1.2),
+    gauge_max: float | None = Query(default=None, ge=0.4, le=1.2),
+    is_hybrid: bool | None = Query(default=None),
     is_active: bool | None = Query(default=None),
     sort_by: str = Query(default="updated_at"),
     sort_order: str = Query(default="desc"),
@@ -107,6 +122,10 @@ def admin_list_strings(
     page = ListStringsUseCase(catalog_repository=catalog_repository).execute(
         is_active=is_active,
         brand=brand,
+        series=series,
+        gauge_min=gauge_min,
+        gauge_max=gauge_max,
+        is_hybrid=is_hybrid,
         search=search,
         sort_by=sort_by,
         sort_order=sort_order,
@@ -129,6 +148,8 @@ def admin_create_string(
         model_name=payload.model_name,
         overrides=payload.model_dump(exclude_none=True),
     )
+    if payload.price_rm is not None:
+        cast(dict[str, object], values["inventory"])["selling_price"] = payload.price_rm
     item = CreateStringUseCase(catalog_repository=catalog_repository).execute(values)
     return string_to_dto(item)
 
@@ -147,6 +168,8 @@ def admin_update_string(
         model_name=payload.model_name,
         overrides=payload.model_dump(exclude_none=True),
     )
+    if payload.price_rm is not None:
+        cast(dict[str, object], values["inventory"])["selling_price"] = payload.price_rm
     item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
         values=values,
@@ -215,15 +238,90 @@ def admin_update_inventory_string(
         stock_level = payload.stock_level or 0
         values["stock_level"] = stock_level
         values["is_active"] = stock_level > 0
+    if "current_stock" in payload.model_fields_set:
+        values["current_stock"] = payload.current_stock or 0
+    if "reserved_stock" in payload.model_fields_set:
+        values["reserved_stock"] = payload.reserved_stock or 0
+    if "reorder_level" in payload.model_fields_set:
+        values["reorder_level"] = payload.reorder_level or 0
+    if "reorder_quantity" in payload.model_fields_set:
+        values["reorder_quantity"] = payload.reorder_quantity or 0
+    if "cost_price" in payload.model_fields_set:
+        values["cost_price"] = payload.cost_price
+    if "selling_price" in payload.model_fields_set:
+        values["selling_price"] = payload.selling_price
+    if "is_active" in payload.model_fields_set:
+        values["is_active"] = bool(payload.is_active)
     if "admin_note" in payload.model_fields_set:
         values["admin_note"] = (
             payload.admin_note.strip() if payload.admin_note else None
         )
+    if "movement_type" in payload.model_fields_set:
+        values["movement_type"] = payload.movement_type
+    if "reference_type" in payload.model_fields_set:
+        values["reference_type"] = payload.reference_type
+    if "reference_id" in payload.model_fields_set:
+        values["reference_id"] = payload.reference_id
     item = UpdateInventoryStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
         values=values,
     )
     return inventory_string_to_dto(item)
+
+
+@router.get(
+    "/inventory/strings/{string_id}/movements",
+    response_model=dict,
+)
+def admin_inventory_movement_history(
+    string_id: str,
+    limit: int | None = Query(default=None, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> dict[str, object]:
+    page = ListInventoryMovementsUseCase(
+        catalog_repository=catalog_repository
+    ).execute(
+        string_id=string_id,
+        limit=limit,
+        offset=offset,
+    )
+    return page_to_dict(page, lambda item: inventory_movement_to_dto(item).model_dump())
+
+
+@router.get(
+    "/strings/{string_id}/official-performance",
+    response_model=OfficialPerformanceOut,
+)
+def admin_get_official_performance(
+    string_id: str,
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> OfficialPerformanceOut:
+    item = GetOfficialPerformanceUseCase(
+        catalog_repository=catalog_repository
+    ).execute(string_id=string_id)
+    return official_performance_to_dto(item)
+
+
+@router.put(
+    "/strings/{string_id}/official-performance",
+    response_model=OfficialPerformanceOut,
+)
+def admin_update_official_performance(
+    string_id: str,
+    payload: OfficialPerformancePayload,
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> OfficialPerformanceOut:
+    item = UpdateOfficialPerformanceUseCase(
+        catalog_repository=catalog_repository
+    ).execute(
+        string_id=string_id,
+        values=payload.model_dump(exclude_none=True),
+    )
+    return official_performance_to_dto(item)
 
 
 @router.get("/bookings", response_model=dict)

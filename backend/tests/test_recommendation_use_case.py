@@ -35,30 +35,63 @@ class FakeCatalogRepository:
     def update_inventory(self, string_id: str, values: dict[str, object]):
         raise NotImplementedError
 
+    def get_official_performance(self, string_id: str):
+        raise NotImplementedError
+
+    def update_official_performance(self, string_id: str, values: dict[str, object]):
+        raise NotImplementedError
+
+    def list_inventory_movements(self, string_id: str, *, limit: int | None, offset: int):
+        raise NotImplementedError
+
     def list_active_catalog(self) -> list[StringItem]:
         return [
             StringItem(
                 id="string-1",
                 brand="Yonex",
+                brand_code="yonex",
+                display_name="Yonex BG80",
                 model_name="BG80",
                 normalized_name="yonex bg80",
-                price_rm=45.0,
-                attack=0.9,
-                comfort=0.5,
-                control=0.7,
-                durability=0.6,
-                elasticity=0.8,
-                sound=0.7,
-                string_movement=0.4,
-                tension_retention=0.6,
-                value_for_money=0.5,
-                beginner_fit_score=0.4,
-                stability_score=0.6,
-                all_round_score=0.7,
-                source_item_id=None,
-                source_url=None,
-                stock_level=10,
-                admin_note=None,
+                series_key="high_repulsion",
+                series_label="High Repulsion",
+                is_hybrid=False,
+                gauge_main_mm=0.68,
+                gauge_cross_mm=None,
+                gauge_label="0.68 mm",
+                material_summary_en="Nylon multifilament",
+                color_options_en=["White"],
+                short_description="Short description",
+                full_description="Full description",
+                official_performance_status="pending_manual_fill",
+                source_dataset_url=None,
+                source_language="en",
+                original_name="BG-80",
+                original_brand_label="尤尼克斯 YONEX",
+                original_series="高弹性",
+                original_material=None,
+                original_color=None,
+                community_rating=9.1,
+                want_count=100,
+                used_count=50,
+                review_count=20,
+                tags=[],
+                official_performance=None,
+                inventory=None,
+                aspect_scores={
+                    "attack": 0.9,
+                    "comfort": 0.5,
+                    "control": 0.7,
+                    "durability": 0.6,
+                    "elasticity": 0.8,
+                    "sound": 0.7,
+                    "string_movement": 0.4,
+                    "tension_retention": 0.6,
+                    "value_for_money": 0.5,
+                    "beginner_fit_score": 0.4,
+                    "stability_score": 0.6,
+                    "all_round_score": 0.7,
+                },
                 is_active=True,
                 created_at=None,
                 updated_at=None,

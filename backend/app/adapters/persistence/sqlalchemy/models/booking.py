@@ -35,8 +35,8 @@ class Booking(Base):
         index=True,
     )
     string_id: Mapped[str] = mapped_column(
-        SAString(36),
-        ForeignKey("string_catalog_items.id"),
+        SAString(120),
+        ForeignKey("strings.catalog_id"),
         index=True,
     )
     racket_brand: Mapped[str | None] = mapped_column(SAString(100), nullable=True)

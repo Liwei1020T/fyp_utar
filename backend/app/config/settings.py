@@ -61,7 +61,7 @@ class Settings(BaseSettings):
         alias="CORS_ORIGINS",
     )
     approved_strings_source_path: str = Field(
-        default="data/raw/badminton_strings_recommender.jsonl",
+        default="data/string_catalog_db_ready.json",
         alias="APPROVED_STRINGS_SOURCE_PATH",
     )
     seed_admin_enabled: bool = Field(default=False, alias="SEED_ADMIN_ENABLED")

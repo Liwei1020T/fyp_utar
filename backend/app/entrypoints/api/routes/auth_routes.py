@@ -53,7 +53,7 @@ def _validate_payload(model: type[BaseModel], payload: dict, **context):
     try:
         return model.model_validate(payload, context=context)
     except ValidationError as exc:
-        first_error = exc.errors()[0] if exc.errors() else {}
+        first_error = dict(exc.errors()[0]) if exc.errors() else {}
         message = str(first_error.get("msg", "Invalid request"))
         if message.startswith("Value error, "):
             message = message.removeprefix("Value error, ")

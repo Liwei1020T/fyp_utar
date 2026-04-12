@@ -4,10 +4,17 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.adapters.persistence.sqlalchemy.catalog_seed import approved_catalog_defaults
+from app.adapters.persistence.sqlalchemy.catalog_seed import seed_catalog_rows
+from app.adapters.persistence.sqlalchemy.models import Brand
+from app.adapters.persistence.sqlalchemy.models import RecommendationFeatureDefinition
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
+from app.adapters.persistence.sqlalchemy.models import StringCatalogMetric
+from app.adapters.persistence.sqlalchemy.models import StringCatalogTag
+from app.adapters.persistence.sqlalchemy.models import StringInventoryItem
+from app.adapters.persistence.sqlalchemy.models import StringOfficialPerformance
+from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.services.security.pbkdf2_password_hasher import Pbkdf2PasswordHasher
 from app.config.settings import get_settings
@@ -161,8 +168,35 @@ def ensure_catalog_seeded(db: Session) -> None:
     if count > 0:
         return
 
-    for payload in approved_catalog_defaults(settings.approved_strings_path).values():
-        db.add(StringCatalogItem(**payload))
+    seed_rows = seed_catalog_rows(settings.approved_strings_path)
+    for brand in seed_rows["brands"]:
+        db.merge(Brand(**brand))
+    for feature in seed_rows["feature_definitions"]:
+        db.merge(RecommendationFeatureDefinition(**feature))
+    db.flush()
+
+    for payload in seed_rows["items"]:
+        item = StringCatalogItem(**payload["catalog"])
+        item.metrics = StringCatalogMetric(
+            catalog_id=item.catalog_id,
+            **payload["metrics"],
+        )
+        item.tags = [
+            StringCatalogTag(catalog_id=item.catalog_id, **tag)
+            for tag in payload["tags"]
+        ]
+        item.official_performance = StringOfficialPerformance(
+            **payload["official_performance"]
+        )
+        item.inventory_item = StringInventoryItem(**payload["inventory"])
+        item.recommendation_entries = [
+            StringRecommendationMatrix(
+                catalog_id=item.catalog_id,
+                **entry,
+            )
+            for entry in payload["matrix_entries"]
+        ]
+        db.add(item)
     db.flush()
 
 

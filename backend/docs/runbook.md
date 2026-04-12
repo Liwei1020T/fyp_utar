@@ -41,10 +41,13 @@ cd backend
 
 ## 4. Catalog and Recommendation Notes
 
-- The unified backend seeds strings from `APPROVED_STRINGS_SOURCE_PATH` when the table is empty.
+- The unified backend seeds the normalized catalog from `APPROVED_STRINGS_SOURCE_PATH` when the catalog is empty.
 - Relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root.
-- Recommendation scoring now uses the active DB-backed string catalog in process.
+- The default approved source is `backend/data/string_catalog_db_ready.json`.
+- Recommendation scoring now reads compatibility aspect scores from `string_recommendation_matrix`.
 - Admin string write operations still require approved catalog membership.
+- Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.
+- NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.
 - `AUTO_CREATE_SCHEMA=true` is meant for local development and tests; use Alembic migrations explicitly for controlled environments.
 - Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is configured with companion credentials.
 
