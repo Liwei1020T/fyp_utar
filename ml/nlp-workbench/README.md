@@ -15,7 +15,9 @@ This folder keeps the notebook-driven ABSA pipeline used to generate recommendat
 - `outputs/patched_practical_string_feature_matrix.csv`
 - `outputs/rule_based_review_aspect_signals.csv`
 
-The backend reads these files through `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH`.
+These files are used through `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` for standalone `ai_service` compatibility and optional import workflows.
+
+The unified backend public runtime default source is `RECOMMENDATION_MATRIX_SOURCE_PATH`, which points to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` in `backend/.env.example`.
 
 ## Run
 

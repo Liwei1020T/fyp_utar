@@ -7,6 +7,7 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 - `mobile/`: Expo Router React Native app for player and admin flows
 - `backend/`: FastAPI + SQLAlchemy backend and in-process AI/recommendation modules
 - `ml/nlp-workbench/`: Jupyter notebook, datasets, and generated CSV outputs
+- `ml/nlp-workbench-latest/`: versioned latest notebook package and default recommendation matrix workbook
 - `docs/`: workspace-level documentation index
 
 ## Quick Start
@@ -42,10 +43,12 @@ jupyter lab
 
 Run `stringsense_complete_absa_pipeline_notebook.ipynb` from top to bottom. The generated outputs go into `ml/nlp-workbench/outputs/`.
 
+The unified backend default recommendation source points to `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
+
 ## Backend and NLP Integration
 
-- `backend/.env.example` points `AI_MATRIX_CSV_PATH` to `../ml/nlp-workbench/outputs/patched_practical_string_feature_matrix.csv`
-- `backend/.env.example` points `AI_REVIEW_ASPECT_CSV_PATH` to `../ml/nlp-workbench/outputs/rule_based_review_aspect_signals.csv`
+- `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+- Legacy `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` still point to `../ml/nlp-workbench/outputs/*` for standalone `ai_service` compatibility
 - If those generated files do not exist yet, the backend can still fall back to `backend/data/raw/badminton_strings_recommender.jsonl`
 
 ## Validation

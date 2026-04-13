@@ -275,6 +275,12 @@ The backend expects generated files such as:
 - `ml/nlp-workbench/outputs/patched_practical_string_feature_matrix.csv`
 - `ml/nlp-workbench/outputs/rule_based_review_aspect_signals.csv`
 
+The unified backend public runtime default recommendation source is:
+
+- `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+
+The `ml/nlp-workbench/outputs/*` artifacts remain valid for legacy `AI_*_PATH` compatibility and manual import workflows.
+
 Generated notebook outputs should stay out of commits unless the task explicitly
 asks to version a specific artifact.
 
@@ -289,7 +295,7 @@ asks to version a specific artifact.
 | Change database schema | `backend/app/adapters/persistence/sqlalchemy/models/*` | Alembic revision, repositories, `backend/docs/database.md`, tests. |
 | Change recommendation behavior | `backend/app/adapters/services/ai/recommendation_engine_adapter.py` and `backend/ai_service/*` | NLP outputs and recommendation tests. |
 | Change mobile/backend field names | `backend/app/dto/*`, `mobile/types/backend.ts`, `mobile/services/backendMappers.ts` | API contract docs and backend/mobile validation. |
-| Regenerate NLP artifacts | `ml/nlp-workbench/*.ipynb` | Backend `.env` `AI_*_PATH` values and generated output files. |
+| Regenerate NLP artifacts | `ml/nlp-workbench/*.ipynb` | Backend `.env` `RECOMMENDATION_MATRIX_SOURCE_PATH` for unified runtime and `AI_*_PATH` for legacy compatibility. |
 
 ## Validation Shortlist
 

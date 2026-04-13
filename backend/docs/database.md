@@ -12,6 +12,12 @@ The active migration sequence is:
 - [20260405_0004_inventory_fields.py](../migrations/versions/20260405_0004_inventory_fields.py)
 - [20260405_0005_store_ops_tables.py](../migrations/versions/20260405_0005_store_ops_tables.py)
 - [20260407_0006_booking_updates.py](../migrations/versions/20260407_0006_booking_updates.py)
+- [20260411_0007_booking_update_photo_type.py](../migrations/versions/20260411_0007_booking_update_photo_type.py)
+- [20260412_0008_normalize_string_catalog.py](../migrations/versions/20260412_0008_normalize_string_catalog.py)
+- [20260412_0009_fix_official_performance_numeric_types.py](../migrations/versions/20260412_0009_fix_official_performance_numeric_types.py)
+- [20260412_0010_activate_recommendation_cache_breakdown.py](../migrations/versions/20260412_0010_activate_recommendation_cache_breakdown.py)
+- [20260412_0011_preference_raw_score_and_features.py](../migrations/versions/20260412_0011_preference_raw_score_and_features.py)
+- [20260413_0012_admin_string_editor_fields.py](../migrations/versions/20260413_0012_admin_string_editor_fields.py)
 
 ## Active Business Tables
 
@@ -137,22 +143,18 @@ Important rules:
 - both CSV and XLSX practical matrix sources are supported; V9 XLSX is the current default runtime source
 - before import, the backend sanitizes the source file to a runtime whitelist so only the currently used live-scoring fields and matching metadata are written into the feature store; stale `nlp_review` rows outside that whitelist are pruned on re-import
 
-Canonical NLP feature keys now include:
+Current `nlp_review` runtime import keys are:
 
-- `attack`
+- `repulsion` (mapped from source column `attack`)
 - `comfort`
 - `control`
 - `durability`
 - `elasticity`
-- `hitting_sound`
+- `sound`
 - `string_movement`
 - `tension_retention`
-- `value_for_money`
-- `stability`
-- `all_round`
-- `attacking_fit`
-- `control_fit`
-- `beginner_fit`
+
+Support keys such as `value_for_money`, `stability_score`, `all_round_score`, `attacking_fit_score`, `control_fit_score`, and `beginner_fit_score` may still appear from older compatibility rows (for example `hybrid_derived`) but are not imported by the current `nlp_review` whitelist.
 
 ### `user_preference_matrix`
 

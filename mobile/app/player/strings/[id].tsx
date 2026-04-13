@@ -25,15 +25,81 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { useAppStore, useCurrentUser, useLiveRecommendationResults } from '../../../store/appStore';
+import { useAppStore, useCurrentUser, useLiveRecommendationResults, useStrings } from '../../../store/appStore';
 import { getStringById } from '../../../services/mockAppService';
 import { formatCurrency, formatLabel } from '../../../lib/formatters';
 import { AppRadarChart } from '../../../components/ui/AppRadarChart';
 
+const FEATURE_LABELS: Record<string, string> = {
+  attack: 'Power',
+  repulsion: 'Power',
+  control: 'Control',
+  durability: 'Durability',
+  comfort: 'Comfort',
+  sound: 'Sound',
+  elasticity: 'Elasticity',
+  string_movement: 'String movement',
+  tension_retention: 'Tension retention',
+  hitting_sound: 'Sound',
+};
+
+function toAspectLabel(featureKey?: string, displayLabel?: string) {
+  if (displayLabel && displayLabel.trim().length > 0) {
+    return displayLabel;
+  }
+
+  if (!featureKey) {
+    return 'Community signal';
+  }
+
+  const normalized = featureKey.toLowerCase();
+  const mapped = FEATURE_LABELS[normalized];
+
+  if (mapped) {
+    return mapped;
+  }
+
+  return normalized
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function toSentiment(score?: number | null): 'Positive' | 'Mixed' | 'Neutral' {
+  if (score == null) {
+    return 'Neutral';
+  }
+
+  if (score >= 0.65) {
+    return 'Positive';
+  }
+
+  if (score >= 0.45) {
+    return 'Mixed';
+  }
+
+  return 'Neutral';
+}
+
+function normalizeRatingScore(value: number) {
+  return Math.max(0, Math.min(1, value / 10));
+}
+
+function compactReason(value: string, maxLength = 36) {
+  const normalized = value.trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trim()}...`;
+}
+
 export default function StringDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
-  const selectedString = getStringById(params.id);
+  const strings = useStrings();
+  const selectedString =
+    strings.find((item) => item.id === params.id) ?? getStringById(params.id);
   const user = useCurrentUser();
   const playerUser = user?.role === 'player' ? user : null;
   const liveResults = useLiveRecommendationResults();
@@ -58,6 +124,7 @@ export default function StringDetailScreen() {
   const liveResult = liveResults.find(
     (item) => item.stringId === selectedString.id
   );
+  const rationale = liveResult?.rationalePayload ?? null;
 
   const isSelected = compareSelection.includes(selectedString.id);
   
@@ -68,10 +135,79 @@ export default function StringDetailScreen() {
     { key: 'comfort', label: 'Comfort', icon: <Heart size={16} color="#EC4899" />, value: selectedString.ratings.comfort },
     { key: 'sound', label: 'Sound', icon: <Volume2 size={16} color="#8B5CF6" />, value: selectedString.ratings.sound },
   ];
+  const sortedPerformanceMetrics = [...performanceMetrics].sort((a, b) => b.value - a.value);
+  const topPerformanceLabels = sortedPerformanceMetrics.slice(0, 2).map((metric) => metric.label);
+
+  const evidenceSignals = (rationale?.feature_evidence ?? []).reduce<
+    Array<{ label: string; score: number }>
+  >((acc, entry) => {
+    const score =
+      entry.nlp_review_score ?? entry.effective_score ?? entry.official_score ?? null;
+
+    if (score == null) {
+      return acc;
+    }
+
+    acc.push({
+      label: toAspectLabel(entry.feature_key, entry.display_label),
+      score,
+    });
+
+    return acc;
+  }, []).sort((left, right) => right.score - left.score);
+
+  const fallbackSignals = sortedPerformanceMetrics.map((metric) => ({
+    label: metric.label,
+    score: normalizeRatingScore(metric.value),
+  }));
+  const signalSource = evidenceSignals.length > 0 ? evidenceSignals : fallbackSignals;
+  const sentimentSignals = signalSource.reduce<
+    Array<{ aspect: string; sentiment: 'Positive' | 'Mixed' | 'Neutral' }>
+  >((acc, item) => {
+    if (acc.some((entry) => entry.aspect === item.label)) {
+      return acc;
+    }
+
+    acc.push({
+      aspect: item.label,
+      sentiment: toSentiment(item.score),
+    });
+
+    return acc;
+  }, []).slice(0, 5);
+
+  const reasonThemes = (rationale?.top_reasons ?? liveResult?.reasons ?? [])
+    .map((item) => compactReason(item))
+    .filter((item) => item.length > 0)
+    .slice(0, 2);
+  const reviewThemes =
+    reasonThemes.length > 0
+      ? reasonThemes
+      : topPerformanceLabels.map((label) => `${label} focus`);
+
+  const highlightedStrength =
+    evidenceSignals[0]?.label ?? topPerformanceLabels[0] ?? 'Balanced response';
+  const highlightedTradeOff =
+    evidenceSignals[evidenceSignals.length - 1]?.label ??
+    sortedPerformanceMetrics[sortedPerformanceMetrics.length - 1]?.label ??
+    'Comfort';
+  const reviewSummary =
+    rationale?.nlp_review_summary ??
+    `${topPerformanceLabels[0] ?? 'Performance'} and ${
+      topPerformanceLabels[1]?.toLowerCase() ?? 'feel'
+    } are the strongest community-supported traits for this string.`;
+  const deepReasoningParagraphs = [
+    rationale?.top_reasons?.[0] ??
+      liveResult?.reasons[0] ??
+      `This setup supports your ${playerUser?.playingStyle ?? 'Balanced'} playing profile.`,
+    reviewSummary,
+    rationale?.trade_off_summary ??
+      liveResult?.tradeOffSummary ??
+      `${highlightedTradeOff} is the main trade-off to monitor depending on your preferred feel.`,
+  ];
 
   const getInsightSentence = () => {
-    const sorted = [...performanceMetrics].sort((a, b) => b.value - a.value);
-    const top = sorted.slice(0, 2).map(m => m.label.toLowerCase());
+    const top = sortedPerformanceMetrics.slice(0, 2).map((metric) => metric.label.toLowerCase());
     return `${top[0].charAt(0).toUpperCase() + top[0].slice(1)} and ${top[1]} are the dominant performance traits for this string.`;
   };
 
@@ -88,23 +224,6 @@ export default function StringDetailScreen() {
     } catch {
       Alert.alert('Share unavailable', 'This device could not open the share sheet for this item.');
     }
-  };
-
-  // Mock NLP Insights standardized
-  const nlpInsights = {
-    mostMentioned: 'Power',
-    oftenPraised: 'Durability',
-    commonFeel: 'Sharp sound',
-    tradeOff: 'Comfort',
-    themes: ['Attack speed', 'Tournament-ready'],
-    keywords: ['Crisp', 'Fast', 'Aggressive'],
-    sentiments: [
-      { aspect: 'Power', sentiment: 'Positive' },
-      { aspect: 'Durability', sentiment: 'Positive' },
-      { aspect: 'Sound', sentiment: 'Positive' },
-      { aspect: 'Control', sentiment: 'Neutral' },
-      { aspect: 'Comfort', sentiment: 'Mixed' }
-    ]
   };
 
   const getSentimentColor = (sentiment: string) => {
@@ -257,7 +376,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Style Overlap</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  {liveResult?.reasons[0] ?? `Matches your ${playerUser?.playingStyle || 'Balanced'} style with core ${selectedString.category} properties.`}
+                  {deepReasoningParagraphs[0]}
                 </HeroText>
               </View>
             </View>
@@ -269,7 +388,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Priority Alignment</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  Dominant ratings in {performanceMetrics.slice(0, 2).map(m => m.label).join(' & ')} align with your performance profile.
+                  Dominant ratings in {topPerformanceLabels.join(' & ')} align with your performance profile.
                 </HeroText>
               </View>
             </View>
@@ -281,7 +400,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Tension Fit</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  Optimal performance at {playerUser?.preferredTension || 27} lbs falls right inside this string's sweet spot.
+                  Optimal performance at {playerUser?.preferredTension || 27} lbs falls right inside this string&apos;s sweet spot.
                 </HeroText>
               </View>
             </View>
@@ -300,15 +419,14 @@ export default function StringDetailScreen() {
           
           {isExplainOpen && (
             <View className="bg-white px-5 pb-6 pt-2">
-              <HeroText className="text-sm leading-6 text-neutral-700">
-                As an <HeroText className="font-bold">{playerUser?.playingStyle || 'Attacking'}</HeroText> player, our NLP engine identified that you prioritize <HeroText className="font-bold text-primary-700">Power</HeroText> and <HeroText className="font-bold text-primary-700">Sound</HeroText>.
-              </HeroText>
-              <HeroText className="mt-4 text-sm leading-6 text-neutral-700">
-                The <HeroText className="font-bold">{selectedString.model}</HeroText> maps to these needs perfectly because 82% of similar players highlight its "instant snap" and "metallic ping" at higher tensions.
-              </HeroText>
-              <HeroText className="mt-4 text-sm leading-6 text-neutral-700">
-                While durability is a common trade-off (noted in 15% of reviews), your tournament frequency suggests you prioritize immediate performance.
-              </HeroText>
+              {deepReasoningParagraphs.map((paragraph, index) => (
+                <HeroText
+                  key={`${paragraph}-${index}`}
+                  className={`text-sm leading-6 text-neutral-700 ${index > 0 ? 'mt-4' : ''}`}
+                >
+                  {paragraph}
+                </HeroText>
+              ))}
             </View>
           )}
         </AppCard>
@@ -321,16 +439,20 @@ export default function StringDetailScreen() {
             <View className="flex-row justify-between mb-6">
               <View className="flex-1 mr-4">
                 <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Top Praise</HeroText>
-                <HeroText className="text-sm font-bold text-neutral-900">{nlpInsights.oftenPraised}</HeroText>
+                <HeroText className="text-sm font-bold text-neutral-900">{highlightedStrength}</HeroText>
               </View>
               <View className="flex-1">
                 <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Common Trade-off</HeroText>
-                <HeroText className="text-sm font-bold text-neutral-900">{nlpInsights.tradeOff}</HeroText>
+                <HeroText className="text-sm font-bold text-neutral-900">{highlightedTradeOff}</HeroText>
               </View>
             </View>
 
+            <HeroText className="mb-4 text-xs leading-5 text-neutral-500">
+              {reviewSummary}
+            </HeroText>
+
             <View className="flex-row flex-wrap gap-2 mb-6">
-              {nlpInsights.themes.map(theme => (
+              {reviewThemes.map((theme) => (
                 <View key={theme} className="bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100 flex-row items-center gap-1.5">
                   <CheckCircle2 size={12} color="#10B981" />
                   <HeroText className="text-[11px] font-bold text-neutral-700 uppercase">{theme}</HeroText>
@@ -340,7 +462,7 @@ export default function StringDetailScreen() {
 
             <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Aspect Sentiment</HeroText>
             <View className="flex-row flex-wrap gap-2">
-              {nlpInsights.sentiments.map((item) => (
+              {sentimentSignals.map((item) => (
                 <View key={item.aspect} className={`${getSentimentBg(item.sentiment)} px-3 py-1.5 rounded-full border border-neutral-100 flex-row items-center gap-1.5`}>
                   <View className={`h-1.5 w-1.5 rounded-full ${item.sentiment === 'Positive' ? 'bg-green-500' : item.sentiment === 'Mixed' ? 'bg-amber-500' : 'bg-neutral-300'}`} />
                   <HeroText className={`text-[10px] font-bold ${getSentimentColor(item.sentiment)}`}>

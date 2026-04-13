@@ -25,11 +25,13 @@ Key variables:
 - `DATABASE_URL`: SQLAlchemy database URL for the unified Python backend
 - `JWT_SECRET_KEY`: signing key for bearer tokens
 - `APPROVED_STRINGS_SOURCE_PATH`: approved normalized catalog source; relative paths resolve from the backend root
-- `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix CSV; relative paths resolve from the backend root
+- `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix source file (`.csv` or `.xlsx`); relative paths resolve from the backend root
 - `SEED_ADMIN_*`: optional admin seed controls
 - `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
 
-In this unified workspace, `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` should normally point at `../ml/nlp-workbench/outputs/`.
+In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`).
+
+`AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` remain for standalone `ai_service/` compatibility and can point at `../ml/nlp-workbench/outputs/`.
 
 Legacy AI env vars such as `AI_INTERNAL_API_KEY` are only needed if you still run `ai_service/` directly for standalone compatibility checks.
 

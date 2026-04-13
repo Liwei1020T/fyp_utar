@@ -8,23 +8,38 @@ import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { useCurrentUser } from '../../../store/appStore';
-import { getRacketsForPlayer, getStringById } from '../../../services/mockAppService';
+import { useCurrentUser, useRackets, useStrings } from '../../../store/appStore';
+import { getStringById } from '../../../services/mockAppService';
 
 export default function RacketPassportDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const user = useCurrentUser();
+  const rackets = useRackets();
+  const strings = useStrings();
 
   if (!user || user.role !== 'player') {
     return null;
   }
 
-  const racket = getRacketsForPlayer(user.id).find((item) => item.id === params.id);
+  const racket = rackets.find(
+    (item) => item.playerId === user.id && item.id === params.id,
+  );
 
   if (!racket) {
     return null;
   }
+
+  const currentString =
+    strings.find((item) => item.id === racket.currentStringId) ??
+    getStringById(racket.currentStringId);
+  const averageTension =
+    racket.stringHistory.length > 0
+      ? Math.round(
+          racket.stringHistory.reduce((sum, item) => sum + item.tension, 0) /
+            racket.stringHistory.length,
+        )
+      : racket.currentTension;
 
   return (
     <AppScreen
@@ -51,7 +66,9 @@ export default function RacketPassportDetailScreen() {
       <AppSection eyebrow="Current setup" title="Live stringing profile">
         <AppCard variant="elevated" padding="md">
           <HeroText className="text-base font-semibold text-neutral-900">
-            {getStringById(racket.currentStringId)?.brand} {getStringById(racket.currentStringId)?.model}
+            {currentString
+              ? `${currentString.brand} ${currentString.model}`
+              : 'String setup pending'}
           </HeroText>
           <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
             Current tension: {racket.currentTension} lbs • Preferred use: {racket.preferredUse}
@@ -61,16 +78,24 @@ export default function RacketPassportDetailScreen() {
 
       <AppSection eyebrow="History" title="String history and service notes">
         <View className="gap-3">
-          {racket.stringHistory.map((entry) => (
-            <AppCard key={entry.bookingId} variant="elevated" padding="sm">
-              <HeroText className="text-sm font-semibold text-neutral-900">
-                {getStringById(entry.stringId)?.brand} {getStringById(entry.stringId)?.model}
-              </HeroText>
-              <HeroText className="mt-1 text-sm text-neutral-500">
-                {entry.tension} lbs • Installed {entry.installedAt}
-              </HeroText>
-            </AppCard>
-          ))}
+          {racket.stringHistory.map((entry) => {
+            const historyString =
+              strings.find((item) => item.id === entry.stringId) ??
+              getStringById(entry.stringId);
+
+            return (
+              <AppCard key={entry.bookingId} variant="elevated" padding="sm">
+                <HeroText className="text-sm font-semibold text-neutral-900">
+                  {historyString
+                    ? `${historyString.brand} ${historyString.model}`
+                    : 'Custom string setup'}
+                </HeroText>
+                <HeroText className="mt-1 text-sm text-neutral-500">
+                  {entry.tension} lbs • Installed {entry.installedAt}
+                </HeroText>
+              </AppCard>
+            );
+          })}
         </View>
       </AppSection>
 
@@ -89,7 +114,7 @@ export default function RacketPassportDetailScreen() {
               Avg tension
             </HeroText>
             <HeroText className="mt-2 text-2xl font-bold tracking-tight text-neutral-950">
-              {Math.round(racket.stringHistory.reduce((sum, item) => sum + item.tension, 0) / racket.stringHistory.length)} lbs
+              {averageTension} lbs
             </HeroText>
           </AppCard>
         </View>

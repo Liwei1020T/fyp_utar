@@ -18,6 +18,7 @@ import {
   formatBookingOrderCode,
   formatBookingStatus,
 } from '../../../lib/formatters';
+import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
@@ -209,9 +210,32 @@ export default function PlayerBookingDetailScreen() {
         if (cancelled) {
           return;
         }
-        const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
+        const priceByStringId = new Map<string, number>();
+        strings.forEach((item) => {
+          const priceMeta = getInventoryPriceLabel(item);
+          const priceValue =
+            item.inventory.price ?? (item.price > 0 ? item.price : null);
+
+          if (priceMeta.hasPrice && priceValue != null) {
+            priceByStringId.set(item.id, priceValue);
+          }
+        });
         const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId);
         const currentBookings = useAppStore.getState().liveBookings;
+        const existingBooking = currentBookings.find((item) => item.id === mapped.id);
+        const keepQuotePendingState =
+          existingBooking?.paymentStatus === 'unpaid' &&
+          existingBooking.totalAmount <= 0 &&
+          mapped.totalAmount <= 0;
+
+        if (existingBooking && keepQuotePendingState) {
+          mapped.paymentStatus = existingBooking.paymentStatus;
+          mapped.stringFee = existingBooking.stringFee;
+          mapped.totalAmount = existingBooking.totalAmount;
+          mapped.amountPaid = existingBooking.amountPaid;
+          mapped.paymentRuleNote = existingBooking.paymentRuleNote;
+        }
+
         setLiveBookings(
           currentBookings.some((item) => item.id === mapped.id)
             ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
@@ -246,8 +270,14 @@ export default function PlayerBookingDetailScreen() {
     );
   }
 
-  const stringItem = getStringById(booking.stringId);
+  const stringItem =
+    strings.find((item) => item.id === booking.stringId) ??
+    getStringById(booking.stringId);
   const admin = getAdminById(booking.adminId);
+  const stringLabel = stringItem
+    ? `${stringItem.brand} ${stringItem.model}`
+    : 'Custom string selection';
+  const vendorLabel = admin?.businessName ?? 'Assigned shop';
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const latestUpdate = getLatestUpdate(booking);
 
@@ -304,13 +334,13 @@ export default function PlayerBookingDetailScreen() {
               Booking details
             </HeroText>
             <View className="mt-2">
-              <DetailRow label="Vendor" value={admin?.businessName ?? 'Assigned shop'} />
+              <DetailRow label="Vendor" value={vendorLabel} />
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow
                 label="String"
-                value={`${stringItem?.brand ?? 'Custom'} ${stringItem?.model ?? 'String selection'}`.trim()}
+                value={stringLabel}
               />
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow label="Tension" value={`${booking.requestedTension} lbs`} />

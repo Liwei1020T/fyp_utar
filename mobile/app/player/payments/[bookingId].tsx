@@ -9,10 +9,17 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { PaymentMethodCard } from '../../../components/payment/PaymentMethodCard';
-import { useAppStore, useBookings, useCurrentUser, useWallets } from '../../../store/appStore';
+import {
+  useAppStore,
+  useBookings,
+  useCurrentUser,
+  useStrings,
+  useWallets,
+} from '../../../store/appStore';
 import type { PaymentMethod, PaymentStatus } from '../../../types/domain';
 import { getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
+import { getInventoryPriceLabel } from '../../../lib/inventory';
 
 const paymentOptions: Array<{
   method: PaymentMethod;
@@ -56,6 +63,7 @@ export default function PaymentScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
+  const strings = useStrings();
   const wallets = useWallets();
   const bookingDraft = useAppStore((state) => state.bookingDraft);
   const submitBookingPayment = useAppStore((state) => state.submitBookingPayment);
@@ -66,17 +74,51 @@ export default function PaymentScreen() {
     params.bookingId && params.bookingId !== 'draft'
       ? bookings.find((item) => item.id === params.bookingId)
       : null;
-  const draftString = bookingDraft ? getStringById(bookingDraft.stringId) : undefined;
-  const existingString = booking ? getStringById(booking.stringId) : undefined;
-  const title = booking
-    ? `${existingString?.brand} ${existingString?.model}`
-    : `${draftString?.brand} ${draftString?.model}`;
+  const draftString = bookingDraft
+    ? strings.find((item) => item.id === bookingDraft.stringId) ??
+      getStringById(bookingDraft.stringId)
+    : undefined;
+  const existingString = booking
+    ? strings.find((item) => item.id === booking.stringId) ??
+      getStringById(booking.stringId)
+    : undefined;
+  const activeString = booking ? existingString : draftString;
+  const title = activeString
+    ? `${activeString.brand} ${activeString.model}`
+    : 'String setup pending';
   const wallet = wallets.find((item) => item.userId === user?.id);
-  const stringFee = booking?.stringFee ?? draftString?.price ?? 36;
-  const serviceFee = booking?.serviceFee ?? 18;
-  const totalAmount = booking?.totalAmount ?? stringFee + serviceFee;
+  const stringPriceMeta = activeString
+    ? getInventoryPriceLabel(activeString)
+    : {
+        label: 'Price pending',
+        hasPrice: false,
+      };
+  const isQuotePendingBooking = Boolean(
+    booking && booking.paymentStatus === 'unpaid' && booking.totalAmount <= 0,
+  );
+  const fallbackStringFee =
+    activeString?.inventory.price ??
+    (activeString && activeString.price > 0 ? activeString.price : null);
+  const stringFee = isQuotePendingBooking
+    ? null
+    : booking?.stringFee ?? (stringPriceMeta.hasPrice ? fallbackStringFee ?? 0 : null);
+  const serviceFee = booking?.serviceFee ?? 0;
+  const totalAmount = isQuotePendingBooking
+    ? null
+    : booking?.totalAmount ?? (stringFee != null ? stringFee + serviceFee : null);
+  const canCheckout = totalAmount != null && totalAmount > 0;
+  const stringFeeLabel =
+    stringFee != null
+      ? formatCurrency(stringFee)
+      : isQuotePendingBooking
+        ? 'Quote at shop'
+        : stringPriceMeta.label;
 
   const handlePayment = async (status: PaymentStatus) => {
+    if (!canCheckout) {
+      return;
+    }
+
     setIsProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 650));
 
@@ -112,7 +154,9 @@ export default function PaymentScreen() {
         </HeroText>
         <View className="mt-4 flex-row items-center justify-between">
           <HeroText className="text-sm text-primary-100">String fee</HeroText>
-          <HeroText className="text-lg font-bold text-white">{formatCurrency(stringFee)}</HeroText>
+          <HeroText className="text-lg font-bold text-white">
+            {stringFeeLabel}
+          </HeroText>
         </View>
         <View className="mt-2 flex-row items-center justify-between">
           <HeroText className="text-sm text-primary-100">Service fee</HeroText>
@@ -126,7 +170,9 @@ export default function PaymentScreen() {
         </View>
         <View className="mt-5 border-t border-white/10 pt-4 flex-row items-center justify-between">
           <HeroText className="text-sm text-primary-100">Total amount</HeroText>
-          <HeroText className="text-2xl font-bold text-white">{formatCurrency(totalAmount)}</HeroText>
+          <HeroText className="text-2xl font-bold text-white">
+            {totalAmount != null ? formatCurrency(totalAmount) : 'Quote at shop'}
+          </HeroText>
         </View>
       </AppCard>
 
@@ -149,7 +195,9 @@ export default function PaymentScreen() {
       <AppSection eyebrow="Rule" title="Checkout behavior">
         <AppCard variant="subtle" padding="md">
           <HeroText className="text-sm leading-6 text-neutral-600">
-            This FYP 1 prototype confirms bookings with one full payment. Cancellation and reschedule options stay available only before payment succeeds.
+            {canCheckout
+              ? 'This FYP 1 prototype confirms bookings with one full payment. Cancellation and reschedule options stay available only before payment succeeds.'
+              : 'Final quote is still pending from the service desk. Payment unlocks once a shop-confirmed amount is available.'}
           </HeroText>
         </AppCard>
       </AppSection>
@@ -159,6 +207,7 @@ export default function PaymentScreen() {
           label="Pay full amount now"
           size="lg"
           isLoading={isProcessing}
+          isDisabled={!canCheckout}
           onPress={() => handlePayment('paid')}
         />
         <View className="flex-row gap-3">
@@ -167,6 +216,7 @@ export default function PaymentScreen() {
             variant="outline"
             size="lg"
             className="flex-1"
+            isDisabled={!canCheckout}
             onPress={() => handlePayment('failed')}
           />
           <AppButton
@@ -174,6 +224,7 @@ export default function PaymentScreen() {
             variant="ghost"
             size="lg"
             className="flex-1"
+            isDisabled={!canCheckout}
             onPress={() => handlePayment('cancelled')}
           />
         </View>

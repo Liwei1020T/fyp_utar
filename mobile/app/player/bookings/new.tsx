@@ -72,10 +72,13 @@ export default function NewBookingScreen() {
     return null;
   }
 
-  const selectedString =
-    getStringById(params.stringId) ??
-    (params.stringId ? undefined : strings[0]) ??
-    getStringById('string-001');
+  const requestedStringId = params.stringId;
+  const requestedString = requestedStringId
+    ? strings.find((item) => item.id === requestedStringId) ?? getStringById(requestedStringId)
+    : undefined;
+  const selectedString = requestedStringId
+    ? requestedString
+    : strings[0] ?? getStringById('string-001');
   const adminId = user.preferredAdminId;
   const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
@@ -109,8 +112,16 @@ export default function NewBookingScreen() {
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
   const selectedAdmin = getAdminById(adminId);
+  const selectedAdminName = selectedAdmin?.businessName ?? 'Assigned shop';
+  const selectedAdminMeta = selectedAdmin
+    ? `${selectedAdmin.city} · Avg turnaround ${selectedAdmin.averageTurnaroundHours} hours`
+    : 'Drop-off service desk';
   const recommendedMin = selectedString?.recommendedTension[0] ?? 24;
   const recommendedMax = selectedString?.recommendedTension[1] ?? 29;
+  const showPeriodFilter = slots.length > 6;
+  const visibleSlots = showPeriodFilter
+    ? slots.filter((item) => getSlotPeriod(item) === selectedPeriod)
+    : slots;
 
   const {
     control,
@@ -195,8 +206,29 @@ export default function NewBookingScreen() {
     );
   }, [availableSlots, selectedSlotId, slotError, slots]);
 
+  useEffect(() => {
+    if (!selectedString || !showPeriodFilter) {
+      return;
+    }
+
+    const hasVisibleSlots = slots.some((item) => getSlotPeriod(item) === selectedPeriod);
+
+    if (hasVisibleSlots) {
+      return;
+    }
+
+    const fallbackSlot =
+      slots.find((item) => item.id === selectedSlotId) ??
+      availableSlots[0] ??
+      slots[0];
+
+    if (fallbackSlot) {
+      setSelectedPeriod(getSlotPeriod(fallbackSlot));
+    }
+  }, [availableSlots, selectedPeriod, selectedSlotId, selectedString, showPeriodFilter, slots]);
+
   const onSubmit = async (data: BookingForm) => {
-    if (!selectedString || !selectedAdmin || !selectedSlot || selectedSlot.availableSpots < 1) {
+    if (!selectedString || !selectedSlot || selectedSlot.availableSpots < 1) {
       setSlotError('Select an available drop-off slot before continuing.');
       return;
     }
@@ -204,7 +236,7 @@ export default function NewBookingScreen() {
     await new Promise((resolve) => setTimeout(resolve, 350));
     setBookingDraft({
       stringId: selectedString.id,
-      adminId: selectedAdmin.id,
+      adminId,
       racketId: null,
       racketBrand: data.racketBrand,
       racketModel: data.racketModel,
@@ -239,6 +271,29 @@ export default function NewBookingScreen() {
     });
   };
 
+  if (requestedStringId && !requestedString) {
+    return (
+      <AppScreen
+        title="String unavailable"
+        subtitle="The selected string is no longer in the active catalog."
+        showBackButton
+        onBackPress={() => router.back()}
+      >
+        <AppCard variant="subtle" className="mt-8" padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Choose another string from the catalog before creating this booking.
+          </HeroText>
+          <View className="mt-4">
+            <AppButton
+              label="Browse strings"
+              onPress={() => router.replace('/player/strings')}
+            />
+          </View>
+        </AppCard>
+      </AppScreen>
+    );
+  }
+
   if (!selectedString) {
     return null;
   }
@@ -254,28 +309,6 @@ export default function NewBookingScreen() {
     : 'Times reflect current shop availability.';
   const selectedCategoryLabel =
     selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
-  const showPeriodFilter = slots.length > 6;
-  const visibleSlots = showPeriodFilter
-    ? slots.filter((item) => getSlotPeriod(item) === selectedPeriod)
-    : slots;
-
-  useEffect(() => {
-    if (!showPeriodFilter) {
-      return;
-    }
-
-    const hasVisibleSlots = slots.some((item) => getSlotPeriod(item) === selectedPeriod);
-
-    if (hasVisibleSlots) {
-      return;
-    }
-
-    const fallbackSlot = slots.find((item) => item.id === selectedSlotId) ?? availableSlots[0] ?? slots[0];
-
-    if (fallbackSlot) {
-      setSelectedPeriod(getSlotPeriod(fallbackSlot));
-    }
-  }, [availableSlots, selectedPeriod, selectedSlotId, showPeriodFilter, slots]);
 
   return (
     <AppScreen
@@ -310,10 +343,10 @@ export default function NewBookingScreen() {
             </View>
             <View className="flex-1">
               <HeroText className="text-[17px] font-bold tracking-tight text-neutral-950">
-                {selectedAdmin?.businessName}
+                {selectedAdminName}
               </HeroText>
               <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-                {selectedAdmin?.city} · Avg turnaround {selectedAdmin?.averageTurnaroundHours} hours
+                {selectedAdminMeta}
               </HeroText>
             </View>
           </View>
@@ -512,7 +545,7 @@ export default function NewBookingScreen() {
             {selectedDateLabel} · {selectedTimeLabel}
           </HeroText>
           <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-            {selectedAdmin?.businessName}
+            {selectedAdminName}
           </HeroText>
         </AppCard>
       </AppSection>

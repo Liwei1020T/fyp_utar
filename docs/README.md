@@ -12,3 +12,4 @@
 - [Backend Clean Architecture Migration Map](../backend/docs/clean-architecture-migration-map.md)
 - [Backend Runbook](../backend/docs/runbook.md)
 - [NLP Workbench README](../ml/nlp-workbench/README.md)
+- [NLP Workbench Latest README](../ml/nlp-workbench-latest/README.md)

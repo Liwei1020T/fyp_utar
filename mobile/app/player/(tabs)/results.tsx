@@ -22,6 +22,8 @@ import {
   mapBackendStringToStringItem,
   mapRecommendationResponse,
 } from '../../../services/backendMappers';
+import { formatCurrency } from '../../../lib/formatters';
+import { getInventoryPriceLabel } from '../../../lib/inventory';
 
 function formatScore(value?: number) {
   if (value == null) {
@@ -223,6 +225,7 @@ export default function RecommendationResultsScreen() {
               const normalizedScore = Math.max(82, Math.min(98, Math.round(matchScore / 3.5)));
               const isSelected = compareSelection.includes(item.id);
               const isTop = index === 0;
+              const priceLabel = getInventoryPriceLabel(item);
 
               return (
                 <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md">
@@ -246,8 +249,10 @@ export default function RecommendationResultsScreen() {
                       </HeroText>
                     </View>
                     <View className="items-end">
-                      <HeroText className="text-xs font-medium text-neutral-400">
-                        Price at shop
+                      <HeroText
+                        className={priceLabel.hasPrice ? 'text-xs font-semibold text-neutral-700' : 'text-xs font-medium text-neutral-400'}
+                      >
+                        {priceLabel.hasPrice ? formatCurrency(item.price) : priceLabel.label}
                       </HeroText>
                     </View>
                   </View>

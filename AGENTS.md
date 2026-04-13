@@ -37,7 +37,8 @@
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
-  - NLP artifact handoff: notebook outputs in `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
+  - NLP artifact handoff: default runtime workbook in `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`
+  - legacy AI-service artifact handoff: `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
 - State/data boundaries:
   - `backend/` owns runtime data, auth, bookings, and recommendation logs
   - `mobile/` stays hybrid: live FYP1 player/admin core flow plus hidden/mock-first FYP2 domains
@@ -79,4 +80,5 @@
   - `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - NLP:
   - `cd ml/nlp-workbench && python3 -m pip install -r requirements.txt`
-  - Run the notebook top-to-bottom to populate `ml/nlp-workbench/outputs/`
+  - Run the notebook top-to-bottom to populate `ml/nlp-workbench/outputs/` (legacy AI-service compatibility artifacts)
+  - Unified backend default matrix source uses `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`

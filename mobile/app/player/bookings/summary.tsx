@@ -13,11 +13,13 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
+  useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
+import { getInventoryPriceLabel } from '../../../lib/inventory';
 
 export default function BookingSummaryScreen() {
   const router = useRouter();
@@ -26,6 +28,7 @@ export default function BookingSummaryScreen() {
   const clearBookingDraft = useAppStore((state) => state.clearBookingDraft);
   const prependLiveBooking = useAppStore((state) => state.prependLiveBooking);
   const token = useBackendAccessToken();
+  const strings = useStrings();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -46,11 +49,24 @@ export default function BookingSummaryScreen() {
     );
   }
 
-  const stringItem = getStringById(bookingDraft.stringId);
+  const stringItem =
+    strings.find((item) => item.id === bookingDraft.stringId) ??
+    getStringById(bookingDraft.stringId);
   const admin = getAdminById(bookingDraft.adminId);
-  const stringFee = stringItem?.price ?? 36;
-  const serviceFee = token ? 0 : 18;
-  const totalPayable = stringFee + serviceFee;
+  const stringLabel = stringItem
+    ? `${stringItem.brand} ${stringItem.model}`
+    : 'Selected string';
+  const stringPrice =
+    stringItem?.inventory.price ?? (stringItem && stringItem.price > 0 ? stringItem.price : null);
+  const stringPriceMeta = stringItem
+    ? getInventoryPriceLabel(stringItem)
+    : {
+        label: 'Price pending',
+        hasPrice: false,
+      };
+  const stringFee = stringPriceMeta.hasPrice ? stringPrice ?? 0 : null;
+  const serviceFee = 0;
+  const totalPayable = stringFee != null ? stringFee + serviceFee : null;
 
   const handleProceed = async () => {
     if (!token) {
@@ -85,12 +101,22 @@ export default function BookingSummaryScreen() {
         }
       }
 
-      prependLiveBooking(
-        mapBackendBookingToBooking(
-          booking,
-          new Map([[bookingDraft.stringId, stringFee]]),
-        ),
-      );
+      const priceByStringId = new Map<string, number>();
+      if (stringFee != null) {
+        priceByStringId.set(bookingDraft.stringId, stringFee);
+      }
+
+      const mappedBooking = mapBackendBookingToBooking(booking, priceByStringId);
+      if (stringFee == null) {
+        mappedBooking.paymentStatus = 'unpaid';
+        mappedBooking.stringFee = 0;
+        mappedBooking.totalAmount = 0;
+        mappedBooking.amountPaid = 0;
+        mappedBooking.paymentRuleNote =
+          'Final string quote is pending. Payment unlocks after shop confirms the amount.';
+      }
+
+      prependLiveBooking(mappedBooking);
       clearBookingDraft();
       router.replace(
         `/player/bookings/${booking.id}${photoUploadFailed ? '?photoUpload=failed' : ''}`,
@@ -121,7 +147,7 @@ export default function BookingSummaryScreen() {
               {admin?.businessName}
             </HeroText>
             <HeroText className="text-[24px] font-bold tracking-tight text-neutral-950">
-              {stringItem?.brand} {stringItem?.model}
+              {stringLabel}
             </HeroText>
             <HeroText className="text-sm leading-6 text-neutral-500">
               {bookingDraft.racketBrand} {bookingDraft.racketModel} at {bookingDraft.requestedTension} lbs
@@ -135,7 +161,7 @@ export default function BookingSummaryScreen() {
           items={[
             {
               label: 'String',
-              value: `${stringItem?.brand ?? ''} ${stringItem?.model ?? ''}`.trim(),
+              value: stringLabel,
             },
             {
               label: 'Racket',
@@ -162,7 +188,7 @@ export default function BookingSummaryScreen() {
           <View className="flex-row items-center justify-between">
             <HeroText className="text-sm text-primary-100">String fee</HeroText>
             <HeroText className="text-lg font-bold text-white">
-              {formatCurrency(stringFee)}
+              {stringFee != null ? formatCurrency(stringFee) : stringPriceMeta.label}
             </HeroText>
           </View>
           <View className="mt-3 flex-row items-center justify-between">
@@ -174,7 +200,7 @@ export default function BookingSummaryScreen() {
           <View className="mt-5 border-t border-white/10 pt-4 flex-row items-center justify-between">
             <HeroText className="text-sm text-primary-100">Estimated total</HeroText>
             <HeroText className="text-2xl font-bold text-white">
-              {formatCurrency(totalPayable)}
+              {totalPayable != null ? formatCurrency(totalPayable) : 'Quote at shop'}
             </HeroText>
           </View>
         </AppCard>
@@ -199,7 +225,9 @@ export default function BookingSummaryScreen() {
         <AppCard variant="subtle" padding="md">
           <HeroText className="text-sm leading-6 text-neutral-600">
             {token
-              ? 'This FYP1 flow confirms the booking directly with the live backend. Payment remains deferred to FYP2.'
+              ? stringFee != null
+                ? 'This FYP1 flow confirms the booking directly with the live backend. Payment remains deferred to FYP2.'
+                : 'This FYP1 flow confirms the booking directly with the live backend. Final string quote is confirmed at shop.'
               : 'Live backend login is required to confirm an FYP1 booking.'}
           </HeroText>
         </AppCard>

@@ -39,7 +39,8 @@
 - Config/runtime rules:
   - Unified backend reads `.env` through `pydantic-settings`
   - relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root
-  - notebook-generated AI artifacts normally live in `../ml/nlp-workbench/outputs/`
+  - default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+  - legacy `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` values may point to `../ml/nlp-workbench/outputs/` for standalone `ai_service` compatibility
   - `AUTO_CREATE_SCHEMA` is acceptable for local dev/test; use Alembic for controlled schema changes
   - `SEED_ADMIN_ENABLED` defaults to `false`; enabling it requires explicit companion credentials
 - State/data boundaries:

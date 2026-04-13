@@ -8,18 +8,20 @@ import { AppCard } from '../../components/ui/AppCard';
 import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { RacketPassportCard } from '../../components/rackets/RacketPassportCard';
-import { useCurrentUser } from '../../store/appStore';
-import { getRacketsForPlayer, getStringById } from '../../services/mockAppService';
+import { useCurrentUser, useRackets, useStrings } from '../../store/appStore';
+import { getStringById } from '../../services/mockAppService';
 
 export default function RacketPassportListScreen() {
   const router = useRouter();
   const user = useCurrentUser();
+  const rackets = useRackets();
+  const strings = useStrings();
 
   if (!user || user.role !== 'player') {
     return null;
   }
 
-  const rackets = getRacketsForPlayer(user.id);
+  const playerRackets = rackets.filter((item) => item.playerId === user.id);
 
   return (
     <AppScreen
@@ -29,8 +31,17 @@ export default function RacketPassportListScreen() {
     >
       <AppSection eyebrow="Saved rackets" title="Your current lineup">
         <View className="gap-4">
-          {rackets.map((racket) => {
-            const currentString = getStringById(racket.currentStringId);
+          {playerRackets.length === 0 ? (
+            <AppCard variant="subtle" padding="md">
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                Your saved rackets will appear here after your first completed booking.
+              </HeroText>
+            </AppCard>
+          ) : null}
+          {playerRackets.map((racket) => {
+            const currentString =
+              strings.find((item) => item.id === racket.currentStringId) ??
+              getStringById(racket.currentStringId);
             return (
               <RacketPassportCard
                 key={racket.id}

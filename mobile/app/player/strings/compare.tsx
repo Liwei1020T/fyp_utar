@@ -8,9 +8,9 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { useAppStore, useLiveRecommendationResults } from '../../../store/appStore';
-import { getStringById } from '../../../services/mockAppService';
+import { useAppStore, useLiveRecommendationResults, useStrings } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
+import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { AppCompareRadarChart } from '../../../components/ui/AppCompareRadarChart';
 import type { StringItem } from '../../../types/domain';
 
@@ -19,9 +19,10 @@ export default function CompareStringsScreen() {
   const compareSelection = useAppStore((state) => state.compareSelection);
   const clearCompareSelection = useAppStore((state) => state.clearCompareSelection);
   const liveResults = useLiveRecommendationResults();
+  const allStrings = useStrings();
 
   const strings: StringItem[] = compareSelection
-    .map((id) => getStringById(id))
+    .map((id) => allStrings.find((item) => item.id === id))
     .filter((item): item is StringItem => Boolean(item));
 
   if (strings.length < 2) {
@@ -55,6 +56,11 @@ export default function CompareStringsScreen() {
   // Determine if one is clearly a "best match" (higher score)
   const isABest = scoreA !== null && scoreB !== null && scoreA >= scoreB;
 
+  const resolvePriceLabel = (item: StringItem) => {
+    const label = getInventoryPriceLabel(item);
+    return label.hasPrice ? formatCurrency(item.price) : label.label;
+  };
+
   const SummaryCard = ({ item, score, isBest, label }: { item: StringItem, score: number | null, isBest: boolean, label: string }) => (
     <AppCard 
       variant={isBest ? 'highlighted' : 'elevated'} 
@@ -64,10 +70,14 @@ export default function CompareStringsScreen() {
       <View className="flex-row items-center gap-3">
         {/* Left: Thumbnail */}
         <View className="h-14 w-14 rounded-lg bg-slate-50 items-center justify-center overflow-hidden border border-slate-100">
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1617083277661-8488e0867018?w=100&h=100&fit=crop' }} 
-            className="h-full w-full opacity-60"
-          />
+          {item.imageUrl ? (
+            <Image
+              source={{ uri: item.imageUrl }}
+              className="h-full w-full"
+            />
+          ) : (
+            <View className="h-full w-full bg-slate-100" />
+          )}
         </View>
 
         {/* Center: Info */}
@@ -202,7 +212,7 @@ export default function CompareStringsScreen() {
               { label: 'Gauge', valA: stringA.gauge, valB: stringB.gauge },
               { label: 'Material', valA: stringA.material, valB: stringB.material },
               { label: 'Rec. Tension', valA: `${stringA.recommendedTension[0]}–${stringA.recommendedTension[1]} lbs`, valB: `${stringB.recommendedTension[0]}–${stringB.recommendedTension[1]} lbs` },
-              { label: 'Price', valA: stringA.price > 0 ? formatCurrency(stringA.price) : 'Price at shop', valB: stringB.price > 0 ? formatCurrency(stringB.price) : 'Price at shop' },
+              { label: 'Price', valA: resolvePriceLabel(stringA), valB: resolvePriceLabel(stringB) },
             ].map((spec) => (
               <View key={spec.label}>
                 <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-center mb-2">{spec.label}</HeroText>
