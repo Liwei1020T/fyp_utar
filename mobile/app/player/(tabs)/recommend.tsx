@@ -19,6 +19,7 @@ import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   mapBackendStringToStringItem,
   mapRecommendationResponse,
+  deriveAdvancedPreferences,
 } from '../../../services/backendMappers';
 
 const priorityLabels = [
@@ -121,21 +122,25 @@ export default function RecommendationInputScreen() {
       .join(', ');
   }, [priorities]);
   const advancedPreferences = useMemo(
-    () => [
-      {
-        label: 'Elasticity',
-        value: clampPreference((priorities.power + priorities.sound) / 2),
-      },
-      {
-        label: 'Tension retention',
-        value: clampPreference((priorities.control + priorities.durability) / 2),
-      },
-      {
-        label: 'String movement',
-        value: clampPreference((priorities.control + priorities.comfort) / 2),
-      },
-    ],
-    [priorities],
+    () => {
+      const savedAdvanced =
+        user.advancedPreferences ?? deriveAdvancedPreferences(priorities);
+      return [
+        {
+          label: 'Elasticity',
+          value: clampPreference(savedAdvanced.elasticity),
+        },
+        {
+          label: 'Tension retention',
+          value: clampPreference(savedAdvanced.tensionRetention),
+        },
+        {
+          label: 'String movement',
+          value: clampPreference(savedAdvanced.stringMovement),
+        },
+      ];
+    },
+    [priorities, user.advancedPreferences],
   );
 
   return (
@@ -270,7 +275,7 @@ export default function RecommendationInputScreen() {
               Advanced preferences
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              These compact derived inputs are also sent to the FYP1 scorer, so
+              These editable inputs are also sent to the FYP1 scorer, so
               elasticity, tension retention, and string movement are not ignored.
             </HeroText>
             <View className="mt-4 flex-row flex-wrap gap-2">
@@ -314,7 +319,7 @@ export default function RecommendationInputScreen() {
         />
         <Pressable className="mt-4 items-center" onPress={() => router.push('/player/profile/edit')}>
           <HeroText className="text-xs font-bold text-primary-700 uppercase tracking-widest">
-            Edit saved player profile
+            Edit profile and advanced preferences
           </HeroText>
         </Pressable>
       </View>

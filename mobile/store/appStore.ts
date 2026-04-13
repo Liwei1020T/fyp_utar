@@ -380,6 +380,11 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         comfort: 7,
         sound: 5,
       },
+      advancedPreferences: {
+        elasticity: 6,
+        tensionRetention: 6,
+        stringMovement: 7,
+      },
       homeVenue: 'Klang Valley',
       preferredAdminId: 'admin-001',
       recentGoal: 'Dial in a setup that feels balanced and confidence-building.',

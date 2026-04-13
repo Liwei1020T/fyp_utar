@@ -6,6 +6,10 @@ export type PlayFrequency = 'Social' | 'Weekly' | 'Tournament';
 export type BudgetRange = 'Below RM30' | 'RM30–RM50' | 'RM50+';
 export type PreferredFeel = 'Soft' | 'Balanced' | 'Crisp' | 'Hard';
 export type PriorityKey = 'power' | 'control' | 'durability' | 'comfort' | 'sound';
+export type AdvancedPreferenceKey =
+  | 'elasticity'
+  | 'tensionRetention'
+  | 'stringMovement';
 export type StringCategory = 'repulsion' | 'balanced' | 'control' | 'durable';
 export type InventoryPriceStatus = 'priced' | 'pending' | 'quoted_at_shop';
 
@@ -27,6 +31,7 @@ export interface PlayerProfile extends UserIdentity {
   preferredFeel: PreferredFeel;
   preferredTension: number;
   priorities: Record<PriorityKey, number>;
+  advancedPreferences: Record<AdvancedPreferenceKey, number>;
   homeVenue: string;
   preferredAdminId: string;
   recentGoal: string;

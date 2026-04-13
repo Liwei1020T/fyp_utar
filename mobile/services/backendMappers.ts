@@ -85,9 +85,24 @@ function mapBackendPreference(value: number | null | undefined, fallback = 6) {
   return Math.max(1, Math.min(10, Math.round(value)));
 }
 
-function derivedElasticityPreference(
+export function deriveAdvancedPreferences(
   priorities: PlayerProfile['priorities'],
+): PlayerProfile['advancedPreferences'] {
+  return {
+    elasticity: derivedElasticityPreference(priorities),
+    tensionRetention: derivedTensionRetentionPreference(priorities),
+    stringMovement: derivedStringMovementPreference(priorities),
+  };
+}
+
+function advancedPreferencesForPayload(
+  player: Pick<PlayerProfile, 'priorities'> &
+    Partial<Pick<PlayerProfile, 'advancedPreferences'>>,
 ) {
+  return player.advancedPreferences ?? deriveAdvancedPreferences(player.priorities);
+}
+
+function derivedElasticityPreference(priorities: PlayerProfile['priorities']) {
   return toTenPreference(Math.round((priorities.power + priorities.sound) / 2));
 }
 
@@ -256,6 +271,11 @@ export function mapBackendUserToPlayerProfile(
       durability: mapBackendPreference(profile?.pref_durability),
       comfort: mapBackendPreference(profile?.pref_comfort),
       sound: mapBackendPreference(profile?.pref_sound),
+    },
+    advancedPreferences: {
+      elasticity: mapBackendPreference(profile?.pref_elasticity),
+      tensionRetention: mapBackendPreference(profile?.pref_tension_retention),
+      stringMovement: mapBackendPreference(profile?.pref_string_movement),
     },
     homeVenue: 'Klang Valley',
     preferredAdminId: 'admin-001',
@@ -775,11 +795,17 @@ export function mapBackendBookingToBooking(
 export function buildBackendProfilePayload(
   player: Pick<
     PlayerProfile,
-    'skillLevel' | 'playingStyle' | 'playFrequency' | 'preferredTension' | 'priorities'
+    | 'skillLevel'
+    | 'playingStyle'
+    | 'playFrequency'
+    | 'preferredTension'
+    | 'priorities'
     | 'budgetRange'
-  >,
+  > &
+    Partial<Pick<PlayerProfile, 'advancedPreferences'>>,
 ): BackendProfilePayload {
   const budget = mapBudgetRangeToBackend(player.budgetRange);
+  const advanced = advancedPreferencesForPayload(player);
 
   return {
     skill_level: mapFrontendSkillLevel(player.skillLevel),
@@ -793,10 +819,10 @@ export function buildBackendProfilePayload(
     pref_comfort: toTenPreference(player.priorities.comfort),
     pref_control: toTenPreference(player.priorities.control),
     pref_durability: toTenPreference(player.priorities.durability),
-    pref_elasticity: derivedElasticityPreference(player.priorities),
+    pref_elasticity: toTenPreference(advanced.elasticity),
     pref_sound: toTenPreference(player.priorities.sound),
-    pref_string_movement: derivedStringMovementPreference(player.priorities),
-    pref_tension_retention: derivedTensionRetentionPreference(player.priorities),
+    pref_string_movement: toTenPreference(advanced.stringMovement),
+    pref_tension_retention: toTenPreference(advanced.tensionRetention),
     pref_value_for_money: derivedValuePreference(player.priorities),
   };
 }
@@ -809,6 +835,7 @@ export function buildRecommendationPayload(input: {
   playFrequency: PlayFrequency;
   budgetRange?: BudgetRange;
   priorities: PlayerProfile['priorities'];
+  advancedPreferences?: PlayerProfile['advancedPreferences'];
   gameType?: string;
   budgetMin?: number;
   budgetMax?: number;
@@ -816,6 +843,7 @@ export function buildRecommendationPayload(input: {
   const budget = input.budgetRange
     ? mapBudgetRangeToBackend(input.budgetRange)
     : { budgetMin: 0, budgetMax: 999 };
+  const advanced = advancedPreferencesForPayload(input);
 
   return {
     user_id: input.userId,
@@ -834,10 +862,10 @@ export function buildRecommendationPayload(input: {
     pref_comfort: toTenPreference(input.priorities.comfort),
     pref_control: toTenPreference(input.priorities.control),
     pref_durability: toTenPreference(input.priorities.durability),
-    pref_elasticity: derivedElasticityPreference(input.priorities),
+    pref_elasticity: toTenPreference(advanced.elasticity),
     pref_sound: toTenPreference(input.priorities.sound),
-    pref_string_movement: derivedStringMovementPreference(input.priorities),
-    pref_tension_retention: derivedTensionRetentionPreference(input.priorities),
+    pref_string_movement: toTenPreference(advanced.stringMovement),
+    pref_tension_retention: toTenPreference(advanced.tensionRetention),
     pref_value_for_money: derivedValuePreference(input.priorities),
     top_n: 3,
   };

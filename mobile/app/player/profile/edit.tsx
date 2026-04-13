@@ -21,6 +21,7 @@ import { formatPlayFrequency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   buildBackendProfilePayload,
+  deriveAdvancedPreferences,
   mapBackendUserToPlayerProfile,
 } from '../../../services/backendMappers';
 
@@ -44,6 +45,24 @@ const priorityKeys = [
   { key: 'durability', label: 'Durability' },
   { key: 'comfort', label: 'Comfort' },
   { key: 'sound', label: 'Sound' },
+] as const;
+
+const advancedPreferenceKeys = [
+  {
+    key: 'elasticity',
+    label: 'Elasticity',
+    description: 'How much elastic rebound you want from the string bed.',
+  },
+  {
+    key: 'tensionRetention',
+    label: 'Tension retention',
+    description: 'How important it is that the string keeps its feel over time.',
+  },
+  {
+    key: 'stringMovement',
+    label: 'String movement',
+    description: 'How much you care about a stable string bed after rallies.',
+  },
 ] as const;
 
 const styleOptions = [
@@ -91,6 +110,9 @@ export default function ProfileEditScreen() {
   const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
 
   const [priorities, setPriorities] = useState(user.priorities);
+  const [advancedPreferences, setAdvancedPreferences] = useState(
+    user.advancedPreferences ?? deriveAdvancedPreferences(user.priorities),
+  );
 
   const {
     control,
@@ -125,6 +147,7 @@ export default function ProfileEditScreen() {
             budgetRange: data.budgetRange,
             preferredTension: data.preferredTension,
             priorities,
+            advancedPreferences,
           }),
         );
         updatePlayerProfile(
@@ -154,6 +177,7 @@ export default function ProfileEditScreen() {
     updatePlayerProfile(user.id, {
       ...data,
       priorities,
+      advancedPreferences,
     });
     router.replace('/player/profile');
   };
@@ -381,6 +405,47 @@ export default function ProfileEditScreen() {
                 <HeroSlider
                   value={priorities[item.key]}
                   onValueChange={(nextValue) => setPriorities((current) => ({ ...current, [item.key]: nextValue }))}
+                  minimumValue={1}
+                  maximumValue={10}
+                  step={1}
+                />
+              </View>
+            </AppCard>
+          ))}
+        </View>
+      </AppSection>
+
+      <AppSection
+        eyebrow="ADVANCED"
+        title="Advanced recommendation preferences"
+        subtitle="Optional fine-tuning for the FYP1 scorer's extra content features."
+      >
+        <View className="mt-2 gap-4">
+          {advancedPreferenceKeys.map((item) => (
+            <AppCard key={item.key} variant="elevated" padding="md">
+              <View className="flex-row items-center justify-between gap-3">
+                <View className="flex-1">
+                  <HeroText className="text-base font-semibold text-neutral-900">
+                    {item.label}
+                  </HeroText>
+                  <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
+                    {item.description}
+                  </HeroText>
+                </View>
+                <AppChip
+                  label={`${advancedPreferences[item.key]}/10`}
+                  variant="secondary"
+                />
+              </View>
+              <View className="mt-5">
+                <HeroSlider
+                  value={advancedPreferences[item.key]}
+                  onValueChange={(nextValue) =>
+                    setAdvancedPreferences((current) => ({
+                      ...current,
+                      [item.key]: nextValue,
+                    }))
+                  }
                   minimumValue={1}
                   maximumValue={10}
                   step={1}
