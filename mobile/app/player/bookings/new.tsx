@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CalendarClock, Minus, Plus, Store, Upload } from 'lucide-react-native';
+import { CalendarClock, ChevronDown, Minus, Plus, Store, Upload } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -78,9 +78,15 @@ export default function NewBookingScreen() {
   const requestedString = requestedStringId
     ? strings.find((item) => item.id === requestedStringId) ?? getStringById(requestedStringId)
     : undefined;
-  const selectedString = requestedStringId
-    ? requestedString
-    : strings[0] ?? getStringById('string-001');
+  const fallbackString = strings[0] ?? getStringById('string-001');
+  const [selectedStringId, setSelectedStringId] = useState(
+    requestedString?.id ?? fallbackString?.id ?? ''
+  );
+  const [isStringPickerOpen, setIsStringPickerOpen] = useState(!requestedStringId);
+  const selectedString =
+    strings.find((item) => item.id === selectedStringId) ??
+    requestedString ??
+    fallbackString;
   const adminId = preferredAdminId ?? user.preferredAdminId;
   const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
@@ -129,6 +135,7 @@ export default function NewBookingScreen() {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
+    setValue,
   } = useForm<BookingFormInput, unknown, BookingForm>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
@@ -139,6 +146,26 @@ export default function NewBookingScreen() {
     },
   });
   const watchedTension = useWatch({ control, name: 'requestedTension' });
+
+  useEffect(() => {
+    if (!selectedString) {
+      return;
+    }
+
+    setValue('requestedTension', selectedString.recommendedTension[0]);
+  }, [selectedString?.id, selectedString, setValue]);
+
+  useEffect(() => {
+    if (requestedString?.id) {
+      setSelectedStringId(requestedString.id);
+      setIsStringPickerOpen(false);
+      return;
+    }
+
+    if (!selectedStringId && fallbackString?.id) {
+      setSelectedStringId(fallbackString.id);
+    }
+  }, [fallbackString?.id, requestedString?.id, selectedStringId]);
 
   useEffect(() => {
     if (!token) {
@@ -322,19 +349,82 @@ export default function NewBookingScreen() {
       onBackPress={() => router.back()}
     >
       <AppCard variant="highlighted" className="rounded-[28px]" padding="md">
-        <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
-          Selected string
-        </HeroText>
-        <HeroText className="mt-1.5 text-[22px] font-bold tracking-tight text-neutral-950">
-          {selectedString.brand} {selectedString.model}
-        </HeroText>
-        <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-          Recommended at {recommendedMin}–{recommendedMax} lbs
-        </HeroText>
+        <View className="flex-row items-start justify-between gap-3">
+          <View className="min-w-0 flex-1">
+            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
+              Selected string
+            </HeroText>
+            <HeroText className="mt-1.5 text-[22px] font-bold tracking-tight text-neutral-950">
+              {selectedString.brand} {selectedString.model}
+            </HeroText>
+            <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+              Recommended at {recommendedMin}–{recommendedMax} lbs
+            </HeroText>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Choose string"
+            onPress={() => setIsStringPickerOpen((current) => !current)}
+            className="h-11 w-11 items-center justify-center rounded-[16px] border border-primary-100 bg-white"
+          >
+            <ChevronDown
+              size={18}
+              color="#2563EB"
+              style={{ transform: [{ rotate: isStringPickerOpen ? '180deg' : '0deg' }] }}
+            />
+          </Pressable>
+        </View>
         <View className="mt-3 flex-row flex-wrap gap-2">
           <AppChip label={selectedString.gauge} variant="neutral" />
           <AppChip label={selectedCategoryLabel} variant="primary" />
         </View>
+
+        {isStringPickerOpen ? (
+          <View className="mt-4 rounded-[22px] border border-[#DCE6F7] bg-white px-3 py-3">
+            <HeroText className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+              Choose from catalog
+            </HeroText>
+            <View className="gap-2">
+              {strings.map((item) => {
+                const isSelected = item.id === selectedString.id;
+
+                return (
+                  <Pressable
+                    key={item.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    onPress={() => {
+                      setSelectedStringId(item.id);
+                      setIsStringPickerOpen(false);
+                    }}
+                    className={`rounded-[18px] border px-3 py-3 ${
+                      isSelected
+                        ? 'border-primary-200 bg-primary-50'
+                        : 'border-[#E8EEF8] bg-white'
+                    }`}
+                  >
+                    <View className="flex-row items-start justify-between gap-3">
+                      <View className="min-w-0 flex-1">
+                        <HeroText
+                          className={`text-[14px] font-semibold ${
+                            isSelected ? 'text-primary-700' : 'text-slate-900'
+                          }`}
+                          numberOfLines={1}
+                        >
+                          {item.brand} {item.model}
+                        </HeroText>
+                        <HeroText className="mt-1 text-[12px] text-slate-500" numberOfLines={1}>
+                          {item.gauge} · {item.category}
+                        </HeroText>
+                      </View>
+                      {isSelected ? <AppChip label="Selected" variant="primary" /> : null}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
       </AppCard>
 
       <AppSection eyebrow="Store" title="Service desk" variant="compact">
