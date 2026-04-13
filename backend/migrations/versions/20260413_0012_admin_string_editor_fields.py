@@ -71,7 +71,7 @@ def upgrade() -> None:
                     ELSE 'fixed_price'
                 END,
                 availability_status = CASE
-                    WHEN is_active = 0 OR available_stock <= 0 THEN 'out_of_stock'
+                    WHEN is_active IS FALSE OR available_stock <= 0 THEN 'out_of_stock'
                     WHEN available_stock <= 5 THEN 'low_stock'
                     ELSE 'in_stock'
                 END
