@@ -21,6 +21,7 @@ import {
   mapBackendStringToStringItem,
   mapRecommendationResponse,
 } from '../../../services/backendMappers';
+import { formatCurrency } from '../../../lib/formatters';
 
 function formatScore(value?: number) {
   if (value == null) {
@@ -82,10 +83,23 @@ export default function RecommendationResultsScreen() {
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
   const compareSelection = useAppStore((state) => state.compareSelection);
   const [cacheError, setCacheError] = useState<string | null>(null);
-  const [isLoadingCache, setIsLoadingCache] = useState(false);
+  const [isLoadingCache, setIsLoadingCache] = useState(Boolean(token));
+  const [hasLoadedCache, setHasLoadedCache] = useState(false);
 
   useEffect(() => {
-    if (!token || liveResults.length > 0 || isLoadingCache || cacheError) {
+    if (!token) {
+      setIsLoadingCache(false);
+      setHasLoadedCache(false);
+      return;
+    }
+
+    if (liveResults.length > 0) {
+      setIsLoadingCache(false);
+      setHasLoadedCache(true);
+      return;
+    }
+
+    if (isLoadingCache || cacheError) {
       return;
     }
 
@@ -115,6 +129,7 @@ export default function RecommendationResultsScreen() {
         setLiveRecommendationResults(
           mapRecommendationResponse(response, availableStrings),
         );
+        setHasLoadedCache(true);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -124,6 +139,7 @@ export default function RecommendationResultsScreen() {
             ? error.message
             : 'Unable to load cached recommendations.',
         );
+        setHasLoadedCache(true);
       } finally {
         if (isMounted) {
           setIsLoadingCache(false);
@@ -153,6 +169,7 @@ export default function RecommendationResultsScreen() {
   const isLive = Boolean(token);
   const algorithmVersion = liveResults[0]?.algorithmVersion;
   const hasResults = liveResults.length > 0;
+  const isWaitingForInitialResults = isLive && !hasResults && (!hasLoadedCache || isLoadingCache);
 
   return (
     <View className="flex-1">
@@ -175,10 +192,19 @@ export default function RecommendationResultsScreen() {
               onPress={() => router.replace('/auth/login?role=player')}
             />
           </AppCard>
+        ) : isWaitingForInitialResults ? (
+          <AppCard variant="subtle" className="mt-6" padding="lg">
+            <HeroText className="text-lg font-bold text-neutral-900">
+              Loading backend recommendations...
+            </HeroText>
+            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
+              Pulling your saved shortlist and recommendation evidence from the database.
+            </HeroText>
+          </AppCard>
         ) : !hasResults ? (
           <AppCard variant="subtle" className="mt-6" padding="lg">
             <HeroText className="text-lg font-bold text-neutral-900">
-              {isLoadingCache ? 'Loading cached recommendations...' : 'No backend results yet.'}
+              No backend results yet.
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
               {cacheError ?? 'Generate a shortlist from the recommendation lab to see ranked results here.'}
@@ -251,13 +277,20 @@ export default function RecommendationResultsScreen() {
                           {item.matchScore}% match
                         </HeroText>
                       </View>
-                      <View className="items-end rounded-2xl bg-white/80 px-3 py-2">
+                      <View className="items-end gap-2">
                         <HeroText className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                           Rank
                         </HeroText>
-                        <HeroText className="text-lg font-black text-primary-700">
-                          #{index + 1}
-                        </HeroText>
+                        <View className="rounded-2xl bg-white/80 px-3 py-2">
+                          <HeroText className="text-lg font-black text-primary-700">
+                            #{index + 1}
+                          </HeroText>
+                        </View>
+                        <View className="rounded-full bg-neutral-100 px-3 py-1.5">
+                          <HeroText className="text-[11px] font-semibold text-neutral-700">
+                            {item.price != null ? formatCurrency(item.price) : 'Price pending'}
+                          </HeroText>
+                        </View>
                       </View>
                     </View>
 

@@ -17,7 +17,8 @@ export default function AdminAnalyticsScreen() {
   const strings = useStrings();
   const [analytics, setAnalytics] = useState<BackendAnalyticsSummary | null>(null);
   const [popularStrings, setPopularStrings] = useState<BackendPopularString[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(Boolean(token));
+  const [hasLoadedAnalytics, setHasLoadedAnalytics] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';
 
@@ -25,6 +26,8 @@ export default function AdminAnalyticsScreen() {
     if (!isAdmin) {
       setAnalytics(null);
       setPopularStrings([]);
+      setIsLoading(false);
+      setHasLoadedAnalytics(false);
       setError(null);
       return;
     }
@@ -32,6 +35,8 @@ export default function AdminAnalyticsScreen() {
     if (!token) {
       setAnalytics(null);
       setPopularStrings([]);
+      setIsLoading(false);
+      setHasLoadedAnalytics(false);
       setError('Backend login is required to view live analytics.');
       return;
     }
@@ -51,6 +56,7 @@ export default function AdminAnalyticsScreen() {
         }
         setAnalytics(summary);
         setPopularStrings(popular);
+        setHasLoadedAnalytics(true);
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -58,6 +64,7 @@ export default function AdminAnalyticsScreen() {
               ? loadError.message
               : 'Failed to load analytics.',
           );
+          setHasLoadedAnalytics(true);
         }
       } finally {
         if (!cancelled) {
@@ -91,6 +98,26 @@ export default function AdminAnalyticsScreen() {
 
   if (!isAdmin) {
     return null;
+  }
+
+  if (token && !hasLoadedAnalytics && isLoading) {
+    return (
+      <AppScreen
+        tone="admin"
+        headerVariant="primary"
+        title="Admin analytics"
+        subtitle="Operations trends, busy slots, popular strings, and payment workload."
+      >
+        <AppCard variant="subtle" className="mt-6" padding="lg">
+          <HeroText className="text-lg font-bold text-neutral-900">
+            Loading live analytics...
+          </HeroText>
+          <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
+            Pulling bookings, revenue, and popular-string activity from the backend.
+          </HeroText>
+        </AppCard>
+      </AppScreen>
+    );
   }
 
   return (
