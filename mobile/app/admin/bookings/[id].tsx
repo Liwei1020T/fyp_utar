@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -51,6 +51,17 @@ const WORKFLOW_STATUSES = [
   'completed',
 ] as const;
 
+const WORKFLOW_TRANSITIONS: Partial<Record<BookingStatus, BookingStatus[]>> = {
+  pending: ['awaiting_dropoff'],
+  pending_payment: ['awaiting_dropoff'],
+  confirmed: ['awaiting_dropoff'],
+  awaiting_dropoff: ['in_progress'],
+  in_progress: ['ready_for_collection'],
+  ready_for_collection: ['completed'],
+  completed: [],
+  cancelled: [],
+};
+
 const PHOTO_TYPE_OPTIONS: {
   value: BackendBookingPhotoType;
   label: string;
@@ -88,6 +99,36 @@ function getWorkflowActionLabel(status: BookingStatus) {
     default:
       return 'Update booking workflow';
   }
+}
+
+function getAllowedNextStatuses(status: BookingStatus) {
+  return WORKFLOW_TRANSITIONS[status] ?? [];
+}
+
+function getWorkflowOptionHint({
+  isBookingCompleted,
+  isCurrent,
+  isSelectable,
+  isSelected,
+}: {
+  isBookingCompleted: boolean;
+  isCurrent: boolean;
+  isSelectable: boolean;
+  isSelected: boolean;
+}) {
+  if (isBookingCompleted) {
+    return 'Workflow locked';
+  }
+  if (isCurrent) {
+    return 'Current workflow state';
+  }
+  if (isSelected) {
+    return 'Selected next state';
+  }
+  if (isSelectable) {
+    return 'Tap to select';
+  }
+  return 'Complete the previous step first';
 }
 
 function getStatusHeroCopy(status: BookingStatus) {
@@ -303,13 +344,22 @@ export default function AdminBookingDetailScreen() {
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const priceState = getPriceStateLabel(booking);
   const workflowCTA = getWorkflowActionLabel(status);
+  const allowedNextStatuses = getAllowedNextStatuses(booking.status);
   const isWorkflowUnchanged = status === booking.status;
   const isBookingCompleted = booking.status === 'completed';
+  const isStatusChangeAllowed = !isWorkflowUnchanged && allowedNextStatuses.includes(status);
 
   const applyStatusChange = async () => {
     setError(null);
 
     if (status === booking.status) {
+      return;
+    }
+
+    if (!allowedNextStatuses.includes(status)) {
+      setError(
+        `Move this booking to ${formatBookingStatus(allowedNextStatuses[0] ?? booking.status)} before selecting ${formatBookingStatus(status)}.`,
+      );
       return;
     }
 
@@ -354,14 +404,29 @@ export default function AdminBookingDetailScreen() {
       return;
     }
 
-    Alert.alert(
-      'Confirm status update',
-      `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: () => void applyStatusChange() },
-      ],
-    );
+    if (!isStatusChangeAllowed) {
+      const nextStatus = allowedNextStatuses[0];
+      setError(
+        nextStatus
+          ? `Next valid workflow step is ${formatBookingStatus(nextStatus)}.`
+          : 'This workflow state cannot be changed.',
+      );
+      return;
+    }
+
+    const message = `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)}?`;
+
+    if (Platform.OS === 'web') {
+      if (typeof globalThis.confirm !== 'function' || globalThis.confirm(message)) {
+        void applyStatusChange();
+      }
+      return;
+    }
+
+    Alert.alert('Confirm status update', message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Confirm', onPress: () => void applyStatusChange() },
+    ]);
   };
 
   const pickUpdatePhoto = async () => {
@@ -497,14 +562,15 @@ export default function AdminBookingDetailScreen() {
             {WORKFLOW_STATUSES.map((item) => {
               const isCurrent = booking.status === item;
               const isSelected = status === item;
+              const isSelectable = allowedNextStatuses.includes(item);
 
               return (
                 <AppCard
                   key={item}
                   variant={isCurrent || isSelected ? 'highlighted' : 'subtle'}
                   padding="sm"
-                  onPress={isBookingCompleted ? undefined : () => setStatus(item)}
-                  className="min-w-[148px] flex-1"
+                  onPress={isSelectable ? () => setStatus(item) : undefined}
+                  className={`min-w-[148px] flex-1 ${!isCurrent && !isSelectable ? 'opacity-60' : ''}`}
                 >
                   <View className="gap-1.5">
                     <View className="flex-row items-center justify-between gap-2">
@@ -516,13 +582,12 @@ export default function AdminBookingDetailScreen() {
                       {isCurrent ? <CheckCircle2 size={15} color="#2F64B6" /> : null}
                     </View>
                     <HeroText className="text-[11px] font-medium leading-4 text-neutral-500">
-                      {isBookingCompleted
-                        ? 'Workflow locked'
-                        : isCurrent
-                          ? 'Current workflow state'
-                          : isSelected
-                            ? 'Selected next state'
-                            : 'Tap to select'}
+                      {getWorkflowOptionHint({
+                        isBookingCompleted,
+                        isCurrent,
+                        isSelectable,
+                        isSelected,
+                      })}
                     </HeroText>
                   </View>
                 </AppCard>
@@ -543,12 +608,18 @@ export default function AdminBookingDetailScreen() {
           ) : null}
 
           <AppButton
-            label={isWorkflowUnchanged ? `Current status: ${formatBookingStatus(booking.status)}` : workflowCTA}
+            label={
+              isWorkflowUnchanged
+                ? `Current status: ${formatBookingStatus(booking.status)}`
+                : isStatusChangeAllowed
+                  ? workflowCTA
+                  : 'Select the next workflow step'
+            }
             size="lg"
             className="mt-1"
             onPress={saveStatus}
             isLoading={isSaving}
-            isDisabled={isWorkflowUnchanged || isBookingCompleted}
+            isDisabled={isWorkflowUnchanged || isBookingCompleted || !isStatusChangeAllowed}
           />
         </View>
       </AppSection>
