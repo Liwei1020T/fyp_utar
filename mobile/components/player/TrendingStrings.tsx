@@ -2,7 +2,6 @@ import React from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HeroText } from '../ui/heroui';
-import { MOCK_STRINGS } from '../../mocks/strings';
 import { useAppStore, useCurrentUser, useStrings } from '../../store/appStore';
 
 const categoryLabels = {
@@ -29,11 +28,22 @@ export function TrendingStrings() {
   const configuredTrending = configuredTrendingIds
     .map((id) => strings.find((item) => item.id === id))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
-  const fallbackPool = strings.length > 0 ? strings : MOCK_STRINGS;
-  const fallbackTrending = fallbackPool
-    .filter((item) => !configuredTrendingIds.includes(item.id))
-    .slice(0, Math.max(0, 5 - configuredTrending.length));
-  const trending = [...configuredTrending, ...fallbackTrending].slice(0, 5);
+  const trending = configuredTrending.slice(0, 5);
+
+  if (trending.length === 0) {
+    return (
+      <View className="mt-1 px-4">
+        <View className="rounded-[20px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
+          <HeroText className="text-[14px] font-semibold text-slate-900">
+            No trending strings yet
+          </HeroText>
+          <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
+            This section will show only the strings that the admin marks as shown on home.
+          </HeroText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="mt-1">

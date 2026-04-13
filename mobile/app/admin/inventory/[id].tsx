@@ -317,6 +317,11 @@ function createShortDescription(description: string) {
     : `${preferred.slice(0, 157).trimEnd()}...`;
 }
 
+function resolveAvailabilityStatus(normalized: NormalizedFormState) {
+  const stockQty = Math.max(0, normalized.stockLevel ?? 0);
+  return stockQty === 0 ? 'out_of_stock' : normalized.availabilityStatus;
+}
+
 function buildLocalPatch(
   stringItem: StringItem,
   normalized: NormalizedFormState,
@@ -331,10 +336,7 @@ function buildLocalPatch(
     inventoryPrice,
     mapPricingModeToPriceStatus(normalized.pricingMode),
   );
-  const availabilityStatus =
-    stockQty === 0
-      ? 'out_of_stock'
-      : normalized.availabilityStatus ?? deriveAvailabilityStatus(stockQty);
+  const availabilityStatus = resolveAvailabilityStatus(normalized) ?? deriveAvailabilityStatus(stockQty);
   const performanceScores = sanitizePerformanceScores(
     {
       power: normalized.powerScore ?? stringItem.catalog.performanceScores.power,
@@ -442,7 +444,7 @@ function buildInventoryPayload(normalized: NormalizedFormState) {
     price_rm: normalized.pricingMode === 'fixed_price' ? normalized.priceRm : null,
     pricing_mode: normalized.pricingMode,
     stock_level: normalized.stockLevel ?? 0,
-    availability_status: normalized.availabilityStatus,
+    availability_status: resolveAvailabilityStatus(normalized),
     admin_note: normalized.shopNote || null,
   };
 }
