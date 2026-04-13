@@ -139,6 +139,44 @@ function getNextStepLabel(status: BookingStatus) {
   }
 }
 
+function getHeroStatusChipClasses(status: BookingStatus) {
+  switch (status) {
+    case 'completed':
+      return {
+        className: 'self-start border-[#94A3B8]/45 bg-[#E2E8F0]/18',
+        textClassName: 'text-white font-semibold text-xs',
+      };
+    case 'ready_for_collection':
+      return {
+        className: 'self-start border-emerald-200/35 bg-emerald-300/18',
+        textClassName: 'text-white font-semibold text-xs',
+      };
+    case 'in_progress':
+    case 'confirmed':
+      return {
+        className: 'self-start border-primary-200/35 bg-primary-300/18',
+        textClassName: 'text-white font-semibold text-xs',
+      };
+    case 'awaiting_dropoff':
+    case 'pending':
+    case 'pending_payment':
+      return {
+        className: 'self-start border-amber-200/35 bg-amber-300/18',
+        textClassName: 'text-white font-semibold text-xs',
+      };
+    case 'cancelled':
+      return {
+        className: 'self-start border-red-200/35 bg-red-300/18',
+        textClassName: 'text-white font-semibold text-xs',
+      };
+    default:
+      return {
+        className: 'self-start border-white/20 bg-white/15',
+        textClassName: 'text-white font-semibold text-xs',
+      };
+  }
+}
+
 function getQuoteStatus(booking: Booking) {
   if (booking.totalAmount > 0 || booking.amountPaid > 0) {
     return 'Quote confirmed';
@@ -280,6 +318,7 @@ export default function PlayerBookingDetailScreen() {
   const vendorLabel = admin?.businessName ?? 'Assigned shop';
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const latestUpdate = getLatestUpdate(booking);
+  const heroStatusChip = getHeroStatusChipClasses(booking.status);
 
   return (
     <AppScreen
@@ -313,7 +352,8 @@ export default function PlayerBookingDetailScreen() {
               <AppChip
                 label={formatBookingStatus(booking.status)}
                 variant={getBookingStatusVariant(booking.status)}
-                className="self-start bg-white/15 border-white/20"
+                className={heroStatusChip.className}
+                textClassName={heroStatusChip.textClassName}
               />
             </View>
 
