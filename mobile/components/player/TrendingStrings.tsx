@@ -2,7 +2,12 @@ import React from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HeroText } from '../ui/heroui';
-import { useAppStore, useCurrentUser, useStrings } from '../../store/appStore';
+import {
+  useAppStore,
+  useCurrentUser,
+  usePreferredAdminId,
+  useStrings,
+} from '../../store/appStore';
 
 const categoryLabels = {
   repulsion: 'Repulsion',
@@ -15,20 +20,38 @@ export function TrendingStrings() {
   const router = useRouter();
   const user = useCurrentUser();
   const strings = useStrings();
+  const preferredAdminId = usePreferredAdminId();
+  const hasHydrated = useAppStore((state) => state.hasHydrated);
+  const sessionSource = useAppStore((state) => state.sessionSource);
   const adminSettings = useAppStore((state) => state.adminSettings);
-  const targetAdminId =
-    user?.role === 'player'
-      ? user.preferredAdminId
-      : user?.role === 'admin'
-        ? user.id
-        : null;
-  const configuredTrendingIds = targetAdminId
-    ? adminSettings.find((item) => item.adminId === targetAdminId)?.trendingStringIds ?? []
+  const configuredTrendingIds = preferredAdminId
+    ? adminSettings.find((item) => item.adminId === preferredAdminId)?.trendingStringIds ?? []
     : [];
   const configuredTrending = configuredTrendingIds
     .map((id) => strings.find((item) => item.id === id))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
   const trending = configuredTrending.slice(0, 5);
+  const isHydratingConfiguredTrending =
+    hasHydrated &&
+    sessionSource === 'backend' &&
+    user?.role === 'player' &&
+    configuredTrendingIds.length > 0 &&
+    strings.length === 0;
+
+  if (isHydratingConfiguredTrending) {
+    return (
+      <View className="mt-1 px-4">
+        <View className="rounded-[20px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
+          <HeroText className="text-[14px] font-semibold text-slate-900">
+            Loading featured strings...
+          </HeroText>
+          <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
+            Syncing the latest admin-picked strings for your home feed.
+          </HeroText>
+        </View>
+      </View>
+    );
+  }
 
   if (trending.length === 0) {
     return (
