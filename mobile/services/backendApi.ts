@@ -491,6 +491,11 @@ export const backendApi = {
       token,
     });
   },
+  fetchStoreSettings(token: string) {
+    return requestJson<BackendStoreSettings>('/store-settings', {
+      token,
+    });
+  },
   adminUpdateStoreSettings(
     token: string,
     payload: BackendStoreSettingsPayload,

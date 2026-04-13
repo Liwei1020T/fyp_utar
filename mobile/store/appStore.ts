@@ -1003,13 +1003,15 @@ export function usePreferredAdminId() {
     return user.id;
   }
 
+  if (sessionSource === 'backend') {
+    return adminSettings.find((item) => item.adminId === 'main')?.adminId
+      ?? adminSettings[0]?.adminId
+      ?? user.preferredAdminId;
+  }
+
   const matchingSetting = adminSettings.find((item) => item.adminId === user.preferredAdminId);
   if (matchingSetting) {
     return matchingSetting.adminId;
-  }
-
-  if (sessionSource === 'backend') {
-    return adminSettings[0]?.adminId ?? user.preferredAdminId;
   }
 
   return user.preferredAdminId;

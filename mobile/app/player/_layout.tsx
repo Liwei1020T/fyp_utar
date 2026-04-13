@@ -42,6 +42,7 @@ export default function PlayerLayout() {
   );
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
 
   useEffect(() => {
     if (!hasHydrated || sessionSource !== 'backend' || !token || user?.role !== 'player') {
@@ -52,11 +53,12 @@ export default function PlayerLayout() {
 
     const hydrate = async () => {
       try {
-        const [user, profile, stringsPage, bookingsPage] = await Promise.all([
+        const [user, profile, stringsPage, bookingsPage, storeSettings] = await Promise.all([
           backendApi.fetchCurrentUser(token),
           backendApi.fetchProfile(token).catch(() => null),
           backendApi.listStrings(token),
           backendApi.listBookings(token),
+          backendApi.fetchStoreSettings(token),
         ]);
 
         if (cancelled) {
@@ -77,6 +79,16 @@ export default function PlayerLayout() {
         });
         setLiveStrings(liveStrings);
         setLiveBookings(liveBookings);
+        updateAdminSettings('main', {
+          storeName: storeSettings.store_name,
+          storeContact: storeSettings.store_contact,
+          address: storeSettings.address,
+          supportText: storeSettings.support_text,
+          paymentNotes: storeSettings.payment_notes,
+          bookingNotes: storeSettings.booking_notes,
+          storePolicyText: storeSettings.store_policy_text,
+          trendingStringIds: storeSettings.trending_string_ids ?? [],
+        });
       } catch (error) {
         if (isBackendAuthError(error)) {
           logout();
@@ -99,6 +111,7 @@ export default function PlayerLayout() {
     setLiveBookings,
     setLiveStrings,
     token,
+    updateAdminSettings,
     user?.role,
   ]);
 

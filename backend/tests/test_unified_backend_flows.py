@@ -674,6 +674,13 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert update_settings_response.json()["store_name"] == "Apex String Lab Express"
     assert update_settings_response.json()["trending_string_ids"] == [featured_string_id]
 
+    public_settings_response = client.get(
+        "/api/store-settings",
+        headers=headers(customer_token),
+    )
+    assert public_settings_response.status_code == 200
+    assert public_settings_response.json()["trending_string_ids"] == [featured_string_id]
+
 
 def test_admin_check_in_and_service_queue_flow():
     customer_token = register_customer(phone_number="+60126661111")

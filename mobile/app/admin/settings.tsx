@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
-import { Alert, View } from 'react-native';
+import { Search } from 'lucide-react-native';
+import { Alert, Platform, View } from 'react-native';
 import { AppButton } from '../../components/ui/AppButton';
+import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { AppInput } from '../../components/ui/AppInput';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
@@ -24,9 +24,10 @@ export default function AdminSettingsScreen() {
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const strings = useStrings();
-  const settings = useAppStore((state) =>
-    state.adminSettings.find((item) => item.adminId === user?.id)
-  );
+  const settings = useAppStore((state) => {
+    const byUser = state.adminSettings.find((item) => item.adminId === user?.id);
+    return byUser ?? state.adminSettings.find((item) => item.adminId === 'main');
+  });
   const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
   const [storeName, setStoreName] = useState(settings?.storeName ?? '');
   const [storeContact, setStoreContact] = useState(settings?.storeContact ?? '');
@@ -38,7 +39,9 @@ export default function AdminSettingsScreen() {
   const [trendingStringIds, setTrendingStringIds] = useState<string[]>(
     settings?.trendingStringIds ?? []
   );
+  const [trendingSearch, setTrendingSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -56,17 +59,43 @@ export default function AdminSettingsScreen() {
   }, [settings]);
 
   const toggleTrendingString = (stringId: string) => {
+    setSaveSuccessMessage(null);
     setTrendingStringIds((current) => {
       if (current.includes(stringId)) {
         return current.filter((id) => id !== stringId);
       }
 
       if (current.length >= 5) {
-        return [...current.slice(1), stringId];
+        setError('Remove one selected string before adding another homepage feature.');
+        return current;
       }
 
+      setError(null);
       return [...current, stringId];
     });
+  };
+
+  const selectedTrendingStrings = trendingStringIds
+    .map((id) => strings.find((item) => item.id === id))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const normalizedTrendingSearch = trendingSearch.trim().toLowerCase();
+  const filteredTrendingStrings = strings.filter((item) => {
+    if (!normalizedTrendingSearch) {
+      return true;
+    }
+
+    return `${item.brand} ${item.model} ${item.mainTrait}`
+      .toLowerCase()
+      .includes(normalizedTrendingSearch);
+  });
+
+  const showSaveSuccess = () => {
+    const message = 'Your store details and homepage trending strings have been updated.';
+    setSaveSuccessMessage(message);
+
+    if (Platform.OS !== 'web') {
+      Alert.alert('Store settings saved', message);
+    }
   };
 
   useEffect(() => {
@@ -84,6 +113,16 @@ export default function AdminSettingsScreen() {
           return;
         }
         updateAdminSettings(user.id, {
+          storeName: response.store_name,
+          storeContact: response.store_contact,
+          address: response.address,
+          supportText: response.support_text,
+          paymentNotes: response.payment_notes,
+          bookingNotes: response.booking_notes,
+          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
+          trendingStringIds: response.trending_string_ids ?? [],
+        });
+        updateAdminSettings('main', {
           storeName: response.store_name,
           storeContact: response.store_contact,
           address: response.address,
@@ -140,6 +179,16 @@ export default function AdminSettingsScreen() {
           storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? trendingStringIds,
         });
+        updateAdminSettings('main', {
+          storeName: response.store_name,
+          storeContact: response.store_contact,
+          address: response.address,
+          supportText: response.support_text,
+          paymentNotes: response.payment_notes,
+          bookingNotes: response.booking_notes,
+          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
+          trendingStringIds: response.trending_string_ids ?? trendingStringIds,
+        });
       } else {
         updateAdminSettings(user.id, {
           storeName,
@@ -152,8 +201,9 @@ export default function AdminSettingsScreen() {
           trendingStringIds,
         });
       }
-      Alert.alert('Store settings saved', 'Your store details and homepage trending strings have been updated.');
+      showSaveSuccess();
     } catch (saveError) {
+      setSaveSuccessMessage(null);
       setError(
         saveError instanceof BackendApiError
           ? saveError.message
@@ -192,27 +242,80 @@ export default function AdminSettingsScreen() {
       <AppSection
         eyebrow="Homepage"
         title="Trending strings"
-        subtitle="Choose up to 5 strings to feature on the player home screen."
+        subtitle="Pick the exact strings that should appear on the player home screen."
       >
-        <HeroText className="mb-3 text-xs font-semibold text-slate-500">
-          Selected: {trendingStringIds.length}/5
-        </HeroText>
-        <View className="flex-row flex-wrap gap-2">
-          {strings.map((item) => {
-            const isSelected = trendingStringIds.includes(item.id);
+        <AppCard variant="subtle" padding="md">
+          <View className="gap-4">
+            <View>
+              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                Selected {trendingStringIds.length}/5
+              </HeroText>
+              <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
+                These strings are the only items shown in the player Trending Strings carousel.
+              </HeroText>
+            </View>
 
-            return (
-              <AppChip
-                key={item.id}
-                label={`${item.brand} ${item.model}`}
-                size="md"
-                variant={isSelected ? 'primary' : 'neutral'}
-                onPress={() => toggleTrendingString(item.id)}
-              />
-            );
-          })}
-        </View>
+            {selectedTrendingStrings.length > 0 ? (
+              <View className="flex-row flex-wrap gap-2">
+                {selectedTrendingStrings.map((item) => (
+                  <AppChip
+                    key={item.id}
+                    label={`${item.brand} ${item.model}`}
+                    size="md"
+                    variant="primary"
+                    onPress={() => toggleTrendingString(item.id)}
+                  />
+                ))}
+              </View>
+            ) : (
+              <View className="rounded-[16px] border border-[#DCE6F7] bg-white px-3 py-3">
+                <HeroText className="text-[13px] font-semibold text-slate-900">
+                  No homepage strings selected
+                </HeroText>
+                <HeroText className="mt-1 text-[12px] leading-5 text-slate-600">
+                  Select up to 5 strings below. Player home will stay empty until at least one is saved.
+                </HeroText>
+              </View>
+            )}
+
+            <AppInput
+              variant="minimal"
+              className="mb-0"
+              value={trendingSearch}
+              onChangeText={setTrendingSearch}
+              placeholder="Search string or brand"
+              leftAdornment={<Search size={16} color="#94A3B8" />}
+            />
+
+            <View className="flex-row flex-wrap gap-2">
+              {filteredTrendingStrings.map((item) => {
+                const isSelected = trendingStringIds.includes(item.id);
+
+                return (
+                  <AppChip
+                    key={item.id}
+                    label={`${item.brand} ${item.model}`}
+                    size="md"
+                    variant={isSelected ? 'primary' : 'neutral'}
+                    onPress={() => toggleTrendingString(item.id)}
+                  />
+                );
+              })}
+            </View>
+          </View>
+        </AppCard>
       </AppSection>
+
+      {saveSuccessMessage ? (
+        <View className="mt-4 rounded-[20px] border border-success-100 bg-success-50 px-4 py-3">
+          <HeroText className="text-[13px] font-semibold text-success-700">
+            Store settings saved
+          </HeroText>
+          <HeroText className="mt-1 text-[12px] leading-5 text-success-700">
+            {saveSuccessMessage}
+          </HeroText>
+        </View>
+      ) : null}
 
       {error ? (
         <HeroText className="mt-4 text-sm font-semibold text-danger-600">

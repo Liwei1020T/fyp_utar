@@ -137,6 +137,7 @@ Example profile request:
 - `GET /api/admin/business-hours`
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`
+- `GET /api/store-settings`
 - `GET /api/admin/slots`
 - `GET /api/admin/check-in/lookup`
 - `POST /api/admin/check-in`
@@ -226,7 +227,7 @@ Store-ops responses add:
 - business hours day configs in snake_case (`is_open`, `open_time`, `slot_duration_minutes`, `max_bookings_per_slot`)
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
-- single-store settings payloads for support/policy copy plus `trending_string_ids` for player home merchandising
+- single-store settings payloads for support/policy copy plus `trending_string_ids` for player home merchandising; player clients read this through `GET /api/store-settings`
 - analytics summary and popular string aggregates for the admin dashboard
 
 ### Recommendations

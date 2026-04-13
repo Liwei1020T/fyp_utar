@@ -37,7 +37,7 @@ export const MOCK_ADMIN_SETTINGS: AdminSettings[] = [
     bookingNotes: 'Drop-off slots are previewed from business hours and capacity settings.',
     storePolicyText: 'Reschedule or cancellation is allowed before the admin starts work on the racket. Collection reminders remain mock-only in FYP1.',
     address: 'Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur',
-    trendingStringIds: ['string-001', 'string-002', 'string-003', 'string-004', 'string-005'],
+    trendingStringIds: [],
   },
 ];
 
