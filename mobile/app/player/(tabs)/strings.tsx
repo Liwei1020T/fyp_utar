@@ -20,6 +20,7 @@ import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl'
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { FloatingCompareTray } from '../../../components/shared/FloatingCompareTray';
+import { StringProductImage } from '../../../components/shared/StringProductImage';
 import { useAppStore, useStrings } from '../../../store/appStore';
 import { formatCurrency, formatLabel } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
@@ -203,14 +204,17 @@ export default function StringsCatalogScreen() {
         <View className="flex-row items-center gap-3">
           {/* Left: Thumbnail */}
           <View className="h-14 w-14 rounded-lg bg-slate-50 items-center justify-center overflow-hidden border border-slate-100">
-            {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                className="h-full w-full"
-              />
-            ) : (
-              <View className="h-full w-full bg-slate-100" />
-            )}
+            <StringProductImage
+              imageUrl={item.imageUrl}
+              brand={item.brand}
+              model={item.model}
+              gauge={item.gauge}
+              className="h-full w-full"
+              fallbackClassName="h-12 w-9 rounded-xl border-[3px]"
+              fallbackTextClassName="px-2 text-[8px]"
+              fallbackGaugeClassName="mt-2 px-2 py-1"
+              resizeMode="cover"
+            />
           </View>
 
           {/* Center: Info */}

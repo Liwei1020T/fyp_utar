@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, View, Image } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Scale, Info, Zap, ShieldCheck, Target, AlertCircle } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -8,6 +8,7 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { StringProductImage } from '../../../components/shared/StringProductImage';
 import { useAppStore, useLiveRecommendationResults, useStrings } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
@@ -70,14 +71,17 @@ export default function CompareStringsScreen() {
       <View className="flex-row items-center gap-3">
         {/* Left: Thumbnail */}
         <View className="h-14 w-14 rounded-lg bg-slate-50 items-center justify-center overflow-hidden border border-slate-100">
-          {item.imageUrl ? (
-            <Image
-              source={{ uri: item.imageUrl }}
-              className="h-full w-full"
-            />
-          ) : (
-            <View className="h-full w-full bg-slate-100" />
-          )}
+          <StringProductImage
+            imageUrl={item.imageUrl}
+            brand={item.brand}
+            model={item.model}
+            gauge={item.gauge}
+            className="h-full w-full"
+            fallbackClassName="h-12 w-9 rounded-xl border-[3px]"
+            fallbackTextClassName="px-2 text-[8px]"
+            fallbackGaugeClassName="mt-2 px-2 py-1"
+            resizeMode="cover"
+          />
         </View>
 
         {/* Center: Info */}

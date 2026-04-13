@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Share, View, Pressable, Image } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Share, View, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { 
   ChevronLeft, 
@@ -25,6 +25,7 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { StringProductImage } from '../../../components/shared/StringProductImage';
 import { useAppStore, useCurrentUser, useLiveRecommendationResults, useStrings } from '../../../store/appStore';
 import { getStringById } from '../../../services/mockAppService';
 import { formatCurrency, formatLabel } from '../../../lib/formatters';
@@ -107,7 +108,6 @@ export default function StringDetailScreen() {
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
 
   const [isExplainOpen, setIsExplainOpen] = useState(false);
-  const [heroImageFailed, setHeroImageFailed] = useState(false);
 
   if (!selectedString) {
     return (
@@ -128,11 +128,6 @@ export default function StringDetailScreen() {
   const rationale = liveResult?.rationalePayload ?? null;
 
   const isSelected = compareSelection.includes(selectedString.id);
-  const heroImageUrl = selectedString.imageUrl?.trim() || null;
-
-  useEffect(() => {
-    setHeroImageFailed(false);
-  }, [selectedString.id, heroImageUrl]);
   
   const performanceMetrics = [
     { key: 'power', label: 'Power', icon: <Zap size={16} color="#F59E0B" />, value: selectedString.ratings.power },
@@ -267,30 +262,15 @@ export default function StringDetailScreen() {
       {/* 0. Product Visual Section */}
       <View className="items-center justify-center pt-2 pb-8">
         <View className="w-full aspect-[4/3] bg-neutral-50 rounded-[40px] items-center justify-center overflow-hidden border border-neutral-200/50 shadow-sm">
-          {heroImageUrl && !heroImageFailed ? (
-            <Image
-              source={{ uri: heroImageUrl }}
-              className="h-full w-full"
-              resizeMode="contain"
-              accessibilityLabel={`${selectedString.brand} ${selectedString.model} product photo`}
-              onError={() => setHeroImageFailed(true)}
-            />
-          ) : (
-            <View
-              className="w-48 h-60 bg-neutral-900 rounded-2xl shadow-2xl items-center justify-center border-[6px] border-white/5"
-              style={{ transform: [{ rotate: '-5deg' }] }}
-            >
-              <Zap size={72} color="rgba(255,255,255,0.15)" className="absolute top-6 left-6" />
-              <HeroText className="text-white font-black text-3xl text-center px-6 uppercase leading-tight tracking-tighter">
-                {selectedString.model.split(' ').join('\n')}
-              </HeroText>
-              <View className="mt-6 px-4 py-1.5 bg-white/10 rounded-full border border-white/10">
-                <HeroText className="text-[10px] font-black text-white uppercase tracking-[0.2em]">
-                  {selectedString.gauge}
-                </HeroText>
-              </View>
-            </View>
-          )}
+          <StringProductImage
+            imageUrl={selectedString.imageUrl}
+            brand={selectedString.brand}
+            model={selectedString.model}
+            gauge={selectedString.gauge}
+            className="h-full w-full"
+            fallbackClassName="h-60 w-48"
+            resizeMode="contain"
+          />
         </View>
       </View>
 
