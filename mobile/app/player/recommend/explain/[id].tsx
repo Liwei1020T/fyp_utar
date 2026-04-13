@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Gauge,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  WalletCards,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { HeroText } from '../../../../components/ui/heroui';
 import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
@@ -20,9 +30,11 @@ import type {
   BackendRecommendationResult,
 } from '../../../../types/backend';
 
+type ScoreTone = 'primary' | 'success' | 'warning' | 'neutral';
+
 function formatScore(value?: number) {
   if (value == null) {
-    return '—';
+    return '-';
   }
   return `${Math.round(value * 100)}%`;
 }
@@ -40,144 +52,46 @@ function humanizeFeature(value: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-function humanizeSource(value?: string) {
-  if (!value) {
-    return 'Unknown source';
+function compactSentence(value: string) {
+  return value.trim().replace(/\.$/, '');
+}
+
+function clampPercent(value?: number | null) {
+  return Math.max(0, Math.min(100, Math.round((value ?? 0) * 100)));
+}
+
+function toFeatureCopy(featureKey?: string, displayLabel?: string) {
+  const label = displayLabel ?? humanizeFeature(featureKey ?? 'review support');
+  const normalized = (featureKey ?? displayLabel ?? '').toLowerCase();
+
+  if (normalized.includes('sound')) {
+    return {
+      title: 'Hitting sound support',
+      body: 'Players mention a cleaner impact sound, which supports the feel profile behind this pick.',
+    };
   }
-  if (value === 'official_performance+nlp_review') {
-    return 'Official + NLP review';
+
+  if (normalized.includes('tension')) {
+    return {
+      title: 'Tension retention support',
+      body: 'Reviews support its ability to hold play feel across more sessions.',
+    };
   }
-  return humanizeFeature(value);
+
+  if (normalized.includes('durability')) {
+    return {
+      title: 'Durability support',
+      body: 'Community signals point to reliable lifespan for frequent play.',
+    };
+  }
+
+  return {
+    title: `${label} support`,
+    body: 'Community feedback strengthens confidence in this part of the recommendation.',
+  };
 }
 
-function ScoreTile({
-  label,
-  value,
-  note,
-  tone = 'primary',
-}: {
-  label: string;
-  value?: number;
-  note: string;
-  tone?: 'primary' | 'accent' | 'neutral' | 'success';
-}) {
-  const percent = value == null ? 0 : Math.max(0, Math.min(100, Math.round(value * 100)));
-  const fillClassName =
-    tone === 'accent'
-      ? 'bg-accent-500'
-      : tone === 'neutral'
-        ? 'bg-neutral-500'
-        : tone === 'success'
-          ? 'bg-success-500'
-          : 'bg-primary-600';
-
-  return (
-    <AppCard variant="elevated" padding="sm" className="min-w-[138px] flex-1 rounded-[24px]">
-      <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">
-        {label}
-      </HeroText>
-      <HeroText className="mt-2 text-[28px] font-black tracking-tight text-neutral-950">
-        {formatScore(value)}
-      </HeroText>
-      <View className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-100">
-        <View className={`h-full rounded-full ${fillClassName}`} style={{ width: `${percent}%` }} />
-      </View>
-      <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
-        {note}
-      </HeroText>
-    </AppCard>
-  );
-}
-
-function EvidenceRow({
-  label,
-  source,
-  effectiveScore,
-  preferenceWeight,
-  nlpReviewScore,
-  officialScore,
-}: {
-  label: string;
-  source?: string;
-  effectiveScore?: number | null;
-  preferenceWeight?: number | null;
-  nlpReviewScore?: number | null;
-  officialScore?: number | null;
-}) {
-  const effectiveWidth = Math.round(Math.max(0, Math.min(1, effectiveScore ?? 0)) * 100);
-  const nlpWidth = Math.round(Math.max(0, Math.min(1, nlpReviewScore ?? 0)) * 100);
-  const officialWidth = Math.round(Math.max(0, Math.min(1, officialScore ?? 0)) * 100);
-
-  return (
-    <AppCard variant="elevated" padding="sm" className="rounded-[24px]">
-      <View className="flex-row items-start justify-between gap-3">
-        <View className="flex-1">
-          <HeroText className="text-sm font-bold text-neutral-950">{label}</HeroText>
-          <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
-            {humanizeSource(source)}
-          </HeroText>
-        </View>
-        {preferenceWeight != null ? (
-          <View className="rounded-full bg-primary-50 px-3 py-1.5">
-            <HeroText className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-700">
-              Weight {formatScore(preferenceWeight)}
-            </HeroText>
-          </View>
-        ) : null}
-      </View>
-
-      <View className="mt-4 gap-3">
-        <View>
-          <View className="flex-row items-center justify-between">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-              Effective
-            </HeroText>
-            <HeroText className="text-xs font-black text-neutral-900">
-              {formatScore(effectiveScore ?? undefined)}
-            </HeroText>
-          </View>
-          <View className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100">
-            <View className="h-full rounded-full bg-primary-600" style={{ width: `${effectiveWidth}%` }} />
-          </View>
-        </View>
-
-        {nlpReviewScore != null ? (
-          <View>
-            <View className="flex-row items-center justify-between">
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                NLP Review
-              </HeroText>
-              <HeroText className="text-xs font-black text-neutral-900">
-                {formatScore(nlpReviewScore)}
-              </HeroText>
-            </View>
-            <View className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100">
-              <View className="h-full rounded-full bg-accent-500" style={{ width: `${nlpWidth}%` }} />
-            </View>
-          </View>
-        ) : null}
-
-        {officialScore != null ? (
-          <View>
-            <View className="flex-row items-center justify-between">
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                Official
-              </HeroText>
-              <HeroText className="text-xs font-black text-neutral-900">
-                {formatScore(officialScore)}
-              </HeroText>
-            </View>
-            <View className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100">
-              <View className="h-full rounded-full bg-neutral-500" style={{ width: `${officialWidth}%` }} />
-            </View>
-          </View>
-        ) : null}
-      </View>
-    </AppCard>
-  );
-}
-
-function budgetLabel(
+function getBudgetCopy(
   rationale: BackendRecommendationRationale | null,
   fallbackPrice?: number | null,
 ) {
@@ -186,26 +100,205 @@ function budgetLabel(
   const maximum = rationale?.budget?.budget_max;
 
   if (price == null || minimum == null || maximum == null) {
-    return 'Budget fit is based on your saved range and current shelf price.';
+    return 'Price fit against your saved range.';
   }
 
-  return `${formatCurrency(price)} against your RM${minimum.toFixed(0)}–RM${maximum.toFixed(0)} target range.`;
+  return `${formatCurrency(price)} fits your RM${minimum.toFixed(0)}-RM${maximum.toFixed(0)} range.`;
 }
 
-function buildDecisionSummary({
+function buildRecommendationSummary({
+  playingStyle,
+  skillLevel,
   priorities,
-  strongestReason,
-  tradeOff,
 }: {
+  playingStyle: string;
+  skillLevel: string;
   priorities: string[];
-  strongestReason: string;
-  tradeOff: string;
 }) {
-  const topTwo = priorities.slice(0, 2).join(' and ').toLowerCase();
-  const emphasis = topTwo || 'your saved priorities';
-  const firstClause = strongestReason.replace(/\.$/, '');
-  const tradeOffClause = tradeOff.replace(/\.$/, '');
-  return `${firstClause}. Best if you want stronger ${emphasis} without losing sight of the main trade-off: ${tradeOffClause.toLowerCase()}.`;
+  const priorityCopy = priorities.length > 0
+    ? priorities.slice(0, 2).join(' and ').toLowerCase()
+    : 'your strongest preferences';
+
+  return `A strong fit for your ${playingStyle.toLowerCase()} game and ${skillLevel.toLowerCase()} level, with the clearest advantage in ${priorityCopy}.`;
+}
+
+function buildMatchReasons({
+  suggestedTensionRange,
+  preferredTension,
+  playFrequency,
+  topPriorityLabels,
+}: {
+  suggestedTensionRange: string;
+  preferredTension: number;
+  playFrequency: string;
+  topPriorityLabels: string[];
+}) {
+  const firstPriority = topPriorityLabels[0]?.toLowerCase() ?? 'feel';
+  const playsOften = playFrequency === 'Tournament' || playFrequency === 'Weekly';
+
+  return [
+    {
+      title: 'Matches your feel priority',
+      body: `Its strongest profile supports ${firstPriority}, one of the main things you rated highly.`,
+      Icon: Sparkles,
+    },
+    {
+      title: 'Fits your tension setup',
+      body: `${preferredTension} lbs sits comfortably inside the ${suggestedTensionRange} window.`,
+      Icon: Gauge,
+    },
+    {
+      title: 'Ready for your play rhythm',
+      body: playsOften
+        ? 'Durability support makes it a safer choice for frequent sessions.'
+        : 'It gives you enough reliability without pushing you into an overly stiff setup.',
+      Icon: ShieldCheck,
+    },
+  ];
+}
+
+function MatchReasonCard({
+  title,
+  body,
+  Icon,
+}: {
+  title: string;
+  body: string;
+  Icon: LucideIcon;
+}) {
+  return (
+    <View className="flex-row items-start gap-3 rounded-[22px] border border-[#E7EEF8] bg-white px-4 py-3.5">
+      <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-50">
+        <Icon size={18} color="#2F64B6" strokeWidth={2.3} />
+      </View>
+      <View className="flex-1">
+        <HeroText className="text-sm font-bold tracking-tight text-neutral-950">
+          {title}
+        </HeroText>
+        <HeroText className="mt-1 text-[13px] leading-5 text-neutral-500">
+          {body}
+        </HeroText>
+      </View>
+    </View>
+  );
+}
+
+function ScoreBlock({
+  label,
+  value,
+  note,
+  tone = 'primary',
+}: {
+  label: string;
+  value?: number;
+  note: string;
+  tone?: ScoreTone;
+}) {
+  const badgeBackgrounds: Record<ScoreTone, string> = {
+    primary: 'bg-primary-50',
+    success: 'bg-success-50',
+    warning: 'bg-warning-50',
+    neutral: 'bg-neutral-100',
+  };
+  const badgeText: Record<ScoreTone, string> = {
+    primary: 'text-primary-700',
+    success: 'text-success-700',
+    warning: 'text-warning-700',
+    neutral: 'text-neutral-700',
+  };
+
+  return (
+    <View className="min-w-[145px] flex-1 rounded-[22px] border border-[#E5EDF7] bg-white px-4 py-4">
+      <View className="flex-row items-start justify-between gap-2">
+        <HeroText className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-400">
+          {label}
+        </HeroText>
+        <View className={`rounded-full px-2.5 py-1 ${badgeBackgrounds[tone]}`}>
+          <HeroText className={`text-xs font-black ${badgeText[tone]}`}>
+            {formatScore(value)}
+          </HeroText>
+        </View>
+      </View>
+      <HeroText className="mt-3 text-[13px] leading-5 text-neutral-500">
+        {note}
+      </HeroText>
+    </View>
+  );
+}
+
+function ReviewStrength({
+  title,
+  body,
+  score,
+}: {
+  title: string;
+  body: string;
+  score?: number | null;
+}) {
+  const percent = clampPercent(score);
+
+  return (
+    <View className="rounded-[20px] border border-[#E6EEF8] bg-white px-4 py-3.5">
+      <View className="flex-row items-start justify-between gap-3">
+        <View className="flex-1">
+          <HeroText className="text-sm font-bold tracking-tight text-neutral-950">
+            {title}
+          </HeroText>
+          <HeroText className="mt-1 text-[13px] leading-5 text-neutral-500">
+            {body}
+          </HeroText>
+        </View>
+        {score != null ? (
+          <HeroText className="text-sm font-black text-primary-700">{percent}%</HeroText>
+        ) : null}
+      </View>
+      {score != null ? (
+        <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-primary-50">
+          <View className="h-full rounded-full bg-primary-600" style={{ width: `${percent}%` }} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function getReviewStrengths(rationale: BackendRecommendationRationale | null) {
+  const evidence = rationale?.feature_evidence ?? [];
+  const preferredKeys = ['hitting_sound', 'tension_retention', 'durability'];
+
+  const fromEvidence = preferredKeys
+    .map((key) => evidence.find((entry) => entry.feature_key === key))
+    .filter(Boolean)
+    .map((entry) => {
+      const copy = toFeatureCopy(entry?.feature_key, entry?.display_label);
+      return {
+        ...copy,
+        score: entry?.nlp_review_score ?? entry?.effective_score ?? null,
+      };
+    });
+
+  if (fromEvidence.length >= 3) {
+    return fromEvidence.slice(0, 3);
+  }
+
+  const fallback = [
+    {
+      title: 'Hitting sound support',
+      body: 'Community feedback supports a satisfying impact feel.',
+      score: rationale?.nlp_review_scores?.hitting_sound ?? null,
+    },
+    {
+      title: 'Tension retention support',
+      body: 'Review signals help confirm the string can hold its feel longer.',
+      score: rationale?.nlp_review_scores?.tension_retention ?? null,
+    },
+    {
+      title: 'Durability support',
+      body: 'Players give useful confidence that it can handle regular play.',
+      score: rationale?.nlp_review_scores?.durability ?? null,
+    },
+  ];
+
+  return [...fromEvidence, ...fallback].slice(0, 3);
 }
 
 export default function RecommendationExplanationScreen() {
@@ -225,11 +318,6 @@ export default function RecommendationExplanationScreen() {
   );
   const detailResult = backendDetail ?? null;
   const rationale = detailResult?.rationale_payload ?? liveResult?.rationalePayload ?? null;
-  const fitAngle = rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Profile match';
-  const tradeOff =
-    rationale?.trade_off_summary ??
-    liveResult?.tradeOffSummary ??
-    'Balanced against your saved profile, badminton rules, and current price range.';
   const scoreBreakdown =
     liveResult?.scoreBreakdown ??
     (detailResult?.score_breakdown
@@ -257,25 +345,17 @@ export default function RecommendationExplanationScreen() {
     .sort((left, right) => right[1] - left[1])
     .slice(0, 3);
   const topPriorityLabels = topPriorities.map(([key]) => humanizeFeature(key));
-  const priorityLine =
-    topPriorityLabels.length > 0
-      ? topPriorityLabels.join(', ')
-      : 'your saved priorities';
-  const featureEvidence = (rationale?.feature_evidence ?? []).slice(0, 3);
-  const nlpEvidence = featureEvidence.filter((entry) => (entry.nlp_influence ?? 0) > 0);
   const strongestReason =
+    rationale?.top_reasons?.[0] ??
     liveResult?.reasons[0] ??
     detailResult?.reasons?.[0] ??
-    `${fitAngle} for your current player profile.`;
-  const followUpReason =
-    liveResult?.reasons[1] ??
-    detailResult?.reasons?.[1] ??
-    'The strongest weighted parts of your profile are carrying this recommendation.';
-  const decisionSummary = buildDecisionSummary({
-    priorities: topPriorityLabels,
-    strongestReason,
-    tradeOff,
-  });
+    'It lines up well with the way you play and the feel you prefer.';
+  const bestReason = compactSentence(strongestReason);
+  const tradeOff =
+    rationale?.trade_off_summary ??
+    liveResult?.tradeOffSummary ??
+    'String movement control is the area to watch if you prefer a locked-in string bed.';
+  const reviewStrengths = getReviewStrengths(rationale);
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -300,7 +380,7 @@ export default function RecommendationExplanationScreen() {
         setDetailError(
           error instanceof BackendApiError
             ? error.message
-            : 'Unable to load backend recommendation explanation.',
+            : 'Unable to load recommendation details.',
         );
       }
     }
@@ -316,12 +396,28 @@ export default function RecommendationExplanationScreen() {
     return null;
   }
 
+  const preferredTension = user.preferredTension;
+  const playFrequency = user.playFrequency;
+  const matchReasons = buildMatchReasons({
+    suggestedTensionRange,
+    preferredTension,
+    playFrequency,
+    topPriorityLabels,
+  });
+  const recommendationSummary = buildRecommendationSummary({
+    playingStyle: user.playingStyle,
+    skillLevel: user.skillLevel,
+    priorities: topPriorityLabels,
+  });
+  const stringId = stringItem?.id ?? params.id;
+  const canBook = Boolean(stringItem);
+
   if (!stringItem && !detailResult) {
     return (
       <AppScreen title="Explanation unavailable">
         <AppCard variant="subtle" padding="lg">
           <HeroText className="text-lg font-bold text-neutral-900">
-            We couldn&apos;t find this recommendation.
+            We could not find this recommendation.
           </HeroText>
           {detailError ? (
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">{detailError}</HeroText>
@@ -335,192 +431,190 @@ export default function RecommendationExplanationScreen() {
   return (
     <AppScreen
       headerVariant="secondary"
-      title="Recommendation explanation"
-      subtitle="See the exact fit logic, review evidence, and trade-offs behind this pick."
+      title="Recommendation detail"
+      subtitle="A quick read on fit, confidence, and the main compromise."
       showBackButton
       onBackPress={() => router.back()}
+      contentContainerClassName="pt-3"
     >
-      <AppCard variant="dark" className="rounded-[34px]" padding="lg">
-        <View className="flex-row items-start justify-between gap-3">
+      <AppCard variant="dark" className="rounded-[30px]" padding="lg">
+        <View className="flex-row items-start justify-between gap-4">
           <View className="flex-1">
-            <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
+            <HeroText className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-100">
               {stringItem?.brand ?? detailResult?.brand ?? 'StringSense'}
             </HeroText>
-            <HeroText className="mt-3 text-[30px] font-black tracking-tight text-white">
+            <HeroText className="mt-2 text-[29px] font-black leading-[34px] tracking-tight text-white">
               {stringItem?.model ?? detailResult?.model_name ?? detailResult?.string_name}
             </HeroText>
           </View>
           {matchScore != null ? (
-            <View className="rounded-[22px] bg-white/12 px-4 py-3">
-              <HeroText className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-100">
-                Final
+            <View className="min-w-[74px] rounded-[20px] bg-white/14 px-3 py-2.5">
+              <HeroText className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-100">
+                Score
               </HeroText>
               <HeroText className="mt-1 text-2xl font-black text-white">{matchScore}%</HeroText>
             </View>
           ) : null}
         </View>
 
-        <View className="mt-5 flex-row flex-wrap gap-2">
-          <AppChip label={fitAngle} variant="accent" />
-          <AppChip
-            label={rationale?.nlp_review_signal_count ? `${rationale.nlp_review_signal_count} review signals` : 'Rules + profile'}
-            variant="info"
-          />
-          <AppChip label={suggestedTensionRange} variant="secondary" />
+        <View className="mt-4 flex-row flex-wrap gap-2">
+          <AppChip label={rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Profile match'} variant="accent" />
+          <AppChip label={suggestedTensionRange} variant="info" />
+          <AppChip label={topPriorityLabels[0] ?? 'Balanced feel'} variant="secondary" />
         </View>
 
         <HeroText className="mt-4 text-sm leading-6 text-primary-100">
-          This pick is anchored on your {user.playingStyle.toLowerCase()} style, {user.skillLevel.toLowerCase()} level, and strongest priorities in {priorityLine.toLowerCase()}.
+          {recommendationSummary}
         </HeroText>
 
-        <View className="mt-5 rounded-[24px] bg-white/10 px-4 py-4">
-          <HeroText className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-100">
+        <View className="mt-4 rounded-[22px] border border-white/10 bg-white/10 px-4 py-3.5">
+          <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-100">
             Best reason
           </HeroText>
-          <HeroText className="mt-2 text-base font-bold leading-6 text-white">{strongestReason}</HeroText>
-          <HeroText className="mt-3 text-sm leading-6 text-primary-100">
-            {decisionSummary}
+          <HeroText className="mt-1.5 text-base font-bold leading-6 text-white">
+            {bestReason}.
           </HeroText>
+        </View>
+
+        <View className="mt-5 flex-row gap-3">
+          <AppButton
+            label="Book this string"
+            className="flex-1 border-white bg-white"
+            textClassName="text-primary-700 font-bold"
+            isDisabled={!canBook}
+            onPress={() => stringId ? router.push(`/player/bookings/new?stringId=${stringId}`) : undefined}
+          />
+          <AppButton
+            label="Back to shortlist"
+            variant="ghost"
+            className="flex-1 border-white/20 bg-white/10"
+            textClassName="text-white font-bold"
+            onPress={() => router.replace('/player/results')}
+          />
         </View>
       </AppCard>
 
       {detailError ? (
-        <AppCard variant="subtle" className="mt-4 rounded-[24px] border border-warning-100 bg-warning-50/70" padding="sm">
+        <View className="mt-4 rounded-[20px] border border-warning-100 bg-warning-50 px-4 py-3">
           <HeroText className="text-xs leading-5 text-warning-700">
-            Backend detail refresh failed, so some sections below are using the latest cached app data. {detailError}
+            Fresh recommendation details are unavailable, so this page is using the latest saved result.
           </HeroText>
-        </AppCard>
+        </View>
       ) : null}
 
-      <AppSection eyebrow="Verdict" title="Why it landed here">
-        <AppCard variant="highlighted" padding="md" className="rounded-[28px]">
-          <HeroText className="text-base font-bold text-neutral-950">{strongestReason}</HeroText>
-          <HeroText className="mt-3 text-sm leading-6 text-neutral-600">{decisionSummary}</HeroText>
-        </AppCard>
-      </AppSection>
-
-      {scoreBreakdown ? (
-        <AppSection eyebrow="Score formula" title="Recommendation breakdown">
-          <View className="flex-row flex-wrap gap-3">
-            <ScoreTile
-              label="Final"
-              value={scoreBreakdown.finalScore ?? (matchScore != null ? matchScore / 100 : undefined)}
-              note="The final rank after profile, rule, and budget checks are blended."
-              tone="success"
-            />
-            <ScoreTile
-              label="Preference"
-              value={scoreBreakdown.preferenceMatch}
-              note="Your weighted priorities matched against effective string features."
-            />
-            <ScoreTile
-              label="Rule"
-              value={scoreBreakdown.ruleFit}
-              note="Badminton-specific logic like style, gauge, tension, and play frequency."
-              tone="accent"
-            />
-            <ScoreTile
-              label="Budget"
-              value={scoreBreakdown.budgetFit}
-              note={budgetLabel(rationale, detailResult?.price_rm ?? stringItem?.price)}
-              tone="neutral"
-            />
-            {scoreBreakdown.nlpReviewScore != null ? (
-              <ScoreTile
-                label="NLP Review"
-                value={scoreBreakdown.nlpReviewScore}
-                note="How strongly review-derived signals back up the parts of your profile that matter most."
-              />
-            ) : null}
-          </View>
-        </AppSection>
-      ) : null}
-
-      <AppSection eyebrow="What this means" title="Match logic">
+      <AppSection title="Why this matches you" variant="compact">
         <View className="gap-3">
-          <AppCard variant="elevated" padding="md" className="rounded-[28px]">
-            <HeroText className="text-base font-semibold text-neutral-950">Priority fit</HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              {followUpReason}. Your top weighted priorities are {priorityLine.toLowerCase()}, so this string stays competitive in the exact areas most likely to drive your feel on court.
-            </HeroText>
-          </AppCard>
-
-          <AppCard variant="elevated" padding="md" className="rounded-[28px]">
-            <HeroText className="text-base font-semibold text-neutral-950">Setup fit</HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              Suggested tension range is {suggestedTensionRange}. Your saved {user.preferredTension} lbs setup sits inside that window, and the main thing to watch is this trade-off: {tradeOff.toLowerCase()}
-            </HeroText>
-          </AppCard>
+          {matchReasons.map((reason) => (
+            <MatchReasonCard
+              key={reason.title}
+              title={reason.title}
+              body={reason.body}
+              Icon={reason.Icon}
+            />
+          ))}
         </View>
       </AppSection>
 
-      {nlpEvidence.length > 0 ? (
-        <AppSection eyebrow="NLP evidence" title="Review-derived support">
-          <View className="gap-3">
-            <AppCard variant="highlighted" padding="md" className="rounded-[28px]">
-              <HeroText className="text-base font-bold text-neutral-950">
-                {rationale?.nlp_review_summary ?? 'Review-derived signals are reinforcing this recommendation.'}
-              </HeroText>
-              <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
-                The NLP layer does not replace your profile. It strengthens the feature signals most likely to matter for your current style and feel preference.
-              </HeroText>
-            </AppCard>
-
-            {nlpEvidence.map((entry, index) => (
-              <EvidenceRow
-                key={`${entry.feature_key ?? 'feature'}-${index}`}
-                label={entry.display_label ?? humanizeFeature(entry.feature_key ?? 'Feature')}
-                source={entry.source}
-                effectiveScore={entry.effective_score}
-                preferenceWeight={entry.preference_weight}
-                nlpReviewScore={entry.nlp_review_score}
-                officialScore={entry.official_score}
-              />
-            ))}
+      {scoreBreakdown ? (
+        <AppSection title="Score breakdown" variant="compact">
+          <View className="flex-row flex-wrap gap-3">
+            <ScoreBlock
+              label="Final"
+              value={scoreBreakdown.finalScore ?? (matchScore != null ? matchScore / 100 : undefined)}
+              note="Overall recommendation strength."
+              tone="success"
+            />
+            <ScoreBlock
+              label="Preference"
+              value={scoreBreakdown.preferenceMatch}
+              note="How well it fits your saved priorities."
+            />
+            <ScoreBlock
+              label="Rule"
+              value={scoreBreakdown.ruleFit}
+              note="How well the setup fits your game."
+              tone="warning"
+            />
+            <ScoreBlock
+              label="Budget"
+              value={scoreBreakdown.budgetFit}
+              note={getBudgetCopy(rationale, detailResult?.price_rm ?? stringItem?.price)}
+              tone="neutral"
+            />
           </View>
         </AppSection>
       ) : null}
 
-      {rationale?.rule_events?.length ? (
-        <AppSection eyebrow="Rules" title="Badminton rule events">
-          <View className="gap-3">
-            {rationale.rule_events.slice(0, 3).map((event, index) => (
-              <AppCard key={`${event.rule ?? 'rule'}-${index}`} variant="elevated" padding="sm" className="rounded-[24px]">
-                <View className="flex-row items-start justify-between gap-3">
-                  <View className="flex-1">
-                    <HeroText className="text-sm font-semibold text-neutral-900">
-                      {event.reason ?? event.rule ?? 'Rule adjustment'}
-                    </HeroText>
-                    {event.rule ? (
-                      <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
-                        {humanizeFeature(event.rule)}
-                      </HeroText>
-                    ) : null}
-                  </View>
-                  {event.delta != null ? (
-                    <View className="rounded-full bg-primary-50 px-3 py-1.5">
-                      <HeroText className="text-xs font-black text-primary-700">
-                        {event.delta > 0 ? '+' : ''}
-                        {event.delta.toFixed(2)}
-                      </HeroText>
-                    </View>
-                  ) : null}
-                </View>
-              </AppCard>
-            ))}
-          </View>
-        </AppSection>
-      ) : null}
-
-      <AppSection eyebrow="Next step" title="How to continue">
+      <AppSection title="Review support" variant="compact">
         <View className="gap-3">
-          <View className="flex-row gap-3">
+          <View className="rounded-[24px] border border-primary-100 bg-primary-50 px-4 py-4">
+            <View className="flex-row items-start gap-3">
+              <View className="h-9 w-9 items-center justify-center rounded-full bg-white">
+                <CheckCircle2 size={18} color="#2F64B6" strokeWidth={2.3} />
+              </View>
+              <View className="flex-1">
+                <HeroText className="text-sm font-bold tracking-tight text-neutral-950">
+                  Community signals add confidence
+                </HeroText>
+                <HeroText className="mt-1 text-[13px] leading-5 text-neutral-600">
+                  Reviews reinforce the strengths below, so the fit is not based only on specs.
+                </HeroText>
+              </View>
+            </View>
+          </View>
+
+          {reviewStrengths.map((item) => (
+            <ReviewStrength
+              key={item.title}
+              title={item.title}
+              body={item.body}
+              score={item.score}
+            />
+          ))}
+        </View>
+      </AppSection>
+
+      <AppSection title="Trade-off" variant="compact">
+        <View className="rounded-[24px] border border-warning-100 bg-warning-50 px-4 py-4">
+          <View className="flex-row items-start gap-3">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
+              <AlertTriangle size={19} color="#B67D21" strokeWidth={2.4} />
+            </View>
+            <View className="flex-1">
+              <HeroText className="text-base font-bold tracking-tight text-neutral-950">
+                Main compromise
+              </HeroText>
+              <HeroText className="mt-1.5 text-sm leading-6 text-neutral-700">
+                {compactSentence(tradeOff)}.
+              </HeroText>
+              <HeroText className="mt-2 text-[13px] leading-5 text-neutral-500">
+                Choose it if the strengths above matter more to you than this compromise.
+              </HeroText>
+            </View>
+          </View>
+        </View>
+      </AppSection>
+
+      <AppSection title="Next step" variant="compact">
+        <View className="rounded-[26px] border border-[#E5EDF7] bg-white px-4 py-4">
+          <View className="flex-row items-start gap-3">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50">
+              <Target size={19} color="#2F64B6" strokeWidth={2.4} />
+            </View>
+            <View className="flex-1">
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                Use this page as a quick decision check: if the fit reasons match your game and the trade-off feels acceptable, book it now.
+              </HeroText>
+            </View>
+          </View>
+
+          <View className="mt-4 flex-row gap-3">
             <AppButton
-              label="Open string detail"
-              variant="outline"
+              label="Book this string"
               className="flex-1"
-              isDisabled={!stringItem}
-              onPress={() => stringItem ? router.push(`/player/strings/${stringItem.id}`) : undefined}
+              leadingIcon={<WalletCards size={17} color="#FFFFFF" strokeWidth={2.4} />}
+              isDisabled={!canBook}
+              onPress={() => stringId ? router.push(`/player/bookings/new?stringId=${stringId}`) : undefined}
             />
             <AppButton
               label="Back to shortlist"
@@ -529,28 +623,10 @@ export default function RecommendationExplanationScreen() {
               onPress={() => router.replace('/player/results')}
             />
           </View>
-
-          <AppCard variant="subtle" padding="md" className="rounded-[28px]">
-            <HeroText className="text-sm leading-6 text-neutral-600">
-              Use this page when you need confidence, not just ranking. If the fit story looks right, book it. If not, jump back to the shortlist or open the full string detail before deciding.
-            </HeroText>
-          </AppCard>
         </View>
       </AppSection>
 
-      <View className="mb-10 mt-8 gap-3">
-        <AppButton
-          label="Book this string"
-          size="lg"
-          isDisabled={!stringItem}
-          onPress={() => stringItem ? router.push(`/player/bookings/new?stringId=${stringItem.id}`) : undefined}
-        />
-        <AppButton
-          label="Back to shortlist"
-          variant="outline"
-          onPress={() => router.replace('/player/results')}
-        />
-      </View>
+      <View className="h-6" />
     </AppScreen>
   );
 }
