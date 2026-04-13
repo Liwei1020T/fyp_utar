@@ -58,7 +58,7 @@ export default function PlayerLayout() {
           backendApi.fetchProfile(token).catch(() => null),
           backendApi.listStrings(token),
           backendApi.listBookings(token),
-          backendApi.fetchStoreSettings(token),
+          backendApi.fetchStoreSettings(token).catch(() => null),
         ]);
 
         if (cancelled) {
@@ -79,16 +79,18 @@ export default function PlayerLayout() {
         });
         setLiveStrings(liveStrings);
         setLiveBookings(liveBookings);
-        updateAdminSettings('main', {
-          storeName: storeSettings.store_name,
-          storeContact: storeSettings.store_contact,
-          address: storeSettings.address,
-          supportText: storeSettings.support_text,
-          paymentNotes: storeSettings.payment_notes,
-          bookingNotes: storeSettings.booking_notes,
-          storePolicyText: storeSettings.store_policy_text,
-          trendingStringIds: storeSettings.trending_string_ids ?? [],
-        });
+        if (storeSettings) {
+          updateAdminSettings('main', {
+            storeName: storeSettings.store_name,
+            storeContact: storeSettings.store_contact,
+            address: storeSettings.address,
+            supportText: storeSettings.support_text,
+            paymentNotes: storeSettings.payment_notes,
+            bookingNotes: storeSettings.booking_notes,
+            storePolicyText: storeSettings.store_policy_text,
+            trendingStringIds: storeSettings.trending_string_ids ?? [],
+          });
+        }
       } catch (error) {
         if (isBackendAuthError(error)) {
           logout();

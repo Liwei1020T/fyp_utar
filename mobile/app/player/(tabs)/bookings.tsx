@@ -11,7 +11,7 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { BookingCard } from '../../../components/booking/BookingCard';
-import { useBookings, useCurrentUser } from '../../../store/appStore';
+import { useAppStore, useBookings, useCurrentUser } from '../../../store/appStore';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
 import type { BookingStatus } from '../../../types/domain';
 import { formatBookingOrderCode, formatBookingStatus } from '../../../lib/formatters';
@@ -24,10 +24,16 @@ const filters: Array<BookingStatus | 'all'> = [
   'completed',
 ];
 
+function normalizeStoreText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 export default function BookingsListScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
+  const sessionSource = useAppStore((state) => state.sessionSource);
+  const adminSettings = useAppStore((state) => state.adminSettings);
   const bottomContentInset = useBottomContentInset(24);
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -122,12 +128,22 @@ export default function BookingsListScreen() {
         renderItem={({ item }) => {
           const stringItem = getStringById(item.stringId);
           const admin = getAdminById(item.adminId);
+          const currentStoreSettings =
+            (sessionSource === 'backend'
+              ? adminSettings.find((settings) => settings.adminId === 'main') ??
+                adminSettings.find((settings) => settings.adminId === item.adminId)
+              : adminSettings.find((settings) => settings.adminId === item.adminId) ??
+                adminSettings.find((settings) => settings.adminId === 'main'));
+          const adminLabel =
+            normalizeStoreText(currentStoreSettings?.storeName) ||
+            admin?.businessName ||
+            'Assigned shop';
 
           return (
             <BookingCard
               booking={item}
               stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
-              adminLabel={admin?.businessName}
+              adminLabel={adminLabel}
               onPress={() => router.push(`/player/bookings/${item.id}`)}
             />
           );

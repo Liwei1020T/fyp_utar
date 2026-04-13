@@ -21,10 +21,16 @@ import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
 
+function normalizeStoreText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 export default function BookingSummaryScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookingDraft = useAppStore((state) => state.bookingDraft);
+  const sessionSource = useAppStore((state) => state.sessionSource);
+  const adminSettings = useAppStore((state) => state.adminSettings);
   const clearBookingDraft = useAppStore((state) => state.clearBookingDraft);
   const prependLiveBooking = useAppStore((state) => state.prependLiveBooking);
   const token = useBackendAccessToken();
@@ -53,6 +59,16 @@ export default function BookingSummaryScreen() {
     strings.find((item) => item.id === bookingDraft.stringId) ??
     getStringById(bookingDraft.stringId);
   const admin = getAdminById(bookingDraft.adminId);
+  const currentStoreSettings =
+    (sessionSource === 'backend'
+      ? adminSettings.find((item) => item.adminId === 'main') ??
+        adminSettings.find((item) => item.adminId === bookingDraft.adminId)
+      : adminSettings.find((item) => item.adminId === bookingDraft.adminId) ??
+        adminSettings.find((item) => item.adminId === 'main'));
+  const vendorLabel =
+    normalizeStoreText(currentStoreSettings?.storeName) ||
+    admin?.businessName ||
+    'Assigned shop';
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
     : 'Selected string';
@@ -144,7 +160,7 @@ export default function BookingSummaryScreen() {
         <AppCard variant="highlighted" padding="lg">
           <View className="gap-3">
             <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-              {admin?.businessName}
+              {vendorLabel}
             </HeroText>
             <HeroText className="text-[24px] font-bold tracking-tight text-neutral-950">
               {stringLabel}

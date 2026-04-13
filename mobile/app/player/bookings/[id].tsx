@@ -211,6 +211,10 @@ function getLatestUpdate(booking: Booking): {
   };
 }
 
+function normalizeStoreText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-start justify-between gap-4 py-3">
@@ -230,6 +234,8 @@ export default function PlayerBookingDetailScreen() {
   const bookings = useBookings();
   const strings = useStrings();
   const token = useBackendAccessToken();
+  const sessionSource = useAppStore((state) => state.sessionSource);
+  const adminSettings = useAppStore((state) => state.adminSettings);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
   const booking = bookings.find((item) => item.id === params.id);
   const showPhotoUploadWarning = params.photoUpload === 'failed';
@@ -312,10 +318,24 @@ export default function PlayerBookingDetailScreen() {
     strings.find((item) => item.id === booking.stringId) ??
     getStringById(booking.stringId);
   const admin = getAdminById(booking.adminId);
+  const currentStoreSettings =
+    (sessionSource === 'backend'
+      ? adminSettings.find((item) => item.adminId === 'main') ??
+        adminSettings.find((item) => item.adminId === booking.adminId)
+      : adminSettings.find((item) => item.adminId === booking.adminId) ??
+        adminSettings.find((item) => item.adminId === 'main'));
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
     : 'Custom string selection';
-  const vendorLabel = admin?.businessName ?? 'Assigned shop';
+  const storeName = normalizeStoreText(currentStoreSettings?.storeName);
+  const storeAddress = normalizeStoreText(currentStoreSettings?.address);
+  const vendorLabel =
+    storeName ||
+    admin?.businessName ||
+    'Assigned shop';
+  const shopAddress =
+    storeAddress ||
+    'Address not provided';
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const latestUpdate = getLatestUpdate(booking);
   const heroStatusChip = getHeroStatusChipClasses(booking.status);
@@ -375,6 +395,15 @@ export default function PlayerBookingDetailScreen() {
             </HeroText>
             <View className="mt-2">
               <DetailRow label="Vendor" value={vendorLabel} />
+              <View className="h-px bg-[#EEF3F8]" />
+              <View className="py-3">
+                <HeroText className="text-[13px] text-neutral-500">
+                  Shop address
+                </HeroText>
+                <HeroText className="mt-1 text-[13px] leading-5 text-neutral-900">
+                  {shopAddress}
+                </HeroText>
+              </View>
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
               <View className="h-px bg-[#EEF3F8]" />
