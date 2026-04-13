@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppIconButton } from '../../components/ui/AppIconButton';
@@ -152,6 +152,7 @@ export default function AdminSettingsScreen() {
           trendingStringIds,
         });
       }
+      Alert.alert('Store settings saved', 'Your store details and homepage trending strings have been updated.');
     } catch (saveError) {
       setError(
         saveError instanceof BackendApiError
