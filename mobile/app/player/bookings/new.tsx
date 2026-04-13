@@ -20,6 +20,7 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
+  usePreferredAdminId,
   useStrings,
 } from '../../../store/appStore';
 import { MOCK_BOOKING_SLOTS } from '../../../mocks';
@@ -64,6 +65,7 @@ export default function NewBookingScreen() {
   const params = useLocalSearchParams<{ stringId?: string }>();
   const router = useRouter();
   const user = useCurrentUser();
+  const preferredAdminId = usePreferredAdminId();
   const strings = useStrings();
   const token = useBackendAccessToken();
   const setBookingDraft = useAppStore((state) => state.setBookingDraft);
@@ -79,7 +81,7 @@ export default function NewBookingScreen() {
   const selectedString = requestedStringId
     ? requestedString
     : strings[0] ?? getStringById('string-001');
-  const adminId = user.preferredAdminId;
+  const adminId = preferredAdminId ?? user.preferredAdminId;
   const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [liveSlots, setLiveSlots] = useState<BookingSlot[]>([]);
