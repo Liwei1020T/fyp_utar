@@ -4,8 +4,13 @@ import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { LockKeyhole, Smartphone, UserRound } from 'lucide-react-native';
+import { LockKeyhole, UserRound } from 'lucide-react-native';
 import { AuthShell } from '../../components/auth/AuthShell';
+import {
+  composePhoneIdentifier,
+  countryDialCodes,
+  PhoneNumberField,
+} from '../../components/auth/PhoneNumberField';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
@@ -16,7 +21,12 @@ import { mapBackendUserToPlayerProfile } from '../../services/backendMappers';
 const registerSchema = z
   .object({
     username: z.string().min(3, 'Username must be at least 3 characters'),
-    phoneNumber: z.string().min(9, 'Phone number must be at least 9 digits'),
+    countryCode: z.string().min(2, 'Choose a country code'),
+    phoneNumber: z
+      .string()
+      .trim()
+      .min(7, 'Enter your phone number')
+      .regex(/^\d[\d\s-]*$/, 'Use numbers only'),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
@@ -40,23 +50,27 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
+      countryCode: countryDialCodes[0].value,
       phoneNumber: '',
       password: '',
       confirmPassword: '',
     },
   });
+  const countryCodeValue = watch('countryCode');
 
   const onSubmit = async (data: RegisterForm) => {
     setFormError(null);
     try {
       const auth = await backendApi.registerPlayer({
         username: data.username,
-        phone_number: data.phoneNumber,
+        phone_number: composePhoneIdentifier(data.countryCode, data.phoneNumber),
         password: data.password,
       });
 
@@ -116,14 +130,23 @@ export default function RegisterScreen() {
         control={control}
         name="phoneNumber"
         render={({ field: { onChange, value } }) => (
-          <AppInput
-            label="Phone number"
-            placeholder="e.g. +60123456789"
-            keyboardType="phone-pad"
+          <PhoneNumberField
+            countryCode={countryCodeValue}
             value={value}
-            onChangeText={onChange}
-            error={errors.phoneNumber?.message}
-            leftAdornment={<Smartphone size={18} color="#64748B" />}
+            onChangePhoneNumber={onChange}
+            onChangeCountryCode={(nextCode) =>
+              setValue('countryCode', nextCode, { shouldValidate: true })
+            }
+            placeholder="123456789"
+            error={
+              errors.countryCode?.message ??
+              errors.phoneNumber?.message ??
+              formError
+            }
+            helperText={`We will create your account with ${composePhoneIdentifier(
+              countryCodeValue,
+              value || '',
+            )}.`}
           />
         )}
       />
@@ -140,8 +163,7 @@ export default function RegisterScreen() {
             onChangeText={onChange}
             error={errors.password?.message}
             helperText={
-              formError
-                ?? 'Use at least 8 characters with at least one letter and one number.'
+              'Use at least 8 characters with at least one letter and one number.'
             }
             leftAdornment={<LockKeyhole size={18} color="#64748B" />}
           />
