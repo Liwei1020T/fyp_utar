@@ -1,16 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { LockKeyhole, Phone } from 'lucide-react-native';
+import { Check, ChevronDown, LockKeyhole, Phone } from 'lucide-react-native';
 import { AuthShell } from '../../components/auth/AuthShell';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
+import { appChromeColors } from '../../components/ui/theme';
 import { useAppStore } from '../../store/appStore';
 import { getRoleHome } from '../../lib/navigation';
 import { BackendApiError, backendApi } from '../../services/backendApi';
@@ -101,6 +102,7 @@ export default function LoginScreen() {
   );
   const [selectedRole, setSelectedRole] = useState<UserRole>(params.role ?? 'player');
   const [formError, setFormError] = useState<string | null>(null);
+  const [isCountryPickerOpen, setIsCountryPickerOpen] = useState(false);
 
   const {
     control,
@@ -124,6 +126,8 @@ export default function LoginScreen() {
   const countryCodeValue = watch('countryCode');
   const phoneNumberValue = watch('phoneNumber');
   const identifierValue = composePhoneIdentifier(countryCodeValue, phoneNumberValue);
+  const selectedCountry =
+    countryDialCodes.find((item) => item.value === countryCodeValue) ?? countryDialCodes[0];
 
   useEffect(() => {
     const phoneParts = splitPhoneIdentifier(params.identifier ?? activeDemo.identifier);
@@ -233,65 +237,101 @@ export default function LoginScreen() {
 
         <Controller
           control={control}
-          name="countryCode"
-          render={({ field: { onChange, value } }) => (
-            <View className="gap-2">
-              <HeroText className="ml-1 text-sm font-semibold text-foreground">
-                Country code
-              </HeroText>
-              <View className="flex-row gap-2">
-                {countryDialCodes.map((item) => (
-                  <Pressable
-                    key={item.value}
-                    accessibilityRole="button"
-                    onPress={() => onChange(item.value)}
-                    className={`h-12 flex-1 items-center justify-center rounded-lg border bg-white ${
-                      value === item.value ? 'border-primary-600' : 'border-[#D2D2D7]'
-                    }`}
-                  >
-                    <HeroText
-                      className={`text-[15px] font-semibold ${
-                        value === item.value ? 'text-primary-700' : 'text-[#1D1D1F]'
-                      }`}
-                    >
-                      {item.label}
-                    </HeroText>
-                    <HeroText className="mt-0.5 text-[10px] text-[rgba(29,29,31,0.48)]">
-                      {item.caption}
-                    </HeroText>
-                  </Pressable>
-                ))}
-              </View>
-              {errors.countryCode?.message ? (
-                <HeroText className="ml-1 text-xs leading-5 text-danger">
-                  {errors.countryCode.message}
-                </HeroText>
-              ) : null}
-            </View>
-          )}
-        />
-
-        <Controller
-          control={control}
           name="phoneNumber"
           render={({ field: { onChange, value } }) => (
-            <AppInput
-              label="Phone number"
-              placeholder={
-                selectedRole === 'player'
-                  ? '123456789'
-                  : '190000000'
-              }
-              keyboardType="phone-pad"
-              value={value}
-              onChangeText={(nextValue) => onChange(normalizePhoneNumber(nextValue))}
-              error={errors.phoneNumber?.message}
-              helperText={
-                formError
-                  ?? `We will sign in with ${composePhoneIdentifier(countryCodeValue, value || '')}.`
-              }
-              leftAdornment={<Phone size={18} color="#64748B" />}
-            />
+            <View className="relative z-20 gap-2">
+              <HeroText className="ml-1 text-sm font-semibold text-foreground">
+                Phone number
+              </HeroText>
+              <View
+                className={`flex-row items-center rounded-lg border bg-white shadow-soft ${
+                  isCountryPickerOpen ? 'border-primary-600' : 'border-[#D2D2D7]'
+                }`}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose country code"
+                  onPress={() => setIsCountryPickerOpen((current) => !current)}
+                  className="h-14 min-w-[94px] flex-row items-center justify-center gap-1.5 border-r border-[#D2D2D7] px-3"
+                >
+                  <HeroText className="text-[15px] font-semibold text-[#1D1D1F]">
+                    {selectedCountry.value}
+                  </HeroText>
+                  <ChevronDown
+                    size={15}
+                    color="#1D1D1F"
+                    strokeWidth={2}
+                    style={{ transform: [{ rotate: isCountryPickerOpen ? '180deg' : '0deg' }] }}
+                  />
+                </Pressable>
+                <Phone size={17} color="rgba(29,29,31,0.48)" strokeWidth={2} className="ml-3" />
+                <TextInput
+                  placeholder={
+                    selectedRole === 'player'
+                      ? '123456789'
+                      : '190000000'
+                  }
+                  keyboardType="phone-pad"
+                  value={value}
+                  onChangeText={(nextValue) => onChange(normalizePhoneNumber(nextValue))}
+                  placeholderTextColor="rgba(29,29,31,0.48)"
+                  selectionColor={appChromeColors.primary}
+                  className="h-14 flex-1 border-0 bg-transparent px-3 text-[15px] text-[#1D1D1F] outline-none"
+                />
+              </View>
+              {isCountryPickerOpen ? (
+                <View className="absolute left-0 right-0 top-[78px] z-30 overflow-hidden rounded-lg border border-[#D2D2D7] bg-white shadow-float">
+                  {countryDialCodes.map((item) => {
+                    const isSelected = countryCodeValue === item.value;
+
+                    return (
+                      <Pressable
+                        key={item.value}
+                        accessibilityRole="button"
+                        onPress={() => {
+                          setValue('countryCode', item.value, { shouldValidate: true });
+                          setIsCountryPickerOpen(false);
+                        }}
+                        className={`min-h-14 flex-row items-center justify-between px-4 py-3 ${
+                          isSelected ? 'bg-primary-50' : 'bg-white'
+                        }`}
+                      >
+                        <View>
+                          <HeroText
+                            className={`text-[15px] font-semibold ${
+                              isSelected ? 'text-primary-700' : 'text-[#1D1D1F]'
+                            }`}
+                          >
+                            {item.caption}
+                          </HeroText>
+                          <HeroText className="mt-0.5 text-[12px] text-[rgba(29,29,31,0.52)]">
+                            {item.value}
+                          </HeroText>
+                        </View>
+                        {isSelected ? (
+                          <Check size={17} color="#0071E3" strokeWidth={2.2} />
+                        ) : null}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : null}
+              {(errors.countryCode?.message || errors.phoneNumber?.message || formError) ? (
+                <HeroText
+                  className={`ml-1 text-xs leading-5 ${
+                    errors.countryCode?.message || errors.phoneNumber?.message || formError
+                      ? 'text-danger'
+                      : 'text-muted'
+                  }`}
+                >
+                  {errors.countryCode?.message ?? errors.phoneNumber?.message ?? formError}
+                </HeroText>
+              ) : (
+                <HeroText className="ml-1 text-xs leading-5 text-muted">
+                  We will sign in with {composePhoneIdentifier(countryCodeValue, value || '')}.
+                </HeroText>
+              )}
+            </View>
           )}
         />
 
