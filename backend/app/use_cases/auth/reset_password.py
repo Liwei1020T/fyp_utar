@@ -54,4 +54,3 @@ class ResetPasswordUseCase:
         if user is None:
             raise BadRequestError("Invalid or expired verification code")
         self.password_reset_repository.mark_used(reset_code.id, now)
-

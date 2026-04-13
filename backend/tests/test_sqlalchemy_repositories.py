@@ -45,7 +45,9 @@ def test_sqlalchemy_booking_repository_creates_history_entries() -> None:
         assert booking.status == BookingStatus.AWAITING_DROPOFF.value
         assert booking.order_code.startswith("ORD-")
         assert len(booking.status_history) == 1
-        assert booking.status_history[0].new_status == BookingStatus.AWAITING_DROPOFF.value
+        assert (
+            booking.status_history[0].new_status == BookingStatus.AWAITING_DROPOFF.value
+        )
         by_order_code = booking_repository.get_by_order_code(booking.order_code)
         assert by_order_code is not None
         assert by_order_code.id == booking.id

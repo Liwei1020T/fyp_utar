@@ -37,27 +37,195 @@ ASPECT_FIELDS = (
 )
 
 FEATURE_DEFINITIONS = (
-    ("attack", "Attack", "catalog_aspect", "score", 0, 1, "Explosive offensive response."),
-    ("comfort", "Comfort", "catalog_aspect", "score", 0, 1, "Overall comfort and feel on impact."),
-    ("control", "Control", "catalog_aspect", "score", 0, 1, "Control-oriented response."),
-    ("durability", "Durability", "catalog_aspect", "score", 0, 1, "Resistance to snapping and wear."),
-    ("elasticity", "Elasticity", "catalog_aspect", "score", 0, 1, "Elastic rebound feel."),
-    ("sound", "Hitting Sound", "catalog_aspect", "score", 0, 1, "Crisp sound response."),
-    ("string_movement", "String Movement", "catalog_aspect", "score", 0, 1, "String bed movement behaviour."),
-    ("tension_retention", "Tension Retention", "catalog_aspect", "score", 0, 1, "Ability to hold tension over time."),
-    ("value_for_money", "Value for Money", "catalog_aspect", "score", 0, 1, "Perceived value for price paid."),
-    ("beginner_fit_score", "Beginner Fit", "derived_aspect", "score", 0, 1, "Derived beginner-friendliness score."),
-    ("stability_score", "Stability", "derived_aspect", "score", 0, 1, "Derived stability score."),
-    ("all_round_score", "All Round", "derived_aspect", "score", 0, 1, "Derived all-round playability score."),
-    ("gauge_mm", "Gauge (mm)", "catalog_structured", "number", 0.5, 0.8, "Nominal string gauge."),
-    ("skill_level_weight", "Skill Level Weight", "user_preference", "weight", 0, 1, "Weight derived from player skill level."),
-    ("playing_style_weight", "Playing Style Weight", "user_preference", "weight", 0, 1, "Weight derived from playing style."),
-    ("budget_weight", "Budget Weight", "user_preference", "weight", 0, 1, "Weight derived from budget fit."),
-    ("durability_preference", "Durability Preference", "user_preference", "weight", 0, 1, "Player durability preference."),
-    ("repulsion_preference", "Repulsion Preference", "user_preference", "weight", 0, 1, "Player repulsion preference."),
-    ("control_preference", "Control Preference", "user_preference", "weight", 0, 1, "Player control preference."),
-    ("sound_preference", "Sound Preference", "user_preference", "weight", 0, 1, "Player sound preference."),
-    ("comfort_preference", "Comfort Preference", "user_preference", "weight", 0, 1, "Player comfort preference."),
+    (
+        "attack",
+        "Attack",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Explosive offensive response.",
+    ),
+    (
+        "comfort",
+        "Comfort",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Overall comfort and feel on impact.",
+    ),
+    (
+        "control",
+        "Control",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Control-oriented response.",
+    ),
+    (
+        "durability",
+        "Durability",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Resistance to snapping and wear.",
+    ),
+    (
+        "elasticity",
+        "Elasticity",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Elastic rebound feel.",
+    ),
+    (
+        "sound",
+        "Hitting Sound",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Crisp sound response.",
+    ),
+    (
+        "string_movement",
+        "String Movement",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "String bed movement behaviour.",
+    ),
+    (
+        "tension_retention",
+        "Tension Retention",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Ability to hold tension over time.",
+    ),
+    (
+        "value_for_money",
+        "Value for Money",
+        "catalog_aspect",
+        "score",
+        0,
+        1,
+        "Perceived value for price paid.",
+    ),
+    (
+        "beginner_fit_score",
+        "Beginner Fit",
+        "derived_aspect",
+        "score",
+        0,
+        1,
+        "Derived beginner-friendliness score.",
+    ),
+    (
+        "stability_score",
+        "Stability",
+        "derived_aspect",
+        "score",
+        0,
+        1,
+        "Derived stability score.",
+    ),
+    (
+        "all_round_score",
+        "All Round",
+        "derived_aspect",
+        "score",
+        0,
+        1,
+        "Derived all-round playability score.",
+    ),
+    (
+        "gauge_mm",
+        "Gauge (mm)",
+        "catalog_structured",
+        "number",
+        0.5,
+        0.8,
+        "Nominal string gauge.",
+    ),
+    (
+        "skill_level_weight",
+        "Skill Level Weight",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Weight derived from player skill level.",
+    ),
+    (
+        "playing_style_weight",
+        "Playing Style Weight",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Weight derived from playing style.",
+    ),
+    (
+        "budget_weight",
+        "Budget Weight",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Weight derived from budget fit.",
+    ),
+    (
+        "durability_preference",
+        "Durability Preference",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Player durability preference.",
+    ),
+    (
+        "repulsion_preference",
+        "Repulsion Preference",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Player repulsion preference.",
+    ),
+    (
+        "control_preference",
+        "Control Preference",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Player control preference.",
+    ),
+    (
+        "sound_preference",
+        "Sound Preference",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Player sound preference.",
+    ),
+    (
+        "comfort_preference",
+        "Comfort Preference",
+        "user_preference",
+        "weight",
+        0,
+        1,
+        "Player comfort preference.",
+    ),
 )
 
 
@@ -72,8 +240,7 @@ def _catalog_payload() -> dict[str, object]:
 
 def _normalize_name(brand: str, model_name: str) -> str:
     return " ".join(
-        f"{brand} {model_name}"
-        .strip()
+        f"{brand} {model_name}".strip()
         .lower()
         .replace("-", " ")
         .replace("_", " ")
@@ -185,7 +352,9 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("catalog_id"),
     )
 
@@ -195,7 +364,9 @@ def upgrade() -> None:
         sa.Column("tag_key", sa.String(length=80), nullable=False),
         sa.Column("tag_label", sa.String(length=120), nullable=False),
         sa.Column("tag_count", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("catalog_id", "tag_key"),
     )
 
@@ -222,7 +393,9 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("catalog_id"),
     )
     op.create_index(
@@ -251,13 +424,19 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("inventory_id"),
         sa.UniqueConstraint("catalog_id"),
         sa.UniqueConstraint("sku"),
     )
-    op.create_index("ix_inventory_items_catalog_id", "inventory_items", ["catalog_id"], unique=True)
-    op.create_index("ix_inventory_items_is_active", "inventory_items", ["is_active"], unique=False)
+    op.create_index(
+        "ix_inventory_items_catalog_id", "inventory_items", ["catalog_id"], unique=True
+    )
+    op.create_index(
+        "ix_inventory_items_is_active", "inventory_items", ["is_active"], unique=False
+    )
 
     op.create_table(
         "inventory_movements",
@@ -274,12 +453,29 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["inventory_id"], ["inventory_items.inventory_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["inventory_id"], ["inventory_items.inventory_id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("movement_id"),
     )
-    op.create_index("ix_inventory_movements_inventory_id", "inventory_movements", ["inventory_id"], unique=False)
-    op.create_index("ix_inventory_movements_movement_type", "inventory_movements", ["movement_type"], unique=False)
-    op.create_index("ix_inventory_movements_created_at", "inventory_movements", ["created_at"], unique=False)
+    op.create_index(
+        "ix_inventory_movements_inventory_id",
+        "inventory_movements",
+        ["inventory_id"],
+        unique=False,
+    )
+    op.create_index(
+        "ix_inventory_movements_movement_type",
+        "inventory_movements",
+        ["movement_type"],
+        unique=False,
+    )
+    op.create_index(
+        "ix_inventory_movements_created_at",
+        "inventory_movements",
+        ["created_at"],
+        unique=False,
+    )
 
     op.create_table(
         "recommendation_feature_definitions",
@@ -334,8 +530,14 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["feature_key"], ["recommendation_feature_definitions.feature_key"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(
+            ["feature_key"],
+            ["recommendation_feature_definitions.feature_key"],
+            ondelete="CASCADE",
+        ),
         sa.PrimaryKeyConstraint("catalog_id", "feature_key", "source_layer"),
     )
     op.create_index(
@@ -359,7 +561,11 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["feature_key"], ["recommendation_feature_definitions.feature_key"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["feature_key"],
+            ["recommendation_feature_definitions.feature_key"],
+            ondelete="CASCADE",
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id", "feature_key", "source_layer"),
     )
@@ -382,7 +588,9 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["catalog_id"], ["strings.catalog_id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id", "catalog_id", "algorithm_version"),
     )
@@ -488,10 +696,18 @@ def upgrade() -> None:
                 {"new_id": item["catalog_id"], "old_id": legacy["id"]},
             )
 
-        stock_level = int(legacy["stock_level"]) if legacy and legacy["stock_level"] is not None else 8
+        stock_level = (
+            int(legacy["stock_level"])
+            if legacy and legacy["stock_level"] is not None
+            else 8
+        )
         price_rm = legacy["price_rm"] if legacy else None
-        is_active = bool(legacy["is_active"]) if legacy else bool(item.get("is_active", True))
-        inventory_id = str(legacy["id"]) if legacy else f"{item['catalog_id']}-inventory"
+        is_active = (
+            bool(legacy["is_active"]) if legacy else bool(item.get("is_active", True))
+        )
+        inventory_id = (
+            str(legacy["id"]) if legacy else f"{item['catalog_id']}-inventory"
+        )
 
         bind.execute(
             sa.text(
@@ -529,7 +745,9 @@ def upgrade() -> None:
                 "color_options_en": json.dumps(item.get("color_options_en") or []),
                 "short_description": item["short_description"],
                 "full_description": item["full_description"],
-                "official_performance_status": item.get("official_performance_status", "pending_manual_fill"),
+                "official_performance_status": item.get(
+                    "official_performance_status", "pending_manual_fill"
+                ),
                 "source_dataset_url": item.get("source_dataset_url"),
                 "source_language": item.get("source_language", "en"),
                 "original_name": item.get("original_name"),
@@ -595,7 +813,9 @@ def upgrade() -> None:
             ),
             {
                 "catalog_id": item["catalog_id"],
-                "status": item.get("official_performance_status", "pending_manual_fill"),
+                "status": item.get(
+                    "official_performance_status", "pending_manual_fill"
+                ),
                 "updated_at": legacy["updated_at"] if legacy else None,
             },
         )
@@ -853,7 +1073,8 @@ def upgrade() -> None:
     booking_fks = [
         fk["name"]
         for fk in inspector.get_foreign_keys("bookings")
-        if fk.get("referred_table") in {"string_catalog_items", "string_catalog_items_legacy"}
+        if fk.get("referred_table")
+        in {"string_catalog_items", "string_catalog_items_legacy"}
     ]
     with op.batch_alter_table("bookings", recreate="always") as batch_op:
         for constraint_name in booking_fks:

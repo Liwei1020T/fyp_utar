@@ -25,4 +25,3 @@ class LoginUseCase:
         if user.role not in {UserRole.CUSTOMER.value, UserRole.ADMIN.value}:
             raise ForbiddenError("Unsupported user role")
         return user
-

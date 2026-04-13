@@ -17,7 +17,9 @@ from app.adapters.persistence.sqlalchemy.models.common import generate_uuid
 class PasswordResetCode(Base):
     __tablename__ = "password_reset_codes"
 
-    id: Mapped[str] = mapped_column(SAString(36), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
     user_id: Mapped[str] = mapped_column(
         SAString(36),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -35,4 +37,3 @@ class PasswordResetCode(Base):
         DateTime(timezone=True),
         server_default=func.now(),
     )
-

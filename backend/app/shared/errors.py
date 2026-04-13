@@ -57,4 +57,3 @@ class ConflictError(AppError):
             code="conflict",
             details=details,
         )
-

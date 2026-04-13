@@ -81,7 +81,9 @@ class GetStoreAnalyticsUseCase:
         low_stock_count = sum(
             1 for item in strings if inventory_availability(item) == "low_stock"
         )
-        popular_string_ids = [string_id for string_id, _ in string_counter.most_common(3)]
+        popular_string_ids = [
+            string_id for string_id, _ in string_counter.most_common(3)
+        ]
         return AnalyticsSummary(
             weekly_bookings=weekly_bookings,
             pending_payment_count=0,
@@ -117,7 +119,9 @@ class GetStoreAnalyticsUseCase:
             if booking.status
             not in {BookingStatus.CANCELLED.value, BookingStatus.REJECTED.value}
         ]
-        counter: Counter[str] = Counter(booking.string_id for booking in active_bookings)
+        counter: Counter[str] = Counter(
+            booking.string_id for booking in active_bookings
+        )
         catalog = {
             item.id: item
             for item in self.catalog_repository.list_inventory(
@@ -140,4 +144,3 @@ class GetStoreAnalyticsUseCase:
                 )
             )
         return items
-

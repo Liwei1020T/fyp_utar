@@ -118,4 +118,3 @@ def slots_for_date(
         )
         current += duration
     return items
-

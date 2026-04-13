@@ -29,4 +29,3 @@ class ListAdminBookingsUseCase:
             limit=limit,
             offset=offset,
         )
-

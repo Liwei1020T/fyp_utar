@@ -5,4 +5,3 @@ from typing import Protocol
 
 class ReviewAnalysisService(Protocol):
     def analyze_reviews(self, reviews: list[str]) -> dict[str, object]: ...
-

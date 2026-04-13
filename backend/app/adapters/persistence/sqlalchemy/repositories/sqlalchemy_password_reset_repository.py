@@ -6,7 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
-from app.adapters.persistence.sqlalchemy.repositories.mappers import to_password_reset_code
+from app.adapters.persistence.sqlalchemy.repositories.mappers import (
+    to_password_reset_code,
+)
 from app.domain.auth.entities import PasswordResetCodeRecord
 
 
@@ -70,4 +72,3 @@ class SqlAlchemyPasswordResetRepository:
             return
         record.used_at = used_at
         self.db.commit()
-

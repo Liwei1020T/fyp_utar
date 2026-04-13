@@ -16,4 +16,3 @@ def error_payload(
             "details": details or {},
         }
     }
-

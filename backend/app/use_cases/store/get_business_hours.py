@@ -16,4 +16,3 @@ class GetBusinessHoursUseCase:
         if hours is None:
             raise NotFoundError("Store business hours not found")
         return hours
-

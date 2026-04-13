@@ -15,7 +15,9 @@ from app.adapters.persistence.sqlalchemy.models.store_business_hours import (
 )
 from app.adapters.persistence.sqlalchemy.models.store_settings import StoreSettings
 from app.adapters.persistence.sqlalchemy.models.string_catalog_item import Brand
-from app.adapters.persistence.sqlalchemy.models.string_catalog_item import InventoryMovement
+from app.adapters.persistence.sqlalchemy.models.string_catalog_item import (
+    InventoryMovement,
+)
 from app.adapters.persistence.sqlalchemy.models.string_catalog_item import (
     RecommendationFeatureDefinition,
 )

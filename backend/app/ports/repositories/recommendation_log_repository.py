@@ -25,4 +25,3 @@ class RecommendationLogRepository(Protocol):
         limit: int | None,
         offset: int,
     ) -> Page[RecommendationLogRecord]: ...
-

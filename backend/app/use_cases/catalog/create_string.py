@@ -12,4 +12,3 @@ class CreateStringUseCase:
 
     def execute(self, values: dict[str, object]) -> StringItem:
         return self.catalog_repository.create(values)
-

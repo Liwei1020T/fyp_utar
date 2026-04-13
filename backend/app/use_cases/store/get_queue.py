@@ -23,7 +23,9 @@ class GetQueueUseCase:
             (BookingStatus.IN_PROGRESS.value, "In progress"),
             (BookingStatus.READY_FOR_COLLECTION.value, "Ready for collection"),
         ):
-            lane_bookings = [booking for booking in bookings if booking.status == status]
+            lane_bookings = [
+                booking for booking in bookings if booking.status == status
+            ]
             lanes.append(
                 ServiceQueueLane(
                     status=status,
@@ -38,4 +40,3 @@ class GetQueueUseCase:
             generated_at=datetime.now(timezone.utc).isoformat(),
             lanes=lanes,
         )
-

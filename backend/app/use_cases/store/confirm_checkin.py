@@ -38,4 +38,3 @@ class ConfirmCheckInUseCase:
             changed_by_user_id=admin_user_id,
             note=(note or "Checked in at the service counter.").strip(),
         )
-

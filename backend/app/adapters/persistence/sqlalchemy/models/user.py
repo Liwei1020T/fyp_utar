@@ -24,7 +24,9 @@ if TYPE_CHECKING:
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(SAString(36), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
     username: Mapped[str] = mapped_column(SAString(64), index=True)
     phone_number: Mapped[str] = mapped_column(SAString(20), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(SAString(255))

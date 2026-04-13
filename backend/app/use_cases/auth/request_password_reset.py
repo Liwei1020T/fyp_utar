@@ -28,9 +28,7 @@ class RequestPasswordResetUseCase:
 
         now = self.clock.now()
         self.password_reset_repository.mark_active_codes_used(phone_number, now)
-        code = (
-            f"{secrets.randbelow(10**PASSWORD_RESET_CODE_LENGTH):0{PASSWORD_RESET_CODE_LENGTH}d}"
-        )
+        code = f"{secrets.randbelow(10**PASSWORD_RESET_CODE_LENGTH):0{PASSWORD_RESET_CODE_LENGTH}d}"
         self.password_reset_repository.create_code(
             user_id=user.id,
             phone_number=user.phone_number,
@@ -40,4 +38,3 @@ class RequestPasswordResetUseCase:
         if self.dev_preview_enabled and self.is_dev_like:
             return code
         return None
-

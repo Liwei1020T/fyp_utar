@@ -10,4 +10,3 @@ class BookingStatus(StrEnum):
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     REJECTED = "rejected"
-

@@ -12,4 +12,3 @@ class UpdateStoreSettingsUseCase:
 
     def execute(self, values: dict[str, object]) -> StoreSettingsRecord:
         return self.store_repository.update_store_settings(values)
-

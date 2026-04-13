@@ -16,4 +16,3 @@ class DeactivateStringUseCase:
         if existing is None:
             raise NotFoundError("String not found")
         return self.catalog_repository.deactivate(string_id)
-

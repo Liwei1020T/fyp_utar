@@ -295,8 +295,9 @@ class SqlAlchemyBookingRepository:
 
         booking = (
             self.db.execute(
-                query.order_by(Booking.drop_off_datetime.asc(), Booking.created_at.asc())
-                .limit(1)
+                query.order_by(
+                    Booking.drop_off_datetime.asc(), Booking.created_at.asc()
+                ).limit(1)
             )
             .unique()
             .scalars()

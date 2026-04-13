@@ -11,4 +11,3 @@ class ReviewAnalysisAdapter:
     def analyze_reviews(self, reviews: list[str]) -> dict[str, object]:
         response = self.service.analyze_reviews(ReviewAnalyzeRequest(reviews=reviews))
         return response.model_dump(mode="json")
-

@@ -46,4 +46,3 @@ class AuthTokenPayload:
     user_id: str
     phone_number: str
     role: str
-

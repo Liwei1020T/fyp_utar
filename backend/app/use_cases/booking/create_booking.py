@@ -26,7 +26,9 @@ class CreateBookingUseCase:
         drop_off_datetime: datetime | None,
         notes: str | None,
     ) -> BookingRecord:
-        string_item = self.catalog_repository.get_by_id(string_id, include_inactive=False)
+        string_item = self.catalog_repository.get_by_id(
+            string_id, include_inactive=False
+        )
         if string_item is None:
             raise NotFoundError("String not found")
         return self.booking_repository.create_booking(
@@ -40,4 +42,3 @@ class CreateBookingUseCase:
             status=BookingStatus.AWAITING_DROPOFF.value,
             changed_by_user_id=user_id,
         )
-

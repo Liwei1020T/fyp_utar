@@ -12,7 +12,9 @@ from app.entrypoints.api.routes.booking_routes import router as booking_router
 from app.entrypoints.api.routes.catalog_routes import router as catalog_router
 from app.entrypoints.api.routes.media_routes import router as media_router
 from app.entrypoints.api.routes.profile_routes import router as profile_router
-from app.entrypoints.api.routes.recommendation_routes import router as recommendation_router
+from app.entrypoints.api.routes.recommendation_routes import (
+    router as recommendation_router,
+)
 from app.entrypoints.api.routes.store_routes import router as store_router
 
 

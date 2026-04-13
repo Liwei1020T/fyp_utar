@@ -56,4 +56,3 @@ class Pbkdf2PasswordHasher:
             dklen=32,
         )
         return hmac.compare_digest(derived_digest.hex(), digest_hex)
-

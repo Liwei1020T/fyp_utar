@@ -15,7 +15,9 @@ class RegisterUserUseCase:
     user_repository: UserRepository
     password_hasher: PasswordHasher
 
-    def execute(self, *, username: str, phone_number: str, password: str) -> UserAccount:
+    def execute(
+        self, *, username: str, phone_number: str, password: str
+    ) -> UserAccount:
         existing = self.user_repository.get_by_phone_number(phone_number)
         if existing is not None:
             raise ConflictError("Phone number already registered")
@@ -26,4 +28,3 @@ class RegisterUserUseCase:
             role=UserRole.CUSTOMER.value,
             auth_provider=AuthProvider.LOCAL.value,
         )
-

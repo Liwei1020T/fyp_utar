@@ -14,4 +14,3 @@ class Page(Generic[T]):
     total: int
     limit: int | None
     offset: int
-

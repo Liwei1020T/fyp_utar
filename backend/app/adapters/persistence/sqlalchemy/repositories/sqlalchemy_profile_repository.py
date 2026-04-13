@@ -49,4 +49,3 @@ class SqlAlchemyProfileRepository:
         self.db.commit()
         self.db.refresh(record)
         return to_profile(record)
-

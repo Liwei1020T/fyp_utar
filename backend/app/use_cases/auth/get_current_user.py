@@ -16,4 +16,3 @@ class GetCurrentUserUseCase:
         if user is None:
             raise NotFoundError("User not found")
         return user
-

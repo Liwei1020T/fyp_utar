@@ -19,4 +19,3 @@ class GetStringUseCase:
         if item is None:
             raise NotFoundError("String not found")
         return item
-

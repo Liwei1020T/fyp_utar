@@ -28,4 +28,3 @@ class ListInventoryStringsUseCase:
             limit=limit,
             offset=offset,
         )
-

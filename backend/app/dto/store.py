@@ -122,7 +122,9 @@ class StoreSettingsPayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_trending_string_ids(self) -> "StoreSettingsPayload":
-        normalized = [value.strip() for value in self.trending_string_ids if value.strip()]
+        normalized = [
+            value.strip() for value in self.trending_string_ids if value.strip()
+        ]
         if len(set(normalized)) != len(normalized):
             raise ValueError("trending_string_ids must not contain duplicates")
         self.trending_string_ids = normalized
@@ -164,7 +166,9 @@ class PopularStringOut(BaseModel):
 def business_hours_to_dto(hours: StoreBusinessHoursRecord) -> StoreBusinessHoursOut:
     return StoreBusinessHoursOut(
         id=hours.id,
-        days=[BusinessHoursDayPayload.model_validate(day.__dict__) for day in hours.days],
+        days=[
+            BusinessHoursDayPayload.model_validate(day.__dict__) for day in hours.days
+        ],
         special_closed_dates=hours.special_closed_dates,
         updated_at=hours.updated_at,
     )

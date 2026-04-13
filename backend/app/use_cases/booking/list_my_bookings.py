@@ -13,4 +13,3 @@ class ListMyBookingsUseCase:
 
     def execute(self, user_id: str) -> Page[BookingRecord]:
         return self.booking_repository.list_by_user(user_id)
-

@@ -13,7 +13,9 @@ class SqlAlchemyUserRepository:
         self.db = db
 
     def get_by_id(self, user_id: str) -> UserAccount | None:
-        user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = self.db.execute(
+            select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
         return to_user_account(user) if user else None
 
     def get_by_phone_number(self, phone_number: str) -> UserAccount | None:

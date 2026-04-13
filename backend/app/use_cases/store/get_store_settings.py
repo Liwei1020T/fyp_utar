@@ -16,4 +16,3 @@ class GetStoreSettingsUseCase:
         if settings is None:
             raise NotFoundError("Store settings not found")
         return settings
-

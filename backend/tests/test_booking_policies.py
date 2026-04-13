@@ -28,4 +28,3 @@ def test_booking_status_transition_rejects_invalid_progression() -> None:
             BookingStatus.AWAITING_DROPOFF.value,
             BookingStatus.COMPLETED.value,
         )
-

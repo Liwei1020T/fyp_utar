@@ -9,7 +9,9 @@ from sqlalchemy.orm import joinedload
 
 from app.adapters.persistence.sqlalchemy.models import RecommendationLog
 from app.adapters.persistence.sqlalchemy.models import User
-from app.adapters.persistence.sqlalchemy.repositories.mappers import to_recommendation_log
+from app.adapters.persistence.sqlalchemy.repositories.mappers import (
+    to_recommendation_log,
+)
 from app.domain.recommendation.entities import RecommendationLogRecord
 from app.shared.pagination import Page
 
@@ -29,7 +31,9 @@ class SqlAlchemyRecommendationLogRepository:
         self.db.add(
             RecommendationLog(
                 user_id=user_id,
-                request_json=json.dumps(request_payload, ensure_ascii=False, sort_keys=True),
+                request_json=json.dumps(
+                    request_payload, ensure_ascii=False, sort_keys=True
+                ),
                 recommendation_json=json.dumps(response_payload, ensure_ascii=False),
                 algorithm_version=algorithm_version,
             )
@@ -67,4 +71,3 @@ class SqlAlchemyRecommendationLogRepository:
             limit=limit,
             offset=offset,
         )
-

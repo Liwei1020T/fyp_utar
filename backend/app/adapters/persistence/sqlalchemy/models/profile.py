@@ -23,7 +23,9 @@ if TYPE_CHECKING:
 class Profile(Base):
     __tablename__ = "profiles"
 
-    id: Mapped[str] = mapped_column(SAString(36), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
     user_id: Mapped[str] = mapped_column(
         SAString(36),
         ForeignKey("users.id", ondelete="CASCADE"),

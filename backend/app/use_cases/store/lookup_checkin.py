@@ -30,10 +30,9 @@ class LookupCheckInUseCase:
         normalized_reference = reference.strip().upper()
         booking = self.booking_repository.find_active_by_reference(normalized_reference)
         if booking is not None:
-            matched_by_check_in_reference = (
-                booking_check_in_reference(booking.id) == normalized_reference
-                or normalized_reference.startswith("LIVE-")
-            )
+            matched_by_check_in_reference = booking_check_in_reference(
+                booking.id
+            ) == normalized_reference or normalized_reference.startswith("LIVE-")
             return CheckInLookup(
                 matched_by=(
                     "check_in_reference"

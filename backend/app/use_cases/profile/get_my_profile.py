@@ -16,4 +16,3 @@ class GetMyProfileUseCase:
         if profile is None:
             raise NotFoundError("Profile not found")
         return profile
-

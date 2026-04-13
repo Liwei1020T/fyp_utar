@@ -16,4 +16,3 @@ class GetBookingUseCase:
         if booking is None:
             raise NotFoundError("Booking not found")
         return booking
-

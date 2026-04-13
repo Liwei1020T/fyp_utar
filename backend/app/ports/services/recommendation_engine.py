@@ -14,4 +14,3 @@ class RecommendationEngine(Protocol):
         catalog: Sequence[StringItem],
         request: RecommendationRequestModel,
     ) -> RecommendationResponseModel: ...
-

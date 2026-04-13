@@ -19,7 +19,9 @@ class UpdateOfficialPerformanceUseCase:
         values: dict[str, object],
     ) -> StringOfficialPerformance:
         if not values:
-            raise BadRequestError("At least one official performance field must be provided")
+            raise BadRequestError(
+                "At least one official performance field must be provided"
+            )
         existing = self.catalog_repository.get_by_id(string_id, include_inactive=True)
         if existing is None:
             raise NotFoundError("String not found")

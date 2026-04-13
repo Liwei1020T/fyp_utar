@@ -18,6 +18,8 @@ The active migration sequence is:
 - [20260412_0010_activate_recommendation_cache_breakdown.py](../migrations/versions/20260412_0010_activate_recommendation_cache_breakdown.py)
 - [20260412_0011_preference_raw_score_and_features.py](../migrations/versions/20260412_0011_preference_raw_score_and_features.py)
 - [20260413_0012_admin_string_editor_fields.py](../migrations/versions/20260413_0012_admin_string_editor_fields.py)
+- [20260413_0013_store_settings_trending_strings.py](../migrations/versions/20260413_0013_store_settings_trending_strings.py)
+- [20260413_0014_schema_drift_cleanup.py](../migrations/versions/20260413_0014_schema_drift_cleanup.py)
 
 ## Active Business Tables
 
@@ -79,7 +81,7 @@ The old `string_catalog_items` table was split into a normalized catalog subsyst
 - `recommendation_score_cache`
   - cached recommendation results per user and algorithm version, including the active score breakdown and rationale payload
 
-The migration keeps the legacy flat table only as historical migrated state during transition. The active runtime schema now reads catalog and inventory data from the normalized tables above.
+The migration keeps the legacy flat table only as historical migrated state during transition. Alembic autogenerate intentionally ignores `string_catalog_items_legacy`, and the active runtime schema now reads catalog and inventory data from the normalized tables above.
 
 ### `strings`
 
@@ -122,6 +124,8 @@ Stores the current store-facing inventory and pricing state:
 - `reorder_quantity`
 - `cost_price`
 - `selling_price`
+- `pricing_mode`
+- `availability_status`
 - `is_active`
 
 ### `string_recommendation_matrix`

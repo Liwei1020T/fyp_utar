@@ -30,4 +30,3 @@ class UpdateBookingStatusUseCase:
             changed_by_user_id=changed_by_user_id,
             note=note.strip() if note else None,
         )
-

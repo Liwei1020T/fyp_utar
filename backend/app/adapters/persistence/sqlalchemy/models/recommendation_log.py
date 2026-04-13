@@ -22,7 +22,9 @@ if TYPE_CHECKING:
 class RecommendationLog(Base):
     __tablename__ = "recommendation_logs"
 
-    id: Mapped[str] = mapped_column(SAString(36), primary_key=True, default=generate_uuid)
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
     user_id: Mapped[str | None] = mapped_column(
         SAString(36),
         ForeignKey("users.id", ondelete="SET NULL"),

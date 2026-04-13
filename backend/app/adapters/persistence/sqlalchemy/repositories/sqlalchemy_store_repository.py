@@ -48,4 +48,3 @@ class SqlAlchemyStoreRepository:
         self.db.commit()
         self.db.refresh(record)
         return to_store_settings(record)
-

@@ -19,4 +19,3 @@ class UpdateInventoryStringUseCase:
         if existing is None:
             raise NotFoundError("String not found")
         return self.catalog_repository.update_inventory(string_id, values)
-

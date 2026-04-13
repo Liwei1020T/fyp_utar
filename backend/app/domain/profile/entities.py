@@ -43,4 +43,3 @@ class PlayerProfile:
     pref_value_for_money: int | None
     created_at: datetime | None
     updated_at: datetime | None
-

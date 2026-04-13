@@ -22,4 +22,3 @@ class StoreRepository(Protocol):
         self,
         values: dict[str, object],
     ) -> StoreSettingsRecord: ...
-

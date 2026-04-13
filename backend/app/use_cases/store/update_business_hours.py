@@ -20,4 +20,3 @@ class UpdateBusinessHoursUseCase:
             days=days,
             special_closed_dates=special_closed_dates,
         )
-
