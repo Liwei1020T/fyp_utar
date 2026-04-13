@@ -29,6 +29,7 @@ import {
 import {
   useAppStore,
   useBackendAccessToken,
+  useCurrentUser,
   useStrings,
 } from '../../../store/appStore';
 import type {
@@ -626,7 +627,10 @@ export default function AdminInventoryDetailScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const token = useBackendAccessToken();
   const strings = useStrings();
+  const currentUser = useCurrentUser();
   const sessionSource = useAppStore((state) => state.sessionSource);
+  const adminSettings = useAppStore((state) => state.adminSettings);
+  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
   const updateStringItem = useAppStore((state) => state.updateStringItem);
   const stringItem = strings.find((item) => item.id === params.id);
 
@@ -835,6 +839,27 @@ export default function AdminInventoryDetailScreen() {
 
   const backendSyncEnabled = sessionSource === 'backend' && Boolean(token);
   const summaryPrice = getInventoryPriceLabel(previewItem);
+  const trendingStringIds =
+    adminSettings.find((item) => item.adminId === currentUser?.id)?.trendingStringIds ?? [];
+  const isTrendingOnHome = trendingStringIds.includes(stringItem.id);
+
+  const toggleTrendingPlacement = () => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      return;
+    }
+
+    const nextTrending = isTrendingOnHome
+      ? trendingStringIds.filter((id) => id !== stringItem.id)
+      : [...trendingStringIds.filter((id) => id !== stringItem.id).slice(-4), stringItem.id];
+
+    updateAdminSettings(currentUser.id, { trendingStringIds: nextTrending });
+    setStatusBanner({
+      tone: 'success',
+      message: isTrendingOnHome
+        ? 'Removed from the player home Trending Strings section.'
+        : 'Added to the player home Trending Strings section.',
+    });
+  };
 
   const setField = <K extends keyof InventoryFormState>(
     key: K,
@@ -1048,6 +1073,10 @@ export default function AdminInventoryDetailScreen() {
 
               <View className="mt-3 flex-row flex-wrap gap-2">
                 <AppChip
+                  label={isTrendingOnHome ? 'Homepage trending' : 'Not on homepage'}
+                  variant={isTrendingOnHome ? 'primary' : 'neutral'}
+                />
+                <AppChip
                   label={formatSingleGauge(
                     previewItem.catalog.gaugeMinMm ?? previewItem.catalog.gaugeMaxMm,
                     previewItem.gauge,
@@ -1069,6 +1098,18 @@ export default function AdminInventoryDetailScreen() {
                 <AppChip label={summaryPrice.label} variant="secondary" />
               </View>
             </View>
+          </View>
+
+          <View className="mt-4 flex-row flex-wrap gap-3">
+            <AppButton
+              label={isTrendingOnHome ? 'Remove from home' : 'Show on home'}
+              size="sm"
+              variant={isTrendingOnHome ? 'secondary' : 'primary'}
+              onPress={toggleTrendingPlacement}
+            />
+            <HeroText className="self-center text-xs font-medium text-slate-500">
+              Featured strings appear in the player home Trending Strings carousel.
+            </HeroText>
           </View>
 
           <View className="mt-4 flex-row flex-wrap gap-3">
