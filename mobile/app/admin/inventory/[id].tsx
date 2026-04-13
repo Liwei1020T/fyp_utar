@@ -194,6 +194,17 @@ function toGaugeInput(item: StringItem) {
   return primaryGauge != null ? primaryGauge.toFixed(2) : '';
 }
 
+function formatSingleGauge(
+  gaugeMm: number | null | undefined,
+  fallback?: string,
+) {
+  if (gaugeMm == null) {
+    return fallback ?? 'Gauge pending';
+  }
+
+  return `${gaugeMm.toFixed(2)} mm`;
+}
+
 function toPricingMode(item: StringItem): PricingMode {
   if (item.inventory.priceStatus === 'quoted_at_shop') {
     return 'quoted_at_shop';
@@ -978,9 +989,8 @@ export default function AdminInventoryDetailScreen() {
 
               <View className="mt-3 flex-row flex-wrap gap-2">
                 <AppChip
-                  label={formatGaugeRange(
-                    previewItem.catalog.gaugeMinMm,
-                    previewItem.catalog.gaugeMaxMm,
+                  label={formatSingleGauge(
+                    previewItem.catalog.gaugeMinMm ?? previewItem.catalog.gaugeMaxMm,
                     previewItem.gauge,
                   )}
                   variant="secondary"
@@ -1005,9 +1015,8 @@ export default function AdminInventoryDetailScreen() {
           <View className="mt-4 flex-row flex-wrap gap-3">
             <SummaryDetail
               label="Gauge"
-              value={formatGaugeRange(
-                previewItem.catalog.gaugeMinMm,
-                previewItem.catalog.gaugeMaxMm,
+              value={formatSingleGauge(
+                previewItem.catalog.gaugeMinMm ?? previewItem.catalog.gaugeMaxMm,
                 previewItem.gauge,
               )}
             />

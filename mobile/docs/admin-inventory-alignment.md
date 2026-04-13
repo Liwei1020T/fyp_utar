@@ -215,7 +215,7 @@ Legacy top-level fields remain for compatibility with existing player flows, but
 │ [ Brand                  Gosen                  ]  │
 │ [ Model name             G-Tone 5              ]  │
 │ [ Localized name         高神 G-Tone 5         ]  │
-│ [ Gauge min              0.65 ] [ Gauge max 0.65] │
+│ [ Gauge (mm)             0.65                   ] │
 │ [ Material               High polymer nylon     ] │
 │ [ Tension min            23   ] [ Tension max 29] │
 │ [ Main trait             Control                ] │
