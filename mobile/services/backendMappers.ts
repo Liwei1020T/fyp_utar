@@ -74,8 +74,39 @@ function toTenScale(value: number | null | undefined, fallback = 6) {
   return Math.max(1, Math.min(10, Math.round(value * 2)));
 }
 
-function toFiveScale(value: number, fallback = 3) {
-  return Math.max(1, Math.min(5, Math.round(value / 2) || fallback));
+function toTenPreference(value: number, fallback = 5) {
+  return Math.max(1, Math.min(10, Math.round(value) || fallback));
+}
+
+function mapBackendPreference(value: number | null | undefined, fallback = 6) {
+  if (value == null) {
+    return fallback;
+  }
+  return Math.max(1, Math.min(10, Math.round(value)));
+}
+
+function derivedElasticityPreference(
+  priorities: PlayerProfile['priorities'],
+) {
+  return toTenPreference(Math.round((priorities.power + priorities.sound) / 2));
+}
+
+function derivedStringMovementPreference(
+  priorities: PlayerProfile['priorities'],
+) {
+  return toTenPreference(Math.round((priorities.control + priorities.comfort) / 2));
+}
+
+function derivedTensionRetentionPreference(
+  priorities: PlayerProfile['priorities'],
+) {
+  return toTenPreference(
+    Math.round((priorities.control + priorities.durability) / 2),
+  );
+}
+
+function derivedValuePreference(priorities: PlayerProfile['priorities']) {
+  return toTenPreference(Math.round((priorities.durability + priorities.comfort) / 2));
 }
 
 export function mapBackendSkillLevel(
@@ -220,11 +251,11 @@ export function mapBackendUserToPlayerProfile(
     preferredFeel: mapBackendPreferredFeel(profile),
     preferredTension: profile?.preferred_tension ?? 24,
     priorities: {
-      power: toTenScale(profile?.pref_attack),
-      control: toTenScale(profile?.pref_control),
-      durability: toTenScale(profile?.pref_durability),
-      comfort: toTenScale(profile?.pref_comfort),
-      sound: toTenScale(profile?.pref_sound),
+      power: mapBackendPreference(profile?.pref_attack),
+      control: mapBackendPreference(profile?.pref_control),
+      durability: mapBackendPreference(profile?.pref_durability),
+      comfort: mapBackendPreference(profile?.pref_comfort),
+      sound: mapBackendPreference(profile?.pref_sound),
     },
     homeVenue: 'Klang Valley',
     preferredAdminId: 'admin-001',
@@ -758,17 +789,15 @@ export function buildBackendProfilePayload(
     preferred_tension: player.preferredTension,
     game_type: 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(player.playFrequency),
-    pref_attack: toFiveScale(player.priorities.power),
-    pref_comfort: toFiveScale(player.priorities.comfort),
-    pref_control: toFiveScale(player.priorities.control),
-    pref_durability: toFiveScale(player.priorities.durability),
-    pref_elasticity: toFiveScale(player.priorities.power),
-    pref_sound: toFiveScale(player.priorities.sound),
-    pref_string_movement: 3,
-    pref_tension_retention: toFiveScale(
-      Math.round((player.priorities.control + player.priorities.durability) / 2),
-    ),
-    pref_value_for_money: 3,
+    pref_attack: toTenPreference(player.priorities.power),
+    pref_comfort: toTenPreference(player.priorities.comfort),
+    pref_control: toTenPreference(player.priorities.control),
+    pref_durability: toTenPreference(player.priorities.durability),
+    pref_elasticity: derivedElasticityPreference(player.priorities),
+    pref_sound: toTenPreference(player.priorities.sound),
+    pref_string_movement: derivedStringMovementPreference(player.priorities),
+    pref_tension_retention: derivedTensionRetentionPreference(player.priorities),
+    pref_value_for_money: derivedValuePreference(player.priorities),
   };
 }
 
@@ -801,17 +830,15 @@ export function buildRecommendationPayload(input: {
     preferred_tension: input.preferredTension,
     game_type: input.gameType ?? 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),
-    pref_attack: toFiveScale(input.priorities.power),
-    pref_comfort: toFiveScale(input.priorities.comfort),
-    pref_control: toFiveScale(input.priorities.control),
-    pref_durability: toFiveScale(input.priorities.durability),
-    pref_elasticity: toFiveScale(input.priorities.power),
-    pref_sound: toFiveScale(input.priorities.sound),
-    pref_string_movement: 3,
-    pref_tension_retention: toFiveScale(
-      Math.round((input.priorities.control + input.priorities.durability) / 2),
-    ),
-    pref_value_for_money: 3,
+    pref_attack: toTenPreference(input.priorities.power),
+    pref_comfort: toTenPreference(input.priorities.comfort),
+    pref_control: toTenPreference(input.priorities.control),
+    pref_durability: toTenPreference(input.priorities.durability),
+    pref_elasticity: derivedElasticityPreference(input.priorities),
+    pref_sound: toTenPreference(input.priorities.sound),
+    pref_string_movement: derivedStringMovementPreference(input.priorities),
+    pref_tension_retention: derivedTensionRetentionPreference(input.priorities),
+    pref_value_for_money: derivedValuePreference(input.priorities),
     top_n: 3,
   };
 }

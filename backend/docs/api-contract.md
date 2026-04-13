@@ -274,7 +274,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "preference_official_nlp_rule_budget_v2",
+  "algorithm_version": "fyp1_preference_official_nlp_rule_budget_v3",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
@@ -290,7 +290,10 @@ Recommendation response:
         "control": 0.72,
         "durability": 0.61,
         "comfort": 0.58,
-        "sound": 0.84
+        "sound": 0.84,
+        "elasticity": 0.76,
+        "tension_retention": 0.69,
+        "string_movement": 0.63
       },
       "reasons": [
         "matches your power and rebound preference",
@@ -305,6 +308,8 @@ Recommendation response:
         "final_score": 0.84
       },
       "rationale_payload": {
+        "algorithm_family": "rule_enhanced_content_based_official_nlp_budget",
+        "collaborative_filtering_used": false,
         "feature_sources": {
           "repulsion": "nlp_review",
           "control": "nlp_review"
@@ -324,7 +329,10 @@ Recommendation response:
         "nlp_review_signal_count": 2,
         "nlp_review_summary": "Review-derived signals reinforce repulsion and sound for this profile.",
         "user_preference_vector": [
-          { "feature_key": "repulsion", "raw_score": 6, "preference_weight": 0.1935 }
+          { "feature_key": "repulsion", "raw_score": 6, "preference_weight": 0.15 },
+          { "feature_key": "elasticity", "raw_score": 5, "preference_weight": 0.125 },
+          { "feature_key": "tension_retention", "raw_score": 4, "preference_weight": 0.10 },
+          { "feature_key": "string_movement", "raw_score": 4, "preference_weight": 0.10 }
         ],
         "profile_context": {
           "skill_level": "intermediate",
@@ -339,8 +347,10 @@ Recommendation response:
 ```
 
 `budget_fit` reflects price alignment against the user's selected budget range. It is not derived from a separate `value_for_money` runtime score.
+`budget_max` is the stronger ceiling; cheaper strings below `budget_min` are treated as a soft preference mismatch, not a hard penalty.
 
 `nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
+The FYP1 recommender is rule-enhanced content-based recommendation with official performance + NLP review feature fusion + budget fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
 
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
 

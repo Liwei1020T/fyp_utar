@@ -416,6 +416,8 @@ export interface BackendRecommendationScoreBreakdown {
 
 export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
+  algorithm_family?: string;
+  collaborative_filtering_used?: boolean;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;

@@ -9,7 +9,7 @@ from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
-from app.domain.recommendation.scoring import HybridRecommendationScorer
+from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_log_repository import (
@@ -45,8 +45,8 @@ class GenerateRecommendationUseCase:
     profile_repository: ProfileRepository
     recommendation_repository: RecommendationRepository
     recommendation_log_repository: RecommendationLogRepository
-    scorer: HybridRecommendationScorer = field(
-        default_factory=HybridRecommendationScorer
+    scorer: Fyp1ContentRecommendationScorer = field(
+        default_factory=Fyp1ContentRecommendationScorer
     )
 
     def execute_preview(

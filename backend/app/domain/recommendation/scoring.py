@@ -8,26 +8,39 @@ from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
 
 
-ALGORITHM_VERSION = "preference_official_nlp_rule_budget_v2"
+ALGORITHM_VERSION = "fyp1_preference_official_nlp_rule_budget_v3"
 PREFERENCE_SOURCE_LAYER = "profile"
 
-PRIMARY_FEATURES = (
+CORE_RECOMMENDATION_FEATURES = (
     "repulsion",
     "control",
     "durability",
     "comfort",
     "sound",
-)
-OPTIONAL_AUXILIARY_FEATURES = (
-    "value_for_money",
+    "elasticity",
     "tension_retention",
+    "string_movement",
+)
+SUPPORT_FEATURES = (
+    "value_for_money",
     "stability_score",
     "beginner_fit_score",
     "attacking_fit_score",
     "control_fit_score",
     "all_round_score",
 )
-ALL_FEATURES = PRIMARY_FEATURES + OPTIONAL_AUXILIARY_FEATURES
+ALL_FEATURES = CORE_RECOMMENDATION_FEATURES + SUPPORT_FEATURES
+
+FEATURE_LABELS = {
+    "repulsion": "power and rebound",
+    "comfort": "comfort",
+    "control": "control",
+    "durability": "durability",
+    "sound": "hitting sound",
+    "elasticity": "elastic rebound",
+    "tension_retention": "tension retention",
+    "string_movement": "string movement control",
+}
 
 
 @dataclass(frozen=True)
@@ -37,7 +50,9 @@ class ScoredRecommendation:
     preference_vector_rows: list[dict[str, float | str | None]]
 
 
-class HybridRecommendationScorer:
+class Fyp1ContentRecommendationScorer:
+    """Rule-enhanced content scorer; no collaborative filtering is used in FYP1."""
+
     def build_preference_vector(
         self,
         *,
@@ -50,6 +65,9 @@ class HybridRecommendationScorer:
             "durability": float(request.pref_durability),
             "comfort": float(request.pref_comfort),
             "sound": float(request.pref_sound),
+            "elasticity": float(request.pref_elasticity),
+            "tension_retention": float(request.pref_tension_retention),
+            "string_movement": float(request.pref_string_movement),
         }
         total_weight = sum(raw_scores.values()) or 1.0
         return [
@@ -131,6 +149,8 @@ class HybridRecommendationScorer:
                 "display_name": candidate.item.display_name,
                 "brand": candidate.item.brand,
                 "model_name": candidate.item.model_name,
+                "algorithm_family": ("rule_enhanced_content_based_official_nlp_budget"),
+                "collaborative_filtering_used": False,
                 "primary_fit_angle": fit_angle,
                 "trade_off_summary": _trade_off_summary(
                     effective_scores,
@@ -196,7 +216,7 @@ class HybridRecommendationScorer:
                 price_rm=candidate.item.price_rm,
                 aspect_scores={
                     feature_key: round(effective_scores.get(feature_key, 0.5), 4)
-                    for feature_key in PRIMARY_FEATURES
+                    for feature_key in CORE_RECOMMENDATION_FEATURES
                 },
                 reasons=reasons,
                 score_breakdown=breakdown,
@@ -266,7 +286,7 @@ def _effective_item_features(
 
     effective: dict[str, float] = {}
     sources: dict[str, str] = {}
-    for feature_key in PRIMARY_FEATURES:
+    for feature_key in CORE_RECOMMENDATION_FEATURES:
         official_value = official_scores.get(feature_key)
         nlp_value = _nlp_feature_score(nlp_scores, feature_key)
         if official_value is not None and nlp_value is not None:
@@ -306,7 +326,7 @@ def _official_feature_scores(item: StringItem) -> dict[str, float]:
 
 def _nlp_feature_score(nlp_scores: dict[str, float], feature_key: str) -> float | None:
     aliases = {
-        "repulsion": ("repulsion", "attack", "elasticity"),
+        "repulsion": ("repulsion", "attack"),
         "sound": ("sound", "hitting_sound"),
     }.get(feature_key, (feature_key,))
     for alias in aliases:
@@ -322,7 +342,7 @@ def _auxiliary_scores(candidate: RecommendationCandidateModel) -> dict[str, floa
         for feature_key, value in candidate.matrix_by_source.get(
             source_layer, {}
         ).items():
-            if feature_key in OPTIONAL_AUXILIARY_FEATURES and feature_key not in scores:
+            if feature_key in SUPPORT_FEATURES and feature_key not in scores:
                 scores[feature_key] = value
     return scores
 
@@ -334,13 +354,6 @@ def _build_feature_evidence(
     feature_sources: dict[str, str],
     preference_rows: list[dict[str, float | str | None]],
 ) -> list[dict[str, object]]:
-    display_labels = {
-        "repulsion": "Repulsion",
-        "comfort": "Comfort",
-        "control": "Control",
-        "durability": "Durability",
-        "sound": "Hitting sound",
-    }
     official_scores = _official_feature_scores(candidate.item)
     nlp_scores = candidate.matrix_by_source.get("nlp_review", {})
     preference_weights = {
@@ -349,7 +362,7 @@ def _build_feature_evidence(
     }
     rows: list[dict[str, object]] = []
 
-    for feature_key in PRIMARY_FEATURES:
+    for feature_key in CORE_RECOMMENDATION_FEATURES:
         source = feature_sources.get(feature_key, "neutral_fallback")
         nlp_influence = 0.0
         if source == "official_performance+nlp_review":
@@ -362,7 +375,7 @@ def _build_feature_evidence(
         rows.append(
             {
                 "feature_key": feature_key,
-                "display_label": display_labels[feature_key],
+                "display_label": FEATURE_LABELS[feature_key].title(),
                 "effective_score": round(effective_scores.get(feature_key, 0.5), 4),
                 "preference_weight": preference_weights.get(feature_key, 0.0),
                 "source": source,
@@ -394,7 +407,7 @@ def _nlp_review_alignment_score(
     total_primary_weight = sum(
         float(row.get("preference_weight") or 0)
         for row in preference_rows
-        if str(row["feature_key"]) in PRIMARY_FEATURES
+        if str(row["feature_key"]) in CORE_RECOMMENDATION_FEATURES
     )
     if total_primary_weight <= 0:
         return None
@@ -408,9 +421,7 @@ def _nlp_review_alignment_score(
             continue
         has_nlp_signal = True
         weighted_total += (
-            nlp_score
-            * (_to_float(row.get("preference_weight")) or 0)
-            * nlp_influence
+            nlp_score * (_to_float(row.get("preference_weight")) or 0) * nlp_influence
         )
 
     if not has_nlp_signal:
@@ -437,7 +448,9 @@ def _nlp_review_summary(feature_evidence: list[dict[str, object]]) -> str | None
             -(_to_float(row.get("nlp_review_score")) or 0),
         ),
     )
-    labels = [str(row.get("display_label") or row.get("feature_key")) for row in ranked[:2]]
+    labels = [
+        str(row.get("display_label") or row.get("feature_key")) for row in ranked[:2]
+    ]
     if len(labels) == 1:
         return f"Review-derived signals mainly reinforce {labels[0].lower()} for this profile."
     return (
@@ -456,7 +469,7 @@ def _preference_match_score(
     for row in preference_rows:
         feature_key = str(row["feature_key"])
         weight = float(row.get("preference_weight") or 0)
-        if feature_key in PRIMARY_FEATURES:
+        if feature_key in CORE_RECOMMENDATION_FEATURES:
             weighted_total += effective_scores.get(feature_key, 0.5) * weight
             total_weight += weight
     if total_weight == 0:
@@ -478,9 +491,15 @@ def _budget_fit_score(
         closeness = 1 - min(abs(price_rm - midpoint) / span, 1)
         return clamp01(max(0.8, closeness))
 
-    gap = budget_min - price_rm if price_rm < budget_min else price_rm - budget_max
-    tolerance = max((budget_max - budget_min) or budget_max or budget_min or 10, 10)
-    return clamp01(0.8 - (gap / tolerance))
+    span = max(budget_max - budget_min, 10)
+    if price_rm < budget_min:
+        # budget_min is a soft preference: cheaper strings should lose only a little fit.
+        gap = budget_min - price_rm
+        return clamp01(0.8 - min(0.18, gap / (span * 4)))
+
+    # budget_max is the stronger ceiling for FYP1 business logic.
+    gap = price_rm - budget_max
+    return clamp01(0.8 - min(0.65, gap / span))
 
 
 def _rule_fit_score(
@@ -506,6 +525,9 @@ def _rule_fit_score(
     repulsion = effective_scores["repulsion"]
     sound = effective_scores["sound"]
     value_for_money = auxiliary_scores.get("value_for_money", 0.5)
+    elasticity = effective_scores["elasticity"]
+    tension_retention = effective_scores["tension_retention"]
+    string_movement = effective_scores["string_movement"]
 
     if request.skill_level == "beginner" and (item.gauge_main_mm or 0.66) <= 0.63:
         apply(
@@ -534,7 +556,17 @@ def _rule_fit_score(
         apply(0.12, "fits your control-oriented playing style", "control_bonus")
     if (
         request.playing_style == "balanced"
-        and (repulsion + control + durability + comfort) / 4 >= 0.64
+        and (
+            repulsion
+            + control
+            + durability
+            + comfort
+            + elasticity
+            + tension_retention
+            + string_movement
+        )
+        / 7
+        >= 0.64
     ):
         apply(0.08, "offers a balanced all-round response", "balanced_bonus")
 
@@ -551,6 +583,13 @@ def _rule_fit_score(
             "frequent_play_durability_bonus",
         )
 
+    value_priority = request.pref_value_for_money / 10
+    if value_priority >= 0.6 and value_for_money >= 0.68:
+        apply(
+            0.05,
+            "rewards value-for-money because it matters in your profile",
+            "value_priority_bonus",
+        )
     if request.budget_max <= 40 and value_for_money <= 0.45:
         apply(
             -0.08,
@@ -570,11 +609,29 @@ def _rule_fit_score(
             "aligns with your higher preferred tension",
             "high_tension_gauge_bonus",
         )
+    if request.preferred_tension >= 27 and tension_retention >= 0.68:
+        apply(
+            0.06,
+            "supports higher tension with stronger tension retention",
+            "high_tension_retention_bonus",
+        )
     if request.preferred_tension <= 23 and comfort >= 0.65:
         apply(
             0.05,
             "aligns with your lower-tension comfort preference",
             "low_tension_comfort_bonus",
+        )
+    if request.playing_style == "attacking" and elasticity >= 0.70:
+        apply(
+            0.05,
+            "adds elastic rebound support for attacking play",
+            "attacking_elasticity_bonus",
+        )
+    if request.playing_style == "control_defensive" and string_movement >= 0.65:
+        apply(
+            0.05,
+            "supports control with more stable string movement",
+            "control_string_movement_bonus",
         )
     if request.playing_style == "attacking" and sound >= 0.72:
         apply(
@@ -618,22 +675,15 @@ def _top_weighted_preference_reasons(
     effective_scores: dict[str, float],
     preference_rows: list[dict[str, float | str | None]],
 ) -> list[tuple[str, str]]:
-    labels = {
-        "repulsion": "power and rebound",
-        "comfort": "comfort",
-        "control": "control",
-        "durability": "durability",
-        "sound": "hitting sound",
-    }
     ranked = []
     for row in preference_rows:
         feature_key = str(row["feature_key"])
-        if feature_key not in PRIMARY_FEATURES:
+        if feature_key not in CORE_RECOMMENDATION_FEATURES:
             continue
         weight = float(row.get("preference_weight") or 0)
         ranked.append((weight * effective_scores.get(feature_key, 0.5), feature_key))
     ranked.sort(reverse=True)
-    return [(feature_key, labels[feature_key]) for _, feature_key in ranked[:2]]
+    return [(feature_key, FEATURE_LABELS[feature_key]) for _, feature_key in ranked[:2]]
 
 
 def _primary_fit_angle(
@@ -654,6 +704,9 @@ def _primary_fit_angle(
         (
             ("Durability pick", effective_scores["durability"]),
             ("Comfort pick", effective_scores["comfort"]),
+            ("Elastic pick", effective_scores["elasticity"]),
+            ("Tension-safe pick", effective_scores["tension_retention"]),
+            ("Stable-bed pick", effective_scores["string_movement"]),
             ("Sound pick", effective_scores["sound"]),
             ("All-round pick", sum(effective_scores.values()) / len(effective_scores)),
         ),

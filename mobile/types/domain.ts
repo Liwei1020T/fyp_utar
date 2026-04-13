@@ -228,6 +228,8 @@ export interface RecommendationRationalePayload {
     nlp_review_score?: number;
     final_score?: number;
   };
+  algorithm_family?: string;
+  collaborative_filtering_used?: boolean;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;

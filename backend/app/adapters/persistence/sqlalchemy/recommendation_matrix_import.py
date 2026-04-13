@@ -63,7 +63,25 @@ CSV_FEATURE_SPECS = (
         "durability_confidence",
         "durability_review_raw",
     ),
+    CsvFeatureSpec(
+        "elasticity",
+        "elasticity",
+        "elasticity_confidence",
+        "elasticity_review_raw",
+    ),
     CsvFeatureSpec("sound", "sound", "sound_confidence", "sound_review_raw"),
+    CsvFeatureSpec(
+        "string_movement",
+        "string_movement",
+        "string_movement_confidence",
+        "string_movement_review_raw",
+    ),
+    CsvFeatureSpec(
+        "tension_retention",
+        "tension_retention",
+        "tension_retention_confidence",
+        "tension_retention_review_raw",
+    ),
 )
 
 MATRIX_METADATA_COLUMNS = {
@@ -301,11 +319,7 @@ def _load_xlsx_rows(source_path: Path) -> list[dict[str, str]]:
 
 def _sanitize_matrix_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return [
-        {
-            key: value
-            for key, value in row.items()
-            if key in MATRIX_RUNTIME_COLUMNS
-        }
+        {key: value for key, value in row.items() if key in MATRIX_RUNTIME_COLUMNS}
         for row in rows
     ]
 
@@ -319,10 +333,7 @@ def _load_shared_strings(workbook: zipfile.ZipFile) -> list[str]:
     root = ElementTree.fromstring(shared_xml)
     strings: list[str] = []
     for item in root.findall("main:si", namespace):
-        parts = [
-            text.text or ""
-            for text in item.findall(".//main:t", namespace)
-        ]
+        parts = [text.text or "" for text in item.findall(".//main:t", namespace)]
         strings.append("".join(parts))
     return strings
 
@@ -345,9 +356,7 @@ def _cell_text(
 ) -> str:
     cell_type = cell.attrib.get("t")
     if cell_type == "inlineStr":
-        return "".join(
-            text.text or "" for text in cell.findall(".//main:t", namespace)
-        )
+        return "".join(text.text or "" for text in cell.findall(".//main:t", namespace))
     value = cell.find("main:v", namespace)
     raw_value = value.text if value is not None and value.text is not None else ""
     if cell_type == "s" and raw_value:

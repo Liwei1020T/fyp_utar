@@ -96,12 +96,12 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
         "control",
         "durability",
         "sound",
-    }.issubset(nlp_feature_keys)
-    assert {
-        "value_for_money",
         "elasticity",
         "string_movement",
         "tension_retention",
+    }.issubset(nlp_feature_keys)
+    assert {
+        "value_for_money",
         "stability",
         "all_round",
         "attacking_fit",
@@ -151,12 +151,12 @@ def test_latest_v9_workbook_import_matches_catalog() -> None:
             "control",
             "durability",
             "sound",
-        }.issubset(aerobie_rows)
-        assert {
-            "value_for_money",
             "elasticity",
             "string_movement",
             "tension_retention",
+        }.issubset(aerobie_rows)
+        assert {
+            "value_for_money",
             "stability",
             "all_round",
             "attacking_fit",

@@ -163,7 +163,7 @@ Raw 1-to-10 UI inputs are stored in `raw_score`, and backend-normalized weights 
 
 Current persisted feature rows include:
 
-- primary preference weights: `repulsion`, `control`, `durability`, `comfort`, and `sound`
+- core preference weights: `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, and `string_movement`
 
 These rows are regenerated when a complete profile is saved and when profile recommendations are generated.
 
@@ -171,16 +171,17 @@ These rows are regenerated when a complete profile is saved and when profile rec
 
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
-The active algorithm version is `preference_official_nlp_rule_budget_v2`.
+The active algorithm version is `fyp1_preference_official_nlp_rule_budget_v3`.
 
 Score fields:
 
 - `preference_match_score`
 - `rule_fit_score`
 - `budget_fit_score`
+- `nlp_review_score`
 - `final_score`
 
-Compatibility columns (`content_score`, `rule_score`, `nlp_score`, and `nlp_review_score`) remain available for older inspection/debug paths, but NLP is now included inside effective item features rather than scored as a separate top-level component. The `rationale` JSON stores raw user scores, normalized weights, effective official+NLP feature scores, rule events, profile context, and top human-readable reasons.
+Compatibility columns (`content_score`, `collaborative_score`, `rule_score`, and `nlp_score`) remain available for older inspection/debug paths. FYP1 does not write collaborative-filtering scores; `collaborative_score` should stay `NULL`. The `rationale` JSON stores raw user scores, normalized weights, effective official+NLP feature scores, NLP review evidence, rule events, profile context, and top human-readable reasons.
 
 ### `store_business_hours`
 

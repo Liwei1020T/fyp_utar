@@ -107,13 +107,15 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile'`.
 - Raw 1-to-10 inputs are stored as `raw_score`; backend-normalized weights are stored as `preference_weight`.
 - Active catalog candidates are loaded with official performance, inventory, and matrix entries.
+- FYP1 uses rule-enhanced content-based recommendation with official performance + NLP review feature fusion + budget fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
 - PreferenceMatch uses only effective item features from official/manual performance and `nlp_review` matrix rows.
+- Core recommendation dimensions are `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, and `string_movement`.
 - Structured catalog heuristics such as gauge are excluded from PreferenceMatch and used only in RuleFit.
 - The scorer applies:
   - `0.60 * PreferenceMatch`
   - `0.25 * RuleFit`
   - `0.15 * BudgetFit`
-- `BudgetFit` is based on the user's chosen budget range and item price, not on a separate value-for-money matrix score.
+- `BudgetFit` is based on the user's chosen budget range and item price. `budget_max` is the stronger ceiling; `budget_min` is a softer lower preference.
 - Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 

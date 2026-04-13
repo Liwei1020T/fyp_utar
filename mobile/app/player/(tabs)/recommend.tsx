@@ -29,6 +29,10 @@ const priorityLabels = [
   { key: 'sound', title: 'Hitting sound' },
 ] as const;
 
+function clampPreference(value: number) {
+  return Math.max(1, Math.min(10, Math.round(value)));
+}
+
 const styleOptions = [
   { value: 'Attacking', label: 'Attacking' },
   { value: 'Balanced', label: 'Balanced' },
@@ -116,6 +120,23 @@ export default function RecommendationInputScreen() {
       .map(([key]) => priorityLabels.find((p) => p.key === key)?.title.split(' ')[0])
       .join(', ');
   }, [priorities]);
+  const advancedPreferences = useMemo(
+    () => [
+      {
+        label: 'Elasticity',
+        value: clampPreference((priorities.power + priorities.sound) / 2),
+      },
+      {
+        label: 'Tension retention',
+        value: clampPreference((priorities.control + priorities.durability) / 2),
+      },
+      {
+        label: 'String movement',
+        value: clampPreference((priorities.control + priorities.comfort) / 2),
+      },
+    ],
+    [priorities],
+  );
 
   return (
     <AppScreen
@@ -244,6 +265,24 @@ export default function RecommendationInputScreen() {
               </View>
             </AppCard>
           ))}
+          <AppCard variant="subtle" padding="md" className="rounded-[24px]">
+            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+              Advanced preferences
+            </HeroText>
+            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
+              These compact derived inputs are also sent to the FYP1 scorer, so
+              elasticity, tension retention, and string movement are not ignored.
+            </HeroText>
+            <View className="mt-4 flex-row flex-wrap gap-2">
+              {advancedPreferences.map((item) => (
+                <AppChip
+                  key={item.label}
+                  label={`${item.label} ${item.value}/10`}
+                  variant="neutral"
+                />
+              ))}
+            </View>
+          </AppCard>
         </View>
       </AppSection>
 
@@ -252,7 +291,7 @@ export default function RecommendationInputScreen() {
           <View className="flex-row items-center gap-2">
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
-              The backend converts this profile into a preference matrix, then scores every active string with Preference, Rule, Budget, and NLP Review signals.
+              FYP1 uses rule-enhanced content-based recommendation: preference match, official/NLP feature fusion, rule fit, and budget fit. No collaborative filtering is used yet.
             </HeroText>
           </View>
         </AppCard>
