@@ -30,9 +30,9 @@ const baseContainerStyles =
   'w-full self-center overflow-hidden border shadow-soft';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-lg border-[#D2D2D7] bg-white',
-  secondary: 'rounded-lg border-[#D2D2D7] bg-white',
-  flow: 'rounded-lg border-[#D2D2D7] bg-white',
+  primary: 'rounded-[20px] border-[#DCE6F7] bg-white',
+  secondary: 'rounded-[18px] border-[#DCE6F7] bg-white',
+  flow: 'rounded-[18px] border-[#DCE6F7] bg-white',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
@@ -42,15 +42,15 @@ const contentStyles: Record<AppHeaderVariant, string> = {
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[20px] font-semibold tracking-normal text-[#1D1D1F]',
-  secondary: 'text-[17px] font-semibold tracking-normal text-[#1D1D1F]',
-  flow: 'text-[17px] font-semibold tracking-normal text-[#1D1D1F]',
+  primary: 'text-[20px] font-bold tracking-normal text-slate-900',
+  secondary: 'text-[17px] font-semibold tracking-normal text-slate-900',
+  flow: 'text-[17px] font-semibold tracking-normal text-slate-900',
 };
 
 const subtitleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[14px] leading-[20px] tracking-normal text-[rgba(29,29,31,0.72)]',
-  secondary: 'text-[12px] leading-[18px] tracking-normal text-[rgba(29,29,31,0.68)]',
-  flow: 'text-[12px] leading-[18px] tracking-normal text-[rgba(29,29,31,0.68)]',
+  primary: 'text-[14px] leading-[20px] tracking-normal text-slate-600',
+  secondary: 'text-[12px] leading-[18px] tracking-normal text-slate-600',
+  flow: 'text-[12px] leading-[18px] tracking-normal text-slate-600',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {
@@ -93,12 +93,12 @@ export function AppPageHeader({
         >
           {showBackButton ? (
             <AppIconButton
-              icon={<ChevronLeft size={18} color="#0071E3" />}
+              icon={<ChevronLeft size={18} color={appChromeColors.primary} />}
               accessibilityLabel={backAccessibilityLabel}
               onPress={onBackPress}
               variant="header"
               size="md"
-              className={cn(variant === 'flow' ? 'bg-[#F0F5FD]' : undefined)}
+              className={cn(variant === 'flow' ? 'bg-primary-50' : undefined)}
             />
           ) : null}
 
@@ -123,7 +123,7 @@ export function AppPageHeader({
         {variant === 'flow' ? (
           <View
             className="mx-4 mb-3 h-px"
-            style={{ backgroundColor: 'rgba(47, 100, 182, 0.12)' }}
+            style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)' }}
           >
             <View
               className="h-full w-12"

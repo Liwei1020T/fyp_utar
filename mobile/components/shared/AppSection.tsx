@@ -32,9 +32,9 @@ export function AppSection({
   };
 
   const titleStyles = {
-    default: 'text-[20px] font-bold tracking-normal text-neutral-950 leading-tight',
-    compact: 'text-lg font-bold tracking-normal text-neutral-950 leading-tight',
-    hero: 'text-[26px] font-bold tracking-normal text-neutral-950 leading-tight',
+    default: 'text-[20px] font-bold tracking-normal text-slate-900 leading-tight',
+    compact: 'text-lg font-bold tracking-normal text-slate-900 leading-tight',
+    hero: 'text-[26px] font-bold tracking-normal text-slate-900 leading-tight',
   };
 
   return (
@@ -53,7 +53,7 @@ export function AppSection({
               </HeroText>
             )}
             {subtitle && (
-              <HeroText className="mt-1 text-[13px] leading-5 text-neutral-500">
+              <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
                 {subtitle}
               </HeroText>
             )}

@@ -32,16 +32,16 @@ export function AppIconButton({
   };
 
   const variantStyles = {
-    surface: 'border-[#DDE6F0] bg-white shadow-soft',
-    auth: 'border-[#DDE6F0] bg-white',
+    surface: 'border-[#DCE6F7] bg-white shadow-soft',
+    auth: 'border-[#DCE6F7] bg-white',
     primary: 'border-primary-600 bg-primary-600 shadow-soft',
     ghost: 'border-transparent bg-transparent',
-    header: 'border-[#DDE6F0] bg-white shadow-none',
+    header: 'border-[#DCE6F7] bg-white shadow-none',
   };
 
   const sizeStyles = {
-    md: 'h-10 w-10 rounded-lg',
-    lg: 'h-11 w-11 rounded-lg',
+    md: 'h-10 w-10 rounded-xl',
+    lg: 'h-11 w-11 rounded-xl',
   };
 
   return (

@@ -34,14 +34,14 @@ export function AppInput({
 }: AppInputProps) {
   const isMinimal = variant === 'minimal';
   const [isFocused, setIsFocused] = React.useState(false);
-  const focusBorder = isFocused ? 'border-primary-600' : 'border-[#D2D2D7]';
+  const focusBorder = isFocused ? 'border-primary-600' : 'border-[#DCE6F7]';
 
   if (isMinimal) {
     return (
       <View className={cn('mb-4', className)}>
         <View
           className={cn(
-            'h-11 flex-row items-center gap-3 rounded-lg border bg-white px-4 shadow-sm',
+            'h-11 flex-row items-center gap-3 rounded-xl border bg-white px-4 shadow-sm',
             error ? 'border-danger/30' : focusBorder,
             containerClassName,
             innerContainerClassName
@@ -64,7 +64,7 @@ export function AppInput({
               props.onFocus?.(event);
             }}
             editable={!isDisabled && props.editable !== false}
-            placeholderTextColor="rgba(29,29,31,0.48)"
+            placeholderTextColor={appChromeColors.textMuted}
             selectionColor={appChromeColors.primary}
           />
           {rightAdornment ? <View className="shrink-0">{rightAdornment}</View> : null}
@@ -82,14 +82,14 @@ export function AppInput({
       )}
       <View
         className={cn(
-          'rounded-lg border bg-white shadow-soft',
+          'rounded-xl border bg-white shadow-soft',
           error ? 'border-danger/30' : focusBorder,
           containerClassName
         )}
       >
         <View
           className={cn(
-            'min-h-[52px] flex-row items-center gap-3 rounded-lg px-4 py-1',
+            'min-h-[52px] flex-row items-center gap-3 rounded-xl px-4 py-1',
             error ? 'bg-danger/5' : 'bg-field-background',
             innerContainerClassName
           )}
@@ -111,7 +111,7 @@ export function AppInput({
               props.onFocus?.(event);
             }}
             editable={!isDisabled && props.editable !== false}
-            placeholderTextColor="rgba(29,29,31,0.48)"
+            placeholderTextColor={appChromeColors.textMuted}
             selectionColor={appChromeColors.primary}
           />
           {rightAdornment ? <View className="shrink-0">{rightAdornment}</View> : null}

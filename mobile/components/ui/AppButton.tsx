@@ -49,22 +49,22 @@ export function AppButton({
   };
 
   const variantStyles = {
-    primary: 'bg-primary-600 border-primary-600 shadow-soft',
-    secondary: 'bg-secondary-50 border-secondary-200',
+    primary: 'bg-primary-600 border-primary-600 shadow-soft active:bg-primary-700',
+    secondary: 'bg-white border-primary-200',
     accent: 'bg-accent-100 border-accent-200',
-    outline: 'bg-white border-[#DDE6F0]',
+    outline: 'bg-white border-primary-200',
     ghost: 'bg-transparent border-transparent',
-    danger: 'bg-red-600 border-red-600',
+    danger: 'bg-danger border-danger',
     success: 'bg-success-600 border-success-600',
-    dark: 'bg-[#1D1D1F] border-[#1D1D1F] shadow-soft',
+    dark: 'bg-secondary-600 border-secondary-600 shadow-soft',
   };
 
   const textStyles = {
     primary: 'text-white font-semibold tracking-normal',
-    secondary: 'text-secondary-700 font-semibold tracking-normal',
-    accent: 'text-accent-900 font-semibold tracking-normal',
-    outline: 'text-neutral-700 font-semibold tracking-normal',
-    ghost: 'text-neutral-600 font-medium tracking-normal',
+    secondary: 'text-primary-700 font-semibold tracking-normal',
+    accent: 'text-accent-700 font-semibold tracking-normal',
+    outline: 'text-slate-900 font-semibold tracking-normal',
+    ghost: 'text-slate-600 font-medium tracking-normal',
     danger: 'text-white font-semibold tracking-normal',
     success: 'text-white font-semibold tracking-normal',
     dark: 'text-white font-semibold tracking-normal',
@@ -78,10 +78,10 @@ export function AppButton({
 
   const trailingIslandStyles = {
     primary: 'bg-white/14',
-    secondary: 'bg-secondary-200/80',
+    secondary: 'bg-primary-50',
     accent: 'bg-accent-200/80',
-    outline: 'bg-neutral-100',
-    ghost: 'bg-neutral-100',
+    outline: 'bg-slate-100',
+    ghost: 'bg-slate-100',
     danger: 'bg-white/14',
     success: 'bg-white/14',
     dark: 'bg-white/10',

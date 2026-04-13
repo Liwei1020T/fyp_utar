@@ -20,6 +20,7 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
+import { appChromeColors } from '../../../components/ui/theme';
 import { useAppStore, useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
 
 const PRIMARY_ACTIONS = [
@@ -87,7 +88,7 @@ export default function AdminDashboardScreen() {
       subtitle={`${user.businessName} counter operations.`}
       headerRight={
         <AppIconButton
-          icon={<LogOut size={20} color="#EF4444" />}
+          icon={<LogOut size={20} color={appChromeColors.danger} />}
           accessibilityLabel="Log out"
           onPress={() => {
             logout();
@@ -102,25 +103,25 @@ export default function AdminDashboardScreen() {
             <MetricStatCard
               title="Today bookings"
               value={String(adminBookings.length)}
-              icon={<CalendarRange size={20} color="#2F64B6" />}
+              icon={<CalendarRange size={20} color={appChromeColors.primary} />}
             />
             <MetricStatCard
               title="Awaiting drop-off"
               value={String(awaitingDropOffCount)}
-              icon={<Undo2 size={20} color="#B67D21" />}
+              icon={<Undo2 size={20} color={appChromeColors.warning} />}
               accentClassName="bg-warning-50"
             />
             <MetricStatCard
               title="In progress"
               value={String(inProgressCount)}
-              icon={<TimerReset size={20} color="#22766D" />}
-              accentClassName="bg-[#E4F2F0]"
+              icon={<TimerReset size={20} color={appChromeColors.primary} />}
+              accentClassName="bg-primary-50"
             />
             <MetricStatCard
               title="Ready pickup"
               value={String(readyForCollectionCount)}
-              icon={<Store size={20} color="#6550B8" />}
-              accentClassName="bg-[#ECE7FA]"
+              icon={<Store size={20} color={appChromeColors.success} />}
+              accentClassName="bg-success-50"
             />
           </View>
         </AppSection>
@@ -128,7 +129,7 @@ export default function AdminDashboardScreen() {
         <AppSection
           eyebrow="Primary actions"
           title="Start with the counter flow"
-          subtitle="Move the most common shop tasks to the top."
+          subtitle="Keep the work queue, counter flow, and store setup close at hand."
           rightAction={
             <AppChip
               label={`${awaitingDropOffCount} awaiting`}
@@ -155,24 +156,24 @@ export default function AdminDashboardScreen() {
                         className={
                           action.title === 'Check-in'
                             ? 'h-12 w-12 items-center justify-center rounded-[18px] bg-primary-600'
-                            : 'h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50'
+                            : 'h-12 w-12 items-center justify-center rounded-[18px] border border-primary-200 bg-primary-50'
                         }
                       >
                         <Icon
                           size={20}
-                          color={action.title === 'Check-in' ? '#FFFFFF' : '#2F64B6'}
+                          color={action.title === 'Check-in' ? '#FFFFFF' : appChromeColors.primary}
                         />
                       </View>
                       <View className="flex-1">
-                        <HeroText className="text-[16px] font-semibold tracking-tight text-neutral-950">
+                        <HeroText className="text-[16px] font-semibold tracking-tight text-slate-900">
                           {action.title}
                         </HeroText>
-                        <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+                        <HeroText className="mt-1 text-sm leading-5 text-slate-600">
                           {action.subtitle}
                         </HeroText>
                       </View>
                     </View>
-                    <ArrowRight size={16} color="#94A3B8" />
+                    <ArrowRight size={16} color={appChromeColors.textMuted} />
                   </View>
                 </AppCard>
               );
@@ -184,24 +185,24 @@ export default function AdminDashboardScreen() {
           <View className="gap-3">
             <AppCard variant="subtle" padding="md">
               <View className="flex-row items-center gap-3">
-                <Undo2 size={18} color="#2F64B6" />
-                <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
+                <Undo2 size={18} color={appChromeColors.warning} />
+                <HeroText className="flex-1 text-sm leading-6 text-slate-600">
                   {awaitingDropOffCount} booking{awaitingDropOffCount === 1 ? '' : 's'} waiting for racket drop-off.
                 </HeroText>
               </View>
             </AppCard>
             <AppCard variant="subtle" padding="md">
               <View className="flex-row items-center gap-3">
-                <Clock3 size={18} color="#22766D" />
-                <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
+                <Clock3 size={18} color={appChromeColors.primary} />
+                <HeroText className="flex-1 text-sm leading-6 text-slate-600">
                   {inProgressCount} job{inProgressCount === 1 ? '' : 's'} currently on the stringing bench.
                 </HeroText>
               </View>
             </AppCard>
             <AppCard variant="subtle" padding="md">
               <View className="flex-row items-center gap-3">
-                <Boxes size={18} color="#C98A2E" />
-                <HeroText className="flex-1 text-sm leading-6 text-neutral-600">
+                <Boxes size={18} color={appChromeColors.warning} />
+                <HeroText className="flex-1 text-sm leading-6 text-slate-600">
                   {lowStockCount} string SKU{lowStockCount === 1 ? '' : 's'} flagged for stock review.
                 </HeroText>
               </View>
