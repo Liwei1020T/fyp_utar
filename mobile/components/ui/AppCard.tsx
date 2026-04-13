@@ -48,7 +48,7 @@ export function AppCard({
     elevated: 'bg-white border border-[#E8EEF8] shadow-soft',
     highlighted: 'bg-primary-50 border border-primary-200 shadow-soft',
     subtle: 'bg-[#F8FBFF] border border-[#E8EEF8] shadow-none',
-    dark: 'bg-secondary-600 border border-secondary-700 shadow-float',
+    dark: 'bg-app-hero border border-white/10 shadow-soft',
   };
 
   const coreStyles = {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextInput, type TextInputProps, View } from 'react-native';
+import { Platform, TextInput, type TextInputProps, View } from 'react-native';
 import { HeroText } from './heroui';
 import { cn } from './heroui';
 import { appChromeColors } from './theme';
@@ -35,6 +35,10 @@ export function AppInput({
   const isMinimal = variant === 'minimal';
   const [isFocused, setIsFocused] = React.useState(false);
   const focusBorder = isFocused ? 'border-primary-600' : 'border-[#DCE6F7]';
+  const webInputReset =
+    Platform.OS === 'web'
+      ? ({ outlineStyle: 'none', boxShadow: 'none', borderWidth: 0 } as any)
+      : undefined;
 
   if (isMinimal) {
     return (
@@ -55,6 +59,7 @@ export function AppInput({
               props.multiline ? 'min-h-24 py-3' : '',
               inputClassName
             )}
+            style={webInputReset}
             onBlur={(event) => {
               setIsFocused(false);
               props.onBlur?.(event);
@@ -102,6 +107,7 @@ export function AppInput({
               props.multiline ? 'min-h-24 py-3' : '',
               inputClassName
             )}
+            style={webInputReset}
             onBlur={(event) => {
               setIsFocused(false);
               props.onBlur?.(event);
