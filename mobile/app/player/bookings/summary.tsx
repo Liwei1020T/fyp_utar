@@ -61,6 +61,7 @@ export default function BookingSummaryScreen() {
     setSubmitError(null);
     setIsSubmitting(true);
     try {
+      let photoUploadFailed = false;
       let booking = await backendApi.createBooking(token, {
         string_id: bookingDraft.stringId,
         racket_brand: bookingDraft.racketBrand,
@@ -71,13 +72,17 @@ export default function BookingSummaryScreen() {
       });
 
       if (bookingDraft.photoUri) {
-        booking = await backendApi.addBookingUpdate(token, booking.id, {
-          photo: {
-            uri: bookingDraft.photoUri,
-            name: bookingDraft.photoName ?? `booking-photo-${booking.id}.jpg`,
-            type: bookingDraft.photoContentType ?? 'image/jpeg',
-          },
-        });
+        try {
+          booking = await backendApi.addBookingUpdate(token, booking.id, {
+            photo: {
+              uri: bookingDraft.photoUri,
+              name: bookingDraft.photoName ?? `booking-photo-${booking.id}.jpg`,
+              type: bookingDraft.photoContentType ?? 'image/jpeg',
+            },
+          });
+        } catch {
+          photoUploadFailed = true;
+        }
       }
 
       prependLiveBooking(
@@ -87,7 +92,9 @@ export default function BookingSummaryScreen() {
         ),
       );
       clearBookingDraft();
-      router.replace(`/player/bookings/${booking.id}`);
+      router.replace(
+        `/player/bookings/${booking.id}${photoUploadFailed ? '?photoUpload=failed' : ''}`,
+      );
     } catch (error) {
       setSubmitError(
         error instanceof BackendApiError

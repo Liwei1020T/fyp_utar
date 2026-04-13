@@ -15,6 +15,7 @@ from app.domain.catalog.entities import StringItem
 from app.domain.catalog.entities import StringOfficialPerformance
 from app.domain.catalog.policies import inventory_availability
 from app.shared.serialization import isoformat_or_none
+from app.shared.upload_storage import build_signed_media_url
 
 
 InventoryAvailability = Literal["in_stock", "low_stock", "out_of_stock"]
@@ -298,7 +299,7 @@ def string_to_dto(item: StringItem) -> StringOut:
         tension_min_lbs=item.tension_min_lbs,
         tension_max_lbs=item.tension_max_lbs,
         material_summary_en=item.material_summary_en,
-        image_url=f"/media/{item.image_url}" if item.image_url else None,
+        image_url=(build_signed_media_url(item.image_url) if item.image_url else None),
         color_options_en=item.color_options_en,
         short_description=item.short_description,
         full_description=item.full_description,

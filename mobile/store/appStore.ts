@@ -222,12 +222,6 @@ type PersistedAppState = Pick<
 >;
 
 const APP_STORE_KEY = 'stringsense-app-store';
-const BACKEND_SESSION_KEY = 'stringsense-backend-session';
-
-type PersistedBackendSession = {
-  sessionSource: 'backend';
-  backendAccessToken: string;
-};
 
 function readPersistedState(): Partial<PersistedAppState> {
   if (typeof localStorage === 'undefined') {
@@ -243,59 +237,11 @@ function readPersistedState(): Partial<PersistedAppState> {
 }
 
 function readBackendSessionState(): Partial<PersistedAppState> {
-  if (typeof sessionStorage === 'undefined') {
-    return {};
-  }
-
-  try {
-    const raw = sessionStorage.getItem(BACKEND_SESSION_KEY);
-    if (!raw) {
-      return {};
-    }
-
-    const parsed = JSON.parse(raw) as PersistedBackendSession;
-    if (
-      parsed.sessionSource === 'backend' &&
-      typeof parsed.backendAccessToken === 'string' &&
-      parsed.backendAccessToken.trim().length > 0
-    ) {
-      return {
-        sessionSource: 'backend',
-        backendAccessToken: parsed.backendAccessToken,
-      };
-    }
-
-    return {};
-  } catch {
-    return {};
-  }
+  return {};
 }
 
-function syncBackendSessionState(state: AppStoreState) {
-  if (typeof sessionStorage === 'undefined') {
-    return;
-  }
-
-  try {
-    if (
-      state.sessionSource === 'backend' &&
-      typeof state.backendAccessToken === 'string' &&
-      state.backendAccessToken.trim().length > 0
-    ) {
-      sessionStorage.setItem(
-        BACKEND_SESSION_KEY,
-        JSON.stringify({
-          sessionSource: 'backend',
-          backendAccessToken: state.backendAccessToken,
-        } satisfies PersistedBackendSession)
-      );
-      return;
-    }
-
-    sessionStorage.removeItem(BACKEND_SESSION_KEY);
-  } catch {
-    // Ignore storage failures and keep runtime state usable.
-  }
+function syncBackendSessionState(_: AppStoreState) {
+  // Keep backend access tokens in memory only.
 }
 
 function extractPersistedState(state: AppStoreState): PersistedAppState {
@@ -1014,14 +960,12 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     })),
 }));
 
-if (typeof localStorage !== 'undefined' || typeof sessionStorage !== 'undefined') {
+if (typeof localStorage !== 'undefined') {
   useAppStore.subscribe((state) => {
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem(APP_STORE_KEY, JSON.stringify(extractPersistedState(state)));
-      } catch {
-        // Ignore local persistence failures and keep runtime state usable.
-      }
+    try {
+      localStorage.setItem(APP_STORE_KEY, JSON.stringify(extractPersistedState(state)));
+    } catch {
+      // Ignore local persistence failures and keep runtime state usable.
     }
 
     syncBackendSessionState(state);

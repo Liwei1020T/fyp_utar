@@ -93,7 +93,6 @@ function composePhoneIdentifier(countryCode: string, phoneNumber: string) {
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ role?: UserRole; identifier?: string }>();
-  const login = useAppStore((state) => state.login);
   const setBackendPlayerSession = useAppStore(
     (state) => state.setBackendPlayerSession,
   );
@@ -175,14 +174,6 @@ export default function LoginScreen() {
 
       router.replace((profile ? '/player' : '/player/profile/edit') as never);
     } catch (error) {
-      if (selectedRole === 'admin') {
-        const role = login(phoneIdentifier);
-        if (role === 'admin') {
-          router.replace(getRoleHome(role) as never);
-          return;
-        }
-      }
-
       setFormError(
         error instanceof BackendApiError
           ? error.message

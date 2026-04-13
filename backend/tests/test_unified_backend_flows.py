@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
+from urllib.parse import parse_qs
+from urllib.parse import unquote
+from urllib.parse import urlparse
+
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -14,6 +20,10 @@ from app.shared.upload_storage import MAX_UPLOAD_BYTES
 
 
 client = TestClient(app)
+
+JPEG_BYTES = b"\xff\xd8\xff\xe0" + b"\x00" * 32
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+WEBP_BYTES = b"RIFF" + b"\x10\x00\x00\x00" + b"WEBP" + b"\x00" * 32
 
 
 def headers(token: str) -> dict[str, str]:
@@ -73,6 +83,14 @@ def string_image_file_names() -> set[str]:
 def enable_password_reset_preview(monkeypatch) -> None:
     settings = get_settings()
     monkeypatch.setattr(settings, "password_reset_dev_preview_enabled", True)
+
+
+def parse_signed_media_url(url: str) -> tuple[str, str, str]:
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    exp = query.get("exp", [""])[0]
+    sig = query.get("sig", [""])[0]
+    return parsed.path, exp, sig
 
 
 def test_auth_profile_booking_and_admin_status_flow():
@@ -468,10 +486,15 @@ def test_admin_can_persist_catalog_editor_fields_and_string_image():
     image_upload = client.post(
         f"/api/admin/strings/{string_id}/image",
         headers=headers(admin_token),
-        files={"photo": ("string-pack.jpg", b"string-image", "image/jpeg")},
+        files={"photo": ("string-pack.jpg", JPEG_BYTES, "image/jpeg")},
     )
     assert image_upload.status_code == 200
-    assert image_upload.json()["image_url"].startswith("/media/string-images/")
+    image_upload_path, image_upload_exp, image_upload_sig = parse_signed_media_url(
+        image_upload.json()["image_url"]
+    )
+    assert image_upload_path.startswith("/api/media/string-images/")
+    assert image_upload_exp.isdigit()
+    assert len(image_upload_sig) == 64
     after_upload = string_image_file_names()
     assert len(after_upload) == len(before_upload) + 1
 
@@ -500,7 +523,8 @@ def test_admin_can_persist_catalog_editor_fields_and_string_image():
     assert update_string.json()["main_trait"] == "Durable"
     assert update_string.json()["tension_min_lbs"] == 24
     assert update_string.json()["tension_max_lbs"] == 29
-    assert update_string.json()["image_url"].startswith("/media/string-images/")
+    updated_image_path, _, _ = parse_signed_media_url(update_string.json()["image_url"])
+    assert updated_image_path.startswith("/api/media/string-images/")
 
     detail_response = client.get(
         f"/api/admin/inventory/strings/{string_id}",
@@ -511,7 +535,8 @@ def test_admin_can_persist_catalog_editor_fields_and_string_image():
     assert detail_response.json()["main_trait"] == "Durable"
     assert detail_response.json()["tension_min_lbs"] == 24
     assert detail_response.json()["tension_max_lbs"] == 29
-    assert detail_response.json()["image_url"].startswith("/media/string-images/")
+    detail_image_path, _, _ = parse_signed_media_url(detail_response.json()["image_url"])
+    assert detail_image_path.startswith("/api/media/string-images/")
 
     delete_image = client.delete(
         f"/api/admin/strings/{string_id}/image",
@@ -695,6 +720,15 @@ def test_admin_check_in_and_service_queue_flow():
     assert order_code_lookup_response.json()["matched_by"] == "booking_id"
     assert order_code_lookup_response.json()["booking"]["id"] == booking_id
 
+    live_reference = f"LIVE-{booking_id[:8].upper()}"
+    live_lookup_response = client.get(
+        f"/api/admin/check-in/lookup?reference={live_reference}",
+        headers=headers(admin_token),
+    )
+    assert live_lookup_response.status_code == 200
+    assert live_lookup_response.json()["matched_by"] == "check_in_reference"
+    assert live_lookup_response.json()["booking"]["id"] == booking_id
+
     check_in_response = client.post(
         "/api/admin/check-in",
         headers=headers(admin_token),
@@ -719,6 +753,36 @@ def test_admin_check_in_and_service_queue_flow():
     assert lanes["in_progress"][0]["booking"]["id"] == booking_id
     assert len(lanes["awaiting_dropoff"]) == 1
     assert lanes["awaiting_dropoff"][0]["queue_position"] == 1
+
+
+def test_admin_check_in_lookup_rejects_partial_and_wildcard_references():
+    customer_token = register_customer(phone_number="+60126661112")
+    admin_token = login_admin()
+
+    create_booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": first_string_id(customer_token),
+            "racket_brand": "Victor",
+            "racket_model": "Auraspeed",
+            "requested_tension": 24,
+            "drop_off_datetime": "2026-04-07T11:00:00",
+        },
+    )
+    assert create_booking_response.status_code == 200
+
+    wildcard_lookup = client.get(
+        "/api/admin/check-in/lookup?reference=CHK-%",
+        headers=headers(admin_token),
+    )
+    assert wildcard_lookup.status_code == 404
+
+    partial_lookup = client.get(
+        "/api/admin/check-in/lookup?reference=ORD-A",
+        headers=headers(admin_token),
+    )
+    assert partial_lookup.status_code == 404
 
 
 def test_admin_analytics_summary_and_popular_strings():
@@ -1017,13 +1081,16 @@ def test_player_and_admin_can_add_booking_update_photos():
         f"/api/bookings/{booking_id}/updates",
         headers=headers(customer_token),
         data={"comment": "Frame condition before drop-off.", "photo_type": "racket"},
-        files={"photo": ("player-racket.jpg", b"player-photo", "image/jpeg")},
+        files={"photo": ("player-racket.jpg", JPEG_BYTES, "image/jpeg")},
     )
     assert player_update.status_code == 200
     assert player_update.json()["updates"][0]["author_role"] == "customer"
-    assert player_update.json()["updates"][0]["photo_url"].startswith(
-        "/media/booking-updates/"
+    player_photo_path, player_photo_exp, player_photo_sig = parse_signed_media_url(
+        player_update.json()["updates"][0]["photo_url"]
     )
+    assert player_photo_path.startswith("/api/media/booking-updates/")
+    assert player_photo_exp.isdigit()
+    assert len(player_photo_sig) == 64
     assert player_update.json()["updates"][0]["photo_type"] == "racket"
 
     admin_token = login_admin()
@@ -1034,7 +1101,7 @@ def test_player_and_admin_can_add_booking_update_photos():
             "comment": "Admin received the racket photo.",
             "photo_type": "service_progress",
         },
-        files={"photo": ("admin-racket.png", b"admin-photo", "image/png")},
+        files={"photo": ("admin-racket.png", PNG_BYTES, "image/png")},
     )
     assert admin_update.status_code == 200
     updates = admin_update.json()["updates"]
@@ -1046,14 +1113,19 @@ def test_player_and_admin_can_add_booking_update_photos():
         f"/api/admin/bookings/{booking_id}/photos",
         headers=headers(admin_token),
         data={"comment": "Reference photo before collection.", "photo_type": "other"},
-        files={"photo": ("collection.webp", b"admin-photo-2", "image/webp")},
+        files={"photo": ("collection.webp", WEBP_BYTES, "image/webp")},
     )
     assert admin_photo_update.status_code == 200
     updates = admin_photo_update.json()["updates"]
     assert updates[-1]["author_role"] == "admin"
     assert updates[-1]["comment"] == "Reference photo before collection."
     assert updates[-1]["photo_type"] == "other"
-    assert updates[-1]["photo_url"].startswith("/media/booking-updates/")
+    admin_photo_path, admin_photo_exp, admin_photo_sig = parse_signed_media_url(
+        updates[-1]["photo_url"]
+    )
+    assert admin_photo_path.startswith("/api/media/booking-updates/")
+    assert admin_photo_exp.isdigit()
+    assert len(admin_photo_sig) == 64
 
     player_detail = client.get(
         f"/api/bookings/{booking_id}",
@@ -1061,6 +1133,58 @@ def test_player_and_admin_can_add_booking_update_photos():
     )
     assert player_detail.status_code == 200
     assert len(player_detail.json()["updates"]) == 3
+
+
+def test_signed_media_endpoint_requires_valid_signature():
+    customer_token = register_customer(
+        username="signed-media-user",
+        phone_number="+60125550129",
+    )
+    string_id = first_string_id(customer_token)
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Nanoflare 800",
+            "requested_tension": 25,
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    update_response = client.post(
+        f"/api/bookings/{booking_id}/updates",
+        headers=headers(customer_token),
+        files={"photo": ("signed.jpg", JPEG_BYTES, "image/jpeg")},
+    )
+    assert update_response.status_code == 200
+    signed_url = update_response.json()["updates"][0]["photo_url"]
+
+    ok_response = client.get(signed_url)
+    assert ok_response.status_code == 200
+
+    path, exp, _ = parse_signed_media_url(signed_url)
+    invalid_sig_response = client.get(f"{path}?exp={exp}&sig={'0' * 64}")
+    assert invalid_sig_response.status_code == 404
+
+    expired_exp = 1
+    relative_path = unquote(path.removeprefix("/api/media/"))
+    payload = f"{relative_path}:{expired_exp}".encode("utf-8")
+    secret = (get_settings().jwt_secret_key or "").encode("utf-8")
+    expired_sig = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+    expired_sig_response = client.get(f"{path}?exp={expired_exp}&sig={expired_sig}")
+    assert expired_sig_response.status_code == 404
+
+
+def test_admin_bookings_reject_invalid_sort_field():
+    admin_token = login_admin()
+    response = client.get(
+        "/api/admin/bookings?sort_by=unknown_field",
+        headers=headers(admin_token),
+    )
+    assert response.status_code == 422
 
 
 def test_rejected_booking_update_photo_does_not_leave_file():
@@ -1141,6 +1265,38 @@ def test_player_booking_update_rejects_oversized_photo_upload():
     assert oversized_upload.status_code == 400
     assert oversized_upload.json()["error"]["message"] == (
         "Uploaded photo must be 5 MB or smaller"
+    )
+    assert booking_update_file_names() == before_files
+
+
+def test_player_booking_update_rejects_mime_spoofed_photo_upload():
+    customer_token = register_customer(
+        username="spoofed-photo-user",
+        phone_number="+60125550130",
+    )
+    string_id = first_string_id(customer_token)
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Arcsaber 7",
+            "requested_tension": 24,
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    before_files = booking_update_file_names()
+    spoofed_upload = client.post(
+        f"/api/bookings/{booking_id}/updates",
+        headers=headers(customer_token),
+        files={"photo": ("spoofed.jpg", PNG_BYTES, "image/jpeg")},
+    )
+    assert spoofed_upload.status_code == 400
+    assert spoofed_upload.json()["error"]["message"] == (
+        "Uploaded photo must be a valid JPG, PNG, or WEBP image"
     )
     assert booking_update_file_names() == before_files
 

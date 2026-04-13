@@ -187,12 +187,13 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export default function PlayerBookingDetailScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; photoUpload?: string }>();
   const bookings = useBookings();
   const strings = useStrings();
   const token = useBackendAccessToken();
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
   const booking = bookings.find((item) => item.id === params.id);
+  const showPhotoUploadWarning = params.photoUpload === 'failed';
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -260,6 +261,13 @@ export default function PlayerBookingDetailScreen() {
       onBackPress={() => router.back()}
       contentContainerClassName="pt-3"
     >
+      {showPhotoUploadWarning ? (
+        <AppCard variant="subtle" className="mb-4 border border-amber-200" padding="md">
+          <HeroText className="text-sm font-medium text-amber-700">
+            Booking was created, but photo upload failed. You can add a photo again from booking updates.
+          </HeroText>
+        </AppCard>
+      ) : null}
       <View className="gap-4">
         <AppCard variant="dark" className="rounded-[28px]" padding="md">
           <View className="gap-3">

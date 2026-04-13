@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from sqlalchemy import func
 from sqlalchemy import or_
 from sqlalchemy import select
@@ -17,6 +19,14 @@ from app.domain.booking.enums import BookingStatus
 from app.domain.booking.policies import booking_order_code
 from app.domain.store.policies import ACTIVE_QUEUE_STATUSES
 from app.shared.pagination import Page
+
+
+ORDER_CODE_PATTERN = re.compile(r"ORD-[A-F0-9]{5}")
+CHECK_IN_REFERENCE_PATTERN = re.compile(r"CHK-[A-F0-9]{8}")
+LIVE_REFERENCE_PATTERN = re.compile(r"LIVE-[A-F0-9]{8}")
+UUID_PATTERN = re.compile(
+    r"[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}"
+)
 
 
 BOOKING_SORT_COLUMNS = {
@@ -256,3 +266,42 @@ class SqlAlchemyBookingRepository:
     def list_all_for_analytics(self) -> list[BookingRecord]:
         items = self.db.execute(self._detail_query()).unique().scalars().all()
         return [to_booking_record(item) for item in items]
+
+    def find_active_by_reference(self, reference: str) -> BookingRecord | None:
+        normalized = reference.strip().upper()
+        if not normalized:
+            return None
+
+        query = self._detail_query().where(
+            Booking.status.not_in(
+                [
+                    BookingStatus.CANCELLED.value,
+                    BookingStatus.REJECTED.value,
+                    BookingStatus.COMPLETED.value,
+                ]
+            )
+        )
+
+        if ORDER_CODE_PATTERN.fullmatch(normalized):
+            query = query.where(func.upper(Booking.id).like(f"{normalized[4:]}%"))
+        elif CHECK_IN_REFERENCE_PATTERN.fullmatch(normalized):
+            query = query.where(func.upper(Booking.id).like(f"{normalized[4:]}%"))
+        elif LIVE_REFERENCE_PATTERN.fullmatch(normalized):
+            query = query.where(func.upper(Booking.id).like(f"{normalized[5:]}%"))
+        else:
+            if not UUID_PATTERN.fullmatch(normalized):
+                return None
+            query = query.where(func.upper(Booking.id) == normalized)
+
+        booking = (
+            self.db.execute(
+                query.order_by(Booking.drop_off_datetime.asc(), Booking.created_at.asc())
+                .limit(1)
+            )
+            .unique()
+            .scalars()
+            .first()
+        )
+        if booking is None:
+            return None
+        return to_booking_record(booking)

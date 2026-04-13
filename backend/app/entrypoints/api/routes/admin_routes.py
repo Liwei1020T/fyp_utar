@@ -13,6 +13,8 @@ from fastapi import UploadFile
 
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
+from app.dto.booking import BookingSortField
+from app.dto.booking import SortOrder
 from app.dto.booking import UpdateBookingStatusPayload
 from app.dto.booking import booking_to_dto
 from app.dto.catalog import AdminInventoryStringOut
@@ -250,12 +252,18 @@ async def admin_upload_string_image(
         include_inactive=True,
     )
     image_path = await save_string_image_upload(photo)
-    if existing.image_url:
-        delete_string_catalog_image(existing.image_url)
-    item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
-        string_id=string_id,
-        values={"catalog": {"image_url": image_path}},
-    )
+    previous_image_path = existing.image_url
+    try:
+        item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
+            string_id=string_id,
+            values={"catalog": {"image_url": image_path}},
+        )
+    except Exception:
+        delete_string_catalog_image(image_path)
+        raise
+
+    if previous_image_path:
+        delete_string_catalog_image(previous_image_path)
     return string_to_dto(item)
 
 
@@ -269,12 +277,12 @@ def admin_delete_string_image(
         string_id=string_id,
         include_inactive=True,
     )
-    if existing.image_url:
-        delete_string_catalog_image(existing.image_url)
     item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
         values={"catalog": {"image_url": None}},
     )
+    if existing.image_url:
+        delete_string_catalog_image(existing.image_url)
     return string_to_dto(item)
 
 
@@ -460,8 +468,8 @@ def admin_import_recommendation_matrix(
 def admin_bookings(
     status: str | None = Query(default=None),
     search: str | None = Query(default=None, max_length=100),
-    sort_by: str = Query(default="updated_at"),
-    sort_order: str = Query(default="desc"),
+    sort_by: BookingSortField = Query(default="updated_at"),
+    sort_order: SortOrder = Query(default="desc"),
     limit: int | None = Query(default=None, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     _: CurrentUser = Depends(get_current_admin),

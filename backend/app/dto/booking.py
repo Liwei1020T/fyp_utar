@@ -12,6 +12,7 @@ from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.booking.enums import BookingStatus
+from app.shared.upload_storage import build_signed_media_url
 from app.shared.serialization import isoformat_or_none
 
 
@@ -111,7 +112,9 @@ def booking_update_to_dto(entry: BookingUpdateEntry) -> BookingUpdateOut:
         author_role=entry.author_role,
         author_phone_number=entry.author_phone_number,
         comment=entry.comment,
-        photo_url=f"/media/{entry.photo_path}" if entry.photo_path else None,
+        photo_url=(
+            build_signed_media_url(entry.photo_path) if entry.photo_path else None
+        ),
         photo_original_name=entry.photo_original_name,
         photo_content_type=entry.photo_content_type,
         photo_type=entry.photo_type,

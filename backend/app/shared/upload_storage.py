@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
+from urllib.parse import quote
 from uuid import uuid4
 
 from app.config.settings import get_settings
@@ -15,6 +21,41 @@ ALLOWED_IMAGE_CONTENT_TYPES = {
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 BOOKING_UPDATES_DIR = "booking-updates"
 STRING_IMAGES_DIR = "string-images"
+SIGNED_MEDIA_URL_TTL = timedelta(hours=12)
+
+
+def _detect_image_extension(content: bytes) -> str | None:
+    if content.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if len(content) >= 12 and content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return ".webp"
+    return None
+
+
+def _validate_image_payload(
+    *,
+    content: bytes,
+    content_type: str | None,
+    empty_message: str,
+    oversize_message: str,
+    invalid_type_message: str,
+) -> str:
+    if not content:
+        raise BadRequestError(empty_message)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise BadRequestError(oversize_message)
+
+    declared_extension = ALLOWED_IMAGE_CONTENT_TYPES.get(content_type or "")
+    detected_extension = _detect_image_extension(content)
+    if (
+        declared_extension is None
+        or detected_extension is None
+        or declared_extension != detected_extension
+    ):
+        raise BadRequestError(invalid_type_message)
+    return detected_extension
 
 
 def _resolve_upload_destination(
@@ -41,20 +82,76 @@ def _resolve_upload_destination(
     return destination
 
 
+def resolve_upload_media_path(relative_path: str) -> Path | None:
+    if "://" in relative_path:
+        return None
+
+    candidate = Path(relative_path)
+    if candidate.is_absolute():
+        return None
+
+    root = get_settings().upload_root_path.resolve()
+    destination = (root / candidate).resolve()
+    try:
+        relative_to_root = destination.relative_to(root)
+    except ValueError:
+        return None
+
+    if not relative_to_root.parts:
+        return None
+
+    top_level = relative_to_root.parts[0]
+    if top_level not in {BOOKING_UPDATES_DIR, STRING_IMAGES_DIR}:
+        return None
+
+    return destination
+
+
+def build_signed_media_url(relative_path: str) -> str:
+    if "://" in relative_path or relative_path.startswith("/"):
+        return relative_path
+    if resolve_upload_media_path(relative_path) is None:
+        return relative_path
+
+    expires_at = int((datetime.now(UTC) + SIGNED_MEDIA_URL_TTL).timestamp())
+    payload = f"{relative_path}:{expires_at}".encode("utf-8")
+    secret = get_settings().jwt_secret_key or ""
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        payload,
+        hashlib.sha256,
+    ).hexdigest()
+    encoded_path = quote(relative_path, safe="/")
+    return f"/api/media/{encoded_path}?exp={expires_at}&sig={signature}"
+
+
+def verify_signed_media_request(relative_path: str, *, exp: int, sig: str) -> bool:
+    if exp < int(datetime.now(UTC).timestamp()):
+        return False
+
+    payload = f"{relative_path}:{exp}".encode("utf-8")
+    secret = get_settings().jwt_secret_key or ""
+    expected_signature = hmac.new(
+        secret.encode("utf-8"),
+        payload,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected_signature, sig)
+
+
 def save_booking_update_photo(
     *,
     content: bytes,
     content_type: str | None,
     original_name: str | None,
 ) -> str:
-    if not content:
-        raise BadRequestError("Uploaded photo is empty")
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise BadRequestError("Uploaded photo must be 5 MB or smaller")
-
-    extension = ALLOWED_IMAGE_CONTENT_TYPES.get(content_type or "")
-    if extension is None:
-        raise BadRequestError("Uploaded photo must be a JPG, PNG, or WEBP image")
+    extension = _validate_image_payload(
+        content=content,
+        content_type=content_type,
+        empty_message="Uploaded photo is empty",
+        oversize_message="Uploaded photo must be 5 MB or smaller",
+        invalid_type_message="Uploaded photo must be a valid JPG, PNG, or WEBP image",
+    )
 
     safe_stem = Path(original_name or "booking-photo").stem[:60] or "booking-photo"
     file_name = f"{uuid4().hex}-{safe_stem}{extension}"
@@ -89,14 +186,13 @@ def save_string_catalog_image(
     content_type: str | None,
     original_name: str | None,
 ) -> str:
-    if not content:
-        raise BadRequestError("Uploaded image is empty")
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise BadRequestError("Uploaded image must be 5 MB or smaller")
-
-    extension = ALLOWED_IMAGE_CONTENT_TYPES.get(content_type or "")
-    if extension is None:
-        raise BadRequestError("Uploaded image must be a JPG, PNG, or WEBP image")
+    extension = _validate_image_payload(
+        content=content,
+        content_type=content_type,
+        empty_message="Uploaded image is empty",
+        oversize_message="Uploaded image must be 5 MB or smaller",
+        invalid_type_message="Uploaded image must be a valid JPG, PNG, or WEBP image",
+    )
 
     safe_stem = Path(original_name or "string-image").stem[:60] or "string-image"
     file_name = f"{uuid4().hex}-{safe_stem}{extension}"

@@ -21,7 +21,8 @@ import { AppScreen, useBottomContentInset } from '../../../components/shared/App
 import { AppSection } from '../../../components/shared/AppSection';
 import { FloatingCompareTray } from '../../../components/shared/FloatingCompareTray';
 import { useAppStore, useStrings } from '../../../store/appStore';
-import { formatLabel } from '../../../lib/formatters';
+import { formatCurrency, formatLabel } from '../../../lib/formatters';
+import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { cn } from '../../../components/ui/heroui';
 import type { StringItem } from '../../../types/domain';
 
@@ -190,6 +191,7 @@ export default function StringsCatalogScreen() {
 
   const CompactStringCard = ({ item }: { item: typeof strings[0] }) => {
     const isSelected = compareSelection.includes(item.id);
+    const priceLabel = getInventoryPriceLabel(item);
 
     return (
       <AppCard 
@@ -201,10 +203,14 @@ export default function StringsCatalogScreen() {
         <View className="flex-row items-center gap-3">
           {/* Left: Thumbnail */}
           <View className="h-14 w-14 rounded-lg bg-slate-50 items-center justify-center overflow-hidden border border-slate-100">
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1617083277661-8488e0867018?w=100&h=100&fit=crop' }} 
-              className="h-full w-full opacity-60"
-            />
+            {item.imageUrl ? (
+              <Image
+                source={{ uri: item.imageUrl }}
+                className="h-full w-full"
+              />
+            ) : (
+              <View className="h-full w-full bg-slate-100" />
+            )}
           </View>
 
           {/* Center: Info */}
@@ -225,8 +231,13 @@ export default function StringsCatalogScreen() {
 
           {/* Right: Actions */}
           <View className="items-end gap-1.5">
-            <HeroText className="text-[10px] font-bold text-slate-400">
-              Price at shop
+            <HeroText
+              className={cn(
+                'text-[10px] font-bold',
+                priceLabel.hasPrice ? 'text-slate-600' : 'text-slate-400',
+              )}
+            >
+              {priceLabel.hasPrice ? formatCurrency(item.price) : priceLabel.label}
             </HeroText>
             <Pressable 
               onPress={() => toggleCompareSelection(item.id)}
