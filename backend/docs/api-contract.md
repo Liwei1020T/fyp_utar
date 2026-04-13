@@ -226,7 +226,7 @@ Store-ops responses add:
 - business hours day configs in snake_case (`is_open`, `open_time`, `slot_duration_minutes`, `max_bookings_per_slot`)
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
-- single-store settings payloads for support/policy copy
+- single-store settings payloads for support/policy copy plus `trending_string_ids` for player home merchandising
 - analytics summary and popular string aggregates for the admin dashboard
 
 ### Recommendations

@@ -97,12 +97,12 @@ Zod.
 | [mobile/app/admin/(tabs)/chat.tsx](../mobile/app/admin/%28tabs%29/chat.tsx) | Admin chat queue. |
 | [mobile/app/admin/(tabs)/analytics.tsx](../mobile/app/admin/%28tabs%29/analytics.tsx) | Admin analytics view. |
 | [mobile/app/admin/bookings/[id].tsx](../mobile/app/admin/bookings/[id].tsx) | Admin booking detail and status updates. |
-| [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits. |
+| [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing trending strings. |
 | [mobile/app/admin/business-hours.tsx](../mobile/app/admin/business-hours.tsx) | Store business hours editor. |
 | [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Admin check-in lookup and confirmation. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Admin service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Payment monitoring screen. |
-| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Limited FYP1 store settings editor for store name, contact, address, support text, booking notes, and booking policy text. |
+| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Limited FYP1 store settings editor for store name, contact, address, support text, booking notes, booking policy text, and backend-persisted home trending strings. |
 | [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/[id].tsx) | Admin chat detail. |
 
 ### Mobile State, Services, And Types

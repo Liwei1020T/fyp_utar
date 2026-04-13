@@ -13,6 +13,8 @@ The app is optimized for:
 
 At runtime, the FYP1-visible product flow is backend-oriented. Player auth, profile, strings, recommendation, bookings, booking photos/comments, admin booking management, inventory, business hours, and limited store settings can be hydrated from the backend, while FYP2 modules such as chat, payment/wallet, notifications, racket passport, QR check-in, service queue, advanced analytics, and advanced settings stay deferred.
 
+The player home `Trending Strings` carousel is now backend-backed through admin store settings. Admins can mark inventory items as `show on home`, the backend persists those string IDs on `/api/admin/store-settings`, and player surfaces render only those admin-picked strings for the player’s `preferredAdminId`.
+
 ## 2. Technology Stack
 
 ### Core framework
