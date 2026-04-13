@@ -448,6 +448,7 @@ export interface AdminSettings {
   bookingNotes: string;
   storePolicyText: string;
   address: string;
+  trendingStringIds: string[];
 }
 
 export interface BookingDraft {

@@ -3,6 +3,7 @@ import { ScrollView, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HeroText } from '../ui/heroui';
 import { MOCK_STRINGS } from '../../mocks/strings';
+import { useAppStore, useCurrentUser, useStrings } from '../../store/appStore';
 
 const categoryLabels = {
   repulsion: 'Repulsion',
@@ -13,7 +14,26 @@ const categoryLabels = {
 
 export function TrendingStrings() {
   const router = useRouter();
-  const trending = MOCK_STRINGS.slice(0, 5);
+  const user = useCurrentUser();
+  const strings = useStrings();
+  const adminSettings = useAppStore((state) => state.adminSettings);
+  const targetAdminId =
+    user?.role === 'player'
+      ? user.preferredAdminId
+      : user?.role === 'admin'
+        ? user.id
+        : null;
+  const configuredTrendingIds = targetAdminId
+    ? adminSettings.find((item) => item.adminId === targetAdminId)?.trendingStringIds ?? []
+    : [];
+  const configuredTrending = configuredTrendingIds
+    .map((id) => strings.find((item) => item.id === id))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const fallbackPool = strings.length > 0 ? strings : MOCK_STRINGS;
+  const fallbackTrending = fallbackPool
+    .filter((item) => !configuredTrendingIds.includes(item.id))
+    .slice(0, Math.max(0, 5 - configuredTrending.length));
+  const trending = [...configuredTrending, ...fallbackTrending].slice(0, 5);
 
   return (
     <View className="mt-1">

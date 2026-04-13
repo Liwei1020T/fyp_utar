@@ -953,6 +953,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
               bookingNotes: '',
               storePolicyText: '',
               address: '',
+              trendingStringIds: [],
               ...patch,
             },
             ...state.adminSettings,

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
+import { View } from 'react-native';
 import { AppButton } from '../../components/ui/AppButton';
+import { AppChip } from '../../components/ui/AppChip';
 import { AppIconButton } from '../../components/ui/AppIconButton';
 import { AppInput } from '../../components/ui/AppInput';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { HeroText } from '../../components/ui/heroui';
-import { useAppStore, useBackendAccessToken, useCurrentUser } from '../../store/appStore';
+import { useAppStore, useBackendAccessToken, useCurrentUser, useStrings } from '../../store/appStore';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 
 function normalizeFyp1PolicyText(value: string) {
@@ -21,6 +23,7 @@ export default function AdminSettingsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
+  const strings = useStrings();
   const settings = useAppStore((state) =>
     state.adminSettings.find((item) => item.adminId === user?.id)
   );
@@ -32,6 +35,9 @@ export default function AdminSettingsScreen() {
   const [bookingNotes, setBookingNotes] = useState(settings?.bookingNotes ?? '');
   const [policyText, setPolicyText] = useState(settings?.storePolicyText ?? '');
   const [paymentNotes, setPaymentNotes] = useState(settings?.paymentNotes ?? '');
+  const [trendingStringIds, setTrendingStringIds] = useState<string[]>(
+    settings?.trendingStringIds ?? []
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -46,7 +52,22 @@ export default function AdminSettingsScreen() {
     setBookingNotes(settings.bookingNotes);
     setPolicyText(normalizeFyp1PolicyText(settings.storePolicyText));
     setPaymentNotes(settings.paymentNotes);
+    setTrendingStringIds(settings.trendingStringIds ?? []);
   }, [settings]);
+
+  const toggleTrendingString = (stringId: string) => {
+    setTrendingStringIds((current) => {
+      if (current.includes(stringId)) {
+        return current.filter((id) => id !== stringId);
+      }
+
+      if (current.length >= 5) {
+        return [...current.slice(1), stringId];
+      }
+
+      return [...current, stringId];
+    });
+  };
 
   useEffect(() => {
     if (!token || !user || user.role !== 'admin') {
@@ -125,6 +146,7 @@ export default function AdminSettingsScreen() {
           paymentNotes,
           bookingNotes,
           storePolicyText: policyText,
+          trendingStringIds,
         });
       }
     } catch (saveError) {
@@ -161,6 +183,31 @@ export default function AdminSettingsScreen() {
         <AppInput label="Support text" value={supportText} onChangeText={setSupportText} multiline inputClassName="min-h-24" />
         <AppInput label="Booking notes" value={bookingNotes} onChangeText={setBookingNotes} multiline inputClassName="min-h-24" />
         <AppInput label="Store policy text" value={policyText} onChangeText={setPolicyText} multiline inputClassName="min-h-24" />
+      </AppSection>
+
+      <AppSection
+        eyebrow="Homepage"
+        title="Trending strings"
+        subtitle="Choose up to 5 strings to feature on the player home screen."
+      >
+        <HeroText className="mb-3 text-xs font-semibold text-slate-500">
+          Selected: {trendingStringIds.length}/5
+        </HeroText>
+        <View className="flex-row flex-wrap gap-2">
+          {strings.map((item) => {
+            const isSelected = trendingStringIds.includes(item.id);
+
+            return (
+              <AppChip
+                key={item.id}
+                label={`${item.brand} ${item.model}`}
+                size="md"
+                variant={isSelected ? 'primary' : 'neutral'}
+                onPress={() => toggleTrendingString(item.id)}
+              />
+            );
+          })}
+        </View>
       </AppSection>
 
       {error ? (
