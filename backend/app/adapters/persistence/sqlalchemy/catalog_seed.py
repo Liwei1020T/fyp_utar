@@ -102,6 +102,7 @@ def approved_row_to_values(
     scores = derive_scores_from_legacy_row(legacy_row)
     price_rm = positive_number(legacy_row.get("price")) if legacy_row else None
     gauge_mm = number_or_none(row.get("gauge_main_mm"))
+    tension_min_lbs, tension_max_lbs = derive_tension_range(gauge_mm)
     gauge_score = normalize_gauge(gauge_mm)
     catalog_id = str(row["catalog_id"]).strip()
     matrix_entries = [
@@ -144,7 +145,12 @@ def approved_row_to_values(
             "gauge_main_mm": gauge_mm,
             "gauge_cross_mm": number_or_none(row.get("gauge_cross_mm")),
             "gauge_label": as_string(row.get("gauge_label")),
+            "category": None,
+            "main_trait": None,
+            "tension_min_lbs": tension_min_lbs,
+            "tension_max_lbs": tension_max_lbs,
             "material_summary_en": as_string(row.get("material_summary_en")),
+            "image_url": None,
             "color_options_en": list(row.get("color_options_en") or []),
             "short_description": str(row["short_description"]).strip(),
             "full_description": str(row["full_description"]).strip(),
@@ -203,6 +209,10 @@ def approved_row_to_values(
             "reorder_quantity": 8,
             "cost_price": None,
             "selling_price": price_rm,
+            "pricing_mode": "fixed_price" if price_rm is not None else "price_pending",
+            "availability_status": "in_stock"
+            if bool(row.get("is_active", True))
+            else "out_of_stock",
             "is_active": bool(row.get("is_active", True)),
         },
         "matrix_entries": matrix_entries,
@@ -245,7 +255,12 @@ def merge_with_approved_defaults(
                 "gauge_main_mm",
                 "gauge_cross_mm",
                 "gauge_label",
+                "category",
+                "main_trait",
+                "tension_min_lbs",
+                "tension_max_lbs",
                 "material_summary_en",
+                "image_url",
                 "color_options_en",
                 "short_description",
                 "full_description",
@@ -266,6 +281,16 @@ def merge_with_approved_defaults(
     )
     catalog_values["model_name"] = model_name.strip()
     return {**defaults, "catalog": catalog_values, "normalized_name": normalized_name}
+
+
+def derive_tension_range(gauge_mm: float | None) -> tuple[int | None, int | None]:
+    if gauge_mm is None:
+        return None, None
+    if gauge_mm <= 0.65:
+        return 22, 27
+    if gauge_mm >= 0.69:
+        return 24, 29
+    return 23, 28
 
 
 def derive_scores_from_legacy_row(legacy_row: dict[str, Any] | None) -> AspectScoreMap:

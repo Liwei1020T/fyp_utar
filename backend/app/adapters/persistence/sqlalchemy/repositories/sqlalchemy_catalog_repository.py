@@ -38,6 +38,8 @@ from app.domain.catalog.entities import (
     StringOfficialPerformance as OfficialPerformanceRecord,
 )
 from app.domain.catalog.policies import InventoryAvailability
+from app.domain.catalog.policies import inventory_availability
+from app.shared.errors import BadRequestError
 from app.shared.pagination import Page
 
 
@@ -72,7 +74,24 @@ class SqlAlchemyCatalogRepository:
         is_hybrid: bool | None = None,
         search: str | None = None,
     ):
-        if is_active is not None:
+        if is_active is True:
+            query = query.join(StringCatalogItem.inventory_item).where(
+                and_(
+                    StringCatalogItem.is_active.is_(True),
+                    StringInventoryItem.is_active.is_(True),
+                    StringInventoryItem.available_stock > 0,
+                    StringInventoryItem.availability_status != "out_of_stock",
+                )
+            )
+            count_query = count_query.join(StringCatalogItem.inventory_item).where(
+                and_(
+                    StringCatalogItem.is_active.is_(True),
+                    StringInventoryItem.is_active.is_(True),
+                    StringInventoryItem.available_stock > 0,
+                    StringInventoryItem.availability_status != "out_of_stock",
+                )
+            )
+        elif is_active is not None:
             predicate = StringCatalogItem.is_active.is_(is_active)
             query = query.where(predicate)
             count_query = count_query.where(predicate)
@@ -140,9 +159,12 @@ class SqlAlchemyCatalogRepository:
         item = self.db.execute(
             self._base_query().where(StringCatalogItem.catalog_id == string_id)
         ).scalar_one_or_none()
-        if item is None or (not include_inactive and not item.is_active):
+        if item is None:
             return None
-        return to_string_item(item)
+        mapped = to_string_item(item)
+        if not include_inactive and inventory_availability(mapped) == "out_of_stock":
+            return None
+        return mapped
 
     def list_strings(
         self,
@@ -173,6 +195,7 @@ class SqlAlchemyCatalogRepository:
             search=search,
         )
 
+        joined_inventory = is_active is True
         total = self.db.execute(count_query).scalar_one()
         sort_columns: dict[str, Any] = {
             "brand": StringCatalogItem.brand_code,
@@ -185,7 +208,7 @@ class SqlAlchemyCatalogRepository:
             "updated_at": StringCatalogItem.updated_at,
         }
         sort_column = sort_columns.get(sort_by, StringCatalogItem.display_name)
-        if sort_by == "price_rm":
+        if sort_by == "price_rm" and not joined_inventory:
             query = query.outerjoin(StringCatalogItem.inventory_item)
         elif sort_by == "community_rating":
             query = query.outerjoin(StringCatalogItem.metrics)
@@ -233,22 +256,27 @@ class SqlAlchemyCatalogRepository:
         if availability == "in_stock":
             predicate = and_(
                 StringCatalogItem.is_active.is_(True),
-                StringInventoryItem.available_stock > 5,
+                StringInventoryItem.is_active.is_(True),
+                StringInventoryItem.available_stock > 0,
+                StringInventoryItem.availability_status == "in_stock",
             )
             query = query.where(predicate)
             count_query = count_query.where(predicate)
         elif availability == "low_stock":
             predicate = and_(
                 StringCatalogItem.is_active.is_(True),
+                StringInventoryItem.is_active.is_(True),
                 StringInventoryItem.available_stock > 0,
-                StringInventoryItem.available_stock <= 5,
+                StringInventoryItem.availability_status == "low_stock",
             )
             query = query.where(predicate)
             count_query = count_query.where(predicate)
         elif availability == "out_of_stock":
             predicate = or_(
                 StringCatalogItem.is_active.is_(False),
+                StringInventoryItem.is_active.is_(False),
                 StringInventoryItem.available_stock <= 0,
+                StringInventoryItem.availability_status == "out_of_stock",
             )
             query = query.where(predicate)
             count_query = count_query.where(predicate)
@@ -328,6 +356,10 @@ class SqlAlchemyCatalogRepository:
             inventory.selling_price = cast(float | None, values["price_rm"])
         if "selling_price" in values:
             inventory.selling_price = cast(float | None, values["selling_price"])
+        if "pricing_mode" in values:
+            inventory.pricing_mode = str(values["pricing_mode"])
+        if "availability_status" in values:
+            inventory.availability_status = str(values["availability_status"])
         if "cost_price" in values:
             inventory.cost_price = cast(float | None, values["cost_price"])
         if "reorder_level" in values:
@@ -350,9 +382,31 @@ class SqlAlchemyCatalogRepository:
         inventory.current_stock = current_stock
         inventory.reserved_stock = reserved_stock
         inventory.available_stock = max(current_stock - reserved_stock, 0)
-        item.is_active = (
-            item.is_active and inventory.is_active and inventory.available_stock > 0
-        )
+        if inventory.available_stock <= 0:
+            inventory.availability_status = "out_of_stock"
+        elif "availability_status" not in values:
+            inventory.availability_status = (
+                "low_stock" if inventory.available_stock <= 5 else "in_stock"
+            )
+
+        if inventory.pricing_mode not in {
+            "fixed_price",
+            "quoted_at_shop",
+            "price_pending",
+        }:
+            raise BadRequestError("Unsupported pricing mode")
+
+        if inventory.pricing_mode == "fixed_price" and inventory.selling_price is None:
+            raise BadRequestError("Fixed price mode requires a selling price")
+        if inventory.pricing_mode in {"quoted_at_shop", "price_pending"}:
+            inventory.selling_price = None
+
+        if inventory.availability_status not in {
+            "in_stock",
+            "low_stock",
+            "out_of_stock",
+        }:
+            raise BadRequestError("Unsupported inventory availability status")
 
         note = values.get("admin_note")
         movement_type = values.get("movement_type") or "ADJUSTMENT"

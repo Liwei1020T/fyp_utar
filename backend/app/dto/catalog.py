@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 
 from app.domain.catalog.entities import InventoryMovementRecord
 from app.domain.catalog.entities import RecommendationMatrixEntryRecord
@@ -17,6 +18,7 @@ from app.shared.serialization import isoformat_or_none
 
 
 InventoryAvailability = Literal["in_stock", "low_stock", "out_of_stock"]
+PricingMode = Literal["fixed_price", "quoted_at_shop", "price_pending"]
 
 
 class CatalogTagOut(BaseModel):
@@ -53,7 +55,12 @@ class StringOut(BaseModel):
     gauge_main_mm: float | None = None
     gauge_cross_mm: float | None = None
     gauge_label: str | None = None
+    category: str | None = None
+    main_trait: str | None = None
+    tension_min_lbs: int | None = None
+    tension_max_lbs: int | None = None
     material_summary_en: str | None = None
+    image_url: str | None = None
     color_options_en: list[str] = Field(default_factory=list)
     short_description: str
     full_description: str
@@ -86,6 +93,8 @@ class AdminInventoryStringOut(StringOut):
     reorder_quantity: int
     cost_price: float | None = None
     selling_price: float | None = None
+    pricing_mode: PricingMode
+    availability_status: InventoryAvailability
     availability: InventoryAvailability
     admin_note: str | None = None
 
@@ -170,7 +179,12 @@ class StringWritePayload(BaseModel):
     gauge_main_mm: float | None = Field(default=None, ge=0.4, le=1.2)
     gauge_cross_mm: float | None = Field(default=None, ge=0.4, le=1.2)
     gauge_label: str | None = Field(default=None, max_length=80)
+    category: str | None = Field(default=None, max_length=40)
+    main_trait: str | None = Field(default=None, max_length=120)
+    tension_min_lbs: int | None = Field(default=None, ge=15, le=40)
+    tension_max_lbs: int | None = Field(default=None, ge=15, le=40)
     material_summary_en: str | None = Field(default=None, max_length=2000)
+    image_url: str | None = Field(default=None, max_length=2000)
     color_options_en: list[str] | None = None
     short_description: str | None = Field(default=None, max_length=1000)
     full_description: str | None = Field(default=None, max_length=4000)
@@ -181,6 +195,18 @@ class StringWritePayload(BaseModel):
     original_material: str | None = Field(default=None, max_length=4000)
     original_color: str | None = Field(default=None, max_length=4000)
     is_active: bool | None = None
+
+    @model_validator(mode="after")
+    def validate_tension_range(self) -> "StringWritePayload":
+        if (
+            self.tension_min_lbs is not None
+            and self.tension_max_lbs is not None
+            and self.tension_max_lbs < self.tension_min_lbs
+        ):
+            raise ValueError(
+                "tension_max_lbs must be greater than or equal to tension_min_lbs"
+            )
+        return self
 
 
 class InventoryUpdatePayload(BaseModel):
@@ -194,11 +220,29 @@ class InventoryUpdatePayload(BaseModel):
     reorder_quantity: int | None = Field(default=None, ge=0, le=9999)
     cost_price: float | None = Field(default=None, ge=0, le=999)
     selling_price: float | None = Field(default=None, ge=0, le=999)
+    pricing_mode: PricingMode | None = None
+    availability_status: InventoryAvailability | None = None
     is_active: bool | None = None
     admin_note: str | None = Field(default=None, max_length=500)
     movement_type: str | None = Field(default=None, max_length=40)
     reference_type: str | None = Field(default=None, max_length=60)
     reference_id: str | None = Field(default=None, max_length=120)
+
+    @model_validator(mode="after")
+    def validate_pricing_mode(self) -> "InventoryUpdatePayload":
+        price_value = (
+            self.selling_price if self.selling_price is not None else self.price_rm
+        )
+        if self.pricing_mode == "fixed_price" and price_value is None:
+            raise ValueError("fixed_price mode requires price_rm or selling_price")
+        if (
+            self.pricing_mode in {"quoted_at_shop", "price_pending"}
+            and price_value is not None
+        ):
+            raise ValueError(
+                "quoted_at_shop and price_pending modes require a null price value"
+            )
+        return self
 
 
 class OfficialPerformancePayload(BaseModel):
@@ -249,7 +293,12 @@ def string_to_dto(item: StringItem) -> StringOut:
         gauge_main_mm=item.gauge_main_mm,
         gauge_cross_mm=item.gauge_cross_mm,
         gauge_label=item.gauge_label,
+        category=item.category,
+        main_trait=item.main_trait,
+        tension_min_lbs=item.tension_min_lbs,
+        tension_max_lbs=item.tension_max_lbs,
         material_summary_en=item.material_summary_en,
+        image_url=f"/media/{item.image_url}" if item.image_url else None,
         color_options_en=item.color_options_en,
         short_description=item.short_description,
         full_description=item.full_description,
@@ -293,6 +342,10 @@ def inventory_string_to_dto(item: StringItem) -> AdminInventoryStringOut:
         reorder_quantity=item.reorder_quantity,
         cost_price=item.cost_price,
         selling_price=item.selling_price,
+        pricing_mode=item.inventory.pricing_mode if item.inventory else "price_pending",
+        availability_status=item.inventory.availability_status
+        if item.inventory
+        else inventory_availability(item),
         availability=inventory_availability(item),
         admin_note=item.admin_note,
     )

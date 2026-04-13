@@ -6,6 +6,7 @@ import type {
   BackendCheckInRequest,
   BackendBooking,
   BackendForgotPasswordRequestResponse,
+  BackendInventoryUpdatePayload,
   BackendMessageResponse,
   BackendOfficialPerformance,
   BackendOfficialPerformancePayload,
@@ -49,7 +50,7 @@ export function isBackendAuthError(error: unknown): error is BackendApiError {
 }
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   token?: string | null;
 };
@@ -221,6 +222,14 @@ async function buildBookingUpdateForm(input: {
   if (input.photo) {
     formData.append('photo', await normalizeUploadFile(input.photo));
   }
+  return formData;
+}
+
+async function buildImageUploadForm(input: {
+  photo: BackendUploadFile;
+}) {
+  const formData = new FormData();
+  formData.append('photo', await normalizeUploadFile(input.photo));
   return formData;
 }
 
@@ -513,11 +522,7 @@ export const backendApi = {
   adminUpdateInventoryString(
     token: string,
     stringId: string,
-    payload: {
-      price_rm?: number | null;
-      stock_level?: number | null;
-      admin_note?: string | null;
-    },
+    payload: BackendInventoryUpdatePayload,
   ) {
     return requestJson<BackendAdminInventoryString>(
       `/admin/inventory/strings/${stringId}`,
@@ -527,6 +532,24 @@ export const backendApi = {
         token,
       },
     );
+  },
+  adminUploadStringImage(
+    token: string,
+    stringId: string,
+    input: { photo: BackendUploadFile },
+  ) {
+    return buildImageUploadForm(input).then((formData) =>
+      requestFormJson<BackendString>(`/admin/strings/${stringId}/image`, {
+        formData,
+        token,
+      }),
+    );
+  },
+  adminDeleteStringImage(token: string, stringId: string) {
+    return requestJson<BackendString>(`/admin/strings/${stringId}/image`, {
+      method: 'DELETE',
+      token,
+    });
   },
   adminUpdateString(
     token: string,

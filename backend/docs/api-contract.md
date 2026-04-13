@@ -167,8 +167,18 @@ Inventory responses extend the base string shape with:
 - `reorder_quantity`
 - `cost_price`
 - `selling_price`
+- `pricing_mode` (`fixed_price`, `quoted_at_shop`, `price_pending`)
+- `availability_status` (`in_stock`, `low_stock`, `out_of_stock`)
 - `availability` (`in_stock`, `low_stock`, `out_of_stock`)
 - `admin_note`
+
+Catalog string responses also include admin-editor fields such as:
+
+- `category`
+- `main_trait`
+- `tension_min_lbs`
+- `tension_max_lbs`
+- `image_url`
 
 Official performance responses include:
 

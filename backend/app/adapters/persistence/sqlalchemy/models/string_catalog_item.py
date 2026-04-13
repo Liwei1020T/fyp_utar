@@ -64,7 +64,14 @@ class StringCatalogItem(Base):
     gauge_main_mm: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     gauge_cross_mm: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     gauge_label: Mapped[str | None] = mapped_column(SAString(80), nullable=True)
+    category: Mapped[str | None] = mapped_column(
+        SAString(40), nullable=True, index=True
+    )
+    main_trait: Mapped[str | None] = mapped_column(SAString(120), nullable=True)
+    tension_min_lbs: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tension_max_lbs: Mapped[int | None] = mapped_column(Integer, nullable=True)
     material_summary_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     color_options_en: Mapped[list[str]] = mapped_column(JSON, default=list)
     short_description: Mapped[str] = mapped_column(Text)
     full_description: Mapped[str] = mapped_column(Text)
@@ -217,6 +224,10 @@ class StringInventoryItem(Base):
     reorder_quantity: Mapped[int] = mapped_column(Integer, default=8)
     cost_price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     selling_price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    pricing_mode: Mapped[str] = mapped_column(SAString(32), default="price_pending")
+    availability_status: Mapped[str] = mapped_column(
+        SAString(32), default="in_stock", index=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

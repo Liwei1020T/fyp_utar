@@ -55,7 +55,9 @@ from app.entrypoints.api.dependencies import get_current_admin
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_store_repository
 from app.shared.upload_storage import delete_booking_update_photo
+from app.shared.upload_storage import delete_string_catalog_image
 from app.shared.upload_storage import save_booking_update_photo
+from app.shared.upload_storage import save_string_catalog_image
 from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
 from app.use_cases.booking.list_admin_bookings import ListAdminBookingsUseCase
@@ -113,6 +115,14 @@ async def save_update_photo_upload(
     return photo_path, photo_original_name, photo_content_type
 
 
+async def save_string_image_upload(photo: UploadFile) -> str:
+    return save_string_catalog_image(
+        content=await photo.read(),
+        content_type=photo.content_type,
+        original_name=photo.filename,
+    )
+
+
 @router.get("/strings", response_model=dict)
 def admin_list_strings(
     search: str | None = Query(default=None, max_length=100),
@@ -160,6 +170,7 @@ def admin_create_string(
     )
     if payload.price_rm is not None:
         cast(dict[str, object], values["inventory"])["selling_price"] = payload.price_rm
+        cast(dict[str, object], values["inventory"])["pricing_mode"] = "fixed_price"
     item = CreateStringUseCase(catalog_repository=catalog_repository).execute(values)
     return string_to_dto(item)
 
@@ -171,18 +182,70 @@ def admin_update_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> StringOut:
-    values = PrepareStringValuesUseCase(
+    PrepareStringValuesUseCase(
         approved_strings_path=get_settings().approved_strings_path
     ).execute(
         brand=payload.brand,
         model_name=payload.model_name,
-        overrides=payload.model_dump(exclude_none=True),
+        overrides={},
     )
-    if payload.price_rm is not None:
-        cast(dict[str, object], values["inventory"])["selling_price"] = payload.price_rm
+    catalog_values = payload.model_dump(
+        exclude_none=True,
+        exclude={"price_rm"},
+    )
     item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
-        values=values,
+        values={
+            "catalog": catalog_values,
+            "inventory": (
+                {
+                    "selling_price": payload.price_rm,
+                    "pricing_mode": "fixed_price",
+                }
+                if payload.price_rm is not None
+                else {}
+            ),
+        },
+    )
+    return string_to_dto(item)
+
+
+@router.post("/strings/{string_id}/image", response_model=StringOut)
+async def admin_upload_string_image(
+    string_id: str,
+    photo: UploadFile = File(...),
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> StringOut:
+    existing = GetStringUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        include_inactive=True,
+    )
+    image_path = await save_string_image_upload(photo)
+    if existing.image_url:
+        delete_string_catalog_image(existing.image_url)
+    item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        values={"catalog": {"image_url": image_path}},
+    )
+    return string_to_dto(item)
+
+
+@router.delete("/strings/{string_id}/image", response_model=StringOut)
+def admin_delete_string_image(
+    string_id: str,
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> StringOut:
+    existing = GetStringUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        include_inactive=True,
+    )
+    if existing.image_url:
+        delete_string_catalog_image(existing.image_url)
+    item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        values={"catalog": {"image_url": None}},
     )
     return string_to_dto(item)
 
@@ -260,6 +323,10 @@ def admin_update_inventory_string(
         values["cost_price"] = payload.cost_price
     if "selling_price" in payload.model_fields_set:
         values["selling_price"] = payload.selling_price
+    if "pricing_mode" in payload.model_fields_set:
+        values["pricing_mode"] = payload.pricing_mode
+    if "availability_status" in payload.model_fields_set:
+        values["availability_status"] = payload.availability_status
     if "is_active" in payload.model_fields_set:
         values["is_active"] = bool(payload.is_active)
     if "admin_note" in payload.model_fields_set:

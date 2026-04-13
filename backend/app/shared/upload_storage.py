@@ -49,3 +49,40 @@ def delete_booking_update_photo(relative_path: str | None) -> None:
     except OSError:
         # Upload cleanup is best-effort; the original request error should still win.
         return
+
+
+def save_string_catalog_image(
+    *,
+    content: bytes,
+    content_type: str | None,
+    original_name: str | None,
+) -> str:
+    if not content:
+        raise BadRequestError("Uploaded image is empty")
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise BadRequestError("Uploaded image must be 5 MB or smaller")
+
+    extension = ALLOWED_IMAGE_CONTENT_TYPES.get(content_type or "")
+    if extension is None:
+        raise BadRequestError("Uploaded image must be a JPG, PNG, or WEBP image")
+
+    safe_stem = Path(original_name or "string-image").stem[:60] or "string-image"
+    file_name = f"{uuid4().hex}-{safe_stem}{extension}"
+    relative_path = Path("string-images") / file_name
+    destination = get_settings().upload_root_path / relative_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(content)
+    return relative_path.as_posix()
+
+
+def delete_string_catalog_image(relative_path: str | None) -> None:
+    if not relative_path:
+        return
+    if "://" in relative_path or relative_path.startswith("/"):
+        return
+
+    destination = get_settings().upload_root_path / relative_path
+    try:
+        destination.unlink(missing_ok=True)
+    except OSError:
+        return

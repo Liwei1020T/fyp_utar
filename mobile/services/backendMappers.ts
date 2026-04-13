@@ -22,7 +22,9 @@ import type {
   BackendBooking,
   BackendBookingStatusHistory,
   BackendBookingUpdate,
+  BackendInventoryAvailability,
   BackendOfficialPerformance,
+  BackendPricingMode,
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
@@ -282,6 +284,15 @@ function deriveStrengthLabels(item: BackendString) {
 }
 
 function normalizeCategory(item: BackendString): StringItem['category'] {
+  const rawCategory = item.category?.trim().toLowerCase();
+  if (
+    rawCategory === 'repulsion' ||
+    rawCategory === 'balanced' ||
+    rawCategory === 'control' ||
+    rawCategory === 'durable'
+  ) {
+    return rawCategory;
+  }
   const normalizedTags = item.tags
     .map((tag) => tag.tag_key.trim().toLowerCase())
     .filter(Boolean);
@@ -327,6 +338,9 @@ function deriveMainTrait(
   category: StringItem['category'],
   strengths: string[],
 ) {
+  if (item.main_trait?.trim()) {
+    return item.main_trait.trim();
+  }
   const highlightedTag = item.tags
     .map((tag) => tag.tag_label?.trim())
     .find((value) =>
@@ -347,6 +361,29 @@ function deriveMainTrait(
     default:
       return strengths[0] ?? 'Balanced';
   }
+}
+
+function mapBackendPricingModeToPriceStatus(
+  pricingMode: BackendPricingMode | null | undefined,
+  price: number | null | undefined,
+) {
+  switch (pricingMode) {
+    case 'fixed_price':
+      return price == null ? 'pending' : 'priced';
+    case 'quoted_at_shop':
+      return 'quoted_at_shop';
+    case 'price_pending':
+      return 'pending';
+    default:
+      return derivePriceStatus(price);
+  }
+}
+
+function resolveAvailabilityStatus(
+  value: BackendInventoryAvailability | null | undefined,
+  fallbackStock: number,
+) {
+  return value ?? deriveAvailabilityStatus(fallbackStock);
 }
 
 function deriveMaterial(item: BackendString) {
@@ -404,6 +441,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const gauge = formatGaugeRange(gaugeBounds.min, gaugeBounds.max);
   const priceStatus = derivePriceStatus(item.price_rm);
   const availability = deriveAvailabilityStatus(item.is_active ? 8 : 0);
+  const imageUrl = resolveBackendMediaUrl(item.image_url);
   const catalog = {
     id: item.id,
     brand: item.brand,
@@ -421,10 +459,10 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
         .join(' and ')} with a ${titleCase(category)} leaning setup.`,
     mainTrait,
     category,
-    tensionMinLbs,
-    tensionMaxLbs,
+    tensionMinLbs: item.tension_min_lbs ?? tensionMinLbs,
+    tensionMaxLbs: item.tension_max_lbs ?? tensionMaxLbs,
     performanceScores: ratings,
-    imageUrl: undefined,
+    imageUrl,
     isActive: item.is_active,
     createdAt: item.created_at ?? undefined,
     updatedAt: item.updated_at ?? undefined,
@@ -454,15 +492,15 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     price: item.price_rm ?? 0,
     priceStatus,
     recommendedTension,
-    tensionMinLbs,
-    tensionMaxLbs,
+    tensionMinLbs: catalog.tensionMinLbs,
+    tensionMaxLbs: catalog.tensionMaxLbs,
     ratings,
     tensionNote: `Suggested range ${formatTensionRange(
       tensionMinLbs,
       tensionMaxLbs,
     )} based on the current backend profile.`,
     description: catalog.description,
-    imageUrl: undefined,
+    imageUrl,
     isActive: catalog.isActive,
     createdAt: catalog.createdAt,
     updatedAt: catalog.updatedAt,
@@ -497,9 +535,12 @@ export function mapBackendInventoryStringToStringItem(
   item: BackendAdminInventoryString,
 ): StringItem {
   const mapped = mapBackendStringToStringItem(item);
-  const availability = deriveAvailabilityStatus(item.stock_level, item.availability);
+  const availability = resolveAvailabilityStatus(
+    item.availability_status ?? item.availability,
+    item.stock_level,
+  );
   const resolvedPrice = item.selling_price ?? item.price_rm;
-  const priceStatus = derivePriceStatus(resolvedPrice);
+  const priceStatus = mapBackendPricingModeToPriceStatus(item.pricing_mode, resolvedPrice);
   const inventory = {
     ...mapped.inventory,
     id: mapped.inventory.id,

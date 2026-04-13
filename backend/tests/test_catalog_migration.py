@@ -93,42 +93,63 @@ def test_catalog_normalization_migration_preserves_existing_booking(
     assert "string_recommendation_matrix" in table_names
 
     with engine.begin() as connection:
-        string_row = connection.execute(
-            text(
-                """
-                SELECT catalog_id, display_name, official_performance_status
+        string_row = (
+            connection.execute(
+                text(
+                    """
+                SELECT catalog_id, display_name, official_performance_status,
+                       tension_min_lbs, tension_max_lbs
                 FROM strings
                 WHERE catalog_id = 'yonex-bg80'
                 """
+                )
             )
-        ).mappings().one()
+            .mappings()
+            .one()
+        )
         assert string_row["display_name"] == "Yonex BG80"
         assert string_row["official_performance_status"] == "pending_manual_fill"
+        assert string_row["tension_min_lbs"] == 23
+        assert string_row["tension_max_lbs"] == 28
 
-        booking_row = connection.execute(
-            text("SELECT string_id FROM bookings WHERE id = 'booking-1'")
-        ).mappings().one()
+        booking_row = (
+            connection.execute(
+                text("SELECT string_id FROM bookings WHERE id = 'booking-1'")
+            )
+            .mappings()
+            .one()
+        )
         assert booking_row["string_id"] == "yonex-bg80"
 
-        inventory_row = connection.execute(
-            text(
-                """
-                SELECT available_stock, selling_price
+        inventory_row = (
+            connection.execute(
+                text(
+                    """
+                SELECT available_stock, selling_price, pricing_mode, availability_status
                 FROM inventory_items
                 WHERE catalog_id = 'yonex-bg80'
                 """
+                )
             )
-        ).mappings().one()
+            .mappings()
+            .one()
+        )
         assert inventory_row["available_stock"] == 6
         assert float(inventory_row["selling_price"]) == 45.0
+        assert inventory_row["pricing_mode"] == "fixed_price"
+        assert inventory_row["availability_status"] == "in_stock"
 
-        matrix_rows = connection.execute(
-            text(
-                """
+        matrix_rows = (
+            connection.execute(
+                text(
+                    """
                 SELECT COUNT(*) AS count
                 FROM string_recommendation_matrix
                 WHERE catalog_id = 'yonex-bg80'
                 """
+                )
             )
-        ).mappings().one()
+            .mappings()
+            .one()
+        )
         assert matrix_rows["count"] >= 12

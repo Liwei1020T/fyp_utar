@@ -423,6 +423,10 @@ function buildCatalogPayload(normalized: NormalizedFormState) {
     gauge_main_mm: normalized.gaugeMm,
     gauge_cross_mm: normalized.gaugeMm,
     gauge_label: normalized.gaugeMm != null ? `${normalized.gaugeMm.toFixed(2)} mm` : null,
+    category: normalized.category,
+    main_trait: normalized.mainTrait || null,
+    tension_min_lbs: normalized.tensionMinLbs,
+    tension_max_lbs: normalized.tensionMaxLbs,
     material_summary_en: normalized.material || null,
     short_description: createShortDescription(normalized.description),
     full_description: normalized.description,
@@ -435,7 +439,9 @@ function buildCatalogPayload(normalized: NormalizedFormState) {
 function buildInventoryPayload(normalized: NormalizedFormState) {
   return {
     price_rm: normalized.pricingMode === 'fixed_price' ? normalized.priceRm : null,
+    pricing_mode: normalized.pricingMode,
     stock_level: normalized.stockLevel ?? 0,
+    availability_status: normalized.availabilityStatus,
     admin_note: normalized.shopNote || null,
   };
 }
@@ -465,6 +471,10 @@ function comparableCatalogState(normalized: NormalizedFormState) {
     description: normalized.description,
     material: normalized.material,
     gaugeMm: normalized.gaugeMm,
+    tensionMinLbs: normalized.tensionMinLbs,
+    tensionMaxLbs: normalized.tensionMaxLbs,
+    mainTrait: normalized.mainTrait,
+    category: normalized.category,
     isActive: normalized.isActive,
   };
 }
@@ -481,22 +491,16 @@ function comparableScoreState(normalized: NormalizedFormState) {
 
 function comparableInventoryState(normalized: NormalizedFormState) {
   return {
+    pricingMode: normalized.pricingMode,
     priceRm: normalized.pricingMode === 'fixed_price' ? normalized.priceRm : null,
     stockLevel: normalized.stockLevel,
+    availabilityStatus: normalized.availabilityStatus,
     shopNote: normalized.shopNote,
   };
 }
 
-function comparableLocalOnlyState(normalized: NormalizedFormState) {
-  return {
-    mainTrait: normalized.mainTrait,
-    category: normalized.category,
-    tensionMinLbs: normalized.tensionMinLbs,
-    tensionMaxLbs: normalized.tensionMaxLbs,
-    imageUrl: normalized.imageUrl,
-    pricingMode: normalized.pricingMode,
-    availabilityStatus: normalized.availabilityStatus,
-  };
+function isPersistedBackendImage(value: string) {
+  return value.startsWith('/media/') || /^https?:\/\//i.test(value);
 }
 
 function ChoiceGroup<T extends string | boolean>({
@@ -640,6 +644,11 @@ export default function AdminInventoryDetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
   const [isHydrating, setIsHydrating] = useState(false);
+  const [pendingImageUpload, setPendingImageUpload] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!stringItem) {
@@ -650,6 +659,7 @@ export default function AdminInventoryDetailScreen() {
     setForm(nextForm);
     setInitialNormalizedForm(normalizeForm(nextForm));
     setErrors({});
+    setPendingImageUpload(null);
   }, [stringItem]);
 
   useEffect(() => {
@@ -772,15 +782,12 @@ export default function AdminInventoryDetailScreen() {
     );
   }, [initialNormalizedForm, normalizedForm]);
 
-  const hasLocalOnlyChanges = useMemo(() => {
+  const hasImageServerChanges = useMemo(() => {
     if (!normalizedForm || !initialNormalizedForm) {
       return false;
     }
-    return (
-      serializeComparable(comparableLocalOnlyState(normalizedForm)) !==
-      serializeComparable(comparableLocalOnlyState(initialNormalizedForm))
-    );
-  }, [initialNormalizedForm, normalizedForm]);
+    return normalizedForm.imageUrl !== initialNormalizedForm.imageUrl || pendingImageUpload != null;
+  }, [initialNormalizedForm, normalizedForm, pendingImageUpload]);
 
   if ((isHydrating && !form) || (params.id && !stringItem && sessionSource === 'backend')) {
     return (
@@ -863,13 +870,20 @@ export default function AdminInventoryDetailScreen() {
         return;
       }
 
-      setField('imageUrl', result.assets[0].uri);
+      const asset = result.assets[0];
+      setPendingImageUpload({
+        uri: asset.uri,
+        name: asset.fileName || `string-image-${Date.now()}.jpg`,
+        type: asset.mimeType || 'image/jpeg',
+      });
+      setField('imageUrl', asset.uri);
     } finally {
       setIsPickingImage(false);
     }
   };
 
   const removeImage = () => {
+    setPendingImageUpload(null);
     setField('imageUrl', undefined);
   };
 
@@ -894,19 +908,35 @@ export default function AdminInventoryDetailScreen() {
       return;
     }
 
-    if (!hasCatalogServerChanges && !hasScoreServerChanges && !hasInventoryServerChanges) {
-      updateStringItem(stringItem.id, localPatch);
+    if (
+      !hasCatalogServerChanges &&
+      !hasScoreServerChanges &&
+      !hasInventoryServerChanges &&
+      !hasImageServerChanges
+    ) {
       setStatusBanner({
         tone: 'success',
-        message: hasLocalOnlyChanges
-          ? 'Updated the local admin view for fields that are not yet backed by the live API.'
-          : 'No backend changes were needed.',
+        message: 'No backend changes were needed.',
       });
       return;
     }
 
     setIsSaving(true);
     try {
+      if (hasImageServerChanges) {
+        if (pendingImageUpload && validation.data.imageUrl) {
+          await backendApi.adminUploadStringImage(token!, stringItem.id, {
+            photo: pendingImageUpload,
+          });
+        } else if (
+          !validation.data.imageUrl &&
+          initialNormalizedForm?.imageUrl &&
+          isPersistedBackendImage(initialNormalizedForm.imageUrl)
+        ) {
+          await backendApi.adminDeleteStringImage(token!, stringItem.id);
+        }
+      }
+
       if (hasCatalogServerChanges) {
         await backendApi.adminUpdateString(
           token!,
@@ -931,11 +961,40 @@ export default function AdminInventoryDetailScreen() {
         );
       }
 
-      updateStringItem(stringItem.id, localPatch);
+      const [inventoryResponse, officialPerformance] = await Promise.all([
+        backendApi.adminFetchInventoryString(token!, stringItem.id),
+        backendApi.adminFetchOfficialPerformance(token!, stringItem.id).catch((error) => {
+          if (error instanceof BackendApiError && error.statusCode === 404) {
+            return null;
+          }
+          throw error;
+        }),
+      ]);
+      let mapped = mapBackendInventoryStringToStringItem(inventoryResponse);
+      const officialScores = mapOfficialPerformanceToPerformanceScores(
+        officialPerformance,
+        mapped.ratings,
+      );
 
-      const successMessage = hasLocalOnlyChanges
-        ? 'Catalog, score, and shop data were synced. Category labels, image changes, tension guidance, pricing mode distinction, and manual availability still use local compatibility state.'
-        : 'Catalog information, scores, and shop data were synced successfully.';
+      if (serializeComparable(officialScores) !== serializeComparable(mapped.ratings)) {
+        const scorePatch = buildLocalPatch(
+          mapped,
+          normalizeForm({
+            ...toFormState(mapped),
+            powerScore: String(officialScores.power),
+            controlScore: String(officialScores.control),
+            durabilityScore: String(officialScores.durability),
+            comfortScore: String(officialScores.comfort),
+            soundScore: String(officialScores.sound),
+          }),
+        );
+        mapped = { ...mapped, ...scorePatch } as StringItem;
+      }
+
+      updateStringItem(stringItem.id, mapped);
+
+      const successMessage =
+        'Catalog information, scores, media, and shop data were synced successfully.';
 
       setStatusBanner({
         tone: 'success',
@@ -1243,7 +1302,7 @@ export default function AdminInventoryDetailScreen() {
           label={isDirty ? 'Save string changes' : 'All changes saved'}
           onPress={() => void saveInventory()}
           isLoading={isSaving}
-          isDisabled={!isDirty && !hasLocalOnlyChanges}
+          isDisabled={!isDirty}
         />
         <AppButton
           label="Back to inventory"

@@ -46,6 +46,8 @@ class InventorySnapshot:
     reorder_quantity: int
     cost_price: float | None
     selling_price: float | None
+    pricing_mode: str
+    availability_status: str
     is_active: bool
     latest_note: str | None
     updated_at: datetime | None
@@ -115,7 +117,12 @@ class StringItem:
     gauge_main_mm: float | None
     gauge_cross_mm: float | None
     gauge_label: str | None
+    category: str | None
+    main_trait: str | None
+    tension_min_lbs: int | None
+    tension_max_lbs: int | None
     material_summary_en: str | None
+    image_url: str | None
     color_options_en: list[str]
     short_description: str
     full_description: str

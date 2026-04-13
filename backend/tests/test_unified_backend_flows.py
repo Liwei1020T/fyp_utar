@@ -62,6 +62,13 @@ def booking_update_file_names() -> set[str]:
     return {item.name for item in upload_dir.iterdir() if item.is_file()}
 
 
+def string_image_file_names() -> set[str]:
+    upload_dir = get_settings().upload_root_path / "string-images"
+    if not upload_dir.exists():
+        return set()
+    return {item.name for item in upload_dir.iterdir() if item.is_file()}
+
+
 def enable_password_reset_preview(monkeypatch) -> None:
     settings = get_settings()
     monkeypatch.setattr(settings, "password_reset_dev_preview_enabled", True)
@@ -315,7 +322,9 @@ def test_admin_inventory_string_update_controls_public_availability():
         headers=headers(admin_token),
         json={
             "price_rm": 48,
+            "pricing_mode": "fixed_price",
             "stock_level": 3,
+            "availability_status": "low_stock",
             "admin_note": "Reserve 2 packs for walk-in customers.",
         },
     )
@@ -323,6 +332,8 @@ def test_admin_inventory_string_update_controls_public_availability():
     assert low_stock_response.json()["price_rm"] == 48
     assert low_stock_response.json()["stock_level"] == 3
     assert low_stock_response.json()["availability"] == "low_stock"
+    assert low_stock_response.json()["pricing_mode"] == "fixed_price"
+    assert low_stock_response.json()["availability_status"] == "low_stock"
     assert (
         low_stock_response.json()["admin_note"]
         == "Reserve 2 packs for walk-in customers."
@@ -421,6 +432,8 @@ def test_admin_can_persist_official_performance_and_inventory_history():
             "current_stock": 12,
             "reserved_stock": 2,
             "selling_price": 52,
+            "pricing_mode": "fixed_price",
+            "availability_status": "in_stock",
             "movement_type": "RESTOCK",
             "reference_type": "manual_restock",
             "reference_id": "PO-2026-04-12",
@@ -432,6 +445,8 @@ def test_admin_can_persist_official_performance_and_inventory_history():
     assert inventory_update.json()["reserved_stock"] == 2
     assert inventory_update.json()["available_stock"] == 10
     assert inventory_update.json()["price_rm"] == 52
+    assert inventory_update.json()["pricing_mode"] == "fixed_price"
+    assert inventory_update.json()["availability_status"] == "in_stock"
 
     movement_history = client.get(
         f"/api/admin/inventory/strings/{string_id}/movements",
@@ -441,6 +456,69 @@ def test_admin_can_persist_official_performance_and_inventory_history():
     assert movement_history.json()["total"] >= 1
     assert movement_history.json()["items"][0]["movement_type"] == "RESTOCK"
     assert movement_history.json()["items"][0]["reference_id"] == "PO-2026-04-12"
+
+
+def test_admin_can_persist_catalog_editor_fields_and_string_image():
+    customer_token = register_customer(phone_number="+60127776777")
+    admin_token = login_admin()
+    string_id = first_string_id(customer_token)
+
+    before_upload = string_image_file_names()
+    image_upload = client.post(
+        f"/api/admin/strings/{string_id}/image",
+        headers=headers(admin_token),
+        files={"photo": ("string-pack.jpg", b"string-image", "image/jpeg")},
+    )
+    assert image_upload.status_code == 200
+    assert image_upload.json()["image_url"].startswith("/media/string-images/")
+    after_upload = string_image_file_names()
+    assert len(after_upload) == len(before_upload) + 1
+
+    update_string = client.put(
+        f"/api/admin/strings/{string_id}",
+        headers=headers(admin_token),
+        json={
+            "brand": image_upload.json()["brand"],
+            "model_name": image_upload.json()["model_name"],
+            "gauge_main_mm": 0.69,
+            "gauge_cross_mm": 0.69,
+            "gauge_label": "0.69 mm",
+            "category": "durable",
+            "main_trait": "Durable",
+            "tension_min_lbs": 24,
+            "tension_max_lbs": 29,
+            "material_summary_en": "Braided nylon multifilament",
+            "full_description": "Updated from the admin editor.",
+            "short_description": "Updated admin summary.",
+            "original_name": "耐打测试线",
+            "is_active": True,
+        },
+    )
+    assert update_string.status_code == 200
+    assert update_string.json()["category"] == "durable"
+    assert update_string.json()["main_trait"] == "Durable"
+    assert update_string.json()["tension_min_lbs"] == 24
+    assert update_string.json()["tension_max_lbs"] == 29
+    assert update_string.json()["image_url"].startswith("/media/string-images/")
+
+    detail_response = client.get(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+    )
+    assert detail_response.status_code == 200
+    assert detail_response.json()["category"] == "durable"
+    assert detail_response.json()["main_trait"] == "Durable"
+    assert detail_response.json()["tension_min_lbs"] == 24
+    assert detail_response.json()["tension_max_lbs"] == 29
+    assert detail_response.json()["image_url"].startswith("/media/string-images/")
+
+    delete_image = client.delete(
+        f"/api/admin/strings/{string_id}/image",
+        headers=headers(admin_token),
+    )
+    assert delete_image.status_code == 200
+    assert delete_image.json()["image_url"] is None
+    assert len(string_image_file_names()) == len(before_upload)
 
 
 def test_admin_business_hours_settings_and_slots_flow():

@@ -85,7 +85,12 @@ export interface BackendString {
   gauge_main_mm: number | null;
   gauge_cross_mm: number | null;
   gauge_label: string | null;
+  category: string | null;
+  main_trait: string | null;
+  tension_min_lbs: number | null;
+  tension_max_lbs: number | null;
   material_summary_en: string | null;
+  image_url: string | null;
   color_options_en: string[];
   short_description: string;
   full_description: string;
@@ -124,6 +129,7 @@ export interface BackendString {
 }
 
 export type BackendInventoryAvailability = 'in_stock' | 'low_stock' | 'out_of_stock';
+export type BackendPricingMode = 'fixed_price' | 'quoted_at_shop' | 'price_pending';
 
 export interface BackendAdminInventoryString extends BackendString {
   stock_level: number;
@@ -134,6 +140,8 @@ export interface BackendAdminInventoryString extends BackendString {
   reorder_quantity: number;
   cost_price: number | null;
   selling_price: number | null;
+  pricing_mode: BackendPricingMode;
+  availability_status: BackendInventoryAvailability;
   availability: BackendInventoryAvailability;
   admin_note: string | null;
 }
@@ -149,7 +157,12 @@ export interface BackendStringWritePayload {
   gauge_main_mm?: number | null;
   gauge_cross_mm?: number | null;
   gauge_label?: string | null;
+  category?: string | null;
+  main_trait?: string | null;
+  tension_min_lbs?: number | null;
+  tension_max_lbs?: number | null;
   material_summary_en?: string | null;
+  image_url?: string | null;
   color_options_en?: string[] | null;
   short_description?: string | null;
   full_description?: string | null;
@@ -177,6 +190,24 @@ export interface BackendOfficialPerformancePayload {
   control?: number | null;
   notes?: string | null;
   status?: string | null;
+}
+
+export interface BackendInventoryUpdatePayload {
+  price_rm?: number | null;
+  stock_level?: number | null;
+  current_stock?: number | null;
+  reserved_stock?: number | null;
+  reorder_level?: number | null;
+  reorder_quantity?: number | null;
+  cost_price?: number | null;
+  selling_price?: number | null;
+  pricing_mode?: BackendPricingMode | null;
+  availability_status?: BackendInventoryAvailability | null;
+  is_active?: boolean | null;
+  admin_note?: string | null;
+  movement_type?: string | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
 }
 
 export interface BackendStoreBusinessHoursDay {

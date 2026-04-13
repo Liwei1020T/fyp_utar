@@ -75,15 +75,17 @@ The admin inventory flow should help the shop team:
 
 ### Backend truthfulness
 
-- Current admin editor now syncs three layers where backend support already exists:
+- Current admin editor now syncs four layers through live backend storage:
   - catalog master data through `PUT /api/admin/strings/{id}`
+  - catalog image media through `POST/DELETE /api/admin/strings/{id}/image`
   - performance scores through `PUT /api/admin/strings/{id}/official-performance`
   - shop inventory through `PATCH /api/admin/inventory/strings/{id}`
-- A few frontend compatibility fields still remain local-only until dedicated backend storage is added:
-  - image/media asset references
-  - explicit price mode distinction between `pending` and `quoted_at_shop`
-  - manual availability override independent from stock-derived availability
-  - admin tension guidance fields used by the mobile app UI
+- The detail screen now persists:
+  - image asset path
+  - pricing mode
+  - explicit availability status
+  - tension min/max guidance
+  - main trait and category metadata used by the admin editor
 
 ## 4. Unified Inventory Card Design
 
@@ -110,11 +112,11 @@ Three information layers:
 
 | Frontend section | Domain boundary | Backend fields | Notes |
 | --- | --- | --- | --- |
-| String preview card | Mixed read model | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, derived `main_trait`, `stock_level`, `selling_price`, derived availability | Combines catalog and inventory for operational preview only |
-| Catalog information | String master data | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, `material_summary_en`, `full_description`, `is_active` | Saved through the admin string endpoint; frontend still keeps compatibility mirrors such as `mainTrait` and `category` |
+| String preview card | Mixed read model | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, `main_trait`, `image_url`, `stock_level`, `selling_price`, `pricing_mode`, `availability_status` | Combines catalog and inventory for operational preview only |
+| Catalog information | String master data | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, `main_trait`, `category`, `tension_min_lbs`, `tension_max_lbs`, `material_summary_en`, `full_description`, `is_active` | Saved through the admin string endpoint |
 | Performance scores | Official performance | `repulsion_power`, `control`, `durability`, `shock_absorption`, `hitting_sound`, `status` | Frontend maps these onto the mobile app's 1-10 power/control/durability/comfort/sound controls |
-| Media | Frontend compatibility state | local `imageUrl` mirror until a backend media field exists | Upload, replace, and remove work in the mobile UI but still need dedicated backend asset storage |
-| Shop data | Inventory snapshot | `stock_level`, `selling_price`, `admin_note`, derived availability | Live backend persists stock, selling price, and note; explicit price mode/availability semantics still need dedicated fields |
+| Media | String master data | `image_url` plus uploaded asset stored under `/media/string-images/*` | Upload, replace, and remove now persist through dedicated admin media endpoints |
+| Shop data | Inventory snapshot | `stock_level`, `selling_price`, `pricing_mode`, `availability_status`, `admin_note` | Live backend persists stock, pricing mode, availability state, and note |
 
 ### Frontend domain model
 
@@ -258,7 +260,7 @@ Legacy top-level fields remain for compatibility with existing player flows, but
 - [x] Support upload, replace, and remove image actions in the frontend
 - [x] Document backend mapping and persistence boundaries
 - [x] Use existing backend endpoints for catalog master-data and official-performance sync
-- [ ] Add backend media upload or asset-reference handling for image assets
-- [ ] Add dedicated backend persistence for explicit price mode state
-- [ ] Add dedicated backend persistence for manual availability overrides
-- [ ] Add backend persistence for admin tension guidance fields
+- [x] Add backend image upload/remove handling for admin string media
+- [x] Add dedicated backend persistence for explicit price mode state
+- [x] Add dedicated backend persistence for manual availability overrides
+- [x] Add backend persistence for admin tension guidance fields
