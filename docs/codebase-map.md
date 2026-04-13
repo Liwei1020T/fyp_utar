@@ -66,44 +66,44 @@ Zod.
 | [mobile/app/player/(tabs)/strings.tsx](../mobile/app/player/%28tabs%29/strings.tsx) | String catalog browsing and sorting. |
 | [mobile/app/player/(tabs)/recommend.tsx](../mobile/app/player/%28tabs%29/recommend.tsx) | Recommendation input form and backend recommendation trigger. |
 | [mobile/app/player/(tabs)/bookings.tsx](../mobile/app/player/%28tabs%29/bookings.tsx) | Player booking list and filtering. |
-| [mobile/app/player/(tabs)/chat.tsx](../mobile/app/player/%28tabs%29/chat.tsx) | Player chat thread list. |
+| [mobile/app/player/(tabs)/chat.tsx](../mobile/app/player/%28tabs%29/chat.tsx) | Deferred FYP2/mock-first player chat thread list; backend sessions redirect away from this route. |
 | [mobile/app/player/(tabs)/profile.tsx](../mobile/app/player/%28tabs%29/profile.tsx) | Player profile overview. |
 | [mobile/app/player/bookings/new.tsx](../mobile/app/player/bookings/new.tsx) | Booking creation form and slot/string selection. |
 | [mobile/app/player/bookings/summary.tsx](../mobile/app/player/bookings/summary.tsx) | Booking draft confirmation summary. |
 | [mobile/app/player/bookings/[id].tsx](../mobile/app/player/bookings/[id].tsx) | Player booking detail. |
 | [mobile/app/player/bookings/[id]/tracking.tsx](../mobile/app/player/bookings/[id]/tracking.tsx) | Service timeline screen. |
-| [mobile/app/player/payments/[bookingId].tsx](../mobile/app/player/payments/[bookingId].tsx) | Payment method selection and payment simulation. |
-| [mobile/app/player/payments/[bookingId]/result.tsx](../mobile/app/player/payments/[bookingId]/result.tsx) | Payment result screen. |
+| [mobile/app/player/payments/[bookingId].tsx](../mobile/app/player/payments/%5BbookingId%5D.tsx) | Deferred FYP2/mock-first payment simulation; backend sessions redirect away from this route. |
+| [mobile/app/player/payments/[bookingId]/result.tsx](../mobile/app/player/payments/%5BbookingId%5D/result.tsx) | Deferred FYP2/mock-first payment result screen; backend sessions redirect away from this route. |
 | [mobile/app/player/strings/[id].tsx](../mobile/app/player/strings/[id].tsx) | String detail screen. |
 | [mobile/app/player/strings/compare.tsx](../mobile/app/player/strings/compare.tsx) | String comparison flow. |
-| [mobile/app/player/recommend/results.tsx](../mobile/app/player/recommend/results.tsx) | Recommendation result list. |
+| [mobile/app/player/(tabs)/results.tsx](../mobile/app/player/%28tabs%29/results.tsx) | Recommendation result list. |
 | [mobile/app/player/recommend/explain/[id].tsx](../mobile/app/player/recommend/explain/[id].tsx) | Recommendation explanation detail. |
 | [mobile/app/player/profile/edit.tsx](../mobile/app/player/profile/edit.tsx) | Editable recommendation/player profile form. |
-| [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/[id].tsx) | Player chat detail. |
-| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | Legacy redirect for chatbot route compatibility. |
-| [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Player QR/check-in reference screen. |
-| [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/[bookingId].tsx) | Post-service feedback screen. |
-| [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Notification list. |
-| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Notification settings. |
-| [mobile/app/player/rackets.tsx](../mobile/app/player/rackets.tsx) | Racket passport list. |
-| [mobile/app/player/rackets/[id].tsx](../mobile/app/player/rackets/[id].tsx) | Racket passport detail. |
-| [mobile/app/player/wallet.tsx](../mobile/app/player/wallet.tsx) | Wallet balance and transaction screen. |
-| [mobile/app/player/wallet/top-up.tsx](../mobile/app/player/wallet/top-up.tsx) | Wallet top-up simulation. |
+| [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/%5Bid%5D.tsx) | Deferred FYP2/mock-first player chat detail; backend sessions redirect away from this route. |
+| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | Deferred FYP2 chatbot compatibility route; backend sessions redirect away from this route. |
+| [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Deferred FYP2/mock-first player QR/check-in reference screen; backend sessions redirect away from this route. |
+| [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/%5BbookingId%5D.tsx) | Deferred FYP2/mock-first post-service feedback screen; backend sessions redirect away from this route. |
+| [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Deferred FYP2/mock-first notification list; backend sessions redirect away from this route. |
+| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Deferred FYP2/mock-first notification settings; backend sessions redirect away from this route. |
+| [mobile/app/player/rackets.tsx](../mobile/app/player/rackets.tsx) | Deferred FYP2/mock-first racket passport list; backend sessions redirect away from this route. |
+| [mobile/app/player/rackets/[id].tsx](../mobile/app/player/rackets/%5Bid%5D.tsx) | Deferred FYP2/mock-first racket passport detail; backend sessions redirect away from this route. |
+| [mobile/app/player/wallet.tsx](../mobile/app/player/wallet.tsx) | Deferred FYP2/mock-first wallet balance and transaction screen; backend sessions redirect away from this route. |
+| [mobile/app/player/wallet/top-up.tsx](../mobile/app/player/wallet/top-up.tsx) | Deferred FYP2/mock-first wallet top-up simulation; backend sessions redirect away from this route. |
 | [mobile/app/admin/_layout.tsx](../mobile/app/admin/_layout.tsx) | Admin route-group guard. |
 | [mobile/app/admin/(tabs)/_layout.tsx](../mobile/app/admin/%28tabs%29/_layout.tsx) | Admin tab shell. |
 | [mobile/app/admin/(tabs)/dashboard.tsx](../mobile/app/admin/%28tabs%29/dashboard.tsx) | Admin operational dashboard. |
 | [mobile/app/admin/(tabs)/bookings.tsx](../mobile/app/admin/%28tabs%29/bookings.tsx) | Admin booking management list. |
 | [mobile/app/admin/(tabs)/inventory.tsx](../mobile/app/admin/%28tabs%29/inventory.tsx) | Admin inventory list. |
-| [mobile/app/admin/(tabs)/chat.tsx](../mobile/app/admin/%28tabs%29/chat.tsx) | Admin chat queue. |
-| [mobile/app/admin/(tabs)/analytics.tsx](../mobile/app/admin/%28tabs%29/analytics.tsx) | Admin analytics view. |
+| [mobile/app/admin/(tabs)/chat.tsx](../mobile/app/admin/%28tabs%29/chat.tsx) | Deferred FYP2/mock-first admin chat queue; backend sessions redirect away from this route. |
+| [mobile/app/admin/(tabs)/analytics.tsx](../mobile/app/admin/%28tabs%29/analytics.tsx) | Deferred FYP2/mock-first admin analytics view; backend sessions redirect away from this route. |
 | [mobile/app/admin/bookings/[id].tsx](../mobile/app/admin/bookings/[id].tsx) | Admin booking detail and status updates. |
 | [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing trending strings. |
 | [mobile/app/admin/business-hours.tsx](../mobile/app/admin/business-hours.tsx) | Store business hours editor. |
 | [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Admin check-in lookup and confirmation. |
-| [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Admin service queue lanes. |
-| [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Payment monitoring screen. |
+| [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Deferred FYP2/mock-first admin service queue lanes; backend sessions redirect away from this route. |
+| [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Deferred FYP2/mock-first payment monitoring screen; backend sessions redirect away from this route. |
 | [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Limited FYP1 store settings editor for store name, contact, address, support text, booking notes, booking policy text, and backend-persisted home trending strings. |
-| [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/[id].tsx) | Admin chat detail. |
+| [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Deferred FYP2/mock-first admin chat detail; backend sessions redirect away from this route. |
 
 ### Mobile State, Services, And Types
 

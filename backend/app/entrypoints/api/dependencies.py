@@ -134,13 +134,24 @@ def get_recommendation_repository(
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
     token_service: JwtTokenService = Depends(get_token_service),
+    user_repository=Depends(get_user_repository),
 ) -> CurrentUser:
     if credentials is None:
         raise UnauthorizedError("Missing bearer token")
     payload = token_service.verify_access_token(credentials.credentials)
     if payload is None:
         raise UnauthorizedError("Invalid access token")
-    return CurrentUser(**payload.__dict__)
+    user = user_repository.get_by_id(payload.user_id)
+    if user is None:
+        raise UnauthorizedError("Invalid access token")
+    if user.role != payload.role or user.phone_number != payload.phone_number:
+        raise UnauthorizedError("Invalid access token")
+    return CurrentUser(
+        sub=user.id,
+        user_id=user.id,
+        phone_number=user.phone_number,
+        role=user.role,
+    )
 
 
 def require_roles(user: CurrentUser, *roles: UserRole) -> CurrentUser:

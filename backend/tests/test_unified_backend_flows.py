@@ -11,6 +11,7 @@ from sqlalchemy import select
 
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
@@ -191,6 +192,25 @@ def test_customer_cannot_access_admin_booking_routes():
         response.json()["error"]["message"]
         == "Insufficient permissions for this resource"
     )
+
+
+def test_admin_token_is_rejected_after_role_changes_in_database():
+    admin_token = login_admin()
+
+    with SessionLocal() as db:
+        admin = db.execute(
+            select(User).where(User.phone_number == "+60190000000")
+        ).scalar_one()
+        admin.role = "customer"
+        db.commit()
+
+    response = client.get(
+        "/api/admin/bookings",
+        headers=headers(admin_token),
+    )
+
+    assert response.status_code == 401
+    assert response.json()["error"]["message"] == "Invalid access token"
 
 
 def test_recommendations_logs_and_admin_string_controls():
@@ -535,7 +555,9 @@ def test_admin_can_persist_catalog_editor_fields_and_string_image():
     assert detail_response.json()["main_trait"] == "Durable"
     assert detail_response.json()["tension_min_lbs"] == 24
     assert detail_response.json()["tension_max_lbs"] == 29
-    detail_image_path, _, _ = parse_signed_media_url(detail_response.json()["image_url"])
+    detail_image_path, _, _ = parse_signed_media_url(
+        detail_response.json()["image_url"]
+    )
     assert detail_image_path.startswith("/api/media/string-images/")
 
     delete_image = client.delete(
@@ -672,14 +694,18 @@ def test_admin_business_hours_settings_and_slots_flow():
     )
     assert update_settings_response.status_code == 200
     assert update_settings_response.json()["store_name"] == "Apex String Lab Express"
-    assert update_settings_response.json()["trending_string_ids"] == [featured_string_id]
+    assert update_settings_response.json()["trending_string_ids"] == [
+        featured_string_id
+    ]
 
     public_settings_response = client.get(
         "/api/store-settings",
         headers=headers(customer_token),
     )
     assert public_settings_response.status_code == 200
-    assert public_settings_response.json()["trending_string_ids"] == [featured_string_id]
+    assert public_settings_response.json()["trending_string_ids"] == [
+        featured_string_id
+    ]
 
 
 def test_admin_check_in_and_service_queue_flow():

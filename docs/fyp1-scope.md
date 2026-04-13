@@ -11,7 +11,7 @@ This document is the source of truth for the FYP1 demo scope. The FYP1 target is
 - Generate backend-backed string recommendations.
 - View recommendation results and string details.
 - Create a stringing booking from backend-generated slots.
-- Upload an optional booking photo during booking creation.
+- Upload an optional booking photo immediately after booking creation through a booking update. The booking remains created if the follow-up photo upload fails.
 - View own booking list, booking detail, booking status, booking photos, and booking comments.
 
 ### Admin
@@ -66,7 +66,7 @@ Do not claim that FYP1 has deployed collaborative filtering, deep learning ranki
 ## FYP1 Demo Proof
 
 - Player can create a booking using a backend-generated slot.
-- Player can attach a booking photo.
+- Player can attach a booking photo through the follow-up booking update endpoint.
 - Booking persists in the backend database.
 - Admin can retrieve the booking.
 - Admin can add a booking comment/photo.

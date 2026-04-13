@@ -44,9 +44,9 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/admin/_layout.tsx`, `components/roles/RoleGuard.tsx`
   Auth screens reject logged-in users; player and admin route groups are role-guarded.
 - Player workspace: `app/player/(tabs)` plus detail flows under `app/player/**`
-  Covers recommendation, catalog, booking, payment, tracking, chat, profile, wallet, rackets, and notifications.
+  Covers the live FYP1 recommendation, catalog, booking, tracking, and profile flow. Payment, chat, wallet, rackets, notifications, QR check-in, and feedback route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
 - Admin workspace: `app/admin/(tabs)` plus operations screens under `app/admin/**`
-  Covers dashboard, bookings, inventory, chat, analytics, business hours, check-in, payments, queue, and settings.
+  Covers the live FYP1 dashboard, bookings, inventory, business hours, check-in, and limited settings flow. Chat, analytics, payments, and service queue route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
 - Admin inventory components: `components/admin/inventory/**`
@@ -67,7 +67,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Auth redirect and role routing:
   `app/index.tsx` -> auth layout or role home -> role guard
 - Player core journey:
-  auth -> recommend/catalog -> string detail/compare -> booking draft -> payment -> booking detail/tracking -> feedback
+  auth -> recommend/catalog -> string detail/compare -> booking draft -> booking summary confirmation -> booking detail/tracking
 - Admin core journey:
   auth -> operations dashboard -> counter check-in/bookings/inventory -> booking or inventory detail -> operational updates
 - Shared state mutation hotspots:
@@ -128,7 +128,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Install with `npm install`
 - Start with `EXPO_PUBLIC_API_BASE_URL=http://localhost:3001/api npm run web`
 - Start the sibling backend in `../backend` when testing live player flows
-- Use `+60123456789` / `password` for the player flow
+- Create a player through `/auth/register` or use an existing local backend player account for the player flow
 - Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`
 
 ## Maintenance Rule

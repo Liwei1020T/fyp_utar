@@ -125,18 +125,15 @@ Main tab workspace:
 - `strings`
 - `recommend`
 - `bookings`
-- `chat`
 - `profile`
+- `chat` exists in the tab shell for future work, but backend sessions redirect deferred player routes away from FYP1 live mode.
 
 Additional stack screens extend the tab workflow:
 
-- booking creation, summary, detail, tracking, payment, and feedback
+- booking creation, summary, detail, and tracking
 - string detail, compare, and explanation
 - profile edit
-- racket passport list/detail
-- notifications and preferences
-- wallet and top-up
-- QR check-in
+- payment, feedback, racket passport, notifications, wallet, and QR check-in route files exist for FYP2/mock-first work and are redirected away from backend sessions.
 
 `app/player/index.tsx` redirects to `/player/home`.
 
@@ -149,19 +146,16 @@ Main tab workspace:
 - `dashboard`
 - `bookings`
 - `inventory`
-- `chat`
-- `analytics`
+- `chat` and `analytics` exist in the tab shell for future work, but backend sessions redirect those deferred admin routes away from FYP1 live mode.
 
 Additional operational stack screens:
 
 - booking detail
 - inventory detail
 - business hours
-- payments monitor
 - settings
-- service queue
 - check-in for order-ID-based counter drop-off confirmation
-- chat detail
+- payments monitor, service queue, and chat detail route files exist for FYP2/mock-first work and are redirected away from backend sessions.
 
 `app/admin/index.tsx` redirects to `/admin/dashboard`.
 
@@ -189,12 +183,12 @@ The store owns:
 - users
 - strings
 - bookings
-- payments
-- conversations
-- notifications
+- payments for deferred mock-first checkout flows
+- conversations for deferred mock-first chat flows
+- notifications for deferred mock-first notification flows
 - business hours
-- rackets
-- wallets and wallet transactions
+- rackets for deferred mock-first racket passport flows
+- wallets and wallet transactions for deferred mock-first wallet flows
 - admin settings
 - notification preferences
 - compare selection
@@ -209,16 +203,16 @@ The store handles all user-visible prototype mutations:
 - backend player session hydration, refresh-time revalidation, and persistence
 - player profile updates
 - booking draft creation and clearing
-- full booking payment flow
+- deferred mock-first booking payment flow
 - booking cancellation
 - admin booking status updates
 - string compare selection
-- chat message append, admin handoff request, and resolution
+- deferred mock-first chat message append, admin handoff request, and resolution
 - business hours updates
 - inventory updates
 - notification read state
-- wallet top-up
-- notification preference updates
+- deferred mock-first wallet top-up
+- deferred mock-first notification preference updates
 - admin settings updates
 
 ### Derived accessors
@@ -410,17 +404,17 @@ The player experience is organized around a consumer lifecycle:
 2. recommendation discovery
 3. string comparison and detail
 4. booking configuration
-5. payment
+5. booking summary confirmation
 6. service tracking
-7. post-service feedback
 
-Support modules branch off that main flow:
+Deferred FYP2/mock-first support modules still have route files, but are hidden from backend sessions:
 
 - chat
 - notifications
-- profile
 - rackets
 - wallet
+- payment
+- feedback
 
 ### Admin Information Architecture
 
@@ -429,16 +423,15 @@ The admin workspace is structured as an operations console:
 1. operations-first dashboard with compact counter actions
 2. booking queue
 3. inventory management
-4. chat queue
-5. analytics
+4. business hours, counter check-in, and limited store settings
 
 Operational tools live outside the tabs:
 
 - check-in for direct `awaiting_dropoff -> in_progress` processing
-- service queue
 - business hours
-- payments monitor
 - settings
+
+Deferred FYP2/mock-first admin route files remain for service queue, payments monitor, chat, and advanced analytics, but are hidden from backend sessions.
 
 ## 11. Feature Module Breakdown
 
@@ -446,7 +439,7 @@ Operational tools live outside the tabs:
 
 Files in `app/auth/` provide:
 
-- role-based mock login
+- role-based backend login
 - player self-registration
 - welcome screen for demo branching
 
@@ -455,42 +448,41 @@ Files in `app/auth/` provide:
 Main files:
 
 - `app/player/(tabs)/recommend.tsx`
-- `app/player/recommend/results.tsx`
+- `app/player/(tabs)/results.tsx`
 - `app/player/recommend/explain/[id].tsx`
 - `app/player/(tabs)/strings.tsx`
 - `app/player/strings/[id].tsx`
 - `app/player/strings/compare.tsx`
 
-These screens compute ranking directly from player priority weights and string rating fields.
+These screens call the backend recommendation endpoints, map cached/generated results into mobile domain models, and display the backend-provided rationale and scoring evidence.
 
-### Booking and payment
+### Booking
 
 Main files:
 
 - `app/player/bookings/new.tsx`
 - `app/player/bookings/summary.tsx`
-- `app/player/payments/[bookingId].tsx`
-- `app/player/payments/[bookingId]/result.tsx`
 - `app/player/bookings/[id].tsx`
 - `app/player/bookings/[id]/tracking.tsx`
-- `app/player/check-in.tsx`
-- `app/player/feedback/[bookingId].tsx`
 
-The flow is draft-based:
+The live FYP1 flow is draft-based:
 
 1. booking draft is created in Zustand
 2. summary page reads the draft
-3. payment action creates or updates a booking
-4. status and notifications are updated in-store
+3. summary confirmation creates the backend booking
+4. optional booking photo is uploaded afterward through the booking update endpoint
+5. booking status, comments, and photos hydrate from the backend
 
-### Chat
+Payment, player check-in, and post-service feedback routes remain deferred FYP2/mock-first files and are redirected away from backend sessions.
+
+### Deferred Chat
 
 Shared components:
 
 - `components/chat/ChatBubble.tsx`
 - `components/chat/ConversationCard.tsx`
 
-Screen flows:
+Deferred screen flows:
 
 - player chat tab + detail
 - admin chat tab + detail
@@ -503,9 +495,9 @@ The same conversation model supports:
 - resolved
 - closed
 
-### Profile, rackets, wallet, notifications
+### Profile And Deferred Player Retention Modules
 
-These modules capture the personalization and retention layer of the player product:
+The live FYP1 profile captures recommendation preferences. The retention modules remain FYP2/mock-first:
 
 - profile and priorities
 - racket passport history
@@ -519,10 +511,10 @@ Admin-specific screens model the operational back office:
 - dashboard metrics
 - bookings management
 - inventory workbench, attention triage, and master-detail editing
-- service queue
 - business hours
-- payments monitor
 - shop settings
+
+Service queue, payments monitor, chat, and advanced analytics remain deferred FYP2/mock-first files and are redirected away from backend sessions.
 
 Supporting inventory UI now lives in `components/admin/inventory/`, where shared thumbnail cards and preview cards keep the list and detail editor aligned.
 
@@ -617,11 +609,7 @@ Player `primary` pages:
 - `/player/strings`
 - `/player/bookings`
 - `/player/results`
-- `/player/chat`
 - `/player/profile`
-- `/player/notifications`
-- `/player/wallet`
-- `/player/rackets`
 
 Player `secondary` pages:
 
@@ -629,8 +617,6 @@ Player `secondary` pages:
 - `/player/bookings/[id]`
 - `/player/bookings/[id]/tracking`
 - `/player/recommend/explain/[id]`
-- `/player/chat/[id]`
-- `/player/rackets/[id]`
 
 Player `flow` pages:
 
@@ -638,29 +624,33 @@ Player `flow` pages:
 - `/player/strings/compare`
 - `/player/bookings/new`
 - `/player/bookings/summary`
+- `/player/profile/edit`
+
+Deferred FYP2/mock-first player pages that backend sessions redirect away from:
+
+- `/player/chat`
+- `/player/chat/[id]`
+- `/player/notifications`
+- `/player/notifications/preferences`
+- `/player/wallet`
+- `/player/wallet/top-up`
+- `/player/rackets`
+- `/player/rackets/[id]`
 - `/player/payments/[bookingId]`
 - `/player/payments/[bookingId]/result`
 - `/player/check-in`
 - `/player/feedback/[bookingId]`
-- `/player/profile/edit`
-- `/player/notifications/preferences`
-- `/player/wallet/top-up`
 
 Admin `primary` pages:
 
 - `/admin`
 - `/admin/bookings`
 - `/admin/inventory`
-- `/admin/chat`
-- `/admin/analytics`
-- `/admin/payments`
-- `/admin/service-queue`
 
 Admin `secondary` pages:
 
 - `/admin/bookings/[id]`
 - `/admin/inventory/[id]`
-- `/admin/chat/[id]`
 - `/admin/business-hours`
 - `/admin/settings`
 
@@ -668,6 +658,14 @@ Admin `flow` pages:
 
 - `/admin/check-in`
   Use for counter-side order lookup, drop-off checklist completion, and booking handover confirmation.
+
+Deferred FYP2/mock-first admin pages that backend sessions redirect away from:
+
+- `/admin/chat`
+- `/admin/chat/[id]`
+- `/admin/analytics`
+- `/admin/payments`
+- `/admin/service-queue`
 
 ## 14. Screen Composition Pattern
 

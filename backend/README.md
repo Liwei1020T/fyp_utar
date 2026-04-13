@@ -115,6 +115,8 @@ Public unified Python endpoints:
 - `POST /api/admin/strings`
 - `PUT /api/admin/strings/{id}`
 - `DELETE /api/admin/strings/{id}`
+- `POST /api/admin/strings/{id}/image`
+- `DELETE /api/admin/strings/{id}/image`
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
@@ -131,6 +133,7 @@ Public unified Python endpoints:
 - `GET /api/admin/business-hours`
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`
+- `GET /api/store-settings`
 - `GET /api/admin/slots`
 - `GET /api/admin/check-in/lookup`
 - `POST /api/admin/check-in`

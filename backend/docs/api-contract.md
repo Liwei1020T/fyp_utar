@@ -126,6 +126,8 @@ Example profile request:
 - `POST /api/admin/strings`
 - `PUT /api/admin/strings/{id}`
 - `DELETE /api/admin/strings/{id}`
+- `POST /api/admin/strings/{id}/image`
+- `DELETE /api/admin/strings/{id}/image`
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
@@ -148,6 +150,14 @@ Example profile request:
 - `GET /api/admin/analytics/popular-strings`
 
 Only approved catalog strings from `backend/data/string_catalog_db_ready.json` can be created or updated.
+
+Admin string image upload accepts `multipart/form-data`:
+
+- `photo`: required JPG, PNG, or WEBP image up to 5 MB
+- response: updated `StringOut`
+- replacing an existing image deletes the prior stored file after the catalog update succeeds
+
+`DELETE /api/admin/strings/{id}/image` clears the catalog image URL, deletes the stored file when present, and returns the updated `StringOut`.
 
 Public string listing now supports:
 

@@ -83,7 +83,7 @@ export default function RecommendationResultsScreen() {
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
   const compareSelection = useAppStore((state) => state.compareSelection);
   const [cacheError, setCacheError] = useState<string | null>(null);
-  const [isLoadingCache, setIsLoadingCache] = useState(Boolean(token));
+  const [isLoadingCache, setIsLoadingCache] = useState(false);
   const [hasLoadedCache, setHasLoadedCache] = useState(false);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function RecommendationResultsScreen() {
       return;
     }
 
-    if (isLoadingCache || cacheError) {
+    if (isLoadingCache || hasLoadedCache || cacheError) {
       return;
     }
 
@@ -154,6 +154,7 @@ export default function RecommendationResultsScreen() {
     };
   }, [
     cacheError,
+    hasLoadedCache,
     isLoadingCache,
     liveResults.length,
     setLiveRecommendationResults,
