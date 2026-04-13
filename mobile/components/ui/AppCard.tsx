@@ -44,26 +44,26 @@ export function AppCard({
   };
 
   const shellStyles = {
-    default: 'bg-white/80 border border-white/90 shadow-soft',
-    elevated: 'bg-white/85 border border-white shadow-float',
-    highlighted: 'bg-primary-100/70 border border-primary-100 shadow-glow',
-    subtle: 'bg-white/75 border border-white/90 shadow-soft',
-    dark: 'bg-primary-200/20 border border-white/30 shadow-glow',
+    default: 'bg-white border border-[#DDE6F0] shadow-soft',
+    elevated: 'bg-white border border-[#D6E1ED] shadow-float',
+    highlighted: 'bg-primary-50 border border-primary-100 shadow-soft',
+    subtle: 'bg-[#F1F5F9] border border-[#E1E8F0] shadow-none',
+    dark: 'bg-[#1E4E9B] border border-[#2D66BF] shadow-glow',
   };
 
   const coreStyles = {
-    default: 'bg-app-surface border border-[#E8EEF6]',
-    elevated: 'bg-app-surface-elevated border border-white',
-    highlighted: 'bg-primary-50 border border-primary-100/90',
-    subtle: 'bg-app-muted border border-white/80',
-    dark: 'bg-app-hero border border-white/10',
+    default: 'bg-app-surface',
+    elevated: 'bg-app-surface-elevated',
+    highlighted: 'bg-primary-50',
+    subtle: 'bg-app-muted',
+    dark: 'bg-app-hero',
   };
 
   return (
     <Surface
       variant={nativeVariantMap[variant]}
       className={cn(
-        'overflow-hidden rounded-[26px] p-1',
+        'overflow-hidden rounded-lg',
         shellStyles[variant],
         className
       )}
@@ -71,7 +71,7 @@ export function AppCard({
     >
       <View
         className={cn(
-          'overflow-hidden rounded-[22px]',
+          'overflow-hidden rounded-lg',
           coreStyles[variant]
         )}
       >

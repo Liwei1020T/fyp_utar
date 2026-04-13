@@ -21,9 +21,9 @@ export function TrendingStrings() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingRight: 44,
-          gap: 12,
+          paddingHorizontal: 16,
+          paddingRight: 36,
+          gap: 10,
         }}
       >
         {trending.map((item) => {
@@ -33,13 +33,13 @@ export function TrendingStrings() {
             <Pressable
               key={item.id}
               onPress={() => router.push(`/player/strings/${item.id}`)}
-              className="w-[156px] active:opacity-80"
+              className="w-[152px] active:opacity-80"
             >
-              <View className="overflow-hidden rounded-[24px] border border-[#E6EDF5] bg-white px-3.5 py-3.5 shadow-sm">
-                <View className={`rounded-[20px] border px-3 py-3 ${isTopPick ? 'border-accent-100 bg-accent-50/55' : 'border-primary-100 bg-secondary-50'}`}>
+              <View className="overflow-hidden rounded-lg border border-[#DDE6F0] bg-white px-3 py-3 shadow-sm">
+                <View className={`rounded-lg border px-3 py-3 ${isTopPick ? 'border-accent-100 bg-accent-50/70' : 'border-secondary-100 bg-secondary-50'}`}>
                   <View className="flex-row items-start justify-between">
                     <View className={`rounded-full px-2.5 py-1 ${isTopPick ? 'bg-accent-100/80' : 'bg-white/85'}`}>
-                      <HeroText className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                      <HeroText className="text-[10px] font-semibold uppercase tracking-normal text-neutral-500">
                         {item.brand}
                       </HeroText>
                     </View>
@@ -50,32 +50,32 @@ export function TrendingStrings() {
                     </View>
                   </View>
 
-                  <View className="mt-4 h-[72px] items-center justify-center rounded-[18px] bg-white/85">
+                  <View className="mt-4 h-[72px] items-center justify-center rounded-lg bg-white/85">
                     <View
                       className="h-11 w-11 items-center justify-center rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#C7922B16' : '#2F64B616' }}
+                      style={{ backgroundColor: isTopPick ? '#D48A1218' : '#0F9F8F18' }}
                     >
                       <HeroText
-                        className="text-[17px] font-bold tracking-[-0.03em]"
-                        style={{ color: isTopPick ? '#C7922B' : '#2F64B6' }}
+                        className="text-[17px] font-bold tracking-normal"
+                        style={{ color: isTopPick ? '#D48A12' : '#0F9F8F' }}
                       >
                         {item.brand[0]}
                       </HeroText>
                     </View>
                     <View
                       className="mt-2 h-1.5 w-16 rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#C7922B30' : '#2F64B630' }}
+                      style={{ backgroundColor: isTopPick ? '#D48A1230' : '#0F9F8F30' }}
                     />
                     <View
                       className="mt-1 h-1.5 w-10 rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#C7922B1A' : '#2F64B61A' }}
+                      style={{ backgroundColor: isTopPick ? '#D48A121A' : '#0F9F8F1A' }}
                     />
                   </View>
                 </View>
 
                 <View className="mt-3 gap-1">
                   <HeroText
-                    className="text-[14px] font-semibold leading-[18px] tracking-[-0.02em] text-neutral-950"
+                    className="text-[14px] font-semibold leading-[18px] tracking-normal text-neutral-950"
                     numberOfLines={2}
                   >
                     {item.model}

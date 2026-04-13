@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import Svg, { Polygon, Line, Text as SvgText, Circle, G } from 'react-native-svg';
+import { appChromeColors } from './theme';
 
 interface RadarChartProps {
   data: {
@@ -96,8 +97,8 @@ export function AppRadarChart({ data, size = 320 }: RadarChartProps) {
           {/* Data Polygon */}
           <Polygon
             points={dataPointsStr}
-            fill="rgba(47, 100, 182, 0.12)"
-            stroke="#2F64B6"
+            fill="rgba(37, 99, 235, 0.12)"
+            stroke={appChromeColors.primary}
             strokeWidth="2"
           />
 
@@ -111,7 +112,7 @@ export function AppRadarChart({ data, size = 320 }: RadarChartProps) {
                 cx={x}
                 cy={y}
                 r="3.5"
-                fill="#2F64B6"
+                fill={appChromeColors.primary}
                 stroke="white"
                 strokeWidth="1.5"
               />
@@ -137,7 +138,7 @@ export function AppRadarChart({ data, size = 320 }: RadarChartProps) {
                 fontSize="10"
                 fontWeight="bold"
                 textAnchor={textAnchor}
-                letterSpacing="0.05em"
+                letterSpacing="0"
               >
                 {`${axis.label.toUpperCase()} ${value}`}
               </SvgText>

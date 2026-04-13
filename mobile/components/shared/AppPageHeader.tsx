@@ -27,12 +27,12 @@ const appHeaderMetrics = {
 } as const;
 
 const baseContainerStyles =
-  'w-full self-center overflow-hidden border';
+  'w-full self-center overflow-hidden border shadow-soft';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[18px] border-[#E6EDF5] bg-[#F7F8FB]',
-  secondary: 'rounded-[16px] border-[#E6EDF5] bg-[#F7F8FB]',
-  flow: 'rounded-[16px] border-[#E1EAF5] bg-[#F7F8FB]',
+  primary: 'rounded-lg border-[#DDE6F0] bg-white',
+  secondary: 'rounded-lg border-[#DDE6F0] bg-white',
+  flow: 'rounded-lg border-[#DDE6F0] bg-white',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
@@ -42,15 +42,15 @@ const contentStyles: Record<AppHeaderVariant, string> = {
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[20px] font-semibold tracking-[-0.03em] text-[#1D1D1F]',
-  secondary: 'text-[17px] font-semibold tracking-[-0.02em] text-[#1D1D1F]',
-  flow: 'text-[17px] font-semibold tracking-[-0.02em] text-[#1D1D1F]',
+  primary: 'text-[20px] font-semibold tracking-normal text-[#14181F]',
+  secondary: 'text-[17px] font-semibold tracking-normal text-[#14181F]',
+  flow: 'text-[17px] font-semibold tracking-normal text-[#14181F]',
 };
 
 const subtitleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[14px] leading-[20px] tracking-[-0.01em] text-[rgba(29,29,31,0.72)]',
-  secondary: 'text-[12px] leading-[18px] tracking-[-0.01em] text-[rgba(29,29,31,0.68)]',
-  flow: 'text-[12px] leading-[18px] tracking-[-0.01em] text-[rgba(29,29,31,0.68)]',
+  primary: 'text-[14px] leading-[20px] tracking-normal text-[#566579]',
+  secondary: 'text-[12px] leading-[18px] tracking-normal text-[#566579]',
+  flow: 'text-[12px] leading-[18px] tracking-normal text-[#566579]',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {
@@ -75,7 +75,7 @@ export function AppPageHeader({
   }
 
   return (
-    <View className="px-5" style={{ paddingTop: appLayoutMetrics.headerTopSpacing }}>
+    <View className="px-4" style={{ paddingTop: appLayoutMetrics.headerTopSpacing }}>
       <View
         className={cn(baseContainerStyles, variantStyles[variant])}
         style={{

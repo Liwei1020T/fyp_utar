@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import Svg, { Polygon, Line, Text as SvgText, Circle, G } from 'react-native-svg';
+import { appChromeColors } from './theme';
 
 interface RadarData {
   power: number;
@@ -103,8 +104,8 @@ export function AppCompareRadarChart({ dataA, dataB, size = 320 }: AppCompareRad
           {/* String B - Secondary */}
           <Polygon
             points={dataPointsB}
-            fill="rgba(100, 116, 139, 0.1)"
-            stroke="#7D94BC"
+            fill="rgba(15, 159, 143, 0.1)"
+            stroke={appChromeColors.secondary}
             strokeWidth="2"
             strokeDasharray="4,4"
           />
@@ -112,8 +113,8 @@ export function AppCompareRadarChart({ dataA, dataB, size = 320 }: AppCompareRad
           {/* String A - Primary */}
           <Polygon
             points={dataPointsA}
-            fill="rgba(47, 100, 182, 0.12)"
-            stroke="#2F64B6"
+            fill="rgba(37, 99, 235, 0.12)"
+            stroke={appChromeColors.primary}
             strokeWidth="2"
           />
 
@@ -132,7 +133,7 @@ export function AppCompareRadarChart({ dataA, dataB, size = 320 }: AppCompareRad
                 fontSize="10"
                 fontWeight="bold"
                 textAnchor={textAnchor}
-                letterSpacing="0.05em"
+                letterSpacing="0"
               >
                 {axis.label.toUpperCase()}
               </SvgText>

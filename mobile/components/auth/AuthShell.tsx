@@ -6,6 +6,7 @@ import { AppIconButton } from '../ui/AppIconButton';
 import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
+import { appChromeColors } from '../ui/theme';
 
 interface AuthShellProps {
   title: string;
@@ -32,14 +33,14 @@ export function AuthShell({
       <View className="w-full self-center" style={{ maxWidth: 460 }}>
         <View className="mb-6 flex-row items-center justify-between gap-4">
           <View className="flex-row items-center gap-3">
-            <View className="h-12 w-12 items-center justify-center rounded-[18px] bg-[#DCE8F6]">
-              <Activity size={22} color="#2F64B6" />
+            <View className="h-12 w-12 items-center justify-center rounded-lg bg-primary-50">
+              <Activity size={22} color={appChromeColors.primary} />
             </View>
             <View>
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
+              <HeroText className="text-[11px] font-semibold uppercase tracking-normal text-primary-700">
                 StringSense
               </HeroText>
-              <HeroText className="mt-1 text-lg font-bold tracking-tight text-neutral-950">
+              <HeroText className="mt-1 text-lg font-bold tracking-normal text-neutral-950">
                 Badminton stringing
               </HeroText>
             </View>
@@ -62,7 +63,7 @@ export function AuthShell({
               className="self-start"
             />
           ) : null}
-          <HeroText className="mt-4 text-[30px] font-bold tracking-tight text-neutral-950">
+          <HeroText className="mt-4 text-[30px] font-bold tracking-normal text-neutral-950">
             {title}
           </HeroText>
           {subtitle ? (

@@ -36,7 +36,7 @@ export function AppInput({
       <View className={cn('mb-4', className)}>
         <View
           className={cn(
-            'flex-row items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 shadow-sm h-11',
+            'h-11 flex-row items-center gap-3 rounded-lg border border-[#DDE6F0] bg-white px-4 shadow-sm',
             containerClassName,
             innerContainerClassName
           )}
@@ -69,15 +69,15 @@ export function AppInput({
       )}
       <View
         className={cn(
-          'rounded-[24px] border p-1 shadow-soft',
-          error ? 'border-danger/20 bg-danger/10' : 'border-separator bg-surface-secondary',
+          'rounded-lg border shadow-soft',
+          error ? 'border-danger/20 bg-danger/10' : 'border-[#DDE6F0] bg-white',
           containerClassName
         )}
       >
         <View
           className={cn(
-            'min-h-[52px] flex-row items-center gap-3 rounded-[20px] border px-4 py-1',
-            error ? 'border-danger/15 bg-danger/5' : 'border-field-border bg-field-background',
+            'min-h-[52px] flex-row items-center gap-3 rounded-lg px-4 py-1',
+            error ? 'bg-danger/5' : 'bg-field-background',
             innerContainerClassName
           )}
         >

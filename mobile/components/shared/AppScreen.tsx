@@ -85,7 +85,7 @@ export function AppScreen({
             {...props}
           >
             <View
-              className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
+              className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
               style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
             >
               {children}
@@ -94,7 +94,7 @@ export function AppScreen({
         ) : (
           <View className={cn('flex-1', className)} {...props}>
             <View
-              className={cn('flex-1 w-full self-center px-5 pt-4', contentContainerClassName)}
+              className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
               style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
             >
               {children}
@@ -103,7 +103,7 @@ export function AppScreen({
         )}
         {footer && (
           <View 
-            className="w-full self-center px-5"
+            className="w-full self-center px-4"
             style={{ 
               maxWidth: appLayoutMetrics.contentMaxWidth,
               marginBottom: (React.useContext(BottomTabBarHeightContext) ?? 0) + 16,

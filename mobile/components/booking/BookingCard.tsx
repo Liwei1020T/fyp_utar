@@ -12,7 +12,7 @@ import {
 import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
-import { getBookingStatusVariant } from '../ui/theme';
+import { appChromeColors, getBookingStatusVariant } from '../ui/theme';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
@@ -93,7 +93,7 @@ const getStatusStripTone = (status: BookingStatus) => {
       return {
         container: 'bg-primary-50 border-primary-100',
         text: 'text-primary-800',
-        iconColor: '#2F64B6',
+        iconColor: appChromeColors.primary,
         Icon: CircleDashed,
       };
     case 'confirmed':
@@ -102,7 +102,7 @@ const getStatusStripTone = (status: BookingStatus) => {
       return {
         container: 'bg-primary-50 border-primary-100',
         text: 'text-primary-800',
-        iconColor: '#2F64B6',
+        iconColor: appChromeColors.primary,
         Icon: ArrowRightCircle,
       };
   }
@@ -120,7 +120,7 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
     <AppCard variant="elevated" padding="sm">
       <View className="gap-2.5">
         <View className="flex-row items-start justify-between gap-3">
-          <HeroText className="flex-1 pr-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
+          <HeroText className="flex-1 pr-2 text-[10px] font-semibold uppercase tracking-normal text-neutral-400">
             #{orderCode}
           </HeroText>
           <AppChip
@@ -133,7 +133,7 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
 
         <View className="gap-1.5">
           <View className="min-w-0">
-            <HeroText className="text-[17px] font-bold tracking-tight text-neutral-950">
+            <HeroText className="text-[17px] font-bold tracking-normal text-neutral-950">
               {racketName}
             </HeroText>
             <HeroText className="mt-0.5 text-[12px] font-medium text-neutral-600">
@@ -160,7 +160,7 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
         </View>
 
         <View
-          className={`mt-0.5 flex-row items-center gap-2 rounded-[18px] border px-3 py-2 ${stripTone.container}`}
+          className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-3 py-2 ${stripTone.container}`}
         >
           <StatusIcon size={14} color={stripTone.iconColor} />
           <HeroText className={`flex-1 text-[11px] font-semibold ${stripTone.text}`}>

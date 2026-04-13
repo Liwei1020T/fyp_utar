@@ -20,8 +20,8 @@ function StandardTabIcon({
   return (
     <View
       className={cn(
-        'h-10 w-10 items-center justify-center rounded-2xl',
-        focused ? 'bg-primary-600/10' : 'bg-transparent'
+        'h-10 w-10 items-center justify-center rounded-lg',
+        focused ? 'bg-primary-50' : 'bg-transparent'
       )}
     >
       <Icon size={size} color={color} strokeWidth={focused ? 2.1 : 1.9} />
@@ -31,7 +31,7 @@ function StandardTabIcon({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 74 + Math.max(insets.bottom, 10);
+  const tabBarHeight = 68 + Math.max(insets.bottom, 10);
 
   return (
     <Tabs
@@ -55,11 +55,11 @@ export default function TabsLayout() {
           left: appLayoutMetrics.pagePadding,
           right: appLayoutMetrics.pagePadding,
           bottom: Math.max(insets.bottom, 10),
-          borderRadius: 32,
-          shadowColor: '#14233C',
-          shadowOpacity: 0.1,
-          shadowOffset: { width: 0, height: 12 },
-          shadowRadius: 24,
+          borderRadius: 8,
+          shadowColor: '#14181F',
+          shadowOpacity: 0.08,
+          shadowOffset: { width: 0, height: 10 },
+          shadowRadius: 20,
           elevation: 10,
           overflow: 'hidden',
         },
@@ -97,10 +97,10 @@ export default function TabsLayout() {
           title: 'Recommend',
           tabBarIcon: () => (
             <View
-              className="-mt-6 h-[66px] w-[66px] items-center justify-center rounded-full border-[6px] bg-primary-200/80 p-1.5 shadow-glow"
+              className="-mt-5 h-[60px] w-[60px] items-center justify-center rounded-lg border-[5px] bg-primary-100 p-1 shadow-glow"
               style={{ borderColor: appChromeColors.page }}
             >
-              <View className="h-full w-full items-center justify-center rounded-full bg-primary-600">
+              <View className="h-full w-full items-center justify-center rounded-lg bg-primary-600">
                 <Zap size={26} color="white" strokeWidth={1.7} />
               </View>
             </View>
@@ -112,7 +112,7 @@ export default function TabsLayout() {
                 fontSize: 10,
                 fontWeight: '800',
                 marginTop: 8,
-                letterSpacing: 0.6,
+                letterSpacing: 0,
               }}
             >
               {focused ? 'AI RECO' : 'RECO'}

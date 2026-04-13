@@ -49,31 +49,31 @@ export function AppButton({
   };
 
   const variantStyles = {
-    primary: 'bg-primary-600 border-primary-600 shadow-glow',
-    secondary: 'bg-secondary-100 border-secondary-200',
+    primary: 'bg-primary-600 border-primary-600 shadow-soft',
+    secondary: 'bg-secondary-50 border-secondary-200',
     accent: 'bg-accent-100 border-accent-200',
-    outline: 'bg-white/90 border-neutral-200',
+    outline: 'bg-white border-[#DDE6F0]',
     ghost: 'bg-transparent border-transparent',
     danger: 'bg-red-600 border-red-600',
     success: 'bg-success-600 border-success-600',
-    dark: 'bg-app-hero border-app-hero shadow-soft',
+    dark: 'bg-[#14181F] border-[#14181F] shadow-soft',
   };
 
   const textStyles = {
-    primary: 'text-white font-semibold tracking-tight',
-    secondary: 'text-primary-700 font-semibold tracking-tight',
-    accent: 'text-accent-900 font-semibold tracking-tight',
-    outline: 'text-neutral-700 font-semibold tracking-tight',
-    ghost: 'text-neutral-600 font-medium tracking-tight',
-    danger: 'text-white font-semibold tracking-tight',
-    success: 'text-white font-semibold tracking-tight',
-    dark: 'text-white font-semibold tracking-tight',
+    primary: 'text-white font-semibold tracking-normal',
+    secondary: 'text-secondary-700 font-semibold tracking-normal',
+    accent: 'text-accent-900 font-semibold tracking-normal',
+    outline: 'text-neutral-700 font-semibold tracking-normal',
+    ghost: 'text-neutral-600 font-medium tracking-normal',
+    danger: 'text-white font-semibold tracking-normal',
+    success: 'text-white font-semibold tracking-normal',
+    dark: 'text-white font-semibold tracking-normal',
   };
 
   const sizeStyles = {
-    sm: 'h-10 px-4 py-2 rounded-[18px]',
-    md: 'h-[50px] px-5 py-2.5 rounded-[20px]',
-    lg: 'h-[56px] px-6 py-3 rounded-[24px]',
+    sm: 'h-10 px-4 py-2 rounded-lg',
+    md: 'h-[50px] px-5 py-2.5 rounded-lg',
+    lg: 'h-[56px] px-6 py-3 rounded-lg',
   };
 
   const trailingIslandStyles = {
