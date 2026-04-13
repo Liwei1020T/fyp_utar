@@ -2,6 +2,8 @@ import React from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HeroText } from '../ui/heroui';
+import { StringProductImage } from '../shared/StringProductImage';
+import { formatCurrency } from '../../lib/formatters';
 import {
   useAppStore,
   useCurrentUser,
@@ -81,6 +83,7 @@ export function TrendingStrings() {
       >
         {trending.map((item) => {
           const isTopPick = item.id === trending[0]?.id;
+          const shouldShowPrice = item.priceStatus === 'priced' && item.price > 0;
 
           return (
             <Pressable
@@ -88,57 +91,55 @@ export function TrendingStrings() {
               onPress={() => router.push(`/player/strings/${item.id}`)}
               className="w-[152px] active:opacity-80"
             >
-              <View className="overflow-hidden rounded-lg border border-[#D2D2D7] bg-white px-3 py-3 shadow-sm">
-                <View className={`rounded-lg border px-3 py-3 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E5E5EA] bg-[#F5F5F7]'}`}>
+              <View className="overflow-hidden rounded-[18px] border border-[#DCE6F7] bg-white px-3 py-3 shadow-sm">
+                <View className={`rounded-[16px] border px-3 py-3 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E8EEF8] bg-[#F8FBFF]'}`}>
                   <View className="flex-row items-start justify-between">
                     <View className={`rounded-full px-2.5 py-1 ${isTopPick ? 'bg-accent-100/80' : 'bg-white/85'}`}>
-                      <HeroText className="text-[10px] font-semibold uppercase tracking-normal text-neutral-500">
+                      <HeroText className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                         {item.brand}
                       </HeroText>
                     </View>
                     <View className="rounded-full bg-white/70 px-2 py-1">
-                      <HeroText className="text-[10px] font-semibold text-neutral-500">
+                      <HeroText className="text-[10px] font-semibold text-slate-500">
                         {item.gauge}
                       </HeroText>
                     </View>
                   </View>
 
-                  <View className="mt-4 h-[72px] items-center justify-center rounded-lg bg-white/85">
-                    <View
-                      className="h-11 w-11 items-center justify-center rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#0071E316' : '#1D1D1F10' }}
-                    >
-                      <HeroText
-                        className="text-[17px] font-bold tracking-normal"
-                        style={{ color: isTopPick ? '#0071E3' : '#1D1D1F' }}
-                      >
-                        {item.brand[0]}
-                      </HeroText>
-                    </View>
-                    <View
-                      className="mt-2 h-1.5 w-16 rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#0071E330' : '#1D1D1F18' }}
-                    />
-                    <View
-                      className="mt-1 h-1.5 w-10 rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#0071E31A' : '#1D1D1F10' }}
+                  <View className="mt-4 h-[92px] overflow-hidden rounded-[14px] bg-white">
+                    <StringProductImage
+                      imageUrl={item.imageUrl}
+                      brand={item.brand}
+                      model={item.model}
+                      gauge={item.gauge}
+                      className="h-full w-full"
+                      fallbackClassName="h-full w-full rounded-[14px] border-0 bg-primary-50 shadow-none"
+                      fallbackTextClassName="text-[18px] text-primary-700"
+                      fallbackGaugeClassName="mt-2 border-primary-100 bg-white/80"
                     />
                   </View>
                 </View>
 
-                <View className="mt-3 gap-1">
+                <View className="mt-3 min-h-[70px] gap-1">
                   <HeroText
-                    className="text-[14px] font-semibold leading-[18px] tracking-normal text-neutral-950"
+                    className="text-[14px] font-semibold leading-[18px] tracking-normal text-slate-900"
                     numberOfLines={2}
                   >
                     {item.model}
                   </HeroText>
-                  <HeroText className="text-[12px] font-medium text-neutral-500" numberOfLines={1}>
+                  <HeroText className="text-[12px] font-medium text-slate-500" numberOfLines={1}>
                     {item.brand}
                   </HeroText>
-                  <HeroText className="text-[12px] font-medium text-primary-700" numberOfLines={1}>
-                    {categoryLabels[item.category]}
-                  </HeroText>
+                  <View className="mt-auto flex-row items-end justify-between gap-2">
+                    <HeroText className="min-w-0 flex-1 text-[12px] font-medium text-primary-700" numberOfLines={1}>
+                      {categoryLabels[item.category]}
+                    </HeroText>
+                    {shouldShowPrice ? (
+                      <HeroText className="text-[12px] font-bold text-slate-900">
+                        {formatCurrency(item.price)}
+                      </HeroText>
+                    ) : null}
+                  </View>
                 </View>
               </View>
             </Pressable>
