@@ -17,7 +17,9 @@ from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_current_customer
+from app.shared.errors import BadRequestError
 from app.shared.errors import NotFoundError
+from app.shared.upload_storage import MAX_UPLOAD_BYTES
 from app.shared.upload_storage import delete_booking_update_photo
 from app.shared.upload_storage import save_booking_update_photo
 from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
@@ -29,6 +31,20 @@ from app.use_cases.booking.list_my_bookings import ListMyBookingsUseCase
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 BookingPhotoType = Literal["racket", "service_progress", "other"]
+
+
+async def read_upload_bytes_limited(photo: UploadFile) -> bytes:
+    total_size = 0
+    chunks: list[bytes] = []
+    while True:
+        chunk = await photo.read(512 * 1024)
+        if not chunk:
+            break
+        total_size += len(chunk)
+        if total_size > MAX_UPLOAD_BYTES:
+            raise BadRequestError("Uploaded photo must be 5 MB or smaller")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def get_customer_owned_booking(
@@ -118,8 +134,9 @@ async def add_booking_update(
     if photo is not None:
         photo_content_type = photo.content_type
         photo_original_name = photo.filename
+        photo_content = await read_upload_bytes_limited(photo)
         photo_path = save_booking_update_photo(
-            content=await photo.read(),
+            content=photo_content,
             content_type=photo.content_type,
             original_name=photo.filename,
         )

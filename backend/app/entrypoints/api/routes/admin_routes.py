@@ -54,6 +54,8 @@ from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_admin
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_store_repository
+from app.shared.errors import BadRequestError
+from app.shared.upload_storage import MAX_UPLOAD_BYTES
 from app.shared.upload_storage import delete_booking_update_photo
 from app.shared.upload_storage import delete_string_catalog_image
 from app.shared.upload_storage import save_booking_update_photo
@@ -102,13 +104,35 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 BookingPhotoType = Literal["racket", "service_progress", "other"]
 
 
+async def read_upload_bytes_limited(
+    photo: UploadFile,
+    *,
+    oversize_message: str,
+) -> bytes:
+    total_size = 0
+    chunks: list[bytes] = []
+    while True:
+        chunk = await photo.read(512 * 1024)
+        if not chunk:
+            break
+        total_size += len(chunk)
+        if total_size > MAX_UPLOAD_BYTES:
+            raise BadRequestError(oversize_message)
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 async def save_update_photo_upload(
     photo: UploadFile,
 ) -> tuple[str, str | None, str | None]:
     photo_content_type = photo.content_type
     photo_original_name = photo.filename
+    photo_content = await read_upload_bytes_limited(
+        photo,
+        oversize_message="Uploaded photo must be 5 MB or smaller",
+    )
     photo_path = save_booking_update_photo(
-        content=await photo.read(),
+        content=photo_content,
         content_type=photo.content_type,
         original_name=photo.filename,
     )
@@ -116,8 +140,12 @@ async def save_update_photo_upload(
 
 
 async def save_string_image_upload(photo: UploadFile) -> str:
+    photo_content = await read_upload_bytes_limited(
+        photo,
+        oversize_message="Uploaded image must be 5 MB or smaller",
+    )
     return save_string_catalog_image(
-        content=await photo.read(),
+        content=photo_content,
         content_type=photo.content_type,
         original_name=photo.filename,
     )

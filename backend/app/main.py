@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends
@@ -25,6 +26,9 @@ from app.config.settings import get_settings
 from app.entrypoints.api.router import router as api_router
 from app.shared.errors import AppError
 from app.shared.http import error_payload
+
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -101,12 +105,13 @@ async def handle_http_exception(_: Request, exc: HTTPException) -> JSONResponse:
 
 @app.exception_handler(IntegrityError)
 async def handle_integrity_error(_: Request, exc: IntegrityError) -> JSONResponse:
+    logger.warning("Database integrity error: %s", type(exc).__name__)
     return JSONResponse(
         status_code=409,
         content=error_payload(
             code="integrity_error",
-            message="Database integrity error",
-            details={"detail": str(exc.orig)},
+            message="Request conflicts with existing data",
+            details={},
         ),
     )
 

@@ -222,6 +222,12 @@ type PersistedAppState = Pick<
 >;
 
 const APP_STORE_KEY = 'stringsense-app-store';
+const BACKEND_SESSION_KEY = 'stringsense-backend-session';
+
+type PersistedBackendSession = {
+  sessionSource: 'backend';
+  backendAccessToken: string;
+};
 
 function readPersistedState(): Partial<PersistedAppState> {
   if (typeof localStorage === 'undefined') {
@@ -236,16 +242,74 @@ function readPersistedState(): Partial<PersistedAppState> {
   }
 }
 
+function readBackendSessionState(): Partial<PersistedAppState> {
+  if (typeof sessionStorage === 'undefined') {
+    return {};
+  }
+
+  try {
+    const raw = sessionStorage.getItem(BACKEND_SESSION_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as PersistedBackendSession;
+    if (
+      parsed.sessionSource === 'backend' &&
+      typeof parsed.backendAccessToken === 'string' &&
+      parsed.backendAccessToken.trim().length > 0
+    ) {
+      return {
+        sessionSource: 'backend',
+        backendAccessToken: parsed.backendAccessToken,
+      };
+    }
+
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+function syncBackendSessionState(state: AppStoreState) {
+  if (typeof sessionStorage === 'undefined') {
+    return;
+  }
+
+  try {
+    if (
+      state.sessionSource === 'backend' &&
+      typeof state.backendAccessToken === 'string' &&
+      state.backendAccessToken.trim().length > 0
+    ) {
+      sessionStorage.setItem(
+        BACKEND_SESSION_KEY,
+        JSON.stringify({
+          sessionSource: 'backend',
+          backendAccessToken: state.backendAccessToken,
+        } satisfies PersistedBackendSession)
+      );
+      return;
+    }
+
+    sessionStorage.removeItem(BACKEND_SESSION_KEY);
+  } catch {
+    // Ignore storage failures and keep runtime state usable.
+  }
+}
+
 function extractPersistedState(state: AppStoreState): PersistedAppState {
+  const isBackendSession = state.sessionSource === 'backend';
+
   return {
-    sessionSource: state.sessionSource,
-    backendAccessToken: state.backendAccessToken,
-    currentUserId: state.currentUserId,
-    livePlayerProfile: state.livePlayerProfile,
-    liveAdminProfile: state.liveAdminProfile,
-    liveStrings: state.liveStrings,
-    liveBookings: state.liveBookings,
-    liveRecommendationResults: state.liveRecommendationResults,
+    sessionSource: isBackendSession ? null : state.sessionSource,
+    backendAccessToken: null,
+    currentUserId: isBackendSession ? null : state.currentUserId,
+    livePlayerProfile: isBackendSession ? null : state.livePlayerProfile,
+    liveAdminProfile: isBackendSession ? null : state.liveAdminProfile,
+    liveStrings: isBackendSession ? [] : state.liveStrings,
+    liveBookings: isBackendSession ? [] : state.liveBookings,
+    liveRecommendationResults: isBackendSession ? [] : state.liveRecommendationResults,
     businessHours: state.businessHours,
     adminSettings: state.adminSettings,
   };
@@ -278,7 +342,10 @@ function normalizePersistedState(
   };
 }
 
-const persistedState = normalizePersistedState(readPersistedState());
+const persistedState = normalizePersistedState({
+  ...readPersistedState(),
+  ...readBackendSessionState(),
+});
 const requiresBackendSessionBootstrap =
   persistedState.sessionSource === 'backend' &&
   typeof persistedState.backendAccessToken === 'string' &&
@@ -947,13 +1014,17 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     })),
 }));
 
-if (typeof localStorage !== 'undefined') {
+if (typeof localStorage !== 'undefined' || typeof sessionStorage !== 'undefined') {
   useAppStore.subscribe((state) => {
-    try {
-      localStorage.setItem(APP_STORE_KEY, JSON.stringify(extractPersistedState(state)));
-    } catch {
-      // Ignore local persistence failures and keep runtime state usable.
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(APP_STORE_KEY, JSON.stringify(extractPersistedState(state)));
+      } catch {
+        // Ignore local persistence failures and keep runtime state usable.
+      }
     }
+
+    syncBackendSessionState(state);
   });
 }
 

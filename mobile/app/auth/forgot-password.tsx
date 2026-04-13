@@ -90,10 +90,6 @@ export default function ForgotPasswordScreen() {
         phone_number: data.phoneNumber,
       });
 
-      if (response.dev_code_preview) {
-        console.log(`[DEV] Verification code for ${data.phoneNumber}: ${response.dev_code_preview}`);
-      }
-
       setRequestMessage(response.message);
       setDevCodePreview(response.dev_code_preview);
       resetResetForm({

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from typing import cast
 
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
@@ -21,6 +22,8 @@ from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.catalog.recommendation_features import domain_feature_key
 from app.domain.booking.policies import booking_order_code
 from app.domain.catalog.entities import InventorySnapshot
+from app.domain.catalog.entities import InventoryAvailabilityStatus
+from app.domain.catalog.entities import InventoryPricingMode
 from app.domain.catalog.entities import StringItem
 from app.domain.catalog.entities import (
     StringOfficialPerformance as OfficialPerformanceRecord,
@@ -42,6 +45,26 @@ SOURCE_LAYER_PRIORITY = {
     "community_signal": 4,
     "catalog_structured": 5,
 }
+
+
+def _normalize_pricing_mode(value: str | None) -> InventoryPricingMode:
+    if value in {"fixed_price", "quoted_at_shop", "price_pending"}:
+        return cast(InventoryPricingMode, value)
+    return "price_pending"
+
+
+def _normalize_availability_status(
+    value: str | None,
+    *,
+    available_stock: int,
+) -> InventoryAvailabilityStatus:
+    if value in {"in_stock", "low_stock", "out_of_stock"}:
+        return cast(InventoryAvailabilityStatus, value)
+    if available_stock <= 0:
+        return "out_of_stock"
+    if available_stock <= 5:
+        return "low_stock"
+    return "in_stock"
 
 
 def to_user_account(user: User) -> UserAccount:
@@ -98,6 +121,8 @@ def to_profile(profile: Profile) -> PlayerProfile:
 def to_string_item(item: StringCatalogItem) -> StringItem:
     inventory = item.inventory_item
     latest_note = None
+    pricing_mode: InventoryPricingMode = "price_pending"
+    availability_status: InventoryAvailabilityStatus = "out_of_stock"
     if inventory and inventory.movements:
         latest_note = next(
             (
@@ -106,6 +131,12 @@ def to_string_item(item: StringCatalogItem) -> StringItem:
                 if movement.note and movement.note.strip()
             ),
             None,
+        )
+    if inventory is not None:
+        pricing_mode = _normalize_pricing_mode(inventory.pricing_mode)
+        availability_status = _normalize_availability_status(
+            inventory.availability_status,
+            available_stock=inventory.available_stock,
         )
 
     return StringItem(
@@ -162,8 +193,8 @@ def to_string_item(item: StringCatalogItem) -> StringItem:
             reorder_quantity=inventory.reorder_quantity,
             cost_price=number_to_float(inventory.cost_price),
             selling_price=number_to_float(inventory.selling_price),
-            pricing_mode=inventory.pricing_mode,
-            availability_status=inventory.availability_status,
+            pricing_mode=pricing_mode,
+            availability_status=availability_status,
             is_active=inventory.is_active,
             latest_note=latest_note,
             updated_at=inventory.updated_at,

@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 from app.domain.catalog.recommendation_features import DOMAIN_ASPECT_FEATURE_KEYS
 
 
 ASPECT_FEATURE_KEYS = DOMAIN_ASPECT_FEATURE_KEYS
+InventoryPricingMode = Literal["fixed_price", "quoted_at_shop", "price_pending"]
+InventoryAvailabilityStatus = Literal["in_stock", "low_stock", "out_of_stock"]
 
 
 @dataclass(frozen=True)
@@ -46,8 +49,8 @@ class InventorySnapshot:
     reorder_quantity: int
     cost_price: float | None
     selling_price: float | None
-    pricing_mode: str
-    availability_status: str
+    pricing_mode: InventoryPricingMode
+    availability_status: InventoryAvailabilityStatus
     is_active: bool
     latest_note: str | None
     updated_at: datetime | None

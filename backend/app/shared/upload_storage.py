@@ -13,6 +13,32 @@ ALLOWED_IMAGE_CONTENT_TYPES = {
     "image/webp": ".webp",
 }
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+BOOKING_UPDATES_DIR = "booking-updates"
+STRING_IMAGES_DIR = "string-images"
+
+
+def _resolve_upload_destination(
+    relative_path: str,
+    *,
+    expected_directory: str,
+) -> Path | None:
+    if "://" in relative_path:
+        return None
+
+    candidate = Path(relative_path)
+    if candidate.is_absolute():
+        return None
+
+    root = get_settings().upload_root_path.resolve()
+    destination = (root / candidate).resolve()
+    try:
+        relative_to_root = destination.relative_to(root)
+    except ValueError:
+        return None
+
+    if not relative_to_root.parts or relative_to_root.parts[0] != expected_directory:
+        return None
+    return destination
 
 
 def save_booking_update_photo(
@@ -32,7 +58,7 @@ def save_booking_update_photo(
 
     safe_stem = Path(original_name or "booking-photo").stem[:60] or "booking-photo"
     file_name = f"{uuid4().hex}-{safe_stem}{extension}"
-    relative_path = Path("booking-updates") / file_name
+    relative_path = Path(BOOKING_UPDATES_DIR) / file_name
     destination = get_settings().upload_root_path / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(content)
@@ -43,7 +69,13 @@ def delete_booking_update_photo(relative_path: str | None) -> None:
     if not relative_path:
         return
 
-    destination = get_settings().upload_root_path / relative_path
+    destination = _resolve_upload_destination(
+        relative_path,
+        expected_directory=BOOKING_UPDATES_DIR,
+    )
+    if destination is None:
+        return
+
     try:
         destination.unlink(missing_ok=True)
     except OSError:
@@ -68,7 +100,7 @@ def save_string_catalog_image(
 
     safe_stem = Path(original_name or "string-image").stem[:60] or "string-image"
     file_name = f"{uuid4().hex}-{safe_stem}{extension}"
-    relative_path = Path("string-images") / file_name
+    relative_path = Path(STRING_IMAGES_DIR) / file_name
     destination = get_settings().upload_root_path / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(content)
@@ -78,10 +110,14 @@ def save_string_catalog_image(
 def delete_string_catalog_image(relative_path: str | None) -> None:
     if not relative_path:
         return
-    if "://" in relative_path or relative_path.startswith("/"):
+
+    destination = _resolve_upload_destination(
+        relative_path,
+        expected_directory=STRING_IMAGES_DIR,
+    )
+    if destination is None:
         return
 
-    destination = get_settings().upload_root_path / relative_path
     try:
         destination.unlink(missing_ok=True)
     except OSError:

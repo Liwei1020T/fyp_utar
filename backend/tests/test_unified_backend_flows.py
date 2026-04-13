@@ -10,6 +10,7 @@ from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.main import app
+from app.shared.upload_storage import MAX_UPLOAD_BYTES
 
 
 client = TestClient(app)
@@ -519,6 +520,44 @@ def test_admin_can_persist_catalog_editor_fields_and_string_image():
     assert delete_image.status_code == 200
     assert delete_image.json()["image_url"] is None
     assert len(string_image_file_names()) == len(before_upload)
+
+
+def test_admin_delete_string_image_does_not_follow_parent_path_segments():
+    customer_token = register_customer(phone_number="+60127776778")
+    admin_token = login_admin()
+    string_id = first_string_id(customer_token)
+
+    detail_response = client.get(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+    )
+    assert detail_response.status_code == 200
+
+    update_response = client.put(
+        f"/api/admin/strings/{string_id}",
+        headers=headers(admin_token),
+        json={
+            "brand": detail_response.json()["brand"],
+            "model_name": detail_response.json()["model_name"],
+            "image_url": "../stringsense-path-traversal-guard.txt",
+        },
+    )
+    assert update_response.status_code == 200
+
+    outside_file = (
+        get_settings().upload_root_path.parent / "stringsense-path-traversal-guard.txt"
+    )
+    outside_file.write_text("must-stay", encoding="utf-8")
+    try:
+        delete_response = client.delete(
+            f"/api/admin/strings/{string_id}/image",
+            headers=headers(admin_token),
+        )
+        assert delete_response.status_code == 200
+        assert delete_response.json()["image_url"] is None
+        assert outside_file.exists()
+    finally:
+        outside_file.unlink(missing_ok=True)
 
 
 def test_admin_business_hours_settings_and_slots_flow():
@@ -1065,3 +1104,104 @@ def test_rejected_booking_update_photo_does_not_leave_file():
     )
     assert missing_admin_update.status_code == 404
     assert booking_update_file_names() == before_files
+
+
+def test_player_booking_update_rejects_oversized_photo_upload():
+    customer_token = register_customer(
+        username="oversized-photo-user",
+        phone_number="+60125550126",
+    )
+    string_id = first_string_id(customer_token)
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Arcsaber 7",
+            "requested_tension": 24,
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    before_files = booking_update_file_names()
+    oversized_upload = client.post(
+        f"/api/bookings/{booking_id}/updates",
+        headers=headers(customer_token),
+        data={"comment": "Oversized upload should be rejected."},
+        files={
+            "photo": (
+                "too-large.jpg",
+                b"x" * (MAX_UPLOAD_BYTES + 1),
+                "image/jpeg",
+            )
+        },
+    )
+    assert oversized_upload.status_code == 400
+    assert oversized_upload.json()["error"]["message"] == (
+        "Uploaded photo must be 5 MB or smaller"
+    )
+    assert booking_update_file_names() == before_files
+
+
+def test_admin_booking_photo_upload_rejects_oversized_photo_upload():
+    customer_token = register_customer(
+        username="oversized-admin-photo-user",
+        phone_number="+60125550127",
+    )
+    string_id = first_string_id(customer_token)
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Astrox 88D",
+            "requested_tension": 25,
+        },
+    )
+    assert booking_response.status_code == 200
+    booking_id = booking_response.json()["id"]
+
+    before_files = booking_update_file_names()
+    oversized_upload = client.post(
+        f"/api/admin/bookings/{booking_id}/photos",
+        headers=headers(login_admin()),
+        data={"comment": "Oversized photo should be rejected."},
+        files={
+            "photo": (
+                "too-large-admin.jpg",
+                b"x" * (MAX_UPLOAD_BYTES + 1),
+                "image/jpeg",
+            )
+        },
+    )
+    assert oversized_upload.status_code == 400
+    assert oversized_upload.json()["error"]["message"] == (
+        "Uploaded photo must be 5 MB or smaller"
+    )
+    assert booking_update_file_names() == before_files
+
+
+def test_admin_string_image_upload_rejects_oversized_image_upload():
+    customer_token = register_customer(phone_number="+60125550128")
+    string_id = first_string_id(customer_token)
+    before_files = string_image_file_names()
+
+    oversized_upload = client.post(
+        f"/api/admin/strings/{string_id}/image",
+        headers=headers(login_admin()),
+        files={
+            "photo": (
+                "too-large-image.png",
+                b"x" * (MAX_UPLOAD_BYTES + 1),
+                "image/png",
+            )
+        },
+    )
+    assert oversized_upload.status_code == 400
+    assert oversized_upload.json()["error"]["message"] == (
+        "Uploaded image must be 5 MB or smaller"
+    )
+    assert string_image_file_names() == before_files
