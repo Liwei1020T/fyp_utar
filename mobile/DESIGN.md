@@ -1,72 +1,90 @@
-# StringSense Mobile Design System
+# Design System Inspiration of Apple
 
-## Direction
+## Visual Direction
 
-StringSense should feel like a premium, practical badminton service app: calm enough for bookings, sharp enough for performance advice, and clear enough for a shop admin working quickly at the counter.
+StringSense should follow an Apple-inspired mobile UI: quiet surfaces, precise typography, clear hierarchy, restrained depth, and one unmistakable interactive accent. The interface should feel calm and product-focused rather than decorative.
 
-The UI uses a clean sports-service palette instead of a one-color blue system. Blue is reserved for primary player actions, teal supports service/status moments, amber marks highlights and attention, and neutral surfaces carry the layout.
+The design rhythm is built from near-white backgrounds, white cards, occasional near-black feature panels, and Apple Blue for interactive elements. Color should not compete with the content. Badminton strings, bookings, and service status are the product; the UI should frame them cleanly.
 
-## Color Roles
+## Color Palette
 
-- Page: `#F7F9FC`
-- Auth page: `#FAFBFD`
-- Admin page: `#F6FAF8`
+- Page background: `#F5F5F7`
 - Surface: `#FFFFFF`
-- Muted surface: `#EEF3F7`
-- Primary action: `#2563EB`
-- Service accent: `#0F9F8F`
-- Highlight accent: `#D48A12`
-- Success: `#168A5B`
-- Warning: `#B7791F`
-- Danger: `#D94848`
-- Text primary: `#14181F`
-- Text secondary: `#566579`
-- Border: `#DDE6F0`
+- Near black text: `#1D1D1F`
+- Secondary text: `rgba(29, 29, 31, 0.72)`
+- Tertiary text: `rgba(29, 29, 31, 0.48)`
+- Border / separator: `#D2D2D7`
+- Dark panel: `#1D1D1F`
+- Dark panel elevated: `#272729`
+- Primary interactive accent: `#0071E3`
+- Link blue: `#0066CC`
+- Blue on dark: `#2997FF`
 
-## Layout Rules
-
-- Use `AppScreen` for every route-level screen.
-- Keep page padding at 16px for mobile density and consistent tab alignment.
-- Use `AppSection` for title/subtitle rhythm instead of screen-local header blocks.
-- Prefer two-column quick actions only when labels fit at 320px; otherwise stack.
-- Horizontal carousels should align to page padding and keep a visible next-card hint.
-- Bottom tabs float with 16px side gutters, compact height, and stable icon boxes.
-
-## Component Rules
-
-- Cards use `AppCard`; do not create new card chrome in screen files unless a domain component needs it.
-- Buttons use `AppButton`; primary actions should be blue, service/admin secondary actions can use teal, and attention actions can use amber.
-- Inputs use `AppInput`; field borders should stay visible on light backgrounds.
-- Icon buttons use square 8px corners for a cleaner app-shell feel.
-- Avoid heavy nested cards. One surface should be enough for most content blocks.
-- Use Lucide icons consistently and keep icon sizes between 16 and 24 in content.
+Semantic status colors may remain for operational clarity, but they should stay soft and secondary. They must not become the main brand palette.
 
 ## Typography
 
-- Use system sans-serif through `HeroText`.
-- Letter spacing should remain normal for mobile readability.
-- Section titles: 18-20px, semibold/bold.
-- Card titles: 14-17px, semibold/bold.
-- Metadata: 11-13px, medium, with strong contrast.
-- Uppercase labels are allowed, but do not add wide tracking.
+- Use the system sans-serif through `HeroText`, matching the SF Pro feel where available.
+- Keep letter spacing normal in the React Native app; avoid decorative wide tracking.
+- Large screen titles: 20-30px, weight 600-700, tight but readable line height.
+- Section titles: 18-20px, weight 700.
+- Card titles: 14-17px, weight 600-700.
+- Body and metadata: 12-15px, weight 400-600.
+- Keep body text left aligned. Center alignment is only for small decorative product previews.
 
-## Elevation
+## Layout
 
-- Default cards: white surface, visible neutral border, light shadow.
-- Elevated cards: same surface with slightly stronger border and shadow.
-- Highlight cards: soft primary/amber/teal background, not saturated fills.
-- Dark hero cards: use `appChromeColors.hero` sparingly for the main recommendation/action moment only.
+- Use `AppScreen` for route-level screens.
+- Use `AppSection` for section title/subtitle spacing.
+- Keep mobile page padding compact and consistent at 16px.
+- Prefer full-width content blocks over nested card stacks.
+- Horizontal carousels should align to page padding and reveal a hint of the next card.
+- Bottom tabs should float lightly above the page with a white translucent surface and a subtle border.
+
+## Components
+
+- Cards use `AppCard`.
+- Buttons use `AppButton`.
+- Inputs use `AppInput`.
+- Icon buttons use `AppIconButton`.
+- Use Lucide icons consistently.
+- Use 8px radius for rectangular cards, buttons, inputs, and tab surfaces.
+- Pills are allowed only for chips and small labels.
+- Avoid multiple nested borders inside cards unless the inner boundary has a clear functional purpose.
+
+## Buttons
+
+- Primary CTA: Apple Blue `#0071E3`, white text.
+- Secondary CTA: white surface, visible neutral border, near-black or link-blue text.
+- Dark CTA: near-black fill, white text.
+- Button corners: 8px.
+- Press feedback should be subtle opacity or a tiny scale change.
+
+## Cards And Elevation
+
+- Default cards: white background, neutral border, light shadow.
+- Elevated cards: white background, very soft diffused shadow.
+- Highlight cards: soft blue tint, not saturated color blocks.
+- Dark hero cards: near-black background with white text, reserved for the main advisory/feature moment.
+- Avoid heavy colored glow except for focused interactive moments.
+
+## Page Rhythm
+
+- Light informational screens should use `#F5F5F7` page background.
+- White cards should feel like product tiles on a neutral canvas.
+- Dark panels should be rare, high-impact moments.
+- The app should not read as a blue dashboard; blue is for action and focus.
 
 ## Accessibility
 
-- All interactive `Pressable`/button-like components need `accessibilityRole="button"` when they are not a native button wrapper.
-- Do not use color as the only status signal; combine chips, labels, and icons.
-- Text contrast must remain readable on soft fills and dark hero cards.
-- Avoid layout shift on press states; opacity or very small transform is acceptable.
+- All custom pressable controls need `accessibilityRole="button"` when appropriate.
+- Text contrast must meet mobile readability expectations.
+- Do not communicate status with color alone; use chips, labels, or icons.
+- Keep tap targets at least 40px high where possible.
 
-## Current Optimization Notes
+## Implementation Notes
 
-- The shared theme now balances blue, teal, amber, and neutral surfaces.
-- Shared cards, buttons, inputs, headers, and tabs use tighter geometry and clearer borders.
-- Player home quick actions and trending string cards use distinct action colors and denser spacing.
-- Future screen-specific cleanup should replace hard-coded `#2F64B6` usages with `appChromeColors.primary` or the correct semantic color.
+- `components/ui/theme.ts` owns shared color constants.
+- `global.css` mirrors the same visual tokens for HeroUI Native and Uniwind.
+- `tailwind.config.js` should keep primary, secondary, and accent aligned to Apple Blue rather than unrelated accent hues.
+- Screen-local hard-coded colors should be replaced with shared tokens when touched.

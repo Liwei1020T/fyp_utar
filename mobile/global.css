@@ -9,15 +9,15 @@
     --background: oklch(0.985 0.008 255);
     --foreground: oklch(0.24 0.03 255);
 
-    --app-page: oklch(0.982 0.008 252);
-    --app-page-auth: oklch(0.988 0.006 250);
-    --app-page-admin: oklch(0.981 0.012 170);
+    --app-page: oklch(0.967 0.003 286);
+    --app-page-auth: oklch(0.967 0.003 286);
+    --app-page-admin: oklch(0.967 0.003 286);
     --app-surface: oklch(1 0 0);
     --app-surface-elevated: oklch(1 0 0);
-    --app-muted: oklch(0.958 0.012 248);
-    --app-hero: oklch(0.48 0.15 260);
-    --app-hero-foreground: oklch(0.985 0.004 255);
-    --app-hero-muted: oklch(0.91 0.028 252);
+    --app-muted: oklch(0.967 0.003 286);
+    --app-hero: oklch(0.22 0.004 286);
+    --app-hero-foreground: oklch(1 0 0);
+    --app-hero-muted: oklch(0.86 0.003 286);
     --app-tabbar: oklch(1 0 0);
 
     --surface: oklch(0.998 0.003 255);
@@ -34,7 +34,7 @@
     --default: oklch(0.955 0.01 250);
     --default-foreground: oklch(0.31 0.028 252);
 
-    --accent: oklch(0.55 0.17 260);
+    --accent: oklch(0.58 0.19 254);
     --accent-foreground: oklch(0.98 0.003 255);
 
     --field-background: oklch(0.995 0.003 250);
@@ -49,28 +49,28 @@
     --danger: oklch(0.62 0.17 25);
     --danger-foreground: oklch(0.98 0.004 25);
 
-    --separator: oklch(0.905 0.014 250);
+    --separator: oklch(0.86 0.003 286);
     --focus: var(--accent);
     --link: var(--accent);
 
-    --surface-shadow: 0 8px 22px rgba(20, 29, 43, 0.06);
-    --overlay-shadow: 0 14px 34px rgba(20, 29, 43, 0.12);
-    --field-shadow: 0 5px 14px rgba(20, 29, 43, 0.05);
+    --surface-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    --overlay-shadow: 3px 5px 30px rgba(0, 0, 0, 0.16);
+    --field-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   @variant dark {
     --background: oklch(0.985 0.008 255);
     --foreground: oklch(0.24 0.03 255);
 
-    --app-page: oklch(0.982 0.008 252);
-    --app-page-auth: oklch(0.988 0.006 250);
-    --app-page-admin: oklch(0.981 0.012 170);
+    --app-page: oklch(0.967 0.003 286);
+    --app-page-auth: oklch(0.967 0.003 286);
+    --app-page-admin: oklch(0.967 0.003 286);
     --app-surface: oklch(1 0 0);
     --app-surface-elevated: oklch(1 0 0);
-    --app-muted: oklch(0.958 0.012 248);
-    --app-hero: oklch(0.48 0.15 260);
-    --app-hero-foreground: oklch(0.985 0.004 255);
-    --app-hero-muted: oklch(0.91 0.028 252);
+    --app-muted: oklch(0.967 0.003 286);
+    --app-hero: oklch(0.22 0.004 286);
+    --app-hero-foreground: oklch(1 0 0);
+    --app-hero-muted: oklch(0.86 0.003 286);
     --app-tabbar: oklch(1 0 0);
 
     --surface: oklch(0.998 0.003 255);
@@ -87,7 +87,7 @@
     --default: oklch(0.955 0.01 250);
     --default-foreground: oklch(0.31 0.028 252);
 
-    --accent: oklch(0.55 0.17 260);
+    --accent: oklch(0.58 0.19 254);
     --accent-foreground: oklch(0.98 0.003 255);
 
     --field-background: oklch(0.995 0.003 250);
@@ -102,13 +102,13 @@
     --danger: oklch(0.62 0.17 25);
     --danger-foreground: oklch(0.98 0.004 25);
 
-    --separator: oklch(0.905 0.014 250);
+    --separator: oklch(0.86 0.003 286);
     --focus: var(--accent);
     --link: var(--accent);
 
-    --surface-shadow: 0 8px 22px rgba(20, 29, 43, 0.06);
-    --overlay-shadow: 0 14px 34px rgba(20, 29, 43, 0.12);
-    --field-shadow: 0 5px 14px rgba(20, 29, 43, 0.05);
+    --surface-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    --overlay-shadow: 3px 5px 30px rgba(0, 0, 0, 0.16);
+    --field-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 }
 

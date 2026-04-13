@@ -56,7 +56,7 @@ export function AppButton({
     ghost: 'bg-transparent border-transparent',
     danger: 'bg-red-600 border-red-600',
     success: 'bg-success-600 border-success-600',
-    dark: 'bg-[#14181F] border-[#14181F] shadow-soft',
+    dark: 'bg-[#1D1D1F] border-[#1D1D1F] shadow-soft',
   };
 
   const textStyles = {

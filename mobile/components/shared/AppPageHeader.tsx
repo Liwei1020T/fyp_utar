@@ -30,9 +30,9 @@ const baseContainerStyles =
   'w-full self-center overflow-hidden border shadow-soft';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-lg border-[#DDE6F0] bg-white',
-  secondary: 'rounded-lg border-[#DDE6F0] bg-white',
-  flow: 'rounded-lg border-[#DDE6F0] bg-white',
+  primary: 'rounded-lg border-[#D2D2D7] bg-white',
+  secondary: 'rounded-lg border-[#D2D2D7] bg-white',
+  flow: 'rounded-lg border-[#D2D2D7] bg-white',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
@@ -42,15 +42,15 @@ const contentStyles: Record<AppHeaderVariant, string> = {
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[20px] font-semibold tracking-normal text-[#14181F]',
-  secondary: 'text-[17px] font-semibold tracking-normal text-[#14181F]',
-  flow: 'text-[17px] font-semibold tracking-normal text-[#14181F]',
+  primary: 'text-[20px] font-semibold tracking-normal text-[#1D1D1F]',
+  secondary: 'text-[17px] font-semibold tracking-normal text-[#1D1D1F]',
+  flow: 'text-[17px] font-semibold tracking-normal text-[#1D1D1F]',
 };
 
 const subtitleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[14px] leading-[20px] tracking-normal text-[#566579]',
-  secondary: 'text-[12px] leading-[18px] tracking-normal text-[#566579]',
-  flow: 'text-[12px] leading-[18px] tracking-normal text-[#566579]',
+  primary: 'text-[14px] leading-[20px] tracking-normal text-[rgba(29,29,31,0.72)]',
+  secondary: 'text-[12px] leading-[18px] tracking-normal text-[rgba(29,29,31,0.68)]',
+  flow: 'text-[12px] leading-[18px] tracking-normal text-[rgba(29,29,31,0.68)]',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {

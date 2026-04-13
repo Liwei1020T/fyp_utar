@@ -35,8 +35,8 @@ export function TrendingStrings() {
               onPress={() => router.push(`/player/strings/${item.id}`)}
               className="w-[152px] active:opacity-80"
             >
-              <View className="overflow-hidden rounded-lg border border-[#DDE6F0] bg-white px-3 py-3 shadow-sm">
-                <View className={`rounded-lg border px-3 py-3 ${isTopPick ? 'border-accent-100 bg-accent-50/70' : 'border-secondary-100 bg-secondary-50'}`}>
+              <View className="overflow-hidden rounded-lg border border-[#D2D2D7] bg-white px-3 py-3 shadow-sm">
+                <View className={`rounded-lg border px-3 py-3 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E5E5EA] bg-[#F5F5F7]'}`}>
                   <View className="flex-row items-start justify-between">
                     <View className={`rounded-full px-2.5 py-1 ${isTopPick ? 'bg-accent-100/80' : 'bg-white/85'}`}>
                       <HeroText className="text-[10px] font-semibold uppercase tracking-normal text-neutral-500">
@@ -53,22 +53,22 @@ export function TrendingStrings() {
                   <View className="mt-4 h-[72px] items-center justify-center rounded-lg bg-white/85">
                     <View
                       className="h-11 w-11 items-center justify-center rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#D48A1218' : '#0F9F8F18' }}
+                      style={{ backgroundColor: isTopPick ? '#0071E316' : '#1D1D1F10' }}
                     >
                       <HeroText
                         className="text-[17px] font-bold tracking-normal"
-                        style={{ color: isTopPick ? '#D48A12' : '#0F9F8F' }}
+                        style={{ color: isTopPick ? '#0071E3' : '#1D1D1F' }}
                       >
                         {item.brand[0]}
                       </HeroText>
                     </View>
                     <View
                       className="mt-2 h-1.5 w-16 rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#D48A1230' : '#0F9F8F30' }}
+                      style={{ backgroundColor: isTopPick ? '#0071E330' : '#1D1D1F18' }}
                     />
                     <View
                       className="mt-1 h-1.5 w-10 rounded-full"
-                      style={{ backgroundColor: isTopPick ? '#D48A121A' : '#0F9F8F1A' }}
+                      style={{ backgroundColor: isTopPick ? '#0071E31A' : '#1D1D1F10' }}
                     />
                   </View>
                 </View>
@@ -83,7 +83,7 @@ export function TrendingStrings() {
                   <HeroText className="text-[12px] font-medium text-neutral-500" numberOfLines={1}>
                     {item.brand}
                   </HeroText>
-                  <HeroText className={`text-[12px] font-medium ${isTopPick ? 'text-accent-700' : 'text-primary-700'}`} numberOfLines={1}>
+                  <HeroText className="text-[12px] font-medium text-primary-700" numberOfLines={1}>
                     {categoryLabels[item.category]}
                   </HeroText>
                 </View>

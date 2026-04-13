@@ -39,22 +39,22 @@ const quickActions = [
     title: 'Book restring',
     route: '/player/bookings/new',
     icon: CalendarClock,
-    color: appChromeColors.secondary,
-    bgColor: appChromeColors.secondarySoft,
+    color: appChromeColors.primary,
+    bgColor: appChromeColors.primarySoft,
   },
   {
     title: 'Browse strings',
     route: '/player/strings',
     icon: Search,
-    color: appChromeColors.accent,
-    bgColor: appChromeColors.accentSoft,
+    color: appChromeColors.primary,
+    bgColor: appChromeColors.primarySoft,
   },
   {
     title: 'Track service',
     route: '/player/bookings',
     icon: Activity,
-    color: appChromeColors.success,
-    bgColor: appChromeColors.successSoft,
+    color: appChromeColors.primary,
+    bgColor: appChromeColors.primarySoft,
   },
 ] as const;
 
@@ -81,7 +81,7 @@ export default function PlayerHomeScreen() {
       headerRight={
         <Pressable
           onPress={() => router.push('/player/notifications')}
-          className="h-10 w-10 items-center justify-center rounded-lg border border-[#DDE6F0] bg-white shadow-sm"
+          className="h-10 w-10 items-center justify-center rounded-lg border border-[#D2D2D7] bg-white shadow-sm"
         >
           <Bell size={20} color="#64748B" strokeWidth={2} />
           <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
@@ -172,7 +172,7 @@ export default function PlayerHomeScreen() {
               >
                 <AppCard
                   padding="sm"
-                  className="border border-[#DDE6F0] bg-white shadow-sm"
+                  className="border border-[#D2D2D7] bg-white shadow-sm"
                   contentClassName="h-[112px] justify-between"
                 >
                   <View
@@ -201,7 +201,7 @@ export default function PlayerHomeScreen() {
           className="mt-5"
           variant="compact"
         >
-          <AppCard variant="elevated" padding="md" className="border border-[#DDE6F0]">
+          <AppCard variant="elevated" padding="md" className="border border-[#D2D2D7]">
             <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1 flex-row items-start gap-3">
                 <View className="h-11 w-11 items-center justify-center rounded-lg border border-primary-100 bg-primary-50">
