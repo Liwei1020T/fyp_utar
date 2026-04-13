@@ -136,6 +136,7 @@ export default function AdminSettingsScreen() {
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
+          trendingStringIds,
         });
       } else {
         updateAdminSettings(user.id, {
