@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowUpDown, Search, SlidersHorizontal } from 'lucide-react-native';
 import { AdminInventoryCard } from '../../../components/admin/inventory/AdminInventoryCard';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppChip } from '../../../components/ui/AppChip';
-import { HeroText, HeroTextField, cn } from '../../../components/ui/heroui';
+import { HeroText, cn } from '../../../components/ui/heroui';
+import { appChromeColors } from '../../../components/ui/theme';
 import {
   buildStringSearchBlob,
   getInventoryAttentionState,
@@ -104,17 +105,29 @@ function SearchField({
   value: string;
   onChangeText: (value: string) => void;
 }) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <View className="h-11 flex-1 flex-row items-center gap-2 rounded-[18px] border border-[#D8E2EE] bg-white px-3.5">
-      <Search size={17} color="#64748B" strokeWidth={2} />
-      <HeroTextField
-        variant="secondary"
+    <View
+      className={cn(
+        'h-11 flex-1 flex-row items-center gap-2 rounded-lg border bg-white px-3.5',
+        isFocused ? 'border-primary-600' : 'border-[#D2D2D7]',
+      )}
+    >
+      <Search
+        size={17}
+        color={isFocused ? appChromeColors.primary : 'rgba(29,29,31,0.48)'}
+        strokeWidth={2}
+      />
+      <TextInput
         placeholder="Search string or brand"
         value={value}
         onChangeText={onChangeText}
-        className="h-full flex-1 border-0 bg-transparent px-0 text-[14px] text-neutral-900"
-        selectionColorClassName="accent-primary-600"
-        placeholderColorClassName="field-placeholder"
+        onBlur={() => setIsFocused(false)}
+        onFocus={() => setIsFocused(true)}
+        placeholderTextColor="rgba(29,29,31,0.48)"
+        selectionColor={appChromeColors.primary}
+        className="h-full flex-1 border-0 bg-transparent px-0 text-[14px] text-neutral-900 outline-none"
       />
     </View>
   );
