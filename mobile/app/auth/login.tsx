@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { LockKeyhole, Mail } from 'lucide-react-native';
+import { LockKeyhole, Phone } from 'lucide-react-native';
 import { AuthShell } from '../../components/auth/AuthShell';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
@@ -21,7 +21,12 @@ import {
 import type { UserRole } from '../../types/domain';
 
 const loginSchema = z.object({
-  identifier: z.string().min(3, 'Enter your email or phone number'),
+  countryCode: z.string().min(2, 'Choose a country code'),
+  phoneNumber: z
+    .string()
+    .trim()
+    .min(7, 'Enter your phone number')
+    .regex(/^\d[\d\s-]*$/, 'Use numbers only'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -50,6 +55,40 @@ const demoUsers: Array<{
   },
 ];
 
+const countryDialCodes = [
+  { value: '+60', label: '+60', caption: 'Malaysia' },
+  { value: '+65', label: '+65', caption: 'Singapore' },
+  { value: '+62', label: '+62', caption: 'Indonesia' },
+] as const;
+
+function normalizePhoneNumber(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function splitPhoneIdentifier(identifier: string) {
+  const cleanedIdentifier = identifier.trim();
+  const matchedCode = countryDialCodes.find((item) =>
+    cleanedIdentifier.startsWith(item.value),
+  );
+
+  if (!matchedCode) {
+    return {
+      countryCode: countryDialCodes[0].value,
+      phoneNumber: normalizePhoneNumber(cleanedIdentifier),
+    };
+  }
+
+  return {
+    countryCode: matchedCode.value,
+    phoneNumber: normalizePhoneNumber(cleanedIdentifier.slice(matchedCode.value.length)),
+  };
+}
+
+function composePhoneIdentifier(countryCode: string, phoneNumber: string) {
+  const normalizedNumber = normalizePhoneNumber(phoneNumber).replace(/^0+/, '');
+  return `${countryCode}${normalizedNumber}`;
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ role?: UserRole; identifier?: string }>();
@@ -72,7 +111,8 @@ export default function LoginScreen() {
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: '',
+      countryCode: countryDialCodes[0].value,
+      phoneNumber: '',
       password: '',
     },
   });
@@ -81,20 +121,25 @@ export default function LoginScreen() {
     () => demoUsers.find((item) => item.role === selectedRole) ?? demoUsers[0],
     [selectedRole]
   );
-  const identifierValue = watch('identifier');
+  const countryCodeValue = watch('countryCode');
+  const phoneNumberValue = watch('phoneNumber');
+  const identifierValue = composePhoneIdentifier(countryCodeValue, phoneNumberValue);
 
   useEffect(() => {
-    setValue('identifier', params.identifier ?? activeDemo.identifier);
+    const phoneParts = splitPhoneIdentifier(params.identifier ?? activeDemo.identifier);
+    setValue('countryCode', phoneParts.countryCode);
+    setValue('phoneNumber', phoneParts.phoneNumber);
     setValue('password', activeDemo.password);
   }, [activeDemo.identifier, activeDemo.password, params.identifier, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
     await new Promise((resolve) => setTimeout(resolve, 250));
+    const phoneIdentifier = composePhoneIdentifier(data.countryCode, data.phoneNumber);
 
     try {
       const auth = await backendApi.login({
-        phone_number: data.identifier,
+        phone_number: phoneIdentifier,
         password: data.password,
       });
 
@@ -127,7 +172,7 @@ export default function LoginScreen() {
       router.replace((profile ? '/player' : '/player/profile/edit') as never);
     } catch (error) {
       if (selectedRole === 'admin') {
-        const role = login(data.identifier);
+        const role = login(phoneIdentifier);
         if (role === 'admin') {
           router.replace(getRoleHome(role) as never);
           return;
@@ -177,9 +222,9 @@ export default function LoginScreen() {
                 label={item.label}
                 size="md"
                 variant={selectedRole === item.role ? 'primary' : 'neutral'}
-              onPress={() => setSelectedRole(item.role)}
-            />
-          ))}
+                onPress={() => setSelectedRole(item.role)}
+              />
+            ))}
           </View>
           <HeroText className="text-sm leading-5 text-neutral-500">
             {activeDemo.description}
@@ -188,26 +233,64 @@ export default function LoginScreen() {
 
         <Controller
           control={control}
-          name="identifier"
+          name="countryCode"
+          render={({ field: { onChange, value } }) => (
+            <View className="gap-2">
+              <HeroText className="ml-1 text-sm font-semibold text-foreground">
+                Country code
+              </HeroText>
+              <View className="flex-row gap-2">
+                {countryDialCodes.map((item) => (
+                  <Pressable
+                    key={item.value}
+                    accessibilityRole="button"
+                    onPress={() => onChange(item.value)}
+                    className={`h-12 flex-1 items-center justify-center rounded-lg border bg-white ${
+                      value === item.value ? 'border-primary-600' : 'border-[#D2D2D7]'
+                    }`}
+                  >
+                    <HeroText
+                      className={`text-[15px] font-semibold ${
+                        value === item.value ? 'text-primary-700' : 'text-[#1D1D1F]'
+                      }`}
+                    >
+                      {item.label}
+                    </HeroText>
+                    <HeroText className="mt-0.5 text-[10px] text-[rgba(29,29,31,0.48)]">
+                      {item.caption}
+                    </HeroText>
+                  </Pressable>
+                ))}
+              </View>
+              {errors.countryCode?.message ? (
+                <HeroText className="ml-1 text-xs leading-5 text-danger">
+                  {errors.countryCode.message}
+                </HeroText>
+              ) : null}
+            </View>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="phoneNumber"
           render={({ field: { onChange, value } }) => (
             <AppInput
               label="Phone number"
               placeholder={
                 selectedRole === 'player'
-                  ? 'e.g. +60123456789'
-                  : 'e.g. +60190000000'
+                  ? '123456789'
+                  : '190000000'
               }
               keyboardType="phone-pad"
               value={value}
-              onChangeText={onChange}
-              error={errors.identifier?.message}
+              onChangeText={(nextValue) => onChange(normalizePhoneNumber(nextValue))}
+              error={errors.phoneNumber?.message}
               helperText={
                 formError
-                  ?? (selectedRole === 'player'
-                    ? 'Player accounts authenticate against the live backend.'
-                    : 'Admin accounts authenticate against the live backend.')
+                  ?? `We will sign in with ${composePhoneIdentifier(countryCodeValue, value || '')}.`
               }
-              leftAdornment={<Mail size={18} color="#64748B" />}
+              leftAdornment={<Phone size={18} color="#64748B" />}
             />
           )}
         />
@@ -262,8 +345,10 @@ export default function LoginScreen() {
             <Pressable
               key={item.role}
               onPress={() => {
+                const phoneParts = splitPhoneIdentifier(item.identifier);
                 setSelectedRole(item.role);
-                setValue('identifier', item.identifier);
+                setValue('countryCode', phoneParts.countryCode);
+                setValue('phoneNumber', phoneParts.phoneNumber);
                 setValue('password', item.password);
               }}
             >
