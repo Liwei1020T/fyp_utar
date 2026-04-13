@@ -8,7 +8,6 @@ import { AppChip } from '../../../../components/ui/AppChip';
 import { AppScreen } from '../../../../components/shared/AppScreen';
 import { AppSection } from '../../../../components/shared/AppSection';
 import {
-  useAppStore,
   useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
@@ -216,8 +215,6 @@ export default function RecommendationExplanationScreen() {
   const token = useBackendAccessToken();
   const strings = useStrings();
   const liveResults = useLiveRecommendationResults();
-  const compareSelection = useAppStore((state) => state.compareSelection);
-  const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
   const [backendDetail, setBackendDetail] = useState<BackendRecommendationResult | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
 
@@ -279,13 +276,6 @@ export default function RecommendationExplanationScreen() {
     strongestReason,
     tradeOff,
   });
-  const isCompared = stringItem ? compareSelection.includes(stringItem.id) : false;
-  const canOpenCompare = compareSelection.length >= 2 && isCompared;
-  const compareButtonLabel = canOpenCompare
-    ? 'Open compare'
-    : isCompared
-      ? 'Selected for compare'
-      : 'Add to compare';
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -526,33 +516,23 @@ export default function RecommendationExplanationScreen() {
         <View className="gap-3">
           <View className="flex-row gap-3">
             <AppButton
-              label={compareButtonLabel}
-              variant={canOpenCompare ? 'secondary' : 'outline'}
-              className="flex-1"
-              isDisabled={!stringItem || (isCompared && !canOpenCompare)}
-              onPress={() => {
-                if (!stringItem) {
-                  return;
-                }
-                if (canOpenCompare) {
-                  router.push('/player/strings/compare');
-                  return;
-                }
-                toggleCompareSelection(stringItem.id);
-              }}
-            />
-            <AppButton
               label="Open string detail"
               variant="outline"
               className="flex-1"
               isDisabled={!stringItem}
               onPress={() => stringItem ? router.push(`/player/strings/${stringItem.id}`) : undefined}
             />
+            <AppButton
+              label="Back to shortlist"
+              variant="outline"
+              className="flex-1"
+              onPress={() => router.replace('/player/results')}
+            />
           </View>
 
           <AppCard variant="subtle" padding="md" className="rounded-[28px]">
             <HeroText className="text-sm leading-6 text-neutral-600">
-              Use this page when you need confidence, not just ranking. If the fit story looks right, book it. If not, send it to compare and sanity-check it against one more shortlist option.
+              Use this page when you need confidence, not just ranking. If the fit story looks right, book it. If not, jump back to the shortlist or open the full string detail before deciding.
             </HeroText>
           </AppCard>
         </View>
