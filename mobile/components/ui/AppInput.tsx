@@ -1,9 +1,10 @@
 import React from 'react';
-import { View } from 'react-native';
-import { HeroTextField, HeroText } from './heroui';
-import { cn, type HeroTextFieldProps } from './heroui';
+import { TextInput, type TextInputProps, View } from 'react-native';
+import { HeroText } from './heroui';
+import { cn } from './heroui';
+import { appChromeColors } from './theme';
 
-interface AppInputProps extends Omit<HeroTextFieldProps, 'variant'> {
+interface AppInputProps extends TextInputProps {
   label?: string;
   error?: string;
   helperText?: string;
@@ -14,6 +15,7 @@ interface AppInputProps extends Omit<HeroTextFieldProps, 'variant'> {
   leftAdornment?: React.ReactNode;
   rightAdornment?: React.ReactNode;
   variant?: 'default' | 'minimal';
+  isDisabled?: boolean;
 }
 
 export function AppInput({
@@ -27,32 +29,43 @@ export function AppInput({
   leftAdornment,
   rightAdornment,
   variant = 'default',
+  isDisabled = false,
   ...props
 }: AppInputProps) {
   const isMinimal = variant === 'minimal';
+  const [isFocused, setIsFocused] = React.useState(false);
+  const focusBorder = isFocused ? 'border-primary-600' : 'border-[#D2D2D7]';
 
   if (isMinimal) {
     return (
       <View className={cn('mb-4', className)}>
         <View
           className={cn(
-            'h-11 flex-row items-center gap-3 rounded-lg border border-[#DDE6F0] bg-white px-4 shadow-sm',
+            'h-11 flex-row items-center gap-3 rounded-lg border bg-white px-4 shadow-sm',
+            error ? 'border-danger/30' : focusBorder,
             containerClassName,
             innerContainerClassName
           )}
         >
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
-          <HeroTextField
-            variant="secondary"
-            isInvalid={Boolean(error)}
+          <TextInput
+            {...props}
             className={cn(
               'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
               props.multiline ? 'min-h-24 py-3' : '',
               inputClassName
             )}
-            selectionColorClassName="accent-primary-600"
-            placeholderColorClassName="field-placeholder"
-            {...props}
+            onBlur={(event) => {
+              setIsFocused(false);
+              props.onBlur?.(event);
+            }}
+            onFocus={(event) => {
+              setIsFocused(true);
+              props.onFocus?.(event);
+            }}
+            editable={!isDisabled && props.editable !== false}
+            placeholderTextColor="rgba(29,29,31,0.48)"
+            selectionColor={appChromeColors.primary}
           />
           {rightAdornment ? <View className="shrink-0">{rightAdornment}</View> : null}
         </View>
@@ -69,8 +82,8 @@ export function AppInput({
       )}
       <View
         className={cn(
-          'rounded-lg border shadow-soft',
-          error ? 'border-danger/20 bg-danger/10' : 'border-[#DDE6F0] bg-white',
+          'rounded-lg border bg-white shadow-soft',
+          error ? 'border-danger/30' : focusBorder,
           containerClassName
         )}
       >
@@ -82,17 +95,24 @@ export function AppInput({
           )}
         >
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
-          <HeroTextField
-            variant="secondary"
-            isInvalid={Boolean(error)}
+          <TextInput
+            {...props}
             className={cn(
               'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
               props.multiline ? 'min-h-24 py-3' : '',
               inputClassName
             )}
-            selectionColorClassName="accent-primary-600"
-            placeholderColorClassName="field-placeholder"
-            {...props}
+            onBlur={(event) => {
+              setIsFocused(false);
+              props.onBlur?.(event);
+            }}
+            onFocus={(event) => {
+              setIsFocused(true);
+              props.onFocus?.(event);
+            }}
+            editable={!isDisabled && props.editable !== false}
+            placeholderTextColor="rgba(29,29,31,0.48)"
+            selectionColor={appChromeColors.primary}
           />
           {rightAdornment ? <View className="shrink-0">{rightAdornment}</View> : null}
         </View>

@@ -7,24 +7,25 @@ import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { HeroText } from '../../components/ui/heroui';
+import { appChromeColors } from '../../components/ui/theme';
 import { useAppStore } from '../../store/appStore';
 
 const roleCards = [
   {
     role: 'player',
     title: 'Player demo',
-    description: 'Recommendations, bookings, tracking, and profile.',
+    description: 'Recommendations, bookings, tracking, and profile',
     icon: Sparkles,
-    accentClassName: 'bg-[#DCE8F6]',
-    accentColor: '#2F64B6',
+    accentClassName: 'bg-primary-50',
+    accentColor: appChromeColors.primary,
   },
   {
     role: 'admin',
     title: 'Admin demo',
-    description: 'Bookings, inventory, business hours, and store settings.',
+    description: 'Bookings, inventory, business hours, and store settings',
     icon: Building2,
-    accentClassName: 'bg-[#E2F1EF]',
-    accentColor: '#22766D',
+    accentClassName: 'bg-[#F5F5F7]',
+    accentColor: appChromeColors.textPrimary,
   },
 ] as const;
 
@@ -35,8 +36,8 @@ export default function WelcomeScreen() {
   return (
     <AuthShell
       eyebrow="FYP demo access"
-      title="Choose a role and continue"
-      subtitle="One clean entry point for the player journey and the shop admin workspace."
+      title="Log in to StringSense"
+      subtitle="Choose a demo workspace to continue with the mobile app."
       footer={
         <View className="items-center gap-3">
           <Pressable onPress={() => router.push('/auth/register')}>
@@ -60,18 +61,21 @@ export default function WelcomeScreen() {
       <View className="gap-3">
         {roleCards.map(({ role, title, description, icon: Icon, accentClassName, accentColor }) => (
           <Pressable key={role} onPress={() => router.push(`/auth/login?role=${role}`)}>
-            <AppCard variant="subtle" padding="md">
+            <AppCard variant="default" padding="md">
               <View className="flex-row items-center gap-4">
-                <View className={`h-12 w-12 items-center justify-center rounded-[18px] ${accentClassName}`}>
+                <View className={`h-12 w-12 items-center justify-center rounded-lg ${accentClassName}`}>
                   <Icon size={22} color={accentColor} />
                 </View>
-                <View className="flex-1">
-                  <HeroText className="text-base font-bold tracking-tight text-neutral-950">
+                <View className="min-w-0 flex-1">
+                  <HeroText className="text-base font-bold tracking-normal text-[#1D1D1F]">
                     {title}
                   </HeroText>
-                  <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
+                  <HeroText className="mt-1 text-sm leading-5 text-[rgba(29,29,31,0.62)]">
                     {description}
                   </HeroText>
+                </View>
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F7]">
+                  <ArrowRight size={15} color={appChromeColors.primary} strokeWidth={2} />
                 </View>
               </View>
             </AppCard>

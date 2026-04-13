@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { Activity, ChevronLeft } from 'lucide-react-native';
 import { AppScreen } from '../shared/AppScreen';
 import { AppIconButton } from '../ui/AppIconButton';
-import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
 import { appChromeColors } from '../ui/theme';
@@ -28,26 +27,26 @@ export function AuthShell({
   return (
     <AppScreen
       tone="auth"
-      contentContainerClassName="justify-center py-4"
+      contentContainerClassName="justify-center py-8"
     >
-      <View className="w-full self-center" style={{ maxWidth: 460 }}>
-        <View className="mb-6 flex-row items-center justify-between gap-4">
-          <View className="flex-row items-center gap-3">
-            <View className="h-12 w-12 items-center justify-center rounded-lg bg-primary-50">
-              <Activity size={22} color={appChromeColors.primary} />
+      <View className="w-full self-center" style={{ maxWidth: 430 }}>
+        <View className="mb-8 flex-row items-center justify-between gap-4">
+          <View className="min-w-0 flex-row items-center gap-3">
+            <View className="h-11 w-11 items-center justify-center rounded-lg bg-white shadow-soft">
+              <Activity size={21} color={appChromeColors.primary} />
             </View>
-            <View>
-              <HeroText className="text-[11px] font-semibold uppercase tracking-normal text-primary-700">
+            <View className="min-w-0 flex-1">
+              <HeroText className="text-[15px] font-semibold tracking-normal text-[#1D1D1F]">
                 StringSense
               </HeroText>
-              <HeroText className="mt-1 text-lg font-bold tracking-normal text-neutral-950">
+              <HeroText className="mt-0.5 text-[12px] leading-4 text-[rgba(29,29,31,0.58)]">
                 Badminton stringing
               </HeroText>
             </View>
           </View>
           {onBack ? (
             <AppIconButton
-              icon={<ChevronLeft size={20} color="#0F172A" />}
+              icon={<ChevronLeft size={20} color="#1D1D1F" />}
               accessibilityLabel="Go back"
               variant="auth"
               onPress={onBack}
@@ -55,7 +54,7 @@ export function AuthShell({
           ) : null}
         </View>
 
-        <AppCard variant="elevated" padding="lg">
+        <View className="mb-6">
           {eyebrow ? (
             <AppChip
               label={eyebrow}
@@ -63,16 +62,17 @@ export function AuthShell({
               className="self-start"
             />
           ) : null}
-          <HeroText className="mt-4 text-[30px] font-bold tracking-normal text-neutral-950">
+          <HeroText className="mt-4 text-[32px] font-bold leading-[38px] tracking-normal text-[#1D1D1F]">
             {title}
           </HeroText>
           {subtitle ? (
-            <HeroText className="mt-2 text-[15px] leading-6 text-neutral-500">
+            <HeroText className="mt-2 text-[15px] leading-6 text-[rgba(29,29,31,0.68)]">
               {subtitle}
             </HeroText>
           ) : null}
-          <View className="mt-6">{children}</View>
-        </AppCard>
+        </View>
+
+        <View>{children}</View>
 
         {footer ? <View className="mt-5">{footer}</View> : null}
       </View>
