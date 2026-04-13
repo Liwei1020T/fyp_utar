@@ -25,7 +25,7 @@ import {
 } from '../../../store/appStore';
 import { MOCK_BOOKING_SLOTS } from '../../../mocks';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
-import { formatDateLabel, formatLocalDateInputValue } from '../../../lib/formatters';
+import { formatCurrency, formatDateLabel, formatLocalDateInputValue } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendSlotToBookingSlot } from '../../../services/backendMappers';
 import type { BookingSlot } from '../../../types/domain';
@@ -338,6 +338,7 @@ export default function NewBookingScreen() {
     : 'Times reflect current shop availability.';
   const selectedCategoryLabel =
     selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
+  const selectedStringHasPrice = selectedString.priceStatus === 'priced' && selectedString.price > 0;
 
   return (
     <AppScreen
@@ -365,11 +366,12 @@ export default function NewBookingScreen() {
             accessibilityRole="button"
             accessibilityLabel="Choose string"
             onPress={() => setIsStringPickerOpen((current) => !current)}
-            className="h-11 w-11 items-center justify-center rounded-[16px] border border-primary-100 bg-white"
+            className="h-11 w-11 items-center justify-center rounded-[16px] border border-primary-600 bg-primary-600 shadow-soft"
           >
             <ChevronDown
-              size={18}
-              color="#2563EB"
+              size={20}
+              color="#FFFFFF"
+              strokeWidth={2.7}
               style={{ transform: [{ rotate: isStringPickerOpen ? '180deg' : '0deg' }] }}
             />
           </Pressable>
@@ -377,6 +379,9 @@ export default function NewBookingScreen() {
         <View className="mt-3 flex-row flex-wrap gap-2">
           <AppChip label={selectedString.gauge} variant="neutral" />
           <AppChip label={selectedCategoryLabel} variant="primary" />
+          {selectedStringHasPrice ? (
+            <AppChip label={formatCurrency(selectedString.price)} variant="secondary" />
+          ) : null}
         </View>
 
         {isStringPickerOpen ? (
@@ -387,6 +392,7 @@ export default function NewBookingScreen() {
             <View className="gap-2">
               {strings.map((item) => {
                 const isSelected = item.id === selectedString.id;
+                const shouldShowPrice = item.priceStatus === 'priced' && item.price > 0;
 
                 return (
                   <Pressable
@@ -417,7 +423,14 @@ export default function NewBookingScreen() {
                           {item.gauge} · {item.category}
                         </HeroText>
                       </View>
-                      {isSelected ? <AppChip label="Selected" variant="primary" /> : null}
+                      <View className="items-end gap-2">
+                        {shouldShowPrice ? (
+                          <HeroText className="text-[13px] font-bold text-slate-900">
+                            {formatCurrency(item.price)}
+                          </HeroText>
+                        ) : null}
+                        {isSelected ? <AppChip label="Selected" variant="primary" /> : null}
+                      </View>
                     </View>
                   </Pressable>
                 );
