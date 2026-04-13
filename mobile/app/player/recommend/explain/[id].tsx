@@ -8,6 +8,7 @@ import { AppChip } from '../../../../components/ui/AppChip';
 import { AppScreen } from '../../../../components/shared/AppScreen';
 import { AppSection } from '../../../../components/shared/AppSection';
 import {
+  useAppStore,
   useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
@@ -192,6 +193,22 @@ function budgetLabel(
   return `${formatCurrency(price)} against your RM${minimum.toFixed(0)}–RM${maximum.toFixed(0)} target range.`;
 }
 
+function buildDecisionSummary({
+  priorities,
+  strongestReason,
+  tradeOff,
+}: {
+  priorities: string[];
+  strongestReason: string;
+  tradeOff: string;
+}) {
+  const topTwo = priorities.slice(0, 2).join(' and ').toLowerCase();
+  const emphasis = topTwo || 'your saved priorities';
+  const firstClause = strongestReason.replace(/\.$/, '');
+  const tradeOffClause = tradeOff.replace(/\.$/, '');
+  return `${firstClause}. Best if you want stronger ${emphasis} without losing sight of the main trade-off: ${tradeOffClause.toLowerCase()}.`;
+}
+
 export default function RecommendationExplanationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -199,6 +216,8 @@ export default function RecommendationExplanationScreen() {
   const token = useBackendAccessToken();
   const strings = useStrings();
   const liveResults = useLiveRecommendationResults();
+  const compareSelection = useAppStore((state) => state.compareSelection);
+  const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
   const [backendDetail, setBackendDetail] = useState<BackendRecommendationResult | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
 
@@ -240,11 +259,12 @@ export default function RecommendationExplanationScreen() {
   const topPriorities = Object.entries(user?.role === 'player' ? user.priorities : {})
     .sort((left, right) => right[1] - left[1])
     .slice(0, 3);
+  const topPriorityLabels = topPriorities.map(([key]) => humanizeFeature(key));
   const priorityLine =
-    topPriorities.length > 0
-      ? topPriorities.map(([key]) => humanizeFeature(key)).join(', ')
+    topPriorityLabels.length > 0
+      ? topPriorityLabels.join(', ')
       : 'your saved priorities';
-  const featureEvidence = (rationale?.feature_evidence ?? []).slice(0, 4);
+  const featureEvidence = (rationale?.feature_evidence ?? []).slice(0, 3);
   const nlpEvidence = featureEvidence.filter((entry) => (entry.nlp_influence ?? 0) > 0);
   const strongestReason =
     liveResult?.reasons[0] ??
@@ -254,6 +274,18 @@ export default function RecommendationExplanationScreen() {
     liveResult?.reasons[1] ??
     detailResult?.reasons?.[1] ??
     'The strongest weighted parts of your profile are carrying this recommendation.';
+  const decisionSummary = buildDecisionSummary({
+    priorities: topPriorityLabels,
+    strongestReason,
+    tradeOff,
+  });
+  const isCompared = stringItem ? compareSelection.includes(stringItem.id) : false;
+  const canOpenCompare = compareSelection.length >= 2 && isCompared;
+  const compareButtonLabel = canOpenCompare
+    ? 'Open compare'
+    : isCompared
+      ? 'Selected for compare'
+      : 'Add to compare';
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -356,6 +388,9 @@ export default function RecommendationExplanationScreen() {
             Best reason
           </HeroText>
           <HeroText className="mt-2 text-base font-bold leading-6 text-white">{strongestReason}</HeroText>
+          <HeroText className="mt-3 text-sm leading-6 text-primary-100">
+            {decisionSummary}
+          </HeroText>
         </View>
       </AppCard>
 
@@ -368,20 +403,10 @@ export default function RecommendationExplanationScreen() {
       ) : null}
 
       <AppSection eyebrow="Verdict" title="Why it landed here">
-        <View className="gap-3">
-          <AppCard variant="highlighted" padding="md" className="rounded-[28px]">
-            <HeroText className="text-base font-bold text-neutral-950">{strongestReason}</HeroText>
-            <HeroText className="mt-3 text-sm leading-6 text-neutral-600">{tradeOff}</HeroText>
-          </AppCard>
-          <AppCard variant="elevated" padding="md" className="rounded-[28px]">
-            <HeroText className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-400">
-              Profile read
-            </HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-600">
-              {followUpReason}. Your current setup leans most heavily on {priorityLine.toLowerCase()}, so this string is being rewarded where those priorities overlap.
-            </HeroText>
-          </AppCard>
-        </View>
+        <AppCard variant="highlighted" padding="md" className="rounded-[28px]">
+          <HeroText className="text-base font-bold text-neutral-950">{strongestReason}</HeroText>
+          <HeroText className="mt-3 text-sm leading-6 text-neutral-600">{decisionSummary}</HeroText>
+        </AppCard>
       </AppSection>
 
       {scoreBreakdown ? (
@@ -426,20 +451,15 @@ export default function RecommendationExplanationScreen() {
           <AppCard variant="elevated" padding="md" className="rounded-[28px]">
             <HeroText className="text-base font-semibold text-neutral-950">Priority fit</HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              Your top weighted priorities are {priorityLine.toLowerCase()}. This string stays competitive across those areas, which is why it survives both the profile score and the badminton rule pass.
+              {followUpReason}. Your top weighted priorities are {priorityLine.toLowerCase()}, so this string stays competitive in the exact areas most likely to drive your feel on court.
             </HeroText>
           </AppCard>
 
           <AppCard variant="elevated" padding="md" className="rounded-[28px]">
-            <HeroText className="text-base font-semibold text-neutral-950">Tension fit</HeroText>
+            <HeroText className="text-base font-semibold text-neutral-950">Setup fit</HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              Suggested tension range is {suggestedTensionRange}. Your saved {user.preferredTension} lbs setup sits inside that window, so this option should feel coherent with your current hitting setup.
+              Suggested tension range is {suggestedTensionRange}. Your saved {user.preferredTension} lbs setup sits inside that window, and the main thing to watch is this trade-off: {tradeOff.toLowerCase()}
             </HeroText>
-          </AppCard>
-
-          <AppCard variant="elevated" padding="md" className="rounded-[28px]">
-            <HeroText className="text-base font-semibold text-neutral-950">Trade-off watch</HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">{tradeOff}</HeroText>
           </AppCard>
         </View>
       </AppSection>
@@ -452,7 +472,7 @@ export default function RecommendationExplanationScreen() {
                 {rationale?.nlp_review_summary ?? 'Review-derived signals are reinforcing this recommendation.'}
               </HeroText>
               <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
-                The NLP layer is not replacing your profile. It acts as extra evidence for the features most likely to matter for your current style and feel preference.
+                The NLP layer does not replace your profile. It strengthens the feature signals most likely to matter for your current style and feel preference.
               </HeroText>
             </AppCard>
 
@@ -474,7 +494,7 @@ export default function RecommendationExplanationScreen() {
       {rationale?.rule_events?.length ? (
         <AppSection eyebrow="Rules" title="Badminton rule events">
           <View className="gap-3">
-            {rationale.rule_events.slice(0, 4).map((event, index) => (
+            {rationale.rule_events.slice(0, 3).map((event, index) => (
               <AppCard key={`${event.rule ?? 'rule'}-${index}`} variant="elevated" padding="sm" className="rounded-[24px]">
                 <View className="flex-row items-start justify-between gap-3">
                   <View className="flex-1">
@@ -502,31 +522,37 @@ export default function RecommendationExplanationScreen() {
         </AppSection>
       ) : null}
 
-      {featureEvidence.length > 0 ? (
-        <AppSection eyebrow="Source blend" title="Where the scores came from">
-          <View className="flex-row flex-wrap gap-2">
-            {featureEvidence.map((entry, index) => (
-              <AppChip
-                key={`${entry.feature_key ?? 'source'}-${index}`}
-                label={`${entry.display_label ?? humanizeFeature(entry.feature_key ?? 'Feature')} · ${humanizeSource(entry.source)}`}
-                variant="neutral"
-              />
-            ))}
-          </View>
-        </AppSection>
-      ) : null}
-
       <AppSection eyebrow="Next step" title="How to continue">
         <View className="gap-3">
-          <View className="flex-row flex-wrap gap-2">
-            <AppChip label="Compare with shortlist" variant="neutral" />
-            <AppChip label="Open string detail" variant="secondary" />
-            <AppChip label="Book from here" variant="primary" />
+          <View className="flex-row gap-3">
+            <AppButton
+              label={compareButtonLabel}
+              variant={canOpenCompare ? 'secondary' : 'outline'}
+              className="flex-1"
+              isDisabled={!stringItem || (isCompared && !canOpenCompare)}
+              onPress={() => {
+                if (!stringItem) {
+                  return;
+                }
+                if (canOpenCompare) {
+                  router.push('/player/strings/compare');
+                  return;
+                }
+                toggleCompareSelection(stringItem.id);
+              }}
+            />
+            <AppButton
+              label="Open string detail"
+              variant="outline"
+              className="flex-1"
+              isDisabled={!stringItem}
+              onPress={() => stringItem ? router.push(`/player/strings/${stringItem.id}`) : undefined}
+            />
           </View>
 
           <AppCard variant="subtle" padding="md" className="rounded-[28px]">
             <HeroText className="text-sm leading-6 text-neutral-600">
-              Use this page when you need confidence, not just ranking. If the fit story looks right and the trade-off feels acceptable, go straight to booking. If not, bounce back to results and compare one more option side by side.
+              Use this page when you need confidence, not just ranking. If the fit story looks right, book it. If not, send it to compare and sanity-check it against one more shortlist option.
             </HeroText>
           </AppCard>
         </View>
