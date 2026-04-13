@@ -231,9 +231,21 @@ export interface RecommendationRationalePayload {
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
+  feature_evidence?: Array<{
+    feature_key?: string;
+    display_label?: string;
+    effective_score?: number | null;
+    preference_weight?: number | null;
+    source?: string;
+    official_score?: number | null;
+    nlp_review_score?: number | null;
+    nlp_influence?: number | null;
+  }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
   nlp_review_scores?: Record<string, number>;
+  nlp_review_signal_count?: number;
+  nlp_review_summary?: string | null;
   auxiliary_scores?: Record<string, number>;
   user_preference_vector?: Array<{
     feature_key?: string;

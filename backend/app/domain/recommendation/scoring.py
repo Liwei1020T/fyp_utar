@@ -77,9 +77,19 @@ class HybridRecommendationScorer:
         scored: list[ScoredRecommendation] = []
         for candidate in candidates:
             effective_scores, feature_sources = _effective_item_features(candidate)
+            feature_evidence = _build_feature_evidence(
+                candidate=candidate,
+                effective_scores=effective_scores,
+                feature_sources=feature_sources,
+                preference_rows=preference_vector_rows,
+            )
             auxiliary_scores = _auxiliary_scores(candidate)
             preference_match = _preference_match_score(
                 effective_scores=effective_scores,
+                preference_rows=preference_vector_rows,
+            )
+            nlp_review_score = _nlp_review_alignment_score(
+                feature_evidence=feature_evidence,
                 preference_rows=preference_vector_rows,
             )
             budget_fit = _budget_fit_score(
@@ -113,6 +123,8 @@ class HybridRecommendationScorer:
                 "budget_fit": round(budget_fit, 4),
                 "final_score": final_score,
             }
+            if nlp_review_score is not None:
+                breakdown["nlp_review_score"] = round(nlp_review_score, 4)
             fit_angle = _primary_fit_angle(effective_scores, auxiliary_scores, request)
             rationale_payload = {
                 "catalog_id": candidate.item.id,
@@ -128,6 +140,7 @@ class HybridRecommendationScorer:
                 "top_reasons": reasons,
                 "score_breakdown": breakdown,
                 "feature_sources": feature_sources,
+                "feature_evidence": feature_evidence,
                 "effective_feature_scores": {
                     key: round(value, 4) for key, value in effective_scores.items()
                 },
@@ -151,6 +164,14 @@ class HybridRecommendationScorer:
                         "nlp_review", {}
                     ).items()
                 },
+                "nlp_review_signal_count": sum(
+                    [
+                        1
+                        for row in feature_evidence
+                        if (_to_float(row.get("nlp_influence")) or 0) > 0
+                    ]
+                ),
+                "nlp_review_summary": _nlp_review_summary(feature_evidence),
                 "budget": {
                     "price_rm": candidate.item.price_rm,
                     "budget_min": request.budget_min,
@@ -189,7 +210,7 @@ class HybridRecommendationScorer:
                         "preference_match_score": breakdown["preference_match"],
                         "rule_fit_score": breakdown["rule_fit"],
                         "budget_fit_score": breakdown["budget_fit"],
-                        "nlp_review_score": None,
+                        "nlp_review_score": breakdown.get("nlp_review_score"),
                         "final_score": final_score,
                         "rank_position": 0,
                         "rationale": rationale_payload,
@@ -304,6 +325,125 @@ def _auxiliary_scores(candidate: RecommendationCandidateModel) -> dict[str, floa
             if feature_key in OPTIONAL_AUXILIARY_FEATURES and feature_key not in scores:
                 scores[feature_key] = value
     return scores
+
+
+def _build_feature_evidence(
+    *,
+    candidate: RecommendationCandidateModel,
+    effective_scores: dict[str, float],
+    feature_sources: dict[str, str],
+    preference_rows: list[dict[str, float | str | None]],
+) -> list[dict[str, object]]:
+    display_labels = {
+        "repulsion": "Repulsion",
+        "comfort": "Comfort",
+        "control": "Control",
+        "durability": "Durability",
+        "sound": "Hitting sound",
+    }
+    official_scores = _official_feature_scores(candidate.item)
+    nlp_scores = candidate.matrix_by_source.get("nlp_review", {})
+    preference_weights = {
+        str(row["feature_key"]): round(float(row.get("preference_weight") or 0), 4)
+        for row in preference_rows
+    }
+    rows: list[dict[str, object]] = []
+
+    for feature_key in PRIMARY_FEATURES:
+        source = feature_sources.get(feature_key, "neutral_fallback")
+        nlp_influence = 0.0
+        if source == "official_performance+nlp_review":
+            nlp_influence = 0.35
+        elif source == "nlp_review":
+            nlp_influence = 1.0
+
+        official_score = official_scores.get(feature_key)
+        nlp_score = _nlp_feature_score(nlp_scores, feature_key)
+        rows.append(
+            {
+                "feature_key": feature_key,
+                "display_label": display_labels[feature_key],
+                "effective_score": round(effective_scores.get(feature_key, 0.5), 4),
+                "preference_weight": preference_weights.get(feature_key, 0.0),
+                "source": source,
+                "official_score": round(official_score, 4)
+                if official_score is not None
+                else None,
+                "nlp_review_score": round(nlp_score, 4)
+                if nlp_score is not None
+                else None,
+                "nlp_influence": round(nlp_influence, 4),
+            }
+        )
+
+    rows.sort(
+        key=lambda row: (
+            -(_to_float(row.get("preference_weight")) or 0)
+            * (_to_float(row.get("effective_score")) or 0),
+            -(_to_float(row.get("effective_score")) or 0),
+        )
+    )
+    return rows
+
+
+def _nlp_review_alignment_score(
+    *,
+    feature_evidence: list[dict[str, object]],
+    preference_rows: list[dict[str, float | str | None]],
+) -> float | None:
+    total_primary_weight = sum(
+        float(row.get("preference_weight") or 0)
+        for row in preference_rows
+        if str(row["feature_key"]) in PRIMARY_FEATURES
+    )
+    if total_primary_weight <= 0:
+        return None
+
+    weighted_total = 0.0
+    has_nlp_signal = False
+    for row in feature_evidence:
+        nlp_score = _to_float(row.get("nlp_review_score"))
+        nlp_influence = _to_float(row.get("nlp_influence")) or 0
+        if nlp_score is None or nlp_influence <= 0:
+            continue
+        has_nlp_signal = True
+        weighted_total += (
+            nlp_score
+            * (_to_float(row.get("preference_weight")) or 0)
+            * nlp_influence
+        )
+
+    if not has_nlp_signal:
+        return None
+    return clamp01(weighted_total / total_primary_weight)
+
+
+def _nlp_review_summary(feature_evidence: list[dict[str, object]]) -> str | None:
+    backed_rows = [
+        row
+        for row in feature_evidence
+        if _to_float(row.get("nlp_review_score")) is not None
+        and (_to_float(row.get("nlp_influence")) or 0) > 0
+    ]
+    if not backed_rows:
+        return None
+
+    ranked = sorted(
+        backed_rows,
+        key=lambda row: (
+            -(_to_float(row.get("preference_weight")) or 0)
+            * (_to_float(row.get("nlp_influence")) or 0)
+            * (_to_float(row.get("nlp_review_score")) or 0),
+            -(_to_float(row.get("nlp_review_score")) or 0),
+        ),
+    )
+    labels = [str(row.get("display_label") or row.get("feature_key")) for row in ranked[:2]]
+    if len(labels) == 1:
+        return f"Review-derived signals mainly reinforce {labels[0].lower()} for this profile."
+    return (
+        f"Review-derived signals reinforce {labels[0].lower()} and {labels[1].lower()} "
+        "for this profile."
+    )
 
 
 def _preference_match_score(
@@ -554,6 +694,19 @@ def _unique(values: list[str]) -> list[str]:
             seen.add(value)
             ordered.append(value)
     return ordered
+
+
+def _to_float(value: object) -> float | None:
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, int | float):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
 
 
 def clamp01(value: float) -> float:

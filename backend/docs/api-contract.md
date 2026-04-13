@@ -301,6 +301,7 @@ Recommendation response:
         "preference_match": 0.82,
         "rule_fit": 0.75,
         "budget_fit": 0.93,
+        "nlp_review_score": 0.71,
         "final_score": 0.84
       },
       "rationale_payload": {
@@ -308,6 +309,20 @@ Recommendation response:
           "repulsion": "nlp_review",
           "control": "nlp_review"
         },
+        "feature_evidence": [
+          {
+            "feature_key": "repulsion",
+            "display_label": "Repulsion",
+            "effective_score": 0.81,
+            "preference_weight": 0.1935,
+            "source": "official_performance+nlp_review",
+            "official_score": 0.77,
+            "nlp_review_score": 0.88,
+            "nlp_influence": 0.35
+          }
+        ],
+        "nlp_review_signal_count": 2,
+        "nlp_review_summary": "Review-derived signals reinforce repulsion and sound for this profile.",
         "user_preference_vector": [
           { "feature_key": "repulsion", "raw_score": 6, "preference_weight": 0.1935 }
         ],
@@ -324,6 +339,8 @@ Recommendation response:
 ```
 
 `budget_fit` reflects price alignment against the user's selected budget range. It is not derived from a separate `value_for_money` runtime score.
+
+`nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
 
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
 

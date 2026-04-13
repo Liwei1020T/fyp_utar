@@ -198,6 +198,14 @@ def test_hybrid_scorer_uses_required_formula_and_explainability() -> None:
     assert result.score == pytest.approx(expected, abs=1e-4)
     assert result.catalog_id == "yonex-bg80"
     assert "score_breakdown" in (result.rationale_payload or {})
+    assert breakdown["nlp_review_score"] == pytest.approx(0.7353, abs=1e-4)
+    assert (result.rationale_payload or {})["nlp_review_signal_count"] >= 2
+    assert "review-derived signals reinforce" in str(
+        (result.rationale_payload or {}).get("nlp_review_summary", "")
+    ).lower()
+    feature_evidence = (result.rationale_payload or {}).get("feature_evidence") or []
+    assert feature_evidence
+    assert any(row.get("source") == "nlp_review" for row in feature_evidence)
     assert any("power and rebound" in reason.lower() for reason in result.reasons)
 
 
@@ -260,6 +268,9 @@ def test_cached_recommendation_detail_returns_rationale() -> None:
     assert detail.result.catalog_id == "yonex-bg80"
     assert detail.result.rationale_payload is not None
     assert detail.result.score_breakdown is not None
+    assert detail.result.score_breakdown["nlp_review_score"] == pytest.approx(
+        0.7353, abs=1e-4
+    )
     assert detail.result.score_breakdown["final_score"] == detail.result.score
 
 
@@ -320,7 +331,12 @@ def _string_item(
         gauge_main_mm=gauge_main_mm,
         gauge_cross_mm=None,
         gauge_label=f"{gauge_main_mm:.2f} mm",
+        category="repulsion",
+        main_trait="Crisp response",
+        tension_min_lbs=22,
+        tension_max_lbs=29,
         material_summary_en="Nylon multifilament",
+        image_url=None,
         color_options_en=["White"],
         short_description="Short description",
         full_description="Full description",
@@ -347,6 +363,8 @@ def _string_item(
             reorder_quantity=8,
             cost_price=None,
             selling_price=price_rm,
+            pricing_mode="fixed_price",
+            availability_status="in_stock",
             is_active=True,
             latest_note=None,
             updated_at=None,
