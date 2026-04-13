@@ -6,6 +6,7 @@ interface AppChipProps extends Omit<HeroChipProps, 'children' | 'variant'> {
   label: string;
   variant?: AppChipVariant;
   className?: string;
+  textClassName?: string;
   onPress?: () => void;
   size?: 'sm' | 'md';
 }
@@ -26,6 +27,7 @@ export function AppChip({
   label,
   variant = 'neutral',
   className,
+  textClassName,
   onPress,
   size = 'sm',
   ...props
@@ -73,7 +75,7 @@ export function AppChip({
       onPress={onPress}
       {...props}
     >
-      <HeroText className={textStyles[variant]}>
+      <HeroText className={cn(textStyles[variant], textClassName)}>
         {label}
       </HeroText>
     </HeroChip>

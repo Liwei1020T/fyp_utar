@@ -279,15 +279,15 @@ export default function StringDetailScreen() {
         <View className="p-6">
           <View className="flex-row justify-between items-start">
             <View className="flex-1 mr-4">
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
+              <HeroText className="text-[11px] font-bold uppercase tracking-[0.24em] text-secondary-100">
                 {selectedString.brand}
               </HeroText>
-              <HeroText className="mt-1 text-[32px] font-bold tracking-tight text-white">
+              <HeroText className="mt-1 text-[32px] font-black tracking-tight text-white">
                 {selectedString.model}
               </HeroText>
             </View>
             {liveResult && (
-              <View className="bg-primary-500 px-3 py-1.5 rounded-full flex-row items-center gap-1.5 shadow-glow">
+              <View className="rounded-full border border-white/12 bg-primary-600 px-3 py-1.5 flex-row items-center gap-1.5 shadow-soft">
                 <Sparkles size={12} color="white" />
                 <HeroText className="text-[10px] font-bold text-white uppercase tracking-wider">
                   {(liveResult.matchScore * 100).toFixed(0)}% MATCH
@@ -302,13 +302,30 @@ export default function StringDetailScreen() {
                 <Star key={item} size={14} color="#FBBF24" fill={item <= 4 ? "#FBBF24" : "transparent"} />
               ))}
             </View>
-            <HeroText className="text-xs font-medium text-primary-100">{selectedString.reviewHighlight}</HeroText>
+            <HeroText className="text-[13px] font-semibold leading-5 text-white">
+              {selectedString.reviewHighlight}
+            </HeroText>
           </View>
 
           <View className="mt-6 flex-row flex-wrap gap-2">
-            <AppChip label={formatLabel(selectedString.category)} variant="neutral" className="bg-white/10 border-white/20" />
-            <AppChip label={selectedString.gauge} variant="neutral" className="bg-white/10 border-white/20" />
-            <AppChip label={`${selectedString.recommendedTension[0]}-${selectedString.recommendedTension[1]} lbs`} variant="neutral" className="bg-white/10 border-white/20" />
+            <AppChip
+              label={formatLabel(selectedString.category)}
+              variant="neutral"
+              className="border-white/18 bg-white/14"
+              textClassName="text-white font-semibold text-xs"
+            />
+            <AppChip
+              label={selectedString.gauge}
+              variant="neutral"
+              className="border-white/18 bg-white/14"
+              textClassName="text-white font-semibold text-xs"
+            />
+            <AppChip
+              label={`${selectedString.recommendedTension[0]}-${selectedString.recommendedTension[1]} lbs`}
+              variant="neutral"
+              className="border-white/18 bg-white/14"
+              textClassName="text-white font-semibold text-xs"
+            />
           </View>
         </View>
       </AppCard>

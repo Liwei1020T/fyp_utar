@@ -11,6 +11,7 @@ import {
 } from 'heroui-native';
 import {
   Text,
+  Platform,
   type View as RNView,
   type TextInput as RNTextInput,
   type Text as RNText,
@@ -30,10 +31,20 @@ export interface HeroTextProps extends TextProps {
 }
 
 export const HeroText = React.forwardRef<RNText, HeroTextProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <NativeText
       ref={ref}
       className={cn('font-normal text-foreground', className)}
+      style={[
+        Platform.OS === 'web'
+          ? ({
+              textRendering: 'optimizeLegibility',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale',
+            } as any)
+          : undefined,
+        style,
+      ]}
       {...props}
     />
   ),
