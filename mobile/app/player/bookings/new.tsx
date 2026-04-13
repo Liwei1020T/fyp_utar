@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CalendarClock, ChevronDown, Minus, Plus, Store, Upload } from 'lucide-react-native';
+import { CalendarClock, ChevronDown, ChevronUp, Minus, Plus, Store, Upload } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -368,12 +368,11 @@ export default function NewBookingScreen() {
             onPress={() => setIsStringPickerOpen((current) => !current)}
             className="h-11 w-11 items-center justify-center rounded-[16px] border border-primary-600 bg-primary-600 shadow-soft"
           >
-            <ChevronDown
-              size={20}
-              color="#FFFFFF"
-              strokeWidth={2.7}
-              style={{ transform: [{ rotate: isStringPickerOpen ? '180deg' : '0deg' }] }}
-            />
+            {isStringPickerOpen ? (
+              <ChevronUp size={20} color="#FFFFFF" strokeWidth={2.7} />
+            ) : (
+              <ChevronDown size={20} color="#FFFFFF" strokeWidth={2.7} />
+            )}
           </Pressable>
         </View>
         <View className="mt-3 flex-row flex-wrap gap-2">
