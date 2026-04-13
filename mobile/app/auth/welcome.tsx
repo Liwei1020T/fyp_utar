@@ -8,7 +8,6 @@ import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { HeroText } from '../../components/ui/heroui';
 import { appChromeColors } from '../../components/ui/theme';
-import { useAppStore } from '../../store/appStore';
 
 const roleCards = [
   {
@@ -31,28 +30,17 @@ const roleCards = [
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const loginAsUser = useAppStore((state) => state.loginAsUser);
 
   return (
     <AuthShell
       eyebrow="FYP demo access"
       title="Log in to StringSense"
-      subtitle="Choose a demo workspace to continue with the mobile app."
+      subtitle="Choose a workspace, then continue with a backend-backed login."
       footer={
         <View className="items-center gap-3">
           <Pressable onPress={() => router.push('/auth/register')}>
             <HeroText className="text-sm font-semibold text-primary-700">
               New player? Create an account
-            </HeroText>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              loginAsUser('player-001');
-              router.replace('/player');
-            }}
-          >
-            <HeroText className="text-sm text-neutral-500">
-              Quick demo as player
             </HeroText>
           </Pressable>
         </View>
@@ -92,7 +80,7 @@ export default function WelcomeScreen() {
         />
         <View className="items-center">
           <AppChip
-            label="Player and admin demo accounts are pre-configured"
+            label="Player and admin backend accounts are pre-configured"
             variant="neutral"
           />
         </View>
