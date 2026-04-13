@@ -121,6 +121,7 @@ DEFAULT_STORE_SETTINGS = {
         "Reschedule or cancellation is allowed before the admin starts work on the racket."
     ),
     "address": "Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur",
+    "trending_string_ids": [],
 }
 
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import DateTime
+from sqlalchemy import JSON
 from sqlalchemy import String as SAString
 from sqlalchemy import Text
 from sqlalchemy import func
@@ -23,6 +24,7 @@ class StoreSettings(Base):
     booking_notes: Mapped[str] = mapped_column(Text)
     store_policy_text: Mapped[str] = mapped_column(Text)
     address: Mapped[str] = mapped_column(Text)
+    trending_string_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -32,4 +34,3 @@ class StoreSettings(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
-

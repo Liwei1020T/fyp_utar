@@ -990,6 +990,31 @@ export function useRoleHome() {
   return user ? getRoleHome(user.role) : '/auth/welcome';
 }
 
+export function usePreferredAdminId() {
+  const user = useCurrentUser();
+  const sessionSource = useAppStore((state) => state.sessionSource);
+  const adminSettings = useAppStore((state) => state.adminSettings);
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.role === 'admin') {
+    return user.id;
+  }
+
+  const matchingSetting = adminSettings.find((item) => item.adminId === user.preferredAdminId);
+  if (matchingSetting) {
+    return matchingSetting.adminId;
+  }
+
+  if (sessionSource === 'backend') {
+    return adminSettings[0]?.adminId ?? user.preferredAdminId;
+  }
+
+  return user.preferredAdminId;
+}
+
 export function useBookings() {
   const sessionSource = useAppStore((state) => state.sessionSource);
   const liveBookings = useAppStore((state) => state.liveBookings);

@@ -323,6 +323,7 @@ def to_store_settings(settings: StoreSettings) -> StoreSettingsRecord:
         booking_notes=settings.booking_notes,
         store_policy_text=settings.store_policy_text,
         address=settings.address,
+        trending_string_ids=list(settings.trending_string_ids or []),
         updated_at=settings.updated_at.isoformat() if settings.updated_at else None,
     )
 

@@ -118,6 +118,15 @@ class StoreSettingsPayload(BaseModel):
     booking_notes: str = Field(min_length=1, max_length=2000)
     store_policy_text: str = Field(min_length=1, max_length=2000)
     address: str = Field(min_length=1, max_length=500)
+    trending_string_ids: list[str] = Field(default_factory=list, max_length=5)
+
+    @model_validator(mode="after")
+    def validate_trending_string_ids(self) -> "StoreSettingsPayload":
+        normalized = [value.strip() for value in self.trending_string_ids if value.strip()]
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("trending_string_ids must not contain duplicates")
+        self.trending_string_ids = normalized
+        return self
 
 
 class StoreSettingsOut(StoreSettingsPayload):
@@ -171,6 +180,7 @@ def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
         booking_notes=settings.booking_notes,
         store_policy_text=settings.store_policy_text,
         address=settings.address,
+        trending_string_ids=settings.trending_string_ids,
         updated_at=settings.updated_at,
     )
 

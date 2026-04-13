@@ -653,6 +653,8 @@ def test_admin_business_hours_settings_and_slots_flow():
     )
     assert settings_response.status_code == 200
     assert settings_response.json()["store_name"] == "Apex String Lab"
+    assert settings_response.json()["trending_string_ids"] == []
+    featured_string_id = first_string_id(admin_token)
 
     update_settings_response = client.put(
         "/api/admin/store-settings",
@@ -665,10 +667,12 @@ def test_admin_business_hours_settings_and_slots_flow():
             "booking_notes": "Slots are capped by configured store capacity.",
             "store_policy_text": "Completed bookings are final after collection.",
             "address": "Bukit Jalil, Kuala Lumpur",
+            "trending_string_ids": [featured_string_id],
         },
     )
     assert update_settings_response.status_code == 200
     assert update_settings_response.json()["store_name"] == "Apex String Lab Express"
+    assert update_settings_response.json()["trending_string_ids"] == [featured_string_id]
 
 
 def test_admin_check_in_and_service_queue_flow():

@@ -635,6 +635,7 @@ export default function AdminInventoryDetailScreen() {
   const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
   const updateStringItem = useAppStore((state) => state.updateStringItem);
   const stringItem = strings.find((item) => item.id === params.id);
+  const currentSettings = adminSettings.find((item) => item.adminId === currentUser?.id);
 
   const [form, setForm] = useState<InventoryFormState | null>(
     stringItem ? toFormState(stringItem) : null,
@@ -650,6 +651,7 @@ export default function AdminInventoryDetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
   const [isHydrating, setIsHydrating] = useState(false);
+  const [isUpdatingHomePlacement, setIsUpdatingHomePlacement] = useState(false);
   const [pendingImageUpload, setPendingImageUpload] = useState<{
     uri: string;
     name: string;
@@ -841,11 +843,10 @@ export default function AdminInventoryDetailScreen() {
 
   const backendSyncEnabled = sessionSource === 'backend' && Boolean(token);
   const summaryPrice = getInventoryPriceLabel(previewItem);
-  const trendingStringIds =
-    adminSettings.find((item) => item.adminId === currentUser?.id)?.trendingStringIds ?? [];
+  const trendingStringIds = currentSettings?.trendingStringIds ?? [];
   const isTrendingOnHome = trendingStringIds.includes(stringItem.id);
 
-  const toggleTrendingPlacement = () => {
+  const toggleTrendingPlacement = async () => {
     if (!currentUser || currentUser.role !== 'admin') {
       return;
     }
@@ -854,13 +855,52 @@ export default function AdminInventoryDetailScreen() {
       ? trendingStringIds.filter((id) => id !== stringItem.id)
       : [...trendingStringIds.filter((id) => id !== stringItem.id).slice(-4), stringItem.id];
 
-    updateAdminSettings(currentUser.id, { trendingStringIds: nextTrending });
-    setStatusBanner({
-      tone: 'success',
-      message: isTrendingOnHome
-        ? 'Removed from the player home Trending Strings section.'
-        : 'Added to the player home Trending Strings section.',
-    });
+    setIsUpdatingHomePlacement(true);
+    setStatusBanner(null);
+    try {
+      if (token && currentSettings) {
+        const response = await backendApi.adminUpdateStoreSettings(token, {
+          store_name: currentSettings.storeName,
+          store_contact: currentSettings.storeContact,
+          support_text: currentSettings.supportText,
+          payment_notes: currentSettings.paymentNotes,
+          booking_notes: currentSettings.bookingNotes,
+          store_policy_text: currentSettings.storePolicyText,
+          address: currentSettings.address,
+          trending_string_ids: nextTrending,
+        });
+
+        updateAdminSettings(currentUser.id, {
+          storeName: response.store_name,
+          storeContact: response.store_contact,
+          supportText: response.support_text,
+          paymentNotes: response.payment_notes,
+          bookingNotes: response.booking_notes,
+          storePolicyText: response.store_policy_text,
+          address: response.address,
+          trendingStringIds: response.trending_string_ids ?? nextTrending,
+        });
+      } else {
+        updateAdminSettings(currentUser.id, { trendingStringIds: nextTrending });
+      }
+
+      setStatusBanner({
+        tone: 'success',
+        message: isTrendingOnHome
+          ? 'Removed from the player home Trending Strings section.'
+          : 'Added to the player home Trending Strings section.',
+      });
+    } catch (error) {
+      setStatusBanner({
+        tone: 'error',
+        message:
+          error instanceof BackendApiError
+            ? error.message
+            : 'Failed to update the player home placement.',
+      });
+    } finally {
+      setIsUpdatingHomePlacement(false);
+    }
   };
 
   const setField = <K extends keyof InventoryFormState>(
@@ -1107,7 +1147,8 @@ export default function AdminInventoryDetailScreen() {
               label={isTrendingOnHome ? 'Remove from home' : 'Show on home'}
               size="sm"
               variant={isTrendingOnHome ? 'secondary' : 'primary'}
-              onPress={toggleTrendingPlacement}
+              onPress={() => void toggleTrendingPlacement()}
+              isLoading={isUpdatingHomePlacement}
             />
             <HeroText className="self-center text-xs font-medium text-slate-500">
               Featured strings appear in the player home Trending Strings carousel.

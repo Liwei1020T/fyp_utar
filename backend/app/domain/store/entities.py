@@ -35,6 +35,7 @@ class StoreSettingsRecord:
     booking_notes: str
     store_policy_text: str
     address: str
+    trending_string_ids: list[str]
     updated_at: str | None
 
 
@@ -103,4 +104,3 @@ class PopularString:
     brand: str
     model_name: str
     booking_count: int
-

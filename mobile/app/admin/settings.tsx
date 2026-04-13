@@ -91,6 +91,7 @@ export default function AdminSettingsScreen() {
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
+          trendingStringIds: response.trending_string_ids ?? [],
         });
       } catch (loadError) {
         if (!cancelled) {
@@ -127,6 +128,7 @@ export default function AdminSettingsScreen() {
           booking_notes: bookingNotes,
           store_policy_text: policyText,
           address,
+          trending_string_ids: trendingStringIds,
         });
         updateAdminSettings(user.id, {
           storeName: response.store_name,
@@ -136,7 +138,7 @@ export default function AdminSettingsScreen() {
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
-          trendingStringIds,
+          trendingStringIds: response.trending_string_ids ?? trendingStringIds,
         });
       } else {
         updateAdminSettings(user.id, {

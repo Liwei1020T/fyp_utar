@@ -332,6 +332,7 @@ export interface BackendStoreSettings {
   booking_notes: string;
   store_policy_text: string;
   address: string;
+  trending_string_ids: string[];
   updated_at: string | null;
 }
 
@@ -343,6 +344,7 @@ export interface BackendStoreSettingsPayload {
   booking_notes: string;
   store_policy_text: string;
   address: string;
+  trending_string_ids: string[];
 }
 
 export interface BackendAnalyticsWorkloadEntry {
