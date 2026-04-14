@@ -35,8 +35,6 @@ class Profile(Base):
     skill_level: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     playing_style: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     budget_tier: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
-    budget_min: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
-    budget_max: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     preferred_tension: Mapped[float | None] = mapped_column(
         Numeric(4, 1),
         nullable=True,

@@ -3,7 +3,6 @@ from __future__ import annotations
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 
 from app.domain.profile.entities import PlayerProfile
 from app.shared.serialization import isoformat_or_none
@@ -24,8 +23,6 @@ class ProfilePayload(BaseModel):
         default=None,
         pattern="^(below_30|between_30_50|above_50)$",
     )
-    budget_min: float | None = Field(default=None, ge=0, le=999)
-    budget_max: float | None = Field(default=None, ge=0, le=999)
     preferred_tension: float | None = Field(default=None, ge=16, le=35)
     game_type: str | None = Field(default=None, pattern="^(singles|doubles)$")
     frequency_per_week: int | None = Field(default=None, ge=0, le=14)
@@ -44,16 +41,6 @@ class ProfilePayload(BaseModel):
     pref_tension_retention: int | None = Field(default=None, ge=1, le=10)
     pref_value_for_money: int | None = Field(default=None, ge=1, le=10)
 
-    @model_validator(mode="after")
-    def validate_budget(self) -> "ProfilePayload":
-        self.budget_tier, self.budget_min, self.budget_max = normalize_budget_inputs(
-            budget_tier=self.budget_tier,
-            budget_min=self.budget_min,
-            budget_max=self.budget_max,
-            require_tier=False,
-        )
-        return self
-
 
 class ProfileOut(ProfilePayload):
     created_at: str | None = None
@@ -65,8 +52,6 @@ def profile_to_dto(profile: PlayerProfile) -> ProfileOut:
         skill_level=profile.skill_level,
         playing_style=profile.playing_style,
         budget_tier=profile.budget_tier,
-        budget_min=profile.budget_min,
-        budget_max=profile.budget_max,
         preferred_tension=profile.preferred_tension,
         game_type=profile.game_type,
         frequency_per_week=profile.frequency_per_week,
@@ -84,80 +69,3 @@ def profile_to_dto(profile: PlayerProfile) -> ProfileOut:
         created_at=isoformat_or_none(profile.created_at),
         updated_at=isoformat_or_none(profile.updated_at),
     )
-
-
-def budget_tier_from_range(
-    budget_min: float | None,
-    budget_max: float | None,
-) -> str | None:
-    if budget_max is not None and budget_max <= 30:
-        return "below_30"
-    if budget_min is not None and budget_min >= 50:
-        return "above_50"
-    if budget_min is not None or budget_max is not None:
-        return "between_30_50"
-    return None
-
-
-def budget_range_from_tier(budget_tier: str) -> tuple[float, float]:
-    if budget_tier == "below_30":
-        return 0.0, 30.0
-    if budget_tier == "above_50":
-        return 50.0, 999.0
-    return 30.0, 50.0
-
-
-def normalize_budget_inputs(
-    *,
-    budget_tier: str | None,
-    budget_min: float | None,
-    budget_max: float | None,
-    require_tier: bool,
-) -> tuple[str | None, float | None, float | None]:
-    if budget_min is not None and budget_max is not None and budget_min > budget_max:
-        raise ValueError("budget_min must be less than or equal to budget_max")
-
-    derived_tier = budget_tier_from_range(budget_min, budget_max)
-    if budget_tier is None:
-        budget_tier = derived_tier
-    elif derived_tier is not None and derived_tier != budget_tier:
-        raise ValueError("budget_tier must match budget_min and budget_max")
-    elif not budget_range_matches_tier(
-        budget_tier=budget_tier,
-        budget_min=budget_min,
-        budget_max=budget_max,
-    ):
-        raise ValueError("budget_tier must match budget_min and budget_max")
-
-    if require_tier and budget_tier is None:
-        raise ValueError("budget_tier is required")
-
-    if budget_tier is not None and budget_min is None and budget_max is None:
-        budget_min, budget_max = budget_range_from_tier(budget_tier)
-
-    return budget_tier, budget_min, budget_max
-
-
-def budget_range_matches_tier(
-    *,
-    budget_tier: str,
-    budget_min: float | None,
-    budget_max: float | None,
-) -> bool:
-    if budget_tier == "below_30":
-        if budget_min is not None and budget_min >= 50:
-            return False
-        if budget_max is not None and budget_max > 30:
-            return False
-        return True
-    if budget_tier == "above_50":
-        if budget_max is not None and budget_max <= 30:
-            return False
-        if budget_min is not None and budget_min < 50:
-            return False
-        return True
-    if budget_min is not None and budget_min >= 50:
-        return False
-    if budget_max is not None and budget_max <= 30:
-        return False
-    return True

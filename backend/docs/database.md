@@ -22,6 +22,7 @@ The active migration sequence is:
 - [20260413_0014_schema_drift_cleanup.py](../migrations/versions/20260413_0014_schema_drift_cleanup.py)
 - [20260414_0015_fyp1_recommendation_alignment.py](../migrations/versions/20260414_0015_fyp1_recommendation_alignment.py)
 - [20260414_0016_repair_recommendation_schema_drift.py](../migrations/versions/20260414_0016_repair_recommendation_schema_drift.py)
+- [20260414_0017_remove_legacy_budget_range_columns.py](../migrations/versions/20260414_0017_remove_legacy_budget_range_columns.py)
 
 ## Active Business Tables
 
@@ -40,8 +41,6 @@ Stores the canonical recommendation and profile fields:
 - `budget_tier`
 - `skill_level`
 - `playing_style`
-- `budget_min`
-- `budget_max`
 - `preferred_tension`
 - `game_type`
 - `frequency_per_week`

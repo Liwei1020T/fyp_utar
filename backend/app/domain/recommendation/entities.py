@@ -27,8 +27,6 @@ class RecommendationRequestModel:
     pref_tension_retention: int
     pref_value_for_money: int
     top_n: int
-    budget_min: float | None = None
-    budget_max: float | None = None
 
 
 @dataclass(frozen=True)

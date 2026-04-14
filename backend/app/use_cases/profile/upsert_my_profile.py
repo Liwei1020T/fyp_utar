@@ -40,8 +40,6 @@ class UpsertMyProfileUseCase:
                 pref_tension_retention=saved.pref_tension_retention or 0,
                 pref_value_for_money=saved.pref_value_for_money or 0,
                 top_n=5,
-                budget_min=saved.budget_min,
-                budget_max=saved.budget_max,
             )
             self.recommendation_repository.replace_user_preference_vector(
                 user_id=saved.user_id,

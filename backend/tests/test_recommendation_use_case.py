@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
+from pydantic import ValidationError
 
 from app.domain.profile.entities import PlayerProfile
 from app.domain.catalog.entities import InventorySnapshot
@@ -313,8 +314,6 @@ def test_execute_profile_persists_true_profile_snapshot() -> None:
         skill_level="advanced",
         playing_style="attacking",
         budget_tier="between_30_50",
-        budget_min=40,
-        budget_max=70,
         preferred_tension=27,
         game_type="doubles",
         frequency_per_week=4,
@@ -453,47 +452,44 @@ def test_string_movement_preference_can_change_ranking() -> None:
     assert result.results[0].catalog_id == "stable-bed-string"
 
 
-def test_budget_fit_softens_below_minimum_and_penalizes_above_maximum() -> None:
+def test_budget_tier_fit_prefers_mid_tier_over_high_tier() -> None:
     result = _score_custom_candidates(
         _attacking_request(),
         [
-            _candidate_with_core_scores("inside-budget", {}, price_rm=45),
-            _candidate_with_core_scores("below-minimum", {}, price_rm=25),
-            _candidate_with_core_scores("above-maximum", {}, price_rm=95),
+            _candidate_with_core_scores("mid-tier", {}, price_rm=45),
+            _candidate_with_core_scores("low-tier", {}, price_rm=25),
+            _candidate_with_core_scores("high-tier", {}, price_rm=95),
         ],
     )
     breakdowns = {
         item.catalog_id: item.score_breakdown or {} for item in result.results
     }
 
-    assert breakdowns["inside-budget"]["budget_fit"] >= 0.8
-    assert breakdowns["below-minimum"]["budget_fit"] >= 0.62
-    assert (
-        breakdowns["above-maximum"]["budget_fit"]
-        < breakdowns["below-minimum"]["budget_fit"]
-    )
+    assert breakdowns["mid-tier"]["budget_fit"] == pytest.approx(1.0)
+    assert breakdowns["low-tier"]["budget_fit"] == pytest.approx(0.78)
+    assert breakdowns["high-tier"]["budget_fit"] == pytest.approx(0.56)
 
 
-def test_profile_payload_rejects_conflicting_budget_tier_and_range() -> None:
-    with pytest.raises(ValueError, match="budget_tier must match"):
-        ProfilePayload(
-            skill_level="advanced",
-            playing_style="attacking",
-            budget_tier="below_30",
-            budget_min=50,
-            budget_max=80,
+def test_profile_payload_rejects_legacy_budget_range_fields() -> None:
+    with pytest.raises(ValidationError):
+        ProfilePayload.model_validate(
+            {
+                "skill_level": "advanced",
+                "playing_style": "attacking",
+                "budget_tier": "below_30",
+                "budget_min": 50,
+                "budget_max": 80,
+            }
         )
 
 
-def test_recommendation_request_rejects_conflicting_budget_tier_and_range() -> None:
-    with pytest.raises(ValueError, match="budget_tier must match"):
+def test_recommendation_request_rejects_legacy_budget_range_fields() -> None:
+    with pytest.raises(ValidationError):
         RecommendationRequestDto(
             user_id="user-1",
             skill_level="advanced",
             playing_style="attacking",
             budget_tier="above_50",
-            budget_min=0,
-            budget_max=30,
             preferred_tension=26,
             game_type="doubles",
             frequency_per_week=3,
@@ -507,6 +503,7 @@ def test_recommendation_request_rejects_conflicting_budget_tier_and_range() -> N
             pref_tension_retention=4,
             pref_value_for_money=3,
             top_n=3,
+            **{"budget_min": 0, "budget_max": 30},
         )
 
 
@@ -526,8 +523,6 @@ def _attacking_request(
         skill_level="advanced",
         playing_style="attacking",
         budget_tier="between_30_50",
-        budget_min=40,
-        budget_max=70,
         preferred_tension=26,
         game_type="doubles",
         frequency_per_week=3,

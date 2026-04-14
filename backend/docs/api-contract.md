@@ -276,8 +276,6 @@ Direct preview request:
 }
 ```
 
-If `budget_tier` is sent together with compatibility fields `budget_min` and `budget_max`, they must describe the same budget bucket or the request is rejected with validation error.
-
 Profile recommendation request:
 
 ```json

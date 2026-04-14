@@ -32,8 +32,6 @@ export interface BackendProfile {
   skill_level: string | null;
   playing_style: string | null;
   budget_tier: BackendBudgetTier | null;
-  budget_min: number | null;
-  budget_max: number | null;
   preferred_tension: number | null;
   game_type: string | null;
   frequency_per_week: number | null;

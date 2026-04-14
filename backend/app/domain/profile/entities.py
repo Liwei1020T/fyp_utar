@@ -28,8 +28,6 @@ class PlayerProfile:
     skill_level: str | None
     playing_style: str | None
     budget_tier: str | None
-    budget_min: float | None
-    budget_max: float | None
     preferred_tension: float | None
     game_type: str | None
     frequency_per_week: int | None

@@ -6,7 +6,6 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 
 from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.recommendation.entities import RecommendationRequestModel
@@ -14,7 +13,6 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
-from app.dto.profile import normalize_budget_inputs
 from app.shared.serialization import isoformat_or_none
 
 
@@ -24,12 +22,9 @@ class RecommendationRequestDto(BaseModel):
     user_id: str | None = None
     skill_level: str = Field(pattern="^(beginner|intermediate|advanced)$")
     playing_style: str = Field(pattern="^(attacking|balanced|control_defensive)$")
-    budget_tier: str | None = Field(
-        default=None,
+    budget_tier: str = Field(
         pattern="^(below_30|between_30_50|above_50)$",
     )
-    budget_min: float | None = Field(default=None, ge=0, le=999)
-    budget_max: float | None = Field(default=None, ge=0, le=999)
     preferred_tension: float = Field(ge=16, le=35)
     game_type: str = Field(pattern="^(singles|doubles)$")
     frequency_per_week: int = Field(ge=0, le=14)
@@ -43,16 +38,6 @@ class RecommendationRequestDto(BaseModel):
     pref_tension_retention: int = Field(ge=1, le=10)
     pref_value_for_money: int = Field(ge=1, le=10)
     top_n: int = Field(default=5, ge=1, le=10)
-
-    @model_validator(mode="after")
-    def validate_budget(self) -> "RecommendationRequestDto":
-        self.budget_tier, self.budget_min, self.budget_max = normalize_budget_inputs(
-            budget_tier=self.budget_tier,
-            budget_min=self.budget_min,
-            budget_max=self.budget_max,
-            require_tier=True,
-        )
-        return self
 
 
 class RecommendationResultDto(BaseModel):
@@ -129,9 +114,7 @@ class RecommendationRunDto(BaseModel):
 def recommendation_request_to_domain(
     payload: RecommendationRequestDto,
 ) -> RecommendationRequestModel:
-    values = payload.model_dump()
-    assert values["budget_tier"] is not None
-    return RecommendationRequestModel(**values)
+    return RecommendationRequestModel(**payload.model_dump())
 
 
 def recommendation_response_to_dto(

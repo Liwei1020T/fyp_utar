@@ -68,8 +68,6 @@ The canonical player budget input is now `budget_tier`:
 - `between_30_50`
 - `above_50`
 
-Legacy `budget_min` / `budget_max` values remain in the backend schema only as compatibility fields during transition.
-
 ## Backend and NLP Integration
 
 - `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`

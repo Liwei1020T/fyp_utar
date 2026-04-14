@@ -210,8 +210,6 @@ export function mapPlayFrequencyToBackend(value: PlayFrequency): number {
 }
 
 export function mapBackendBudgetRange(
-  minimum: number | null | undefined,
-  maximum: number | null | undefined,
   budgetTier?: BackendBudgetTier | null,
 ): BudgetRange {
   if (budgetTier === 'below_30') {
@@ -222,12 +220,6 @@ export function mapBackendBudgetRange(
   }
   if (budgetTier === 'between_30_50') {
     return 'RM30–RM50';
-  }
-  if (maximum != null && maximum <= 30) {
-    return 'Below RM30';
-  }
-  if (minimum != null && minimum >= 50) {
-    return 'RM50+';
   }
   return 'RM30–RM50';
 }
@@ -277,11 +269,7 @@ export function mapBackendUserToPlayerProfile(
     skillLevel: mapBackendSkillLevel(profile?.skill_level),
     playingStyle: mapBackendPlayingStyle(profile?.playing_style),
     playFrequency: mapFrequencyToPlayFrequency(profile?.frequency_per_week),
-    budgetRange: mapBackendBudgetRange(
-      profile?.budget_min,
-      profile?.budget_max,
-      profile?.budget_tier,
-    ),
+    budgetRange: mapBackendBudgetRange(profile?.budget_tier),
     preferredFeel: profile?.preferred_feel
       ? titleCase(profile.preferred_feel) as PreferredFeel
       : mapBackendPreferredFeel(profile),

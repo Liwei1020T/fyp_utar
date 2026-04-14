@@ -105,8 +105,6 @@ def to_profile(profile: Profile) -> PlayerProfile:
         skill_level=profile.skill_level,
         playing_style=profile.playing_style,
         budget_tier=profile.budget_tier,
-        budget_min=number_to_float(profile.budget_min),
-        budget_max=number_to_float(profile.budget_max),
         preferred_tension=number_to_float(profile.preferred_tension),
         game_type=profile.game_type,
         frequency_per_week=profile.frequency_per_week,

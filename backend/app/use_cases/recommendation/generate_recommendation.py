@@ -98,8 +98,6 @@ class GenerateRecommendationUseCase:
             pref_tension_retention=profile.pref_tension_retention or 0,
             pref_value_for_money=profile.pref_value_for_money or 0,
             top_n=top_n,
-            budget_min=profile.budget_min,
-            budget_max=profile.budget_max,
         )
         return self._execute(
             user_id=user_id,
@@ -355,8 +353,6 @@ def _profile_snapshot(profile) -> dict[str, object]:
         "skill_level": profile.skill_level,
         "playing_style": profile.playing_style,
         "budget_tier": profile.budget_tier,
-        "budget_min": profile.budget_min,
-        "budget_max": profile.budget_max,
         "preferred_tension": profile.preferred_tension,
         "game_type": profile.game_type,
         "frequency_per_week": profile.frequency_per_week,

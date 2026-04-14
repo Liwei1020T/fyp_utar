@@ -26,8 +26,6 @@ class SqlAlchemyProfileRepository:
             "skill_level": profile.skill_level,
             "playing_style": profile.playing_style,
             "budget_tier": profile.budget_tier,
-            "budget_min": profile.budget_min,
-            "budget_max": profile.budget_max,
             "preferred_tension": profile.preferred_tension,
             "game_type": profile.game_type,
             "frequency_per_week": profile.frequency_per_week,
