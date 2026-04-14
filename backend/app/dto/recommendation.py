@@ -14,8 +14,7 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
-from app.dto.profile import budget_range_from_tier
-from app.dto.profile import budget_tier_from_range
+from app.dto.profile import normalize_budget_inputs
 from app.shared.serialization import isoformat_or_none
 
 
@@ -47,21 +46,12 @@ class RecommendationRequestDto(BaseModel):
 
     @model_validator(mode="after")
     def validate_budget(self) -> "RecommendationRequestDto":
-        if (
-            self.budget_min is not None
-            and self.budget_max is not None
-            and self.budget_min > self.budget_max
-        ):
-            raise ValueError("budget_min must be less than or equal to budget_max")
-        if self.budget_tier is None:
-            self.budget_tier = budget_tier_from_range(
-                self.budget_min,
-                self.budget_max,
-            )
-        if self.budget_tier is None:
-            raise ValueError("budget_tier is required")
-        if self.budget_min is None and self.budget_max is None:
-            self.budget_min, self.budget_max = budget_range_from_tier(self.budget_tier)
+        self.budget_tier, self.budget_min, self.budget_max = normalize_budget_inputs(
+            budget_tier=self.budget_tier,
+            budget_min=self.budget_min,
+            budget_max=self.budget_max,
+            require_tier=True,
+        )
         return self
 
 

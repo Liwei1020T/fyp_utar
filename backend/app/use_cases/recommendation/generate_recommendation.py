@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from dataclasses import field
+from datetime import datetime
 
 from app.domain.recommendation.entities import CachedRecommendationRecord
 from app.domain.recommendation.entities import RecommendationDetailModel
@@ -58,6 +59,7 @@ class GenerateRecommendationUseCase:
             user_id=user_id,
             request=request,
             persist=False,
+            profile_snapshot=None,
         )
 
     def execute_profile(
@@ -99,7 +101,12 @@ class GenerateRecommendationUseCase:
             budget_min=profile.budget_min,
             budget_max=profile.budget_max,
         )
-        return self._execute(user_id=user_id, request=request, persist=True)
+        return self._execute(
+            user_id=user_id,
+            request=request,
+            persist=True,
+            profile_snapshot=_profile_snapshot(profile),
+        )
 
     def execute_cached(self, *, user_id: str) -> RecommendationResponseModel:
         cached = self.recommendation_repository.get_cached_results(user_id=user_id)
@@ -135,6 +142,7 @@ class GenerateRecommendationUseCase:
         user_id: str | None,
         request: RecommendationRequestModel,
         persist: bool,
+        profile_snapshot: dict[str, object] | None = None,
     ) -> RecommendationResponseModel:
         scored_results = self.scorer.score_candidates(
             candidates=self.recommendation_repository.list_active_candidates(),
@@ -183,7 +191,7 @@ class GenerateRecommendationUseCase:
         self.recommendation_log_repository.create_run(
             user_id=user_id,
             request_payload=request.__dict__,
-            profile_payload=request.__dict__,
+            profile_payload=profile_snapshot or request.__dict__,
             result_payloads=result_payloads,
             algorithm_version=response.algorithm_version,
             matrix_version=_matrix_version_from_results(result_payloads),
@@ -339,3 +347,34 @@ def _feature_source_version_from_results(
             if isinstance(value, str):
                 return value
     return None
+
+
+def _profile_snapshot(profile) -> dict[str, object]:
+    return {
+        "user_id": profile.user_id,
+        "skill_level": profile.skill_level,
+        "playing_style": profile.playing_style,
+        "budget_tier": profile.budget_tier,
+        "budget_min": profile.budget_min,
+        "budget_max": profile.budget_max,
+        "preferred_tension": profile.preferred_tension,
+        "game_type": profile.game_type,
+        "frequency_per_week": profile.frequency_per_week,
+        "preferred_feel": profile.preferred_feel,
+        "recent_goal": profile.recent_goal,
+        "pref_attack": profile.pref_attack,
+        "pref_comfort": profile.pref_comfort,
+        "pref_control": profile.pref_control,
+        "pref_durability": profile.pref_durability,
+        "pref_elasticity": profile.pref_elasticity,
+        "pref_sound": profile.pref_sound,
+        "pref_string_movement": profile.pref_string_movement,
+        "pref_tension_retention": profile.pref_tension_retention,
+        "pref_value_for_money": profile.pref_value_for_money,
+        "created_at": _isoformat_or_none(profile.created_at),
+        "updated_at": _isoformat_or_none(profile.updated_at),
+    }
+
+
+def _isoformat_or_none(value: datetime | None) -> str | None:
+    return value.isoformat() if value is not None else None

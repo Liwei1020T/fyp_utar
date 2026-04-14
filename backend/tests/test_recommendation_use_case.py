@@ -4,6 +4,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from app.domain.profile.entities import PlayerProfile
 from app.domain.catalog.entities import InventorySnapshot
 from app.domain.catalog.entities import StringItem
 from app.domain.catalog.recommendation_features import (
@@ -15,6 +16,8 @@ from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
+from app.dto.profile import ProfilePayload
+from app.dto.recommendation import RecommendationRequestDto
 from app.shared.pagination import Page
 from app.use_cases.recommendation.generate_recommendation import (
     GenerateRecommendationUseCase,
@@ -22,7 +25,12 @@ from app.use_cases.recommendation.generate_recommendation import (
 
 
 class FakeProfileRepository:
+    def __init__(self, profile: PlayerProfile | None = None) -> None:
+        self.profile = profile
+
     def get_by_user_id(self, user_id: str):  # pragma: no cover - not used here
+        if self.profile is not None:
+            return self.profile
         raise AssertionError("profile lookup should not be used for preview requests")
 
     def upsert(self, profile):  # pragma: no cover - not used here
@@ -153,6 +161,7 @@ class FakeRecommendationRepository:
 class FakeRecommendationLogRepository:
     def __init__(self) -> None:
         self.last_log: dict[str, object] | None = None
+        self.last_run: dict[str, object] | None = None
 
     def create_log(
         self,
@@ -180,7 +189,15 @@ class FakeRecommendationLogRepository:
         matrix_version: str | None,
         feature_source_version: str | None,
     ) -> None:
-        return None
+        self.last_run = {
+            "user_id": user_id,
+            "request_payload": request_payload,
+            "profile_payload": profile_payload,
+            "result_payloads": result_payloads,
+            "algorithm_version": algorithm_version,
+            "matrix_version": matrix_version,
+            "feature_source_version": feature_source_version,
+        }
 
     def list_logs(
         self,
@@ -286,6 +303,51 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     ) == pytest.approx(1.0, abs=1e-3)
     assert repository.cached[0].catalog_id == "yonex-bg80"
     assert repository.cached[0].preference_match_score is not None
+
+
+def test_execute_profile_persists_true_profile_snapshot() -> None:
+    repository = FakeRecommendationRepository()
+    logs = FakeRecommendationLogRepository()
+    profile = PlayerProfile(
+        user_id="user-1",
+        skill_level="advanced",
+        playing_style="attacking",
+        budget_tier="between_30_50",
+        budget_min=40,
+        budget_max=70,
+        preferred_tension=27,
+        game_type="doubles",
+        frequency_per_week=4,
+        preferred_feel="crisp",
+        recent_goal="Need a sharp doubles setup.",
+        pref_attack=9,
+        pref_comfort=3,
+        pref_control=6,
+        pref_durability=5,
+        pref_elasticity=8,
+        pref_sound=7,
+        pref_string_movement=6,
+        pref_tension_retention=7,
+        pref_value_for_money=4,
+        created_at=None,
+        updated_at=None,
+    )
+    use_case = GenerateRecommendationUseCase(
+        profile_repository=FakeProfileRepository(profile),
+        recommendation_repository=repository,
+        recommendation_log_repository=logs,
+    )
+
+    result = use_case.execute_profile(user_id="user-1", top_n=3)
+
+    assert result.results
+    assert logs.last_run is not None
+    profile_payload = _required_mapping(logs.last_run, "profile_payload")
+    request_payload = _required_mapping(logs.last_run, "request_payload")
+    assert profile_payload["preferred_feel"] == "crisp"
+    assert profile_payload["recent_goal"] == ("Need a sharp doubles setup.")
+    assert request_payload["top_n"] == 3
+    assert "top_n" not in profile_payload
 
 
 def test_cached_recommendation_detail_returns_rationale() -> None:
@@ -410,6 +472,42 @@ def test_budget_fit_softens_below_minimum_and_penalizes_above_maximum() -> None:
         breakdowns["above-maximum"]["budget_fit"]
         < breakdowns["below-minimum"]["budget_fit"]
     )
+
+
+def test_profile_payload_rejects_conflicting_budget_tier_and_range() -> None:
+    with pytest.raises(ValueError, match="budget_tier must match"):
+        ProfilePayload(
+            skill_level="advanced",
+            playing_style="attacking",
+            budget_tier="below_30",
+            budget_min=50,
+            budget_max=80,
+        )
+
+
+def test_recommendation_request_rejects_conflicting_budget_tier_and_range() -> None:
+    with pytest.raises(ValueError, match="budget_tier must match"):
+        RecommendationRequestDto(
+            user_id="user-1",
+            skill_level="advanced",
+            playing_style="attacking",
+            budget_tier="above_50",
+            budget_min=0,
+            budget_max=30,
+            preferred_tension=26,
+            game_type="doubles",
+            frequency_per_week=3,
+            pref_attack=5,
+            pref_comfort=3,
+            pref_control=4,
+            pref_durability=3,
+            pref_elasticity=5,
+            pref_sound=4,
+            pref_string_movement=3,
+            pref_tension_retention=4,
+            pref_value_for_money=3,
+            top_n=3,
+        )
 
 
 def _attacking_request(

@@ -46,19 +46,12 @@ class ProfilePayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_budget(self) -> "ProfilePayload":
-        if (
-            self.budget_min is not None
-            and self.budget_max is not None
-            and self.budget_min > self.budget_max
-        ):
-            raise ValueError("budget_min must be less than or equal to budget_max")
-        if self.budget_tier is None:
-            self.budget_tier = budget_tier_from_range(
-                self.budget_min,
-                self.budget_max,
-            )
-        elif self.budget_min is None and self.budget_max is None:
-            self.budget_min, self.budget_max = budget_range_from_tier(self.budget_tier)
+        self.budget_tier, self.budget_min, self.budget_max = normalize_budget_inputs(
+            budget_tier=self.budget_tier,
+            budget_min=self.budget_min,
+            budget_max=self.budget_max,
+            require_tier=False,
+        )
         return self
 
 
@@ -112,3 +105,59 @@ def budget_range_from_tier(budget_tier: str) -> tuple[float, float]:
     if budget_tier == "above_50":
         return 50.0, 999.0
     return 30.0, 50.0
+
+
+def normalize_budget_inputs(
+    *,
+    budget_tier: str | None,
+    budget_min: float | None,
+    budget_max: float | None,
+    require_tier: bool,
+) -> tuple[str | None, float | None, float | None]:
+    if budget_min is not None and budget_max is not None and budget_min > budget_max:
+        raise ValueError("budget_min must be less than or equal to budget_max")
+
+    derived_tier = budget_tier_from_range(budget_min, budget_max)
+    if budget_tier is None:
+        budget_tier = derived_tier
+    elif derived_tier is not None and derived_tier != budget_tier:
+        raise ValueError("budget_tier must match budget_min and budget_max")
+    elif not budget_range_matches_tier(
+        budget_tier=budget_tier,
+        budget_min=budget_min,
+        budget_max=budget_max,
+    ):
+        raise ValueError("budget_tier must match budget_min and budget_max")
+
+    if require_tier and budget_tier is None:
+        raise ValueError("budget_tier is required")
+
+    if budget_tier is not None and budget_min is None and budget_max is None:
+        budget_min, budget_max = budget_range_from_tier(budget_tier)
+
+    return budget_tier, budget_min, budget_max
+
+
+def budget_range_matches_tier(
+    *,
+    budget_tier: str,
+    budget_min: float | None,
+    budget_max: float | None,
+) -> bool:
+    if budget_tier == "below_30":
+        if budget_min is not None and budget_min >= 50:
+            return False
+        if budget_max is not None and budget_max > 30:
+            return False
+        return True
+    if budget_tier == "above_50":
+        if budget_max is not None and budget_max <= 30:
+            return False
+        if budget_min is not None and budget_min < 50:
+            return False
+        return True
+    if budget_min is not None and budget_min >= 50:
+        return False
+    if budget_max is not None and budget_max <= 30:
+        return False
+    return True

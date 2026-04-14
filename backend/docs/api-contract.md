@@ -276,6 +276,8 @@ Direct preview request:
 }
 ```
 
+If `budget_tier` is sent together with compatibility fields `budget_min` and `budget_max`, they must describe the same budget bucket or the request is rejected with validation error.
+
 Profile recommendation request:
 
 ```json
@@ -381,7 +383,7 @@ Recommendation response:
 `nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
 The FYP1 recommender is rule-enhanced, confidence-aware, content-based recommendation with official performance + NLP review feature fusion + budget-tier fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
 
-`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
+`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload. The `/profile` route is retained as a compatibility alias.
 
 `GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.
 
