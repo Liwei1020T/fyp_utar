@@ -20,6 +20,8 @@ The active migration sequence is:
 - [20260413_0012_admin_string_editor_fields.py](../migrations/versions/20260413_0012_admin_string_editor_fields.py)
 - [20260413_0013_store_settings_trending_strings.py](../migrations/versions/20260413_0013_store_settings_trending_strings.py)
 - [20260413_0014_schema_drift_cleanup.py](../migrations/versions/20260413_0014_schema_drift_cleanup.py)
+- [20260414_0015_fyp1_recommendation_alignment.py](../migrations/versions/20260414_0015_fyp1_recommendation_alignment.py)
+- [20260414_0016_repair_recommendation_schema_drift.py](../migrations/versions/20260414_0016_repair_recommendation_schema_drift.py)
 
 ## Active Business Tables
 
@@ -29,11 +31,13 @@ The active migration sequence is:
 - `phone_number` is unique
 - `username` is business-visible profile text
 - `auth_provider` and `external_auth_id` keep Firebase-ready seams without making Firebase mandatory
+- `is_active` allows account disablement without deleting the row
 
 ### `profiles`
 
 Stores the canonical recommendation and profile fields:
 
+- `budget_tier`
 - `skill_level`
 - `playing_style`
 - `budget_min`
@@ -41,6 +45,8 @@ Stores the canonical recommendation and profile fields:
 - `preferred_tension`
 - `game_type`
 - `frequency_per_week`
+- `preferred_feel`
+- `recent_goal`
 - `pref_attack`
 - `pref_comfort`
 - `pref_control`
@@ -80,6 +86,10 @@ The old `string_catalog_items` table was split into a normalized catalog subsyst
   - user-side preference vectors
 - `recommendation_score_cache`
   - cached recommendation results per user and algorithm version, including the active score breakdown and rationale payload
+- `recommendation_runs`
+  - one persisted recommendation run header per generated recommendation set
+- `recommendation_run_items`
+  - item-level persisted recommendation results per run
 
 The migration keeps the legacy flat table only as historical migrated state during transition. Alembic autogenerate intentionally ignores `string_catalog_items_legacy`, and the active runtime schema now reads catalog and inventory data from the normalized tables above.
 
@@ -145,7 +155,7 @@ Important rules:
 - recommendation matrix values do not get copied into `strings`
 - re-imports are idempotent on `(catalog_id, feature_key, source_layer)`
 - both CSV and XLSX practical matrix sources are supported; V9 XLSX is the current default runtime source
-- before import, the backend sanitizes the source file to a runtime whitelist so only the currently used live-scoring fields and matching metadata are written into the feature store; stale `nlp_review` rows outside that whitelist are pruned on re-import
+- imported rows now also persist `source_version`, `source_generated_at`, and `review_count_snapshot` so recommendation runs can be traced back to the artifact version and evidence volume used at scoring time
 
 Current `nlp_review` runtime import keys are:
 
@@ -157,8 +167,12 @@ Current `nlp_review` runtime import keys are:
 - `sound`
 - `string_movement`
 - `tension_retention`
-
-Support keys such as `value_for_money`, `stability_score`, `all_round_score`, `attacking_fit_score`, `control_fit_score`, and `beginner_fit_score` may still appear from older compatibility rows (for example `hybrid_derived`) but are not imported by the current `nlp_review` whitelist.
+- `value_for_money`
+- `stability`
+- `all_round`
+- `attacking_fit`
+- `control_fit`
+- `beginner_fit`
 
 ### `user_preference_matrix`
 
@@ -177,17 +191,51 @@ These rows are regenerated when a complete profile is saved and when profile rec
 
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
-The active algorithm version is `fyp1_preference_official_nlp_rule_budget_v3`.
+The active algorithm version is `fyp1_similarity_confidence_rule_budget_tier_v5`.
 
 Score fields:
 
 - `preference_match_score`
 - `rule_fit_score`
 - `budget_fit_score`
+- `confidence_score`
 - `nlp_review_score`
 - `final_score`
 
 Compatibility columns (`content_score`, `collaborative_score`, `rule_score`, and `nlp_score`) remain available for older inspection/debug paths. FYP1 does not write collaborative-filtering scores; `collaborative_score` should stay `NULL`. The `rationale` JSON stores raw user scores, normalized weights, effective official+NLP feature scores, NLP review evidence, rule events, profile context, and top human-readable reasons.
+
+The cache also stores:
+
+- `matrix_version`
+- `feature_source_version`
+
+### `recommendation_runs`
+
+Stores each generated recommendation set with:
+
+- `algorithm_version`
+- `matrix_version`
+- `feature_source_version`
+- `request_snapshot`
+- `profile_snapshot`
+- `generated_at`
+
+This is the durable recommendation history table for reproducibility and admin audit.
+
+### `recommendation_run_items`
+
+Stores the item-level result rows tied to a recommendation run:
+
+- `catalog_id`
+- `rank_position`
+- `final_score`
+- `preference_match_score`
+- `rule_fit_score`
+- `budget_fit_score`
+- `confidence_score`
+- `nlp_review_score`
+- `score_breakdown`
+- `rationale`
 
 ### `store_business_hours`
 

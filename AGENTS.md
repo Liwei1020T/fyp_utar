@@ -40,7 +40,7 @@
   - NLP artifact handoff: default runtime workbook in `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`
   - legacy AI-service artifact handoff: `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
 - State/data boundaries:
-  - `backend/` owns runtime data, auth, bookings, and recommendation logs
+  - `backend/` owns runtime data, auth, bookings, recommendation logs, and recommendation run history
   - `mobile/` stays hybrid: live FYP1 player/admin core flow plus hidden/mock-first FYP2 domains
   - `ml/nlp-workbench/` is offline experimentation and artifact generation, not a public service
 

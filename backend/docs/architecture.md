@@ -81,6 +81,7 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/store_business_hours.py`
 - `models/store_settings.py`
 - `models/recommendation_log.py`
+  - now owns `recommendation_logs`, `recommendation_runs`, and `recommendation_run_items`
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
@@ -98,7 +99,7 @@ Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/
 
 ## Recommendation Design Review Summary
 
-The backend review found that the existing FastAPI/use-case/repository layering is clean and should be preserved. The catalog normalization is also already strong: master product truth, official performance, inventory, recommendation matrix rows, user preference vectors, and score cache rows are split into separate tables.
+The backend review found that the existing FastAPI/use-case/repository layering is clean and should be preserved. The catalog normalization is also already strong: master product truth, official performance, inventory, recommendation matrix rows, user preference vectors, score cache rows, and recommendation run history are split into separate tables.
 
 The main weakness was runtime usage. Before this refactor, the public recommender still used a lightweight in-process rule engine and did not actively write `user_preference_matrix` or `recommendation_score_cache`. The safest path was therefore incremental: keep auth, bookings, store ops, catalog endpoints, seed logic, and matrix import stable, then activate the dormant recommendation tables through a recommendation-specific repository and scorer.
 
@@ -107,16 +108,19 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile'`.
 - Raw 1-to-10 inputs are stored as `raw_score`; backend-normalized weights are stored as `preference_weight`.
 - Active catalog candidates are loaded with official performance, inventory, and matrix entries.
-- FYP1 uses rule-enhanced content-based recommendation with official performance + NLP review feature fusion + budget fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
+- FYP1 uses rule-enhanced, confidence-aware, content-based recommendation with official performance + NLP review feature fusion + budget-tier fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
 - PreferenceMatch uses only effective item features from official/manual performance and `nlp_review` matrix rows.
 - Core recommendation dimensions are `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, and `string_movement`.
 - Structured catalog heuristics such as gauge are excluded from PreferenceMatch and used only in RuleFit.
+- Per-feature `confidence` from `string_recommendation_matrix` is part of the live fusion input.
 - The scorer applies:
   - `0.60 * PreferenceMatch`
-  - `0.25 * RuleFit`
+  - `0.15 * RuleFit`
   - `0.15 * BudgetFit`
-- `BudgetFit` is based on the user's chosen budget range and item price. `budget_max` is the stronger ceiling; `budget_min` is a softer lower preference.
-- Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
+  - `0.10 * ConfidenceScore`
+- `BudgetFit` is based on the canonical categorical player budget input: `below_30`, `between_30_50`, and `above_50`.
+- Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown, confidence score, artifact version metadata, and rationale payloads.
+- Generated recommendations are also persisted into `recommendation_runs` and `recommendation_run_items` for admin inspection and reproducibility.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 
 ## AI Boundary

@@ -45,6 +45,31 @@ Run `stringsense_complete_absa_pipeline_notebook.ipynb` from top to bottom. The 
 
 The unified backend default recommendation source points to `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
 
+## Recommendation Runtime Summary
+
+The active FYP1 recommender is:
+
+- explainable
+- content-based
+- rule-enhanced
+- confidence-aware
+- budget-tier-based
+
+The live backend uses:
+
+- profile preference weights persisted in `profiles` and `user_preference_matrix`
+- official performance plus `nlp_review` matrix fusion from the V9 workbook
+- recommendation cache rows in `recommendation_score_cache`
+- historical run persistence in `recommendation_runs` and `recommendation_run_items`
+
+The canonical player budget input is now `budget_tier`:
+
+- `below_30`
+- `between_30_50`
+- `above_50`
+
+Legacy `budget_min` / `budget_max` values remain in the backend schema only as compatibility fields during transition.
+
 ## Backend and NLP Integration
 
 - `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`

@@ -261,7 +261,7 @@ Examples:
 - live player profile reads/writes
 - live string catalog reads
 - live booking reads/creates
-- live rules-based recommendation requests
+- live confidence-aware recommendation requests
 
 The mapped backend responses are normalized back into the RN domain model so most screens can keep their existing structure.
 
@@ -456,6 +456,13 @@ Main files:
 
 These screens call the backend recommendation endpoints, map cached/generated results into mobile domain models, and display the backend-provided rationale and scoring evidence.
 
+The active backend-aligned recommendation contract now assumes:
+
+- canonical player budget input is `budget_tier`
+- backend rationale exposes `confidence_score`
+- explanation payloads include feature-level evidence such as `nlp_confidence`, `fusion_confidence`, and `review_count_snapshot`
+- recommendation detail screens can read budget-tier copy from `rationale_payload.budget`
+
 ### Booking
 
 Main files:
@@ -500,6 +507,7 @@ The same conversation model supports:
 The live FYP1 profile captures recommendation preferences. The retention modules remain FYP2/mock-first:
 
 - profile and priorities
+- budget tier, preferred feel, and recent goal now persist through the backend profile contract
 - racket passport history
 - wallet top-up and balance
 - notifications and preferences

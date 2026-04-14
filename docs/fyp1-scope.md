@@ -30,7 +30,7 @@ This document is the source of truth for the FYP1 demo scope. The FYP1 target is
 - Authentication and role guards.
 - Player profile persistence.
 - String catalog and inventory persistence.
-- Baseline hybrid recommendation flow.
+- Explainable confidence-aware recommendation flow.
 - Booking creation, listing, detail, status update, and status history.
 - Booking update persistence for player/admin comments and photos.
 - Local FYP upload storage under `backend/var/uploads/`.
@@ -59,7 +59,7 @@ Route files for deferred modules may remain in the repo for future work, but pri
 
 For FYP1, describe the recommender as:
 
-> A baseline hybrid recommendation module using rule-based logic and content-based attribute matching, enhanced by structured string features and review-derived item knowledge.
+> A rule-enhanced, confidence-aware, content-based recommendation module using player preference weights, official performance signals, and review-derived string features with explainable score breakdowns.
 
 Do not claim that FYP1 has deployed collaborative filtering, deep learning ranking, or RAG-based recommendation assistance.
 
@@ -74,3 +74,4 @@ Do not claim that FYP1 has deployed collaborative filtering, deep learning ranki
 - Admin can update booking status.
 - Player can see the updated status.
 - Admin inventory, business-hours, and limited store-settings updates persist.
+- Recommendation runs, cached scores, and rationale payloads persist in the backend database.

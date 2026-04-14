@@ -67,7 +67,8 @@ Example login response:
     "phone_number": "+60123456789",
     "role": "customer",
     "auth_provider": "local",
-    "external_auth_id": null
+    "external_auth_id": null,
+    "is_active": true
   }
 }
 ```
@@ -101,11 +102,12 @@ Example profile request:
 {
   "skill_level": "intermediate",
   "playing_style": "attacking",
-  "budget_min": 40,
-  "budget_max": 80,
+  "budget_tier": "between_30_50",
   "preferred_tension": 25,
   "game_type": "doubles",
   "frequency_per_week": 3,
+  "preferred_feel": "crisp",
+  "recent_goal": "I want a sharper attacking setup for doubles.",
   "pref_attack": 5,
   "pref_comfort": 3,
   "pref_control": 4,
@@ -248,6 +250,8 @@ Store-ops responses add:
 - `GET /api/recommendations/{user_id}`
 - `GET /api/recommendations/{user_id}/{catalog_id}`
 - `GET /api/admin/recommendations/logs`
+- `GET /api/admin/recommendations/runs`
+- `GET /api/admin/recommendations/runs/{run_id}`
 
 Direct preview request:
 
@@ -255,8 +259,7 @@ Direct preview request:
 {
   "skill_level": "intermediate",
   "playing_style": "attacking",
-  "budget_min": 40,
-  "budget_max": 80,
+  "budget_tier": "between_30_50",
   "preferred_tension": 25,
   "game_type": "doubles",
   "frequency_per_week": 3,
@@ -285,7 +288,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "fyp1_preference_official_nlp_rule_budget_v3",
+  "algorithm_version": "fyp1_similarity_confidence_rule_budget_tier_v5",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
@@ -308,19 +311,22 @@ Recommendation response:
       },
       "reasons": [
         "matches your power and rebound preference",
-        "within your budget range",
+        "mid-price tier strongly fits your budget tier",
         "fits your attacking playing style"
       ],
       "score_breakdown": {
         "preference_match": 0.82,
-        "rule_fit": 0.75,
-        "budget_fit": 0.93,
+        "rule_fit": 0.61,
+        "budget_fit": 1.0,
+        "confidence_score": 0.72,
         "nlp_review_score": 0.71,
         "final_score": 0.84
       },
       "rationale_payload": {
-        "algorithm_family": "rule_enhanced_content_based_official_nlp_budget",
+        "algorithm_family": "rule_enhanced_confidence_aware_content_based_official_nlp_budget_tier",
         "collaborative_filtering_used": false,
+        "matrix_version": "latest_practical_string_feature_matrix_v9_v8dict",
+        "feature_source_version": "latest_practical_string_feature_matrix_v9_v8dict",
         "feature_sources": {
           "repulsion": "nlp_review",
           "control": "nlp_review"
@@ -334,7 +340,10 @@ Recommendation response:
             "source": "official_performance+nlp_review",
             "official_score": 0.77,
             "nlp_review_score": 0.88,
-            "nlp_influence": 0.35
+            "nlp_confidence": 1.0,
+            "nlp_influence": 0.46,
+            "fusion_confidence": 0.79,
+            "review_count_snapshot": 3109
           }
         ],
         "nlp_review_signal_count": 2,
@@ -345,9 +354,19 @@ Recommendation response:
           { "feature_key": "tension_retention", "raw_score": 4, "preference_weight": 0.10 },
           { "feature_key": "string_movement", "raw_score": 4, "preference_weight": 0.10 }
         ],
+        "budget": {
+          "price_rm": 45.0,
+          "budget_tier": "between_30_50",
+          "item_price_tier": "mid",
+          "budget_tier_bounds_rm": {
+            "min_rm": 30.0,
+            "max_rm": 50.0
+          }
+        },
         "profile_context": {
           "skill_level": "intermediate",
-          "playing_style": "attacking"
+          "playing_style": "attacking",
+          "budget_tier": "between_30_50"
         },
         "rule_events": []
       },
@@ -357,18 +376,21 @@ Recommendation response:
 }
 ```
 
-`budget_fit` reflects price alignment against the user's selected budget range. It is not derived from a separate `value_for_money` runtime score.
-`budget_max` is the stronger ceiling; cheaper strings below `budget_min` are treated as a soft preference mismatch, not a hard penalty.
+`budget_fit` reflects price alignment against the user's selected `budget_tier`. It is not derived from a separate `value_for_money` runtime score.
 
 `nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
-The FYP1 recommender is rule-enhanced content-based recommendation with official performance + NLP review feature fusion + budget fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
+The FYP1 recommender is rule-enhanced, confidence-aware, content-based recommendation with official performance + NLP review feature fusion + budget-tier fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
 
-`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
+`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The `/profile` route is retained as a compatibility alias.
 
 `GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.
 
 `GET /api/recommendations/{user_id}/{catalog_id}` returns one cached recommendation result with the full rationale payload.
 The returned `algorithm_version` is read from the cached recommendation row, not inferred from the currently deployed code version.
+
+`GET /api/admin/recommendations/runs` returns persisted recommendation run history with item-level score rows.
+
+`GET /api/admin/recommendations/runs/{run_id}` returns one persisted recommendation run with its full item-level score rows and rationale payloads.
 
 ### Bookings
 
