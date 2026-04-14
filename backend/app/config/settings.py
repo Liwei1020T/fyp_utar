@@ -112,6 +112,10 @@ class Settings(BaseSettings):
         return BACKEND_ROOT / candidate
 
     @property
+    def recommendation_matrix_version(self) -> str:
+        return self.recommendation_matrix_path.stem
+
+    @property
     def upload_root_path(self) -> Path:
         candidate = Path(self.upload_root_path_raw)
         if candidate.is_absolute():

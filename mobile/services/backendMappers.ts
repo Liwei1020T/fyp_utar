@@ -839,8 +839,6 @@ export function buildBackendProfilePayload(
     skill_level: mapFrontendSkillLevel(player.skillLevel),
     playing_style: mapFrontendPlayingStyle(player.playingStyle),
     budget_tier: budget.budgetTier,
-    budget_min: budget.budgetMin,
-    budget_max: budget.budgetMax,
     preferred_tension: player.preferredTension,
     game_type: 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(player.playFrequency),
@@ -868,8 +866,6 @@ export function buildRecommendationPayload(input: {
   priorities: PlayerProfile['priorities'];
   advancedPreferences?: PlayerProfile['advancedPreferences'];
   gameType?: string;
-  budgetMin?: number;
-  budgetMax?: number;
 }): BackendRecommendationPayload {
   const budget = input.budgetRange
     ? mapBudgetRangeToBackend(input.budgetRange)
@@ -881,12 +877,6 @@ export function buildRecommendationPayload(input: {
     skill_level: mapFrontendSkillLevel(input.skillLevel),
     playing_style: mapFrontendPlayingStyle(input.playingStyle),
     budget_tier: budget.budgetTier,
-    budget_min:
-      input.budgetMin
-      ?? budget.budgetMin,
-    budget_max:
-      input.budgetMax
-      ?? budget.budgetMax,
     preferred_tension: input.preferredTension,
     game_type: input.gameType ?? 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),

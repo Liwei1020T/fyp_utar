@@ -9,9 +9,7 @@ from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
-from app.domain.recommendation.scoring import FEATURE_SOURCE_VERSION
 from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
-from app.domain.recommendation.scoring import MATRIX_VERSION
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_log_repository import (
@@ -188,8 +186,10 @@ class GenerateRecommendationUseCase:
             profile_payload=request.__dict__,
             result_payloads=result_payloads,
             algorithm_version=response.algorithm_version,
-            matrix_version=MATRIX_VERSION,
-            feature_source_version=FEATURE_SOURCE_VERSION,
+            matrix_version=_matrix_version_from_results(result_payloads),
+            feature_source_version=_feature_source_version_from_results(
+                result_payloads
+            ),
         )
         self.recommendation_log_repository.create_log(
             user_id=user_id,
@@ -315,3 +315,27 @@ def _result_payload(item: RecommendationResultModel) -> dict[str, object]:
         "rationale_payload": item.rationale_payload or {},
         "generated_at": item.generated_at.isoformat() if item.generated_at else None,
     }
+
+
+def _matrix_version_from_results(
+    result_payloads: list[dict[str, object]],
+) -> str | None:
+    for item in result_payloads:
+        rationale = item.get("rationale_payload")
+        if isinstance(rationale, dict):
+            value = rationale.get("matrix_version")
+            if isinstance(value, str):
+                return value
+    return None
+
+
+def _feature_source_version_from_results(
+    result_payloads: list[dict[str, object]],
+) -> str | None:
+    for item in result_payloads:
+        rationale = item.get("rationale_payload")
+        if isinstance(rationale, dict):
+            value = rationale.get("feature_source_version")
+            if isinstance(value, str):
+                return value
+    return None

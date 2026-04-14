@@ -192,6 +192,19 @@ class FakeRecommendationLogRepository:
     ) -> Page:
         raise NotImplementedError
 
+    def list_runs(
+        self,
+        *,
+        phone_number: str | None,
+        algorithm_version: str | None,
+        limit: int | None,
+        offset: int,
+    ) -> Page:
+        raise NotImplementedError
+
+    def get_run(self, run_id: str):
+        raise NotImplementedError
+
 
 def test_fyp1_scorer_uses_required_formula_and_explainability() -> None:
     candidate = FakeRecommendationRepository().list_active_candidates()[0]

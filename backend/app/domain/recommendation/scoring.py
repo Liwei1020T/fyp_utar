@@ -12,8 +12,6 @@ from app.domain.recommendation.entities import RecommendationResultModel
 
 
 ALGORITHM_VERSION = "fyp1_similarity_confidence_rule_budget_tier_v5"
-MATRIX_VERSION = "latest_practical_string_feature_matrix_v9_v8dict"
-FEATURE_SOURCE_VERSION = "absa_v8_practical_matrix_v9"
 PREFERENCE_SOURCE_LAYER = "profile"
 
 CORE_RECOMMENDATION_FEATURES = (
@@ -204,13 +202,15 @@ class Fyp1ContentRecommendationScorer:
                 budget_fit=budget_fit,
                 confidence_score=confidence_score,
             )
+            matrix_version = _candidate_matrix_version(candidate)
+            feature_source_version = _candidate_feature_source_version(candidate)
             rationale_payload = {
                 "catalog_id": candidate.item.id,
                 "display_name": candidate.item.display_name,
                 "brand": candidate.item.brand,
                 "model_name": candidate.item.model_name,
-                "matrix_version": MATRIX_VERSION,
-                "feature_source_version": FEATURE_SOURCE_VERSION,
+                "matrix_version": matrix_version,
+                "feature_source_version": feature_source_version,
                 "review_count_snapshot": candidate.item.review_count,
                 "algorithm_family": (
                     "rule_enhanced_confidence_aware_content_based_official_nlp_budget_tier"
@@ -309,8 +309,8 @@ class Fyp1ContentRecommendationScorer:
                         "final_score": final_score,
                         "rank_position": 0,
                         "rationale": rationale_payload,
-                        "matrix_version": MATRIX_VERSION,
-                        "feature_source_version": FEATURE_SOURCE_VERSION,
+                        "matrix_version": matrix_version,
+                        "feature_source_version": feature_source_version,
                     },
                     preference_vector_rows=preference_vector_rows,
                 )
@@ -1054,6 +1054,27 @@ def _unique(values: list[str]) -> list[str]:
             seen.add(value)
             ordered.append(value)
     return ordered
+
+
+def _candidate_matrix_version(candidate: RecommendationCandidateModel) -> str | None:
+    for source_layer in ("nlp_review", "hybrid_derived", "community_signal"):
+        source_map = candidate.matrix_by_source.get(source_layer, {})
+        for value in source_map.values():
+            source_version = _signal_source_version(value)
+            if source_version:
+                return source_version
+    return None
+
+
+def _candidate_feature_source_version(
+    candidate: RecommendationCandidateModel,
+) -> str | None:
+    source_map = candidate.matrix_by_source.get("nlp_review", {})
+    for value in source_map.values():
+        source_version = _signal_source_version(value)
+        if source_version:
+            return source_version
+    return _candidate_matrix_version(candidate)
 
 
 def _signal_score(value: object) -> float | None:

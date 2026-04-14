@@ -12,6 +12,8 @@ from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
+from app.domain.recommendation.entities import RecommendationRunItemRecord
+from app.domain.recommendation.entities import RecommendationRunRecord
 from app.dto.profile import budget_range_from_tier
 from app.dto.profile import budget_tier_from_range
 from app.shared.serialization import isoformat_or_none
@@ -102,6 +104,38 @@ class ProfileRecommendationPayload(BaseModel):
     top_n: int = Field(default=5, ge=1, le=10)
 
 
+class RecommendationRunItemDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    catalog_id: str
+    rank_position: int
+    final_score: float
+    preference_match_score: float | None = None
+    rule_fit_score: float | None = None
+    budget_fit_score: float | None = None
+    confidence_score: float | None = None
+    nlp_review_score: float | None = None
+    score_breakdown: dict[str, Any]
+    rationale: dict[str, Any]
+
+
+class RecommendationRunDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    user_id: str | None = None
+    phone_number: str | None = None
+    username: str | None = None
+    algorithm_version: str
+    matrix_version: str | None = None
+    feature_source_version: str | None = None
+    request_snapshot: dict[str, Any]
+    profile_snapshot: dict[str, Any]
+    generated_at: str | None = None
+    items: list[RecommendationRunItemDto]
+
+
 def recommendation_request_to_domain(
     payload: RecommendationRequestDto,
 ) -> RecommendationRequestModel:
@@ -163,3 +197,37 @@ def recommendation_log_to_dict(item: RecommendationLogRecord) -> dict[str, Any]:
         "algorithm_version": item.algorithm_version,
         "created_at": isoformat_or_none(item.created_at),
     }
+
+
+def recommendation_run_to_dict(item: RecommendationRunRecord) -> dict[str, Any]:
+    return RecommendationRunDto(
+        id=item.id,
+        user_id=item.user_id,
+        phone_number=item.phone_number,
+        username=item.username,
+        algorithm_version=item.algorithm_version,
+        matrix_version=item.matrix_version,
+        feature_source_version=item.feature_source_version,
+        request_snapshot=item.request_snapshot,
+        profile_snapshot=item.profile_snapshot,
+        generated_at=isoformat_or_none(item.generated_at),
+        items=[recommendation_run_item_to_dto(run_item) for run_item in item.items],
+    ).model_dump()
+
+
+def recommendation_run_item_to_dto(
+    item: RecommendationRunItemRecord,
+) -> RecommendationRunItemDto:
+    return RecommendationRunItemDto(
+        id=item.id,
+        catalog_id=item.catalog_id,
+        rank_position=item.rank_position,
+        final_score=item.final_score,
+        preference_match_score=item.preference_match_score,
+        rule_fit_score=item.rule_fit_score,
+        budget_fit_score=item.budget_fit_score,
+        confidence_score=item.confidence_score,
+        nlp_review_score=item.nlp_review_score,
+        score_breakdown=item.score_breakdown,
+        rationale=item.rationale,
+    )

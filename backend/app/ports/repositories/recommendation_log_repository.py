@@ -4,6 +4,7 @@ from typing import Any
 from typing import Protocol
 
 from app.domain.recommendation.entities import RecommendationLogRecord
+from app.domain.recommendation.entities import RecommendationRunRecord
 from app.shared.pagination import Page
 
 
@@ -37,3 +38,14 @@ class RecommendationLogRepository(Protocol):
         limit: int | None,
         offset: int,
     ) -> Page[RecommendationLogRecord]: ...
+
+    def list_runs(
+        self,
+        *,
+        phone_number: str | None,
+        algorithm_version: str | None,
+        limit: int | None,
+        offset: int,
+    ) -> Page[RecommendationRunRecord]: ...
+
+    def get_run(self, run_id: str) -> RecommendationRunRecord | None: ...

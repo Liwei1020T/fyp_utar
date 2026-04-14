@@ -480,8 +480,6 @@ export interface BackendProfilePayload {
   skill_level?: string;
   playing_style?: string;
   budget_tier?: BackendBudgetTier;
-  budget_min?: number;
-  budget_max?: number;
   preferred_tension?: number;
   game_type?: string;
   frequency_per_week?: number;
@@ -503,8 +501,6 @@ export interface BackendRecommendationPayload {
   skill_level: string;
   playing_style: string;
   budget_tier: BackendBudgetTier;
-  budget_min?: number;
-  budget_max?: number;
   preferred_tension: number;
   game_type: string;
   frequency_per_week: number;

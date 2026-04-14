@@ -121,3 +121,33 @@ class RecommendationLogRecord:
     recommendation: dict[str, Any]
     algorithm_version: str
     created_at: datetime | None
+
+
+@dataclass(frozen=True)
+class RecommendationRunItemRecord:
+    id: str
+    catalog_id: str
+    rank_position: int
+    final_score: float
+    preference_match_score: float | None
+    rule_fit_score: float | None
+    budget_fit_score: float | None
+    confidence_score: float | None
+    nlp_review_score: float | None
+    score_breakdown: dict[str, Any]
+    rationale: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class RecommendationRunRecord:
+    id: str
+    user_id: str | None
+    phone_number: str | None
+    username: str | None
+    algorithm_version: str
+    matrix_version: str | None
+    feature_source_version: str | None
+    request_snapshot: dict[str, Any]
+    profile_snapshot: dict[str, Any]
+    generated_at: datetime | None
+    items: list[RecommendationRunItemRecord]

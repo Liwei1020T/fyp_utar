@@ -7,6 +7,8 @@ from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
 from app.adapters.persistence.sqlalchemy.models import Profile
 from app.adapters.persistence.sqlalchemy.models import RecommendationLog
+from app.adapters.persistence.sqlalchemy.models import RecommendationRun
+from app.adapters.persistence.sqlalchemy.models import RecommendationRunItem
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
@@ -31,6 +33,8 @@ from app.domain.catalog.entities import (
 from app.domain.catalog.entities import StringTag
 from app.domain.profile.entities import PlayerProfile
 from app.domain.recommendation.entities import RecommendationLogRecord
+from app.domain.recommendation.entities import RecommendationRunItemRecord
+from app.domain.recommendation.entities import RecommendationRunRecord
 from app.domain.store.entities import BusinessHoursDay
 from app.domain.store.entities import StoreBusinessHoursRecord
 from app.domain.store.entities import StoreSettingsRecord
@@ -346,6 +350,40 @@ def to_recommendation_log(item: RecommendationLog) -> RecommendationLogRecord:
         recommendation=json.loads(item.recommendation_json),
         algorithm_version=item.algorithm_version,
         created_at=item.created_at,
+    )
+
+
+def to_recommendation_run(item: RecommendationRun) -> RecommendationRunRecord:
+    return RecommendationRunRecord(
+        id=item.id,
+        user_id=item.user_id,
+        phone_number=item.user.phone_number if item.user else None,
+        username=item.user.username if item.user else None,
+        algorithm_version=item.algorithm_version,
+        matrix_version=item.matrix_version,
+        feature_source_version=item.feature_source_version,
+        request_snapshot=dict(item.request_snapshot or {}),
+        profile_snapshot=dict(item.profile_snapshot or {}),
+        generated_at=item.generated_at,
+        items=[to_recommendation_run_item(run_item) for run_item in item.items],
+    )
+
+
+def to_recommendation_run_item(
+    item: RecommendationRunItem,
+) -> RecommendationRunItemRecord:
+    return RecommendationRunItemRecord(
+        id=item.id,
+        catalog_id=item.catalog_id,
+        rank_position=item.rank_position,
+        final_score=number_to_float(item.final_score) or 0.0,
+        preference_match_score=number_to_float(item.preference_match_score),
+        rule_fit_score=number_to_float(item.rule_fit_score),
+        budget_fit_score=number_to_float(item.budget_fit_score),
+        confidence_score=number_to_float(item.confidence_score),
+        nlp_review_score=number_to_float(item.nlp_review_score),
+        score_breakdown=dict(item.score_breakdown or {}),
+        rationale=dict(item.rationale or {}),
     )
 
 

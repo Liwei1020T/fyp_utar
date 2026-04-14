@@ -7,6 +7,7 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 
 from app.adapters.persistence.sqlalchemy.models import RecommendationLog
 from app.adapters.persistence.sqlalchemy.models import RecommendationRun
@@ -15,7 +16,11 @@ from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.repositories.mappers import (
     to_recommendation_log,
 )
+from app.adapters.persistence.sqlalchemy.repositories.mappers import (
+    to_recommendation_run,
+)
 from app.domain.recommendation.entities import RecommendationLogRecord
+from app.domain.recommendation.entities import RecommendationRunRecord
 from app.shared.pagination import Page
 
 
@@ -115,6 +120,56 @@ class SqlAlchemyRecommendationLogRepository:
             limit=limit,
             offset=offset,
         )
+
+    def list_runs(
+        self,
+        *,
+        phone_number: str | None,
+        algorithm_version: str | None,
+        limit: int | None,
+        offset: int,
+    ) -> Page[RecommendationRunRecord]:
+        query = select(RecommendationRun).options(
+            joinedload(RecommendationRun.user),
+            selectinload(RecommendationRun.items),
+        )
+        count_query = select(func.count()).select_from(RecommendationRun)
+
+        if algorithm_version:
+            version_filter = RecommendationRun.algorithm_version == algorithm_version
+            query = query.where(version_filter)
+            count_query = count_query.where(version_filter)
+        if phone_number:
+            phone_filter = User.phone_number.ilike(f"%{phone_number}%")
+            query = query.join(RecommendationRun.user).where(phone_filter)
+            count_query = count_query.join(RecommendationRun.user).where(phone_filter)
+
+        total = self.db.execute(count_query).scalar_one()
+        query = query.order_by(RecommendationRun.generated_at.desc())
+        if limit is not None:
+            query = query.limit(limit).offset(offset)
+        items = self.db.execute(query).unique().scalars().all()
+        return Page(
+            items=[to_recommendation_run(item) for item in items],
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
+
+    def get_run(self, run_id: str) -> RecommendationRunRecord | None:
+        item = (
+            self.db.execute(
+                select(RecommendationRun)
+                .options(
+                    joinedload(RecommendationRun.user),
+                    selectinload(RecommendationRun.items),
+                )
+                .where(RecommendationRun.id == run_id)
+            )
+            .unique()
+            .scalar_one_or_none()
+        )
+        return to_recommendation_run(item) if item else None
 
 
 def _mapping(value: object) -> dict[str, object]:

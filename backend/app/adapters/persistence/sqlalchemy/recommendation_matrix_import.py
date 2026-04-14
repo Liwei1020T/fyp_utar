@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import csv
+from datetime import UTC
+from datetime import datetime
 import logging
 import re
 import zipfile
@@ -30,7 +32,6 @@ from app.domain.catalog.recommendation_features import (
 logger = logging.getLogger(__name__)
 
 NLP_REVIEW_SOURCE_LAYER = "nlp_review"
-NLP_REVIEW_SOURCE_VERSION = "absa_v8_practical_matrix_v9"
 
 
 @dataclass(frozen=True)
@@ -199,6 +200,11 @@ def import_recommendation_matrix_csv(
 ) -> RecommendationMatrixImportReport:
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
+    source_version = recommendation_matrix_source_version(csv_path)
+    source_generated_at = datetime.fromtimestamp(
+        csv_path.stat().st_mtime,
+        tz=UTC,
+    )
 
     rows = _sanitize_matrix_rows(_load_matrix_rows(csv_path))
     lookup = _build_catalog_lookup(db)
@@ -223,7 +229,12 @@ def import_recommendation_matrix_csv(
         matched_strings += 1
         matched_catalog_ids.add(matched_entry.catalog_id)
         match_counts[matched_by] += 1
-        for entry_payload in _build_matrix_entries(row, matched_entry.catalog_id):
+        for entry_payload in _build_matrix_entries(
+            row,
+            matched_entry.catalog_id,
+            source_version=source_version,
+            source_generated_at=source_generated_at,
+        ):
             matrix_row = db.get(
                 StringRecommendationMatrix,
                 (
@@ -502,6 +513,9 @@ def _matches_identity(
 def _build_matrix_entries(
     row: dict[str, str],
     catalog_id: str,
+    *,
+    source_version: str,
+    source_generated_at: datetime,
 ) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
     for spec in CSV_FEATURE_SPECS:
@@ -523,8 +537,8 @@ def _build_matrix_entries(
                 else None,
                 "evidence_note": _build_evidence_note(row, spec),
                 "source_ref": _clean_text(row.get("source_url")),
-                "source_version": NLP_REVIEW_SOURCE_VERSION,
-                "source_generated_at": None,
+                "source_version": source_version,
+                "source_generated_at": source_generated_at,
                 "review_count_snapshot": _parse_int(row.get("review_count")),
             }
         )
@@ -613,3 +627,7 @@ def _round_score(value: float | None, *, digits: int) -> float | None:
     if value is None:
         return None
     return round(value, digits)
+
+
+def recommendation_matrix_source_version(source_path: Path) -> str:
+    return source_path.stem
