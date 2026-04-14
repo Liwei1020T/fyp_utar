@@ -17,6 +17,7 @@ class BookingRepository(Protocol):
         racket_model: str | None,
         requested_tension: float | None,
         drop_off_datetime: datetime | None,
+        expected_completion_datetime: datetime | None = None,
         notes: str | None,
         status: str,
         changed_by_user_id: str | None,

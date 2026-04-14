@@ -12,6 +12,8 @@ from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
+from app.dto.profile import budget_range_from_tier
+from app.dto.profile import budget_tier_from_range
 from app.shared.serialization import isoformat_or_none
 
 
@@ -21,8 +23,12 @@ class RecommendationRequestDto(BaseModel):
     user_id: str | None = None
     skill_level: str = Field(pattern="^(beginner|intermediate|advanced)$")
     playing_style: str = Field(pattern="^(attacking|balanced|control_defensive)$")
-    budget_min: float = Field(ge=0, le=999)
-    budget_max: float = Field(ge=0, le=999)
+    budget_tier: str | None = Field(
+        default=None,
+        pattern="^(below_30|between_30_50|above_50)$",
+    )
+    budget_min: float | None = Field(default=None, ge=0, le=999)
+    budget_max: float | None = Field(default=None, ge=0, le=999)
     preferred_tension: float = Field(ge=16, le=35)
     game_type: str = Field(pattern="^(singles|doubles)$")
     frequency_per_week: int = Field(ge=0, le=14)
@@ -39,8 +45,21 @@ class RecommendationRequestDto(BaseModel):
 
     @model_validator(mode="after")
     def validate_budget(self) -> "RecommendationRequestDto":
-        if self.budget_min > self.budget_max:
+        if (
+            self.budget_min is not None
+            and self.budget_max is not None
+            and self.budget_min > self.budget_max
+        ):
             raise ValueError("budget_min must be less than or equal to budget_max")
+        if self.budget_tier is None:
+            self.budget_tier = budget_tier_from_range(
+                self.budget_min,
+                self.budget_max,
+            )
+        if self.budget_tier is None:
+            raise ValueError("budget_tier is required")
+        if self.budget_min is None and self.budget_max is None:
+            self.budget_min, self.budget_max = budget_range_from_tier(self.budget_tier)
         return self
 
 
@@ -86,7 +105,9 @@ class ProfileRecommendationPayload(BaseModel):
 def recommendation_request_to_domain(
     payload: RecommendationRequestDto,
 ) -> RecommendationRequestModel:
-    return RecommendationRequestModel(**payload.model_dump())
+    values = payload.model_dump()
+    assert values["budget_tier"] is not None
+    return RecommendationRequestModel(**values)
 
 
 def recommendation_response_to_dto(

@@ -24,6 +24,7 @@ class UserAccount:
     role: str
     auth_provider: str
     external_auth_id: str | None
+    is_active: bool
     created_at: datetime | None
     updated_at: datetime | None
 

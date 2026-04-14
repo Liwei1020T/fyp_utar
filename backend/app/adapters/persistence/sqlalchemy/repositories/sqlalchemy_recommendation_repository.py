@@ -16,6 +16,7 @@ from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
 from app.domain.catalog.recommendation_features import domain_feature_key
 from app.domain.recommendation.entities import CachedRecommendationRecord
+from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import UserPreferenceVectorEntry
 from app.shared.serialization import number_to_float
@@ -124,7 +125,9 @@ class SqlAlchemyRecommendationRepository:
             preference_match = _float_or_none(result.get("preference_match_score"))
             rule_fit = _float_or_none(result.get("rule_fit_score"))
             budget_fit = _float_or_none(result.get("budget_fit_score"))
+            confidence_score = _float_or_none(result.get("confidence_score"))
             nlp_review_score = _float_or_none(result.get("nlp_review_score"))
+            rationale = _required_mapping(result, "rationale")
             self.db.add(
                 RecommendationScoreCache(
                     user_id=user_id,
@@ -137,10 +140,18 @@ class SqlAlchemyRecommendationRepository:
                     preference_match_score=preference_match,
                     rule_fit_score=rule_fit,
                     budget_fit_score=budget_fit,
+                    confidence_score=confidence_score,
                     nlp_review_score=nlp_review_score,
                     final_score=_required_float(result, "final_score"),
                     rank_position=_required_int(result, "rank_position"),
-                    rationale=_required_mapping(result, "rationale"),
+                    rationale=rationale,
+                    matrix_version=_optional_string(
+                        result.get("matrix_version") or rationale.get("matrix_version")
+                    ),
+                    feature_source_version=_optional_string(
+                        result.get("feature_source_version")
+                        or rationale.get("feature_source_version")
+                    ),
                 )
             )
         self.db.commit()
@@ -239,30 +250,47 @@ def _to_cached_record(item: RecommendationScoreCache) -> CachedRecommendationRec
         budget_fit_score=number_to_float(item.budget_fit_score)
         if hasattr(item, "budget_fit_score")
         else None,
+        confidence_score=number_to_float(item.confidence_score)
+        if hasattr(item, "confidence_score")
+        else None,
         nlp_review_score=number_to_float(item.nlp_review_score)
         if hasattr(item, "nlp_review_score")
         else number_to_float(item.nlp_score),
         final_score=float(item.final_score),
         rank_position=item.rank_position,
         rationale=dict(item.rationale or {}),
+        matrix_version=item.matrix_version if hasattr(item, "matrix_version") else None,
+        feature_source_version=item.feature_source_version
+        if hasattr(item, "feature_source_version")
+        else None,
         generated_at=item.generated_at,
     )
 
 
 def _matrix_by_source(
     entries: list[StringRecommendationMatrix],
-) -> dict[str, dict[str, float]]:
-    grouped: dict[str, dict[str, float]] = defaultdict(dict)
+) -> dict[str, dict[str, float | RecommendationFeatureSignalModel]]:
+    grouped: dict[str, dict[str, float | RecommendationFeatureSignalModel]] = (
+        defaultdict(dict)
+    )
     for entry in entries:
         if entry.normalized_score is None:
             continue
         feature_key = _recommendation_feature_key(entry.feature_key)
-        grouped[entry.source_layer][feature_key] = float(str(entry.normalized_score))
+        grouped[entry.source_layer][feature_key] = RecommendationFeatureSignalModel(
+            normalized_score=float(str(entry.normalized_score)),
+            confidence=number_to_float(entry.confidence),
+            raw_value=number_to_float(entry.raw_value),
+            evidence_note=entry.evidence_note,
+            source_ref=entry.source_ref,
+            source_version=entry.source_version,
+            review_count_snapshot=entry.review_count_snapshot,
+        )
     return {source_layer: dict(values) for source_layer, values in grouped.items()}
 
 
 def _recommendation_feature_key(feature_key: str) -> str:
-    if feature_key in {"attack", "elasticity"}:
+    if feature_key == "attack":
         return "repulsion"
     return domain_feature_key(feature_key)
 
@@ -294,3 +322,9 @@ def _required_mapping(values: dict[str, object], key: str) -> dict[str, object]:
     if isinstance(value, Mapping):
         return dict(value)
     raise TypeError(f"Expected mapping value for {key}")
+
+
+def _optional_string(value: object) -> str | None:
+    if value is None:
+        return None
+    return str(value)

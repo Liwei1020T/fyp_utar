@@ -141,6 +141,9 @@ class RecommendationMatrixEntryOut(BaseModel):
     confidence: float | None = None
     evidence_note: str | None = None
     source_ref: str | None = None
+    source_version: str | None = None
+    source_generated_at: str | None = None
+    review_count_snapshot: int | None = None
     updated_at: str | None = None
 
 
@@ -402,6 +405,9 @@ def recommendation_matrix_entry_to_dto(
         confidence=item.confidence,
         evidence_note=item.evidence_note,
         source_ref=item.source_ref,
+        source_version=item.source_version,
+        source_generated_at=isoformat_or_none(item.source_generated_at),
+        review_count_snapshot=item.review_count_snapshot,
         updated_at=isoformat_or_none(item.updated_at),
     )
 

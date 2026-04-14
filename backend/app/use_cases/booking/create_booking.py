@@ -24,6 +24,7 @@ class CreateBookingUseCase:
         racket_model: str | None,
         requested_tension: float | None,
         drop_off_datetime: datetime | None,
+        expected_completion_datetime: datetime | None,
         notes: str | None,
     ) -> BookingRecord:
         string_item = self.catalog_repository.get_by_id(
@@ -38,6 +39,7 @@ class CreateBookingUseCase:
             racket_model=racket_model,
             requested_tension=requested_tension,
             drop_off_datetime=drop_off_datetime,
+            expected_completion_datetime=expected_completion_datetime,
             notes=notes,
             status=BookingStatus.AWAITING_DROPOFF.value,
             changed_by_user_id=user_id,

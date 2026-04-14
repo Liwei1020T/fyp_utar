@@ -10,6 +10,12 @@ from app.adapters.persistence.sqlalchemy.models.profile import Profile
 from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationLog,
 )
+from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
+    RecommendationRun,
+)
+from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
+    RecommendationRunItem,
+)
 from app.adapters.persistence.sqlalchemy.models.store_business_hours import (
     StoreBusinessHours,
 )
@@ -57,6 +63,8 @@ __all__ = [
     "Profile",
     "RecommendationFeatureDefinition",
     "RecommendationLog",
+    "RecommendationRun",
+    "RecommendationRunItem",
     "RecommendationScoreCache",
     "StoreBusinessHours",
     "StoreSettings",

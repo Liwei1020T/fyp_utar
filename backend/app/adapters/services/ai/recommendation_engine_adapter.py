@@ -8,7 +8,13 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 
 
-ALGORITHM_VERSION = "unified_python_rule_engine_v1"
+ALGORITHM_VERSION = "unified_python_rule_engine_budget_tier_v2"
+
+BUDGET_TIER_FIT_SCORES = {
+    "below_30": {"low": 1.00, "mid": 0.58, "high": 0.25, "unknown": 0.45},
+    "between_30_50": {"low": 0.78, "mid": 1.00, "high": 0.56, "unknown": 0.45},
+    "above_50": {"low": 0.60, "mid": 0.80, "high": 1.00, "unknown": 0.45},
+}
 
 
 class RecommendationEngineAdapter:
@@ -131,14 +137,27 @@ class RecommendationEngineAdapter:
             reasons.append("Control and touch help singles rallies")
 
         if item.price_rm is not None:
-            if item.price_rm < request.budget_min:
-                rule_adjustment -= min(0.15, (request.budget_min - item.price_rm) / 100)
-                reasons.append("Below your target budget range")
-            elif item.price_rm > request.budget_max:
-                rule_adjustment -= min(0.20, (item.price_rm - request.budget_max) / 100)
-                reasons.append("Above your target budget range")
-            else:
-                reasons.append("Fits within your budget range")
+            budget_fit = _budget_fit_score(item.price_rm, request.budget_tier)
+            rule_adjustment += (budget_fit - 0.5) * 0.18
+            reasons.append("Matches your budget tier")
 
         final_score = max(0.0, min(1.0, (content_score * 0.78) + rule_adjustment))
         return final_score, reasons
+
+
+def _budget_fit_score(price_rm: float | None, budget_tier: str) -> float:
+    tier_scores = BUDGET_TIER_FIT_SCORES.get(
+        budget_tier,
+        BUDGET_TIER_FIT_SCORES["between_30_50"],
+    )
+    return tier_scores.get(_item_price_tier(price_rm), tier_scores["unknown"])
+
+
+def _item_price_tier(price_rm: float | None) -> str:
+    if price_rm is None:
+        return "unknown"
+    if price_rm < 30:
+        return "low"
+    if price_rm <= 50:
+        return "mid"
+    return "high"

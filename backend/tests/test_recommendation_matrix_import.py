@@ -106,8 +106,7 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
         "all_round",
         "attacking_fit",
         "control_fit",
-        "beginner_fit",
-    }.isdisjoint(nlp_feature_keys)
+    }.issubset(nlp_feature_keys)
 
     import_response = client.post(
         "/api/admin/recommendation-matrix/import",
@@ -161,5 +160,4 @@ def test_latest_v9_workbook_import_matches_catalog() -> None:
             "all_round",
             "attacking_fit",
             "control_fit",
-            "beginner_fit",
-        }.isdisjoint(aerobie_rows)
+        }.issubset(aerobie_rows)

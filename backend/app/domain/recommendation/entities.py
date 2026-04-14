@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from collections.abc import Mapping
 from typing import Any
 
 from app.domain.catalog.entities import StringItem
@@ -12,8 +13,7 @@ class RecommendationRequestModel:
     user_id: str | None
     skill_level: str
     playing_style: str
-    budget_min: float
-    budget_max: float
+    budget_tier: str
     preferred_tension: float
     game_type: str
     frequency_per_week: int
@@ -27,6 +27,8 @@ class RecommendationRequestModel:
     pref_tension_retention: int
     pref_value_for_money: int
     top_n: int
+    budget_min: float | None = None
+    budget_max: float | None = None
 
 
 @dataclass(frozen=True)
@@ -72,9 +74,23 @@ class UserPreferenceVectorEntry:
 
 
 @dataclass(frozen=True)
+class RecommendationFeatureSignalModel:
+    normalized_score: float
+    confidence: float | None = None
+    raw_value: float | None = None
+    evidence_note: str | None = None
+    source_ref: str | None = None
+    source_version: str | None = None
+    review_count_snapshot: int | None = None
+
+
+@dataclass(frozen=True)
 class RecommendationCandidateModel:
     item: StringItem
-    matrix_by_source: dict[str, dict[str, float]]
+    matrix_by_source: Mapping[
+        str,
+        Mapping[str, float | RecommendationFeatureSignalModel],
+    ]
 
 
 @dataclass(frozen=True)
@@ -85,10 +101,13 @@ class CachedRecommendationRecord:
     preference_match_score: float | None
     rule_fit_score: float | None
     budget_fit_score: float | None
+    confidence_score: float | None
     nlp_review_score: float | None
     final_score: float
     rank_position: int
     rationale: dict[str, Any]
+    matrix_version: str | None
+    feature_source_version: str | None
     generated_at: datetime | None
 
 

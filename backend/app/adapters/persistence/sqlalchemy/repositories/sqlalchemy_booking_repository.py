@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
 import re
 
 from sqlalchemy import func
@@ -60,6 +63,7 @@ class SqlAlchemyBookingRepository:
         racket_model: str | None,
         requested_tension: float | None,
         drop_off_datetime,
+        expected_completion_datetime=None,
         notes: str | None,
         status: str,
         changed_by_user_id: str | None,
@@ -71,6 +75,8 @@ class SqlAlchemyBookingRepository:
             racket_model=racket_model,
             requested_tension=requested_tension,
             drop_off_datetime=drop_off_datetime,
+            expected_completion_datetime=expected_completion_datetime
+            or _default_expected_completion(drop_off_datetime),
             notes=notes,
             status=status,
         )
@@ -181,6 +187,14 @@ class SqlAlchemyBookingRepository:
         assert booking is not None
         previous_status = booking.status
         booking.status = next_status
+        if next_status == BookingStatus.COMPLETED.value:
+            booking.collection_datetime = datetime.now(UTC)
+            booking.completion_summary = note
+        elif next_status in {
+            BookingStatus.CANCELLED.value,
+            BookingStatus.REJECTED.value,
+        }:
+            booking.cancellation_reason = note
         self.db.add(
             BookingStatusHistory(
                 booking_id=booking.id,
@@ -306,3 +320,9 @@ class SqlAlchemyBookingRepository:
         if booking is None:
             return None
         return to_booking_record(booking)
+
+
+def _default_expected_completion(drop_off_datetime) -> datetime | None:
+    if drop_off_datetime is None:
+        return None
+    return drop_off_datetime + timedelta(hours=24)

@@ -5,6 +5,7 @@ export interface BackendAuthUser {
   role: string;
   auth_provider: string;
   external_auth_id: string | null;
+  is_active: boolean;
 }
 
 export interface BackendAuthResponse {
@@ -25,14 +26,19 @@ export interface BackendForgotPasswordRequestResponse
   dev_code_preview: string | null;
 }
 
+export type BackendBudgetTier = 'below_30' | 'between_30_50' | 'above_50';
+
 export interface BackendProfile {
   skill_level: string | null;
   playing_style: string | null;
+  budget_tier: BackendBudgetTier | null;
   budget_min: number | null;
   budget_max: number | null;
   preferred_tension: number | null;
   game_type: string | null;
   frequency_per_week: number | null;
+  preferred_feel: 'soft' | 'balanced' | 'crisp' | 'hard' | null;
+  recent_goal: string | null;
   pref_attack: number | null;
   pref_comfort: number | null;
   pref_control: number | null;
@@ -286,7 +292,11 @@ export interface BackendBooking {
   racket_model: string | null;
   requested_tension: number | null;
   drop_off_datetime: string | null;
+  expected_completion_datetime: string | null;
+  collection_datetime: string | null;
   notes: string | null;
+  cancellation_reason: string | null;
+  completion_summary: string | null;
   status: string;
   created_at: string | null;
   updated_at: string | null;
@@ -412,6 +422,7 @@ export interface BackendRecommendationScoreBreakdown {
   preference_match?: number;
   rule_fit?: number;
   budget_fit?: number;
+  confidence_score?: number;
   nlp_review_score?: number;
   final_score?: number;
 }
@@ -431,7 +442,10 @@ export interface BackendRecommendationRationale {
     source?: string;
     official_score?: number | null;
     nlp_review_score?: number | null;
+    nlp_confidence?: number | null;
     nlp_influence?: number | null;
+    fusion_confidence?: number | null;
+    review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
@@ -446,8 +460,12 @@ export interface BackendRecommendationRationale {
   }>;
   budget?: {
     price_rm?: number | null;
-    budget_min?: number;
-    budget_max?: number;
+    budget_tier?: BackendBudgetTier;
+    item_price_tier?: 'low' | 'mid' | 'high' | 'unknown';
+    budget_tier_bounds_rm?: {
+      min_rm?: number;
+      max_rm?: number;
+    };
   };
   rule_events?: Array<{
     rule?: string;
@@ -461,11 +479,14 @@ export interface BackendRecommendationRationale {
 export interface BackendProfilePayload {
   skill_level?: string;
   playing_style?: string;
+  budget_tier?: BackendBudgetTier;
   budget_min?: number;
   budget_max?: number;
   preferred_tension?: number;
   game_type?: string;
   frequency_per_week?: number;
+  preferred_feel?: 'soft' | 'balanced' | 'crisp' | 'hard';
+  recent_goal?: string;
   pref_attack?: number;
   pref_comfort?: number;
   pref_control?: number;
@@ -481,8 +502,9 @@ export interface BackendRecommendationPayload {
   user_id: string;
   skill_level: string;
   playing_style: string;
-  budget_min: number;
-  budget_max: number;
+  budget_tier: BackendBudgetTier;
+  budget_min?: number;
+  budget_max?: number;
   preferred_tension: number;
   game_type: string;
   frequency_per_week: number;

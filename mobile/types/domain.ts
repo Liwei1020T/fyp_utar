@@ -182,8 +182,12 @@ export interface Booking {
   requestedTension: number;
   dropOffDate: string;
   dropOffTime: string;
+  expectedCompletionAt?: string;
+  collectionAt?: string;
   createdAt: string;
   notes?: string;
+  cancellationReason?: string;
+  completionSummary?: string;
   serviceFee: number;
   stringFee: number;
   totalAmount: number;
@@ -222,6 +226,7 @@ export interface RecommendationScoreBreakdown {
   ruleFit?: number;
   budgetFit?: number;
   nlpReviewScore?: number;
+  confidenceScore?: number;
   finalScore?: number;
 }
 
@@ -230,6 +235,7 @@ export interface RecommendationRationalePayload {
     preference_match?: number;
     rule_fit?: number;
     budget_fit?: number;
+    confidence_score?: number;
     nlp_review_score?: number;
     final_score?: number;
   };
@@ -246,7 +252,10 @@ export interface RecommendationRationalePayload {
     source?: string;
     official_score?: number | null;
     nlp_review_score?: number | null;
+    nlp_confidence?: number | null;
     nlp_influence?: number | null;
+    fusion_confidence?: number | null;
+    review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
@@ -261,8 +270,12 @@ export interface RecommendationRationalePayload {
   }>;
   budget?: {
     price_rm?: number | null;
-    budget_min?: number;
-    budget_max?: number;
+    budget_tier?: 'below_30' | 'between_30_50' | 'above_50';
+    item_price_tier?: 'low' | 'mid' | 'high' | 'unknown';
+    budget_tier_bounds_rm?: {
+      min_rm?: number;
+      max_rm?: number;
+    };
   };
   rule_events?: Array<{
     rule?: string;

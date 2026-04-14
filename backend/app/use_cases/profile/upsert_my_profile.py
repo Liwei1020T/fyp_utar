@@ -26,8 +26,7 @@ class UpsertMyProfileUseCase:
                 user_id=saved.user_id,
                 skill_level=saved.skill_level or "",
                 playing_style=saved.playing_style or "",
-                budget_min=saved.budget_min or 0,
-                budget_max=saved.budget_max or 0,
+                budget_tier=saved.budget_tier or "between_30_50",
                 preferred_tension=saved.preferred_tension or 0,
                 game_type=saved.game_type or "",
                 frequency_per_week=saved.frequency_per_week or 0,
@@ -41,6 +40,8 @@ class UpsertMyProfileUseCase:
                 pref_tension_retention=saved.pref_tension_retention or 0,
                 pref_value_for_money=saved.pref_value_for_money or 0,
                 top_n=5,
+                budget_min=saved.budget_min,
+                budget_max=saved.budget_max,
             )
             self.recommendation_repository.replace_user_preference_vector(
                 user_id=saved.user_id,
@@ -59,8 +60,7 @@ def _is_complete(profile: PlayerProfile) -> bool:
         for value in (
             profile.skill_level,
             profile.playing_style,
-            profile.budget_min,
-            profile.budget_max,
+            profile.budget_tier,
             profile.preferred_tension,
             profile.game_type,
             profile.frequency_per_week,

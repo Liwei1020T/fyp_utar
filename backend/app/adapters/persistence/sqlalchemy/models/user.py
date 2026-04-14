@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime
+from sqlalchemy import Boolean
 from sqlalchemy import String as SAString
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped
@@ -37,6 +38,7 @@ class User(Base):
         unique=True,
         nullable=True,
     )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

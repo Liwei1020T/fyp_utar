@@ -34,6 +34,7 @@ class Profile(Base):
     )
     skill_level: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     playing_style: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
+    budget_tier: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     budget_min: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     budget_max: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     preferred_tension: Mapped[float | None] = mapped_column(
@@ -42,6 +43,8 @@ class Profile(Base):
     )
     game_type: Mapped[str | None] = mapped_column(SAString(16), nullable=True)
     frequency_per_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    preferred_feel: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
+    recent_goal: Mapped[str | None] = mapped_column(SAString(500), nullable=True)
     pref_attack: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_comfort: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_control: Mapped[int | None] = mapped_column(Integer, nullable=True)

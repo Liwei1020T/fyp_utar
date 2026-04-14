@@ -144,6 +144,8 @@ def get_current_user(
     user = user_repository.get_by_id(payload.user_id)
     if user is None:
         raise UnauthorizedError("Invalid access token")
+    if not user.is_active:
+        raise UnauthorizedError("Invalid access token")
     if user.role != payload.role or user.phone_number != payload.phone_number:
         raise UnauthorizedError("Invalid access token")
     return CurrentUser(

@@ -19,6 +19,7 @@ class UserOut(BaseModel):
     role: str
     auth_provider: str
     external_auth_id: str | None
+    is_active: bool
 
 
 class AuthResponse(BaseModel):
@@ -112,4 +113,5 @@ def user_to_dto(user: UserAccount) -> UserOut:
         role=user.role,
         auth_provider=user.auth_provider,
         external_auth_id=user.external_auth_id,
+        is_active=user.is_active,
     )

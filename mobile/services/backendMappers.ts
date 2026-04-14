@@ -22,6 +22,7 @@ import type {
   BackendBooking,
   BackendBookingStatusHistory,
   BackendBookingUpdate,
+  BackendBudgetTier,
   BackendInventoryAvailability,
   BackendOfficialPerformance,
   BackendPricingMode,
@@ -211,7 +212,17 @@ export function mapPlayFrequencyToBackend(value: PlayFrequency): number {
 export function mapBackendBudgetRange(
   minimum: number | null | undefined,
   maximum: number | null | undefined,
+  budgetTier?: BackendBudgetTier | null,
 ): BudgetRange {
+  if (budgetTier === 'below_30') {
+    return 'Below RM30';
+  }
+  if (budgetTier === 'above_50') {
+    return 'RM50+';
+  }
+  if (budgetTier === 'between_30_50') {
+    return 'RM30–RM50';
+  }
   if (maximum != null && maximum <= 30) {
     return 'Below RM30';
   }
@@ -223,16 +234,20 @@ export function mapBackendBudgetRange(
 
 function mapBudgetRangeToBackend(
   value: BudgetRange,
-): { budgetMin: number; budgetMax: number } {
+): { budgetTier: BackendBudgetTier; budgetMin: number; budgetMax: number } {
   switch (value) {
     case 'Below RM30':
-      return { budgetMin: 0, budgetMax: 30 };
+      return { budgetTier: 'below_30', budgetMin: 0, budgetMax: 30 };
     case 'RM50+':
-      return { budgetMin: 50, budgetMax: 999 };
+      return { budgetTier: 'above_50', budgetMin: 50, budgetMax: 999 };
     case 'RM30–RM50':
     default:
-      return { budgetMin: 30, budgetMax: 50 };
+      return { budgetTier: 'between_30_50', budgetMin: 30, budgetMax: 50 };
   }
+}
+
+function mapPreferredFeelToBackend(value: PreferredFeel) {
+  return value.toLowerCase() as 'soft' | 'balanced' | 'crisp' | 'hard';
 }
 
 export function mapBackendPreferredFeel(profile?: BackendProfile | null): PreferredFeel {
@@ -262,8 +277,14 @@ export function mapBackendUserToPlayerProfile(
     skillLevel: mapBackendSkillLevel(profile?.skill_level),
     playingStyle: mapBackendPlayingStyle(profile?.playing_style),
     playFrequency: mapFrequencyToPlayFrequency(profile?.frequency_per_week),
-    budgetRange: mapBackendBudgetRange(profile?.budget_min, profile?.budget_max),
-    preferredFeel: mapBackendPreferredFeel(profile),
+    budgetRange: mapBackendBudgetRange(
+      profile?.budget_min,
+      profile?.budget_max,
+      profile?.budget_tier,
+    ),
+    preferredFeel: profile?.preferred_feel
+      ? titleCase(profile.preferred_feel) as PreferredFeel
+      : mapBackendPreferredFeel(profile),
     preferredTension: profile?.preferred_tension ?? 24,
     priorities: {
       power: mapBackendPreference(profile?.pref_attack),
@@ -280,6 +301,7 @@ export function mapBackendUserToPlayerProfile(
     homeVenue: 'Klang Valley',
     preferredAdminId: 'admin-001',
     recentGoal:
+      profile?.recent_goal ??
       'Use your saved profile to generate a grounded shortlist for the next restring.',
   };
 }
@@ -770,8 +792,12 @@ export function mapBackendBookingToBooking(
     dropOffTime: dropOffDateTime
       ? formatLocalTimeValue(dropOffDateTime)
       : 'TBD',
+    expectedCompletionAt: booking.expected_completion_datetime ?? undefined,
+    collectionAt: booking.collection_datetime ?? undefined,
     createdAt: booking.created_at ?? new Date().toISOString(),
     notes: booking.notes ?? undefined,
+    cancellationReason: booking.cancellation_reason ?? undefined,
+    completionSummary: booking.completion_summary ?? undefined,
     serviceFee: 0,
     stringFee,
     totalAmount: stringFee,
@@ -799,6 +825,8 @@ export function buildBackendProfilePayload(
     | 'playingStyle'
     | 'playFrequency'
     | 'preferredTension'
+    | 'preferredFeel'
+    | 'recentGoal'
     | 'priorities'
     | 'budgetRange'
   > &
@@ -810,11 +838,14 @@ export function buildBackendProfilePayload(
   return {
     skill_level: mapFrontendSkillLevel(player.skillLevel),
     playing_style: mapFrontendPlayingStyle(player.playingStyle),
+    budget_tier: budget.budgetTier,
     budget_min: budget.budgetMin,
     budget_max: budget.budgetMax,
     preferred_tension: player.preferredTension,
     game_type: 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(player.playFrequency),
+    preferred_feel: mapPreferredFeelToBackend(player.preferredFeel ?? 'Balanced'),
+    recent_goal: player.recentGoal,
     pref_attack: toTenPreference(player.priorities.power),
     pref_comfort: toTenPreference(player.priorities.comfort),
     pref_control: toTenPreference(player.priorities.control),
@@ -842,13 +873,14 @@ export function buildRecommendationPayload(input: {
 }): BackendRecommendationPayload {
   const budget = input.budgetRange
     ? mapBudgetRangeToBackend(input.budgetRange)
-    : { budgetMin: 0, budgetMax: 999 };
+    : { budgetTier: 'between_30_50' as const, budgetMin: 30, budgetMax: 50 };
   const advanced = advancedPreferencesForPayload(input);
 
   return {
     user_id: input.userId,
     skill_level: mapFrontendSkillLevel(input.skillLevel),
     playing_style: mapFrontendPlayingStyle(input.playingStyle),
+    budget_tier: budget.budgetTier,
     budget_min:
       input.budgetMin
       ?? budget.budgetMin,
@@ -923,6 +955,7 @@ function mapRecommendationScoreBreakdown(
     preferenceMatch: value.preference_match,
     ruleFit: value.rule_fit,
     budgetFit: value.budget_fit,
+    confidenceScore: value.confidence_score,
     nlpReviewScore: value.nlp_review_score,
     finalScore: value.final_score,
   };

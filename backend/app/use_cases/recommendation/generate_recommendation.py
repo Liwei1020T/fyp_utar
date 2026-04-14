@@ -9,7 +9,9 @@ from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
+from app.domain.recommendation.scoring import FEATURE_SOURCE_VERSION
 from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
+from app.domain.recommendation.scoring import MATRIX_VERSION
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_log_repository import (
@@ -23,8 +25,7 @@ from app.shared.errors import NotFoundError
 REQUIRED_PROFILE_FIELDS = {
     "skill_level",
     "playing_style",
-    "budget_min",
-    "budget_max",
+    "budget_tier",
     "preferred_tension",
     "game_type",
     "frequency_per_week",
@@ -83,8 +84,7 @@ class GenerateRecommendationUseCase:
             user_id=user_id,
             skill_level=profile.skill_level or "",
             playing_style=profile.playing_style or "",
-            budget_min=profile.budget_min or 0,
-            budget_max=profile.budget_max or 0,
+            budget_tier=profile.budget_tier or "between_30_50",
             preferred_tension=profile.preferred_tension or 0,
             game_type=profile.game_type or "",
             frequency_per_week=profile.frequency_per_week or 0,
@@ -98,6 +98,8 @@ class GenerateRecommendationUseCase:
             pref_tension_retention=profile.pref_tension_retention or 0,
             pref_value_for_money=profile.pref_value_for_money or 0,
             top_n=top_n,
+            budget_min=profile.budget_min,
+            budget_max=profile.budget_max,
         )
         return self._execute(user_id=user_id, request=request, persist=True)
 
@@ -172,16 +174,27 @@ class GenerateRecommendationUseCase:
             results=result_models,
             generated_at=generated_at,
         )
+        result_payloads = [_result_payload(item) for item in response.results]
+        response_payload = {
+            "algorithm_version": response.algorithm_version,
+            "generated_at": response.generated_at.isoformat()
+            if response.generated_at
+            else None,
+            "results": result_payloads,
+        }
+        self.recommendation_log_repository.create_run(
+            user_id=user_id,
+            request_payload=request.__dict__,
+            profile_payload=request.__dict__,
+            result_payloads=result_payloads,
+            algorithm_version=response.algorithm_version,
+            matrix_version=MATRIX_VERSION,
+            feature_source_version=FEATURE_SOURCE_VERSION,
+        )
         self.recommendation_log_repository.create_log(
             user_id=user_id,
             request_payload=request.__dict__,
-            response_payload={
-                "algorithm_version": response.algorithm_version,
-                "generated_at": response.generated_at.isoformat()
-                if response.generated_at
-                else None,
-                "results": [_result_payload(item) for item in response.results],
-            },
+            response_payload=response_payload,
             algorithm_version=response.algorithm_version,
         )
         return response
@@ -201,6 +214,8 @@ class GenerateRecommendationUseCase:
             breakdown.setdefault("rule_fit", cached.rule_fit_score)
         if cached.budget_fit_score is not None:
             breakdown.setdefault("budget_fit", cached.budget_fit_score)
+        if cached.confidence_score is not None:
+            breakdown.setdefault("confidence_score", cached.confidence_score)
         if cached.nlp_review_score is not None:
             breakdown.setdefault("nlp_review_score", cached.nlp_review_score)
         breakdown.setdefault("final_score", cached.final_score)
@@ -232,6 +247,7 @@ class GenerateRecommendationUseCase:
                 "preference_match": item.preference_match_score,
                 "rule_fit": item.rule_fit_score,
                 "budget_fit": item.budget_fit_score,
+                "confidence_score": item.confidence_score,
                 "nlp_review_score": item.nlp_review_score,
                 "final_score": item.final_score,
             }
@@ -253,7 +269,7 @@ class GenerateRecommendationUseCase:
                 for key, value in aspect_scores.items()
                 if key
                 in {
-                    "attack",
+                    "repulsion",
                     "comfort",
                     "control",
                     "durability",
@@ -261,7 +277,6 @@ class GenerateRecommendationUseCase:
                     "sound",
                     "string_movement",
                     "tension_retention",
-                    "value_for_money",
                 }
             },
             reasons=list(

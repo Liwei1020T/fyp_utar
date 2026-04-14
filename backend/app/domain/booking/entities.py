@@ -42,7 +42,11 @@ class BookingRecord:
     racket_model: str | None
     requested_tension: float | None
     drop_off_datetime: datetime | None
+    expected_completion_datetime: datetime | None
+    collection_datetime: datetime | None
     notes: str | None
+    cancellation_reason: str | None
+    completion_summary: str | None
     status: str
     created_at: datetime | None
     updated_at: datetime | None

@@ -22,6 +22,8 @@ class LoginUseCase:
             user.password_hash,
         ):
             raise UnauthorizedError("Invalid credentials")
+        if not user.is_active:
+            raise ForbiddenError("User account is inactive")
         if user.role not in {UserRole.CUSTOMER.value, UserRole.ADMIN.value}:
             raise ForbiddenError("Unsupported user role")
         return user

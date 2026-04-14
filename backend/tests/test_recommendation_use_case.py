@@ -117,10 +117,13 @@ class FakeRecommendationRepository:
                 preference_match_score=_required_float(item, "preference_match_score"),
                 rule_fit_score=_required_float(item, "rule_fit_score"),
                 budget_fit_score=_required_float(item, "budget_fit_score"),
+                confidence_score=_required_float(item, "confidence_score"),
                 nlp_review_score=_optional_float(item, "nlp_review_score"),
                 final_score=_required_float(item, "final_score"),
                 rank_position=_required_int(item, "rank_position"),
                 rationale=_required_mapping(item, "rationale"),
+                matrix_version=_optional_str(item, "matrix_version"),
+                feature_source_version=_optional_str(item, "feature_source_version"),
                 generated_at=None,
             )
             for item in results
@@ -166,6 +169,19 @@ class FakeRecommendationLogRepository:
             "algorithm_version": algorithm_version,
         }
 
+    def create_run(
+        self,
+        *,
+        user_id: str | None,
+        request_payload: dict[str, object],
+        profile_payload: dict[str, object],
+        result_payloads: list[dict[str, object]],
+        algorithm_version: str,
+        matrix_version: str | None,
+        feature_source_version: str | None,
+    ) -> None:
+        return None
+
     def list_logs(
         self,
         *,
@@ -194,8 +210,9 @@ def test_fyp1_scorer_uses_required_formula_and_explainability() -> None:
     breakdown = result.score_breakdown or {}
     expected = (
         (breakdown["preference_match"] * 0.60)
-        + (breakdown["rule_fit"] * 0.25)
+        + (breakdown["rule_fit"] * 0.15)
         + (breakdown["budget_fit"] * 0.15)
+        + (breakdown["confidence_score"] * 0.10)
     )
     assert result.score == pytest.approx(expected, abs=1e-4)
     assert result.catalog_id == "yonex-bg80"
@@ -397,6 +414,7 @@ def _attacking_request(
         user_id="user-1",
         skill_level="advanced",
         playing_style="attacking",
+        budget_tier="between_30_50",
         budget_min=40,
         budget_max=70,
         preferred_tension=26,
@@ -556,6 +574,11 @@ def _optional_float(values: dict[str, object], key: str) -> float | None:
     if isinstance(value, int | float | str):
         return float(value)
     raise TypeError(f"Expected numeric value for {key}")
+
+
+def _optional_str(values: dict[str, object], key: str) -> str | None:
+    value = values.get(key)
+    return value if isinstance(value, str) else None
 
 
 def _required_int(values: dict[str, object], key: str) -> int:

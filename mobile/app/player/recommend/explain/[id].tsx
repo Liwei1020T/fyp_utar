@@ -96,14 +96,19 @@ function getBudgetCopy(
   fallbackPrice?: number | null,
 ) {
   const price = rationale?.budget?.price_rm ?? fallbackPrice;
-  const minimum = rationale?.budget?.budget_min;
-  const maximum = rationale?.budget?.budget_max;
+  const budgetTier = rationale?.budget?.budget_tier;
+  const minimum = rationale?.budget?.budget_tier_bounds_rm?.min_rm;
+  const maximum = rationale?.budget?.budget_tier_bounds_rm?.max_rm;
 
-  if (price == null || minimum == null || maximum == null) {
-    return 'Price fit against your saved range.';
+  if (price == null || budgetTier == null) {
+    return 'Price fit against your saved budget tier.';
   }
 
-  return `${formatCurrency(price)} fits your RM${minimum.toFixed(0)}-RM${maximum.toFixed(0)} range.`;
+  if (minimum == null || maximum == null) {
+    return `${formatCurrency(price)} is scored against your saved budget tier.`;
+  }
+
+  return `${formatCurrency(price)} is scored against your RM${minimum.toFixed(0)}-RM${maximum.toFixed(0)} tier.`;
 }
 
 function buildRecommendationSummary({

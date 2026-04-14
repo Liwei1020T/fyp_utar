@@ -49,7 +49,17 @@ class Booking(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+    expected_completion_datetime: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    collection_datetime: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    completion_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
         SAString(30),
         default="awaiting_dropoff",

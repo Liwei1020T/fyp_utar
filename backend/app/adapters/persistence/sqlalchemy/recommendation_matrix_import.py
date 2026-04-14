@@ -30,6 +30,7 @@ from app.domain.catalog.recommendation_features import (
 logger = logging.getLogger(__name__)
 
 NLP_REVIEW_SOURCE_LAYER = "nlp_review"
+NLP_REVIEW_SOURCE_VERSION = "absa_v8_practical_matrix_v9"
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,22 @@ CSV_FEATURE_SPECS = (
         "tension_retention_confidence",
         "tension_retention_review_raw",
     ),
+    CsvFeatureSpec(
+        "value_for_money",
+        "value_for_money",
+        "value_for_money_confidence",
+        "value_for_money_review_raw",
+    ),
+    CsvFeatureSpec(
+        "stability_score",
+        "stability",
+        "string_movement_confidence",
+        "string_movement_review_raw",
+    ),
+    CsvFeatureSpec("all_round_score", "all_round"),
+    CsvFeatureSpec("attacking_fit_score", "attacking_fit", "attack_confidence"),
+    CsvFeatureSpec("control_fit_score", "control_fit", "control_confidence"),
+    CsvFeatureSpec("beginner_fit_score", "beginner_fit"),
 )
 
 MATRIX_METADATA_COLUMNS = {
@@ -227,6 +244,8 @@ def import_recommendation_matrix_csv(
                 "confidence",
                 "evidence_note",
                 "source_ref",
+                "source_version",
+                "review_count_snapshot",
             ):
                 current_value = getattr(matrix_row, field)
                 next_value = entry_payload[field]
@@ -504,6 +523,9 @@ def _build_matrix_entries(
                 else None,
                 "evidence_note": _build_evidence_note(row, spec),
                 "source_ref": _clean_text(row.get("source_url")),
+                "source_version": NLP_REVIEW_SOURCE_VERSION,
+                "source_generated_at": None,
+                "review_count_snapshot": _parse_int(row.get("review_count")),
             }
         )
     return entries
@@ -534,13 +556,12 @@ def _build_evidence_note(row: dict[str, str], spec: CsvFeatureSpec) -> str | Non
         if label:
             parts.append(f"crisp_sound_label={label}")
 
-    if spec.feature_key == "beginner_fit":
-        review_count = _clean_text(row.get("review_count"))
-        budget_tier = _clean_text(row.get("budget_tier"))
-        if review_count:
-            parts.append(f"review_count={review_count}")
-        if budget_tier:
-            parts.append(f"budget_tier={budget_tier}")
+    review_count = _clean_text(row.get("review_count"))
+    budget_tier = _clean_text(row.get("budget_tier"))
+    if review_count:
+        parts.append(f"review_count={review_count}")
+    if budget_tier:
+        parts.append(f"budget_tier={budget_tier}")
 
     if not parts:
         return None
@@ -567,6 +588,13 @@ def _parse_float(value: str | None) -> float | None:
     if not stripped:
         return None
     return float(stripped)
+
+
+def _parse_int(value: str | None) -> int | None:
+    parsed = _parse_float(value)
+    if parsed is None:
+        return None
+    return int(parsed)
 
 
 def _to_float(value: Any) -> float | None:
