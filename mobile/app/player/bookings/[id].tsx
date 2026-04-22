@@ -17,6 +17,7 @@ import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
+  formatDateTime,
 } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
@@ -417,6 +418,15 @@ export default function PlayerBookingDetailScreen() {
               <DetailRow label="Order ID" value={orderCode} />
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow label="Quote status" value={getQuoteStatus(booking)} />
+              <View className="h-px bg-[#EEF3F8]" />
+              <DetailRow
+                label="Expected ready"
+                value={
+                  booking.expectedCompletionAt
+                    ? formatDateTime(booking.expectedCompletionAt)
+                    : '-'
+                }
+              />
             </View>
           </View>
         </AppCard>

@@ -147,6 +147,20 @@ export default function BookingTrackingScreen() {
                   {formatDropOffDateTime(booking)}
                 </HeroText>
               </View>
+
+              <View className="min-w-[31%] flex-1 rounded-[18px] bg-secondary-50 px-3 py-3">
+                <View className="flex-row items-center gap-2">
+                  <CalendarClock size={15} color="#2F64B6" />
+                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                    Expected ready
+                  </HeroText>
+                </View>
+                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950">
+                  {booking.expectedCompletionAt
+                    ? formatTrackingDateTime(booking.expectedCompletionAt)
+                    : '-'}
+                </HeroText>
+              </View>
             </View>
 
             <HeroText className="text-[12px] leading-5 text-neutral-500">
