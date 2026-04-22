@@ -38,6 +38,7 @@ class UpdateBookingStatusPayload(BaseModel):
     status: str = Field(
         pattern="^(awaiting_dropoff|in_progress|ready_for_collection|completed|cancelled|rejected)$"
     )
+    expected_completion_datetime: datetime | None = None
     note: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
@@ -85,6 +86,8 @@ class BookingOut(BaseModel):
     racket_model: str | None = None
     requested_tension: float | None = None
     drop_off_datetime: str | None = None
+    expected_completion_datetime: str | None = None
+    collection_datetime: str | None = None
     notes: str | None = None
     status: str
     created_at: str | None = None
@@ -141,6 +144,10 @@ def booking_to_dto(
         racket_model=booking.racket_model,
         requested_tension=booking.requested_tension,
         drop_off_datetime=isoformat_or_none(booking.drop_off_datetime),
+        expected_completion_datetime=isoformat_or_none(
+            booking.expected_completion_datetime
+        ),
+        collection_datetime=isoformat_or_none(booking.collection_datetime),
         notes=booking.notes,
         status=booking.status,
         created_at=isoformat_or_none(booking.created_at),

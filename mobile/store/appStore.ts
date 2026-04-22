@@ -190,7 +190,11 @@ interface AppStoreState {
     bookingId?: string
   ) => { bookingId: string | null; paymentId: string | null };
   cancelBooking: (bookingId: string) => void;
-  updateBookingStatus: (bookingId: string, status: BookingStatus) => void;
+  updateBookingStatus: (
+    bookingId: string,
+    status: BookingStatus,
+    options?: { expectedCompletionAt?: string | null }
+  ) => void;
   toggleCompareSelection: (stringId: string) => void;
   clearCompareSelection: () => void;
   appendChatMessage: (conversationId: string, message: Omit<ChatMessage, 'id' | 'sentAt'>) => void;
@@ -768,13 +772,17 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
           : item
       ),
     })),
-  updateBookingStatus: (bookingId, status) =>
+  updateBookingStatus: (bookingId, status, options) =>
     set((state) => ({
       bookings: state.bookings.map((item) =>
         item.id === bookingId
           ? {
               ...item,
               status,
+              expectedCompletionAt:
+                options && 'expectedCompletionAt' in options
+                  ? options.expectedCompletionAt ?? undefined
+                  : item.expectedCompletionAt,
               timeline: [
                 ...item.timeline,
                 {

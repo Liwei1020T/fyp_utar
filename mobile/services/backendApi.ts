@@ -331,7 +331,11 @@ export const backendApi = {
   adminUpdateBookingStatus(
     token: string,
     bookingId: string,
-    payload: { status: string; note?: string },
+    payload: {
+      status: string;
+      note?: string;
+      expected_completion_datetime?: string | null;
+    },
   ) {
     return requestJson<BackendBooking>(`/admin/bookings/${bookingId}/status`, {
       method: 'PATCH',

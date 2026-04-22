@@ -176,22 +176,28 @@ class SqlAlchemyBookingRepository:
         *,
         booking_id: str,
         next_status: str,
+        expected_completion_datetime,
+        update_expected_completion_datetime: bool,
         changed_by_user_id: str | None,
         note: str | None,
     ) -> BookingRecord:
         booking = self.db.get(Booking, booking_id)
         assert booking is not None
         previous_status = booking.status
+        status_changed = previous_status != next_status
         booking.status = next_status
-        self.db.add(
-            BookingStatusHistory(
-                booking_id=booking.id,
-                old_status=previous_status,
-                new_status=next_status,
-                changed_by_user_id=changed_by_user_id,
-                note=note,
+        if update_expected_completion_datetime:
+            booking.expected_completion_datetime = expected_completion_datetime
+        if status_changed:
+            self.db.add(
+                BookingStatusHistory(
+                    booking_id=booking.id,
+                    old_status=previous_status,
+                    new_status=next_status,
+                    changed_by_user_id=changed_by_user_id,
+                    note=note,
+                )
             )
-        )
         self.db.commit()
         self.db.expire_all()
         refreshed = self.get_by_id(booking_id)

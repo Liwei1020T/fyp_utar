@@ -35,6 +35,8 @@ import {
   formatCurrency,
   formatDateLabel,
   formatDateTime,
+  formatLocalDateInputValue,
+  formatLocalTimeValue,
 } from '../../../lib/formatters';
 import { getStringById, getUserById } from '../../../services/mockAppService';
 import {
@@ -277,6 +279,8 @@ export default function AdminBookingDetailScreen() {
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
   const booking = bookings.find((item) => item.id === params.id);
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
+  const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
+  const [expectedCompletionTime, setExpectedCompletionTime] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [updateComment, setUpdateComment] = useState('');
@@ -293,6 +297,16 @@ export default function AdminBookingDetailScreen() {
   useEffect(() => {
     if (booking) {
       setStatus(booking.status);
+      setExpectedCompletionDate(
+        booking.expectedCompletionAt
+          ? formatLocalDateInputValue(booking.expectedCompletionAt)
+          : '',
+      );
+      setExpectedCompletionTime(
+        booking.expectedCompletionAt
+          ? formatLocalTimeValue(booking.expectedCompletionAt)
+          : '',
+      );
     }
   }, [booking]);
 
@@ -346,17 +360,60 @@ export default function AdminBookingDetailScreen() {
   const workflowCTA = getWorkflowActionLabel(status);
   const allowedNextStatuses = getAllowedNextStatuses(booking.status);
   const isWorkflowUnchanged = status === booking.status;
+  const originalExpectedCompletionDate = booking.expectedCompletionAt
+    ? formatLocalDateInputValue(booking.expectedCompletionAt)
+    : '';
+  const originalExpectedCompletionTime = booking.expectedCompletionAt
+    ? formatLocalTimeValue(booking.expectedCompletionAt)
+    : '';
+  const hasExpectedCompletionChange =
+    expectedCompletionDate !== originalExpectedCompletionDate
+    || expectedCompletionTime !== originalExpectedCompletionTime;
   const isBookingCompleted = booking.status === 'completed';
   const isStatusChangeAllowed = !isWorkflowUnchanged && allowedNextStatuses.includes(status);
+  const canSaveWorkflow =
+    (!isWorkflowUnchanged && isStatusChangeAllowed) || hasExpectedCompletionChange;
+
+  const buildExpectedCompletionTimestamp = () => {
+    const dateValue = expectedCompletionDate.trim();
+    const timeValue = expectedCompletionTime.trim();
+
+    if (!dateValue && !timeValue) {
+      return { value: null, errorMessage: null as string | null };
+    }
+    if (!dateValue || !timeValue) {
+      return {
+        value: null,
+        errorMessage: 'Enter both expected completion date and time.',
+      };
+    }
+
+    const normalized = `${dateValue}T${timeValue}`;
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) {
+      return {
+        value: null,
+        errorMessage: 'Expected completion time is invalid.',
+      };
+    }
+
+    return { value: parsed.toISOString(), errorMessage: null as string | null };
+  };
 
   const applyStatusChange = async () => {
     setError(null);
 
-    if (status === booking.status) {
+    const expectedCompletion = buildExpectedCompletionTimestamp();
+    if (expectedCompletion.errorMessage) {
+      setError(expectedCompletion.errorMessage);
       return;
     }
 
-    if (!allowedNextStatuses.includes(status)) {
+    if (!hasExpectedCompletionChange && status === booking.status) {
+      return;
+    }
+
+    if (!isWorkflowUnchanged && !allowedNextStatuses.includes(status)) {
       setError(
         `Move this booking to ${formatBookingStatus(allowedNextStatuses[0] ?? booking.status)} before selecting ${formatBookingStatus(status)}.`,
       );
@@ -364,7 +421,9 @@ export default function AdminBookingDetailScreen() {
     }
 
     if (!token || user?.role !== 'admin') {
-      updateBookingStatus(booking.id, status);
+      updateBookingStatus(booking.id, status, {
+        expectedCompletionAt: expectedCompletion.value,
+      });
       return;
     }
 
@@ -372,6 +431,9 @@ export default function AdminBookingDetailScreen() {
     try {
       const updated = await backendApi.adminUpdateBookingStatus(token, booking.id, {
         status,
+        expected_completion_datetime: hasExpectedCompletionChange
+          ? expectedCompletion.value
+          : undefined,
       });
       const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
       const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
@@ -400,11 +462,11 @@ export default function AdminBookingDetailScreen() {
       return;
     }
 
-    if (status === booking.status) {
+    if (!hasExpectedCompletionChange && status === booking.status) {
       return;
     }
 
-    if (!isStatusChangeAllowed) {
+    if (!isWorkflowUnchanged && !isStatusChangeAllowed) {
       const nextStatus = allowedNextStatuses[0];
       setError(
         nextStatus
@@ -414,7 +476,18 @@ export default function AdminBookingDetailScreen() {
       return;
     }
 
-    const message = `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)}?`;
+    const expectedCompletion = buildExpectedCompletionTimestamp();
+    if (expectedCompletion.errorMessage) {
+      setError(expectedCompletion.errorMessage);
+      return;
+    }
+
+    const expectedCompletionLabel = expectedCompletion.value
+      ? formatDateTime(expectedCompletion.value)
+      : 'Not set';
+    const message = isWorkflowUnchanged
+      ? `Update the expected completion time to ${expectedCompletionLabel}?`
+      : `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)} and set expected completion to ${expectedCompletionLabel}?`;
 
     if (Platform.OS === 'web') {
       if (typeof globalThis.confirm !== 'function' || globalThis.confirm(message)) {
@@ -546,6 +619,12 @@ export default function AdminBookingDetailScreen() {
                   {priceState}
                 </HeroText>
               </View>
+              <View className="flex-row items-center gap-2">
+                <CalendarClock size={15} color="#2F64B6" />
+                <HeroText className="text-[13px] font-semibold text-neutral-700">
+                  Expected completion: {booking.expectedCompletionAt ? formatDateTime(booking.expectedCompletionAt) : 'Not set'}
+                </HeroText>
+              </View>
             </View>
           </View>
         </AppCard>
@@ -595,6 +674,35 @@ export default function AdminBookingDetailScreen() {
             })}
           </View>
 
+          <View className="rounded-[22px] border border-[#DCE6F7] bg-white px-4 py-4">
+            <HeroText className="text-[13px] font-semibold text-neutral-800">
+              Expected completion
+            </HeroText>
+            <HeroText className="mt-1 text-[12px] leading-5 text-neutral-500">
+              Set when the racket should be ready for collection.
+            </HeroText>
+            <View className="mt-3 flex-row gap-3">
+              <AppInput
+                label="Date"
+                value={expectedCompletionDate}
+                onChangeText={setExpectedCompletionDate}
+                placeholder="YYYY-MM-DD"
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="mb-0 flex-1"
+              />
+              <AppInput
+                label="Time"
+                value={expectedCompletionTime}
+                onChangeText={setExpectedCompletionTime}
+                placeholder="HH:MM"
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="mb-0 flex-1"
+              />
+            </View>
+          </View>
+
           {error ? (
             <HeroText className="text-sm font-semibold text-danger-600">
               {error}
@@ -609,17 +717,19 @@ export default function AdminBookingDetailScreen() {
 
           <AppButton
             label={
-              isWorkflowUnchanged
+              !canSaveWorkflow
                 ? `Current status: ${formatBookingStatus(booking.status)}`
-                : isStatusChangeAllowed
-                  ? workflowCTA
-                  : 'Select the next workflow step'
+                : hasExpectedCompletionChange && isWorkflowUnchanged
+                  ? 'Save expected completion'
+                  : isStatusChangeAllowed
+                    ? workflowCTA
+                    : 'Select the next workflow step'
             }
             size="lg"
             className="mt-1"
             onPress={saveStatus}
             isLoading={isSaving}
-            isDisabled={isWorkflowUnchanged || isBookingCompleted || !isStatusChangeAllowed}
+            isDisabled={!canSaveWorkflow || isBookingCompleted}
           />
         </View>
       </AppSection>
@@ -647,6 +757,14 @@ export default function AdminBookingDetailScreen() {
             <SummaryRow
               label="Drop-off"
               value={`${formatDateLabel(booking.dropOffDate)} · ${booking.dropOffTime}`}
+            />
+            <SummaryRow
+              label="Expected ready"
+              value={
+                booking.expectedCompletionAt
+                  ? formatDateTime(booking.expectedCompletionAt)
+                  : 'Not set'
+              }
             />
             <SummaryRow label="Price state" value={priceState} />
             {booking.queuePosition > 0 ? (

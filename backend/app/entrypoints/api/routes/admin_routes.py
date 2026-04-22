@@ -33,7 +33,6 @@ from app.dto.catalog import recommendation_matrix_inspection_to_dto
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
 from app.dto.recommendation import recommendation_log_to_dict
-from app.dto.recommendation import recommendation_run_to_dict
 from app.dto.store import AnalyticsSummaryOut
 from app.dto.store import CheckInLookupOut
 from app.dto.store import CheckInPayload
@@ -90,12 +89,6 @@ from app.use_cases.catalog.update_official_performance import (
 from app.use_cases.catalog.update_string import UpdateStringUseCase
 from app.use_cases.recommendation.list_recommendation_logs import (
     ListRecommendationLogsUseCase,
-)
-from app.use_cases.recommendation.list_recommendation_runs import (
-    ListRecommendationRunsUseCase,
-)
-from app.use_cases.recommendation.get_recommendation_run import (
-    GetRecommendationRunUseCase,
 )
 from app.use_cases.store.confirm_checkin import ConfirmCheckInUseCase
 from app.use_cases.store.get_business_hours import GetBusinessHoursUseCase
@@ -520,6 +513,10 @@ def admin_update_booking_status(
     booking = UpdateBookingStatusUseCase(booking_repository=booking_repository).execute(
         booking_id=booking_id,
         next_status=payload.status,
+        expected_completion_datetime=payload.expected_completion_datetime,
+        update_expected_completion_datetime=(
+            "expected_completion_datetime" in payload.model_fields_set
+        ),
         changed_by_user_id=current_user.user_id,
         note=payload.note,
     )
@@ -617,38 +614,6 @@ def admin_recommendation_logs(
         offset=offset,
     )
     return page_to_dict(page, recommendation_log_to_dict)
-
-
-@router.get("/recommendations/runs", response_model=dict)
-def admin_recommendation_runs(
-    phone_number: str | None = Query(default=None, max_length=30),
-    algorithm_version: str | None = Query(default=None, max_length=80),
-    limit: int | None = Query(default=None, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
-    _: CurrentUser = Depends(get_current_admin),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
-) -> dict[str, object]:
-    page = ListRecommendationRunsUseCase(
-        recommendation_log_repository=recommendation_log_repository
-    ).execute(
-        phone_number=phone_number,
-        algorithm_version=algorithm_version,
-        limit=limit,
-        offset=offset,
-    )
-    return page_to_dict(page, recommendation_run_to_dict)
-
-
-@router.get("/recommendations/runs/{run_id}", response_model=dict)
-def admin_recommendation_run_detail(
-    run_id: str,
-    _: CurrentUser = Depends(get_current_admin),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
-) -> dict[str, object]:
-    run = GetRecommendationRunUseCase(
-        recommendation_log_repository=recommendation_log_repository
-    ).execute(run_id)
-    return recommendation_run_to_dict(run)
 
 
 @router.get("/business-hours", response_model=StoreBusinessHoursOut)

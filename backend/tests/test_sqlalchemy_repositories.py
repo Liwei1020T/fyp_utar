@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
+from datetime import UTC
+
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_booking_repository import (
     SqlAlchemyBookingRepository,
 )
@@ -56,10 +59,25 @@ def test_sqlalchemy_booking_repository_creates_history_entries() -> None:
         updated = booking_repository.update_status(
             booking_id=booking.id,
             next_status=BookingStatus.IN_PROGRESS.value,
+            expected_completion_datetime=datetime(2026, 4, 23, 18, 30, tzinfo=UTC),
+            update_expected_completion_datetime=True,
             changed_by_user_id=user.id,
             note="Checked in for stringing.",
         )
 
         assert updated.status == BookingStatus.IN_PROGRESS.value
+        assert updated.expected_completion_datetime is not None
         assert len(updated.status_history) == 2
         assert updated.status_history[-1].note == "Checked in for stringing."
+
+        eta_only = booking_repository.update_status(
+            booking_id=booking.id,
+            next_status=BookingStatus.IN_PROGRESS.value,
+            expected_completion_datetime=None,
+            update_expected_completion_datetime=True,
+            changed_by_user_id=user.id,
+            note=None,
+        )
+        assert eta_only.status == BookingStatus.IN_PROGRESS.value
+        assert eta_only.expected_completion_datetime is None
+        assert len(eta_only.status_history) == 2

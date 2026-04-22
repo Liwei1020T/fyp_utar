@@ -45,6 +45,8 @@ class BookingRepository(Protocol):
         *,
         booking_id: str,
         next_status: str,
+        expected_completion_datetime: datetime | None,
+        update_expected_completion_datetime: bool,
         changed_by_user_id: str | None,
         note: str | None,
     ) -> BookingRecord: ...

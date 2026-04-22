@@ -155,12 +155,33 @@ def test_auth_profile_booking_and_admin_status_flow():
     update_response = client.patch(
         f"/api/admin/bookings/{booking_id}/status",
         headers=headers(admin_token),
-        json={"status": "in_progress"},
+        json={
+            "status": "in_progress",
+            "expected_completion_datetime": "2026-04-23T18:30:00Z",
+        },
     )
     assert update_response.status_code == 200
     assert update_response.json()["status"] == "in_progress"
     assert update_response.json()["order_code"] == order_code
+    assert update_response.json()["expected_completion_datetime"].startswith(
+        "2026-04-23T18:30:00"
+    )
     assert len(update_response.json()["status_history"]) == 2
+
+    eta_only_response = client.patch(
+        f"/api/admin/bookings/{booking_id}/status",
+        headers=headers(admin_token),
+        json={
+            "status": "in_progress",
+            "expected_completion_datetime": "2026-04-24T09:15:00Z",
+        },
+    )
+    assert eta_only_response.status_code == 200
+    assert eta_only_response.json()["status"] == "in_progress"
+    assert eta_only_response.json()["expected_completion_datetime"].startswith(
+        "2026-04-24T09:15:00"
+    )
+    assert len(eta_only_response.json()["status_history"]) == 2
 
 
 def test_customer_cannot_access_admin_booking_routes():
