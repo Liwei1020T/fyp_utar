@@ -37,6 +37,7 @@ def test_sqlalchemy_booking_repository_creates_history_entries() -> None:
             racket_model="Astrox",
             requested_tension=25,
             drop_off_datetime=None,
+            expected_completion_datetime=None,
             notes="Repository test booking",
             status=BookingStatus.AWAITING_DROPOFF.value,
             changed_by_user_id=user.id,

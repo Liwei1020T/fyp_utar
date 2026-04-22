@@ -53,33 +53,64 @@ export default function PlayerLayout() {
 
     const hydrate = async () => {
       try {
-        const [user, profile, stringsPage, bookingsPage, storeSettings] = await Promise.all([
+        const [userResult, profileResult, stringsResult, bookingsResult, storeSettingsResult] = await Promise.allSettled([
           backendApi.fetchCurrentUser(token),
-          backendApi.fetchProfile(token).catch(() => null),
+          backendApi.fetchProfile(token),
           backendApi.listStrings(token),
           backendApi.listBookings(token),
-          backendApi.fetchStoreSettings(token).catch(() => null),
+          backendApi.fetchStoreSettings(token),
         ]);
 
         if (cancelled) {
           return;
         }
 
-        const liveStrings = stringsPage.items.map(mapBackendStringToStringItem);
-        const priceByStringId = new Map(
-          liveStrings.map((item) => [item.id, item.price]),
-        );
-        const liveBookings = bookingsPage.items.map((item) =>
-          mapBackendBookingToBooking(item, priceByStringId),
-        );
+        if (userResult.status === 'rejected') {
+          if (isBackendAuthError(userResult.reason)) {
+            logout();
+            return;
+          }
+          console.warn('Failed to hydrate live player identity', userResult.reason);
+          return;
+        }
+
+        const profile =
+          profileResult.status === 'fulfilled' ? profileResult.value : null;
+        if (profileResult.status === 'rejected') {
+          console.warn('Failed to hydrate live player profile details', profileResult.reason);
+        }
 
         setBackendPlayerSession({
           accessToken: token,
-          player: mapBackendUserToPlayerProfile(user, profile),
+          player: mapBackendUserToPlayerProfile(userResult.value, profile),
         });
-        setLiveStrings(liveStrings);
-        setLiveBookings(liveBookings);
-        if (storeSettings) {
+
+        let liveStrings = useAppStore.getState().liveStrings;
+        if (stringsResult.status === 'fulfilled') {
+          liveStrings = stringsResult.value.items.map(mapBackendStringToStringItem);
+          setLiveStrings(liveStrings);
+        } else {
+          console.warn('Failed to hydrate live player strings', stringsResult.reason);
+        }
+
+        if (bookingsResult.status === 'fulfilled') {
+          const priceByStringId = new Map(
+            liveStrings.map((item) => [item.id, item.price]),
+          );
+          const liveBookings = bookingsResult.value.items.map((item) =>
+            mapBackendBookingToBooking(item, priceByStringId),
+          );
+          setLiveBookings(liveBookings);
+        } else {
+          if (isBackendAuthError(bookingsResult.reason)) {
+            logout();
+            return;
+          }
+          console.warn('Failed to hydrate live player bookings', bookingsResult.reason);
+        }
+
+        if (storeSettingsResult.status === 'fulfilled' && storeSettingsResult.value) {
+          const storeSettings = storeSettingsResult.value;
           updateAdminSettings('main', {
             storeName: storeSettings.store_name,
             storeContact: storeSettings.store_contact,
@@ -90,6 +121,8 @@ export default function PlayerLayout() {
             storePolicyText: storeSettings.store_policy_text,
             trendingStringIds: storeSettings.trending_string_ids ?? [],
           });
+        } else if (storeSettingsResult.status === 'rejected') {
+          console.warn('Failed to hydrate live store settings', storeSettingsResult.reason);
         }
       } catch (error) {
         if (isBackendAuthError(error)) {

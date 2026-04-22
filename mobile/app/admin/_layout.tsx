@@ -43,7 +43,7 @@ export default function AdminLayout() {
 
     const hydrate = async () => {
       try {
-        const [currentUser, inventoryPage, bookingsPage] = await Promise.all([
+        const [currentUserResult, inventoryResult, bookingsResult] = await Promise.allSettled([
           backendApi.fetchCurrentUser(token),
           backendApi.adminListInventoryStrings(token),
           backendApi.adminListBookings(token),
@@ -53,21 +53,44 @@ export default function AdminLayout() {
           return;
         }
 
-        const admin = mapBackendUserToAdminProfile(currentUser);
-        const liveStrings = inventoryPage.items.map(mapBackendInventoryStringToStringItem);
-        const priceByStringId = new Map(
-          liveStrings.map((item) => [item.id, item.price]),
-        );
-        const liveBookings = bookingsPage.items.map((item) =>
-          mapBackendBookingToBooking(item, priceByStringId, admin.id),
-        );
+        if (currentUserResult.status === 'rejected') {
+          if (isBackendAuthError(currentUserResult.reason)) {
+            logout();
+            return;
+          }
+          console.warn('Failed to hydrate live admin profile', currentUserResult.reason);
+          return;
+        }
 
+        const admin = mapBackendUserToAdminProfile(currentUserResult.value);
         setBackendAdminSession({
           accessToken: token,
           admin,
         });
-        setLiveStrings(liveStrings);
-        setLiveBookings(liveBookings);
+
+        let liveStrings = useAppStore.getState().liveStrings;
+        if (inventoryResult.status === 'fulfilled') {
+          liveStrings = inventoryResult.value.items.map(mapBackendInventoryStringToStringItem);
+          setLiveStrings(liveStrings);
+        } else {
+          console.warn('Failed to hydrate live admin inventory', inventoryResult.reason);
+        }
+
+        if (bookingsResult.status === 'fulfilled') {
+          const priceByStringId = new Map(
+            liveStrings.map((item) => [item.id, item.price]),
+          );
+          const liveBookings = bookingsResult.value.items.map((item) =>
+            mapBackendBookingToBooking(item, priceByStringId, admin.id),
+          );
+          setLiveBookings(liveBookings);
+        } else {
+          if (isBackendAuthError(bookingsResult.reason)) {
+            logout();
+            return;
+          }
+          console.warn('Failed to hydrate live admin bookings', bookingsResult.reason);
+        }
       } catch (error) {
         if (isBackendAuthError(error)) {
           logout();

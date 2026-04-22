@@ -65,6 +65,8 @@ uv sync --extra dev
 ```bash
 cd backend
 ./.venv/bin/alembic upgrade head
+
+`AUTO_CREATE_SCHEMA=true` is only a convenience for creating missing tables in local/test setups. It does not repair drift in existing tables, so schema changes still require `./.venv/bin/alembic upgrade head`.
 ```
 
 3. Start the unified backend:

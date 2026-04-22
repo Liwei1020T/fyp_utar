@@ -6,8 +6,11 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
+from sqlalchemy.orm import Session
 from sqlalchemy import text
 
+from app.adapters.persistence.sqlalchemy.models import Booking
+from app.adapters.persistence.sqlalchemy.models import User
 from app.config.settings import get_settings
 
 
@@ -153,3 +156,178 @@ def test_catalog_normalization_migration_preserves_existing_booking(
             .one()
         )
         assert matrix_rows["count"] >= 12
+
+
+def test_booking_drift_repair_migration_restores_missing_booking_columns(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    db_path = tmp_path / "booking-drift-repair.sqlite"
+    database_url = f"sqlite+pysqlite:///{db_path}"
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("APP_ENV", "testing")
+    monkeypatch.setenv("AUTO_CREATE_SCHEMA", "false")
+    get_settings.cache_clear()
+
+    config = make_alembic_config(database_url)
+    command.upgrade(config, "20260414_0017")
+
+    engine = create_engine(database_url)
+    with engine.begin() as connection:
+        existing_string = (
+            connection.execute(
+                text(
+                    """
+                    SELECT catalog_id
+                    FROM strings
+                    ORDER BY catalog_id
+                    LIMIT 1
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+
+    with Session(engine) as session:
+        session.add(
+            User(
+                id="user-1",
+                username="drift-user",
+                phone_number="+60123335555",
+                password_hash="hashed",
+                role="customer",
+                auth_provider="local",
+            )
+        )
+        session.add(
+            Booking(
+                id="booking-1",
+                user_id="user-1",
+                string_id=existing_string["catalog_id"],
+                racket_brand="Yonex",
+                racket_model="Astrox 88D",
+                requested_tension=25,
+                status="awaiting_dropoff",
+            )
+        )
+        session.commit()
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE _bookings_repaired (
+                    id VARCHAR(36) NOT NULL PRIMARY KEY,
+                    user_id VARCHAR(36) NOT NULL,
+                    string_id VARCHAR(120) NOT NULL,
+                    racket_brand VARCHAR(100),
+                    racket_model VARCHAR(100),
+                    requested_tension NUMERIC(4, 1),
+                    drop_off_datetime DATETIME,
+                    notes TEXT,
+                    status VARCHAR(30) NOT NULL,
+                    created_at DATETIME NOT NULL,
+                    updated_at DATETIME NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users (id) ON DELETE CASCADE,
+                    FOREIGN KEY(string_id) REFERENCES strings (catalog_id)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO _bookings_repaired (
+                    id, user_id, string_id, racket_brand, racket_model,
+                    requested_tension, drop_off_datetime, notes, status,
+                    created_at, updated_at
+                )
+                SELECT
+                    id, user_id, string_id, racket_brand, racket_model,
+                    requested_tension, drop_off_datetime, notes, status,
+                    created_at, updated_at
+                FROM bookings
+                """
+            )
+        )
+        connection.execute(text("DROP TABLE bookings"))
+        connection.execute(text("ALTER TABLE _bookings_repaired RENAME TO bookings"))
+        connection.execute(text("CREATE INDEX ix_bookings_status ON bookings (status)"))
+        connection.execute(
+            text("CREATE INDEX ix_bookings_string_id ON bookings (string_id)")
+        )
+        connection.execute(
+            text("CREATE INDEX ix_bookings_user_id ON bookings (user_id)")
+        )
+
+        version_row = (
+            connection.execute(text("SELECT version_num FROM alembic_version"))
+            .mappings()
+            .one()
+        )
+        assert version_row["version_num"] == "20260414_0017"
+
+        booking_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT id, user_id, string_id, status
+                    FROM bookings
+                    ORDER BY created_at
+                    LIMIT 1
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+
+    inspector = inspect(engine)
+    columns = {item["name"] for item in inspector.get_columns("bookings")}
+    assert "expected_completion_datetime" not in columns
+    assert "collection_datetime" not in columns
+    assert "cancellation_reason" not in columns
+    assert "completion_summary" not in columns
+
+    command.upgrade(config, "head")
+
+    inspector = inspect(engine)
+    columns = {item["name"] for item in inspector.get_columns("bookings")}
+    assert "expected_completion_datetime" in columns
+    assert "collection_datetime" in columns
+    assert "cancellation_reason" in columns
+    assert "completion_summary" in columns
+
+    with engine.begin() as connection:
+        version_row = (
+            connection.execute(text("SELECT version_num FROM alembic_version"))
+            .mappings()
+            .one()
+        )
+        assert version_row["version_num"] == "20260423_0018"
+
+        repaired_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT id, user_id, string_id, status,
+                           expected_completion_datetime, collection_datetime,
+                           cancellation_reason, completion_summary
+                    FROM bookings
+                    WHERE id = :booking_id
+                    """
+                ),
+                {"booking_id": booking_row["id"]},
+            )
+            .mappings()
+            .one()
+        )
+        assert repaired_row["user_id"] == booking_row["user_id"]
+        assert repaired_row["string_id"] == booking_row["string_id"]
+        assert repaired_row["status"] == booking_row["status"]
+        assert repaired_row["expected_completion_datetime"] is None
+        assert repaired_row["collection_datetime"] is None
+        assert repaired_row["cancellation_reason"] is None
+        assert repaired_row["completion_summary"] is None
