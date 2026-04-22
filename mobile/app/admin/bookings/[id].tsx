@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Clock3,
   Circle,
+  ChevronDown,
   Store,
   TimerReset,
   Upload,
@@ -183,6 +184,50 @@ function SummaryRow({
   );
 }
 
+function SelectionField({
+  label,
+  value,
+  placeholder,
+  isOpen,
+  onPress,
+}: {
+  label: string;
+  value?: string;
+  placeholder: string;
+  isOpen: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      className={`flex-1 rounded-[20px] border px-4 py-4 ${
+        isOpen ? 'border-primary-500 bg-primary-50/50' : 'border-[#DCE6F7] bg-white'
+      }`}
+    >
+      <View className="flex-row items-start justify-between gap-3">
+        <View className="flex-1">
+          <HeroText className="text-[13px] font-semibold text-neutral-800">
+            {label}
+          </HeroText>
+          <HeroText
+            className={`mt-3 text-[16px] font-semibold ${
+              value ? 'text-neutral-900' : 'text-neutral-400'
+            }`}
+          >
+            {value ?? placeholder}
+          </HeroText>
+        </View>
+        <ChevronDown
+          size={18}
+          color={isOpen ? '#2F64B6' : '#94A3B8'}
+        />
+      </View>
+    </Pressable>
+  );
+}
+
 function AdminUpdateFeed({
   updates,
   onOpenPhoto,
@@ -281,6 +326,9 @@ export default function AdminBookingDetailScreen() {
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
   const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
   const [expectedCompletionTime, setExpectedCompletionTime] = useState('');
+  const [openExpectedCompletionSelector, setOpenExpectedCompletionSelector] = useState<
+    'date' | 'time' | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [updateComment, setUpdateComment] = useState('');
@@ -349,6 +397,42 @@ export default function AdminBookingDetailScreen() {
     [booking?.updates]
   );
 
+  const expectedCompletionDateOptions = useMemo(() => {
+    const options: Array<{ value: string; label: string }> = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    for (let offset = 0; offset < 14; offset += 1) {
+      const next = new Date(start);
+      next.setDate(start.getDate() + offset);
+      options.push({
+        value: formatLocalDateInputValue(next),
+        label: next.toLocaleDateString('en-MY', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        }),
+      });
+    }
+
+    return options;
+  }, []);
+
+  const expectedCompletionTimeOptions = useMemo(() => {
+    const options: string[] = [];
+    for (let hour = 10; hour <= 21; hour += 1) {
+      for (const minute of [0, 30]) {
+        if (hour === 21 && minute > 0) {
+          continue;
+        }
+        options.push(
+          `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+        );
+      }
+    }
+    return options;
+  }, []);
+
   if (!booking) {
     return null;
   }
@@ -373,6 +457,8 @@ export default function AdminBookingDetailScreen() {
   const isStatusChangeAllowed = !isWorkflowUnchanged && allowedNextStatuses.includes(status);
   const canSaveWorkflow =
     (!isWorkflowUnchanged && isStatusChangeAllowed) || hasExpectedCompletionChange;
+  const selectedExpectedCompletionDateLabel =
+    expectedCompletionDateOptions.find((item) => item.value === expectedCompletionDate)?.label;
 
   const buildExpectedCompletionTimestamp = () => {
     const dateValue = expectedCompletionDate.trim();
@@ -682,25 +768,74 @@ export default function AdminBookingDetailScreen() {
               Set when the racket should be ready for collection.
             </HeroText>
             <View className="mt-3 flex-row gap-3">
-              <AppInput
+              <SelectionField
                 label="Date"
-                value={expectedCompletionDate}
-                onChangeText={setExpectedCompletionDate}
-                placeholder="YYYY-MM-DD"
-                autoCapitalize="none"
-                autoCorrect={false}
-                className="mb-0 flex-1"
+                value={selectedExpectedCompletionDateLabel}
+                placeholder="Select date"
+                isOpen={openExpectedCompletionSelector === 'date'}
+                onPress={() =>
+                  setOpenExpectedCompletionSelector((current) =>
+                    current === 'date' ? null : 'date'
+                  )
+                }
               />
-              <AppInput
+              <SelectionField
                 label="Time"
-                value={expectedCompletionTime}
-                onChangeText={setExpectedCompletionTime}
-                placeholder="HH:MM"
-                autoCapitalize="none"
-                autoCorrect={false}
-                className="mb-0 flex-1"
+                value={expectedCompletionTime || undefined}
+                placeholder="Select time"
+                isOpen={openExpectedCompletionSelector === 'time'}
+                onPress={() =>
+                  setOpenExpectedCompletionSelector((current) =>
+                    current === 'time' ? null : 'time'
+                  )
+                }
               />
             </View>
+            {openExpectedCompletionSelector === 'date' ? (
+              <View className="mt-4 flex-row flex-wrap gap-2">
+                {expectedCompletionDateOptions.map((option) => (
+                  <AppChip
+                    key={option.value}
+                    label={option.label}
+                    variant={
+                      expectedCompletionDate === option.value ? 'primary' : 'neutral'
+                    }
+                    onPress={() => {
+                      setExpectedCompletionDate(option.value);
+                      setOpenExpectedCompletionSelector('time');
+                    }}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {openExpectedCompletionSelector === 'time' ? (
+              <View className="mt-4 flex-row flex-wrap gap-2">
+                {expectedCompletionTimeOptions.map((option) => (
+                  <AppChip
+                    key={option}
+                    label={option}
+                    variant={expectedCompletionTime === option ? 'primary' : 'neutral'}
+                    onPress={() => {
+                      setExpectedCompletionTime(option);
+                      setOpenExpectedCompletionSelector(null);
+                    }}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {(expectedCompletionDate || expectedCompletionTime) ? (
+              <View className="mt-4">
+                <AppChip
+                  label="Clear expected completion"
+                  variant="neutral"
+                  onPress={() => {
+                    setExpectedCompletionDate('');
+                    setExpectedCompletionTime('');
+                    setOpenExpectedCompletionSelector(null);
+                  }}
+                />
+              </View>
+            ) : null}
           </View>
 
           {error ? (
