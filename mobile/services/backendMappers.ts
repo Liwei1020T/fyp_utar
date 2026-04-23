@@ -301,7 +301,7 @@ export function mapBackendUserToAdminProfile(user: BackendAuthUser): AdminProfil
     name: user.username,
     email: user.phone_number,
     avatarLabel: initials(user.username),
-    businessName: 'Apex String Lab',
+    businessName: 'StringSense',
     city: 'Kuala Lumpur',
     branchCode: 'LIVE-BACKEND',
     averageTurnaroundHours: 24,

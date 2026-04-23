@@ -97,7 +97,7 @@ export const MOCK_ADMINS: AdminProfile[] = [
     name: 'Daniel Tan',
     email: 'admin@example.com',
     avatarLabel: 'DT',
-    businessName: 'Apex String Lab',
+    businessName: 'StringSense',
     city: 'Kuala Lumpur',
     branchCode: 'ASL-KL-01',
     averageTurnaroundHours: 19,
