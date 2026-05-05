@@ -160,7 +160,6 @@ export function AdminInventoryCard({
       variant={attentionOnly ? 'highlighted' : 'default'}
       className={cn('rounded-[24px]', attentionOnly ? 'border-warning-100/90' : undefined)}
       contentClassName="p-3.5"
-      onPress={onPress}
     >
       <View className="flex-row gap-3">
         <AdminStringThumbnail item={item} />
