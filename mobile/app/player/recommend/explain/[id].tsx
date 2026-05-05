@@ -481,10 +481,10 @@ export default function RecommendationExplanationScreen() {
           </HeroText>
         </View>
 
-        <View className="mt-5 flex-row gap-3">
+        <View className="mt-5 gap-3">
           <AppButton
             label="Book this string"
-            className="flex-1 border-white bg-white"
+            className="border-white bg-white"
             textClassName="text-primary-700 font-bold"
             isDisabled={!canBook}
             onPress={() => stringId ? router.push(`/player/bookings/new?stringId=${stringId}`) : undefined}
@@ -492,7 +492,7 @@ export default function RecommendationExplanationScreen() {
           <AppButton
             label="Back to shortlist"
             variant="ghost"
-            className="flex-1 border-white/20 bg-white/10"
+            className="border-white/20 bg-white/10"
             textClassName="text-white font-bold"
             onPress={() => router.replace('/player/results')}
           />
@@ -613,10 +613,9 @@ export default function RecommendationExplanationScreen() {
             </View>
           </View>
 
-          <View className="mt-4 flex-row gap-3">
+          <View className="mt-4 gap-3">
             <AppButton
               label="Book this string"
-              className="flex-1"
               leadingIcon={<WalletCards size={17} color="#FFFFFF" strokeWidth={2.4} />}
               isDisabled={!canBook}
               onPress={() => stringId ? router.push(`/player/bookings/new?stringId=${stringId}`) : undefined}
@@ -624,7 +623,6 @@ export default function RecommendationExplanationScreen() {
             <AppButton
               label="Back to shortlist"
               variant="outline"
-              className="flex-1"
               onPress={() => router.replace('/player/results')}
             />
           </View>

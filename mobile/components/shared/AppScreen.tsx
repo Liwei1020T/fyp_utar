@@ -61,10 +61,10 @@ export function AppScreen({
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: toneBackgrounds[tone] }}
+      style={{ flex: 1, backgroundColor: toneBackgrounds[tone] }}
       edges={['top', 'left', 'right', 'bottom']}
     >
-      <View className="flex-1">
+      <View className="flex-1" style={{ flex: 1 }}>
         <AppPageHeader
           title={title}
           subtitle={subtitle}
@@ -79,6 +79,7 @@ export function AppScreen({
         {scrollable ? (
           <ScrollView
             className={cn('flex-1', className)}
+            style={{ flex: 1 }}
             keyboardShouldPersistTaps="handled"
             scrollIndicatorInsets={{ bottom: bottomContentInset }}
             contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomContentInset }}
@@ -86,16 +87,30 @@ export function AppScreen({
           >
             <View
               className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
-              style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
+              style={{
+                flex: 1,
+                width: '100%',
+                alignSelf: 'center',
+                maxWidth: appLayoutMetrics.contentMaxWidth,
+                paddingHorizontal: appLayoutMetrics.pagePadding,
+                paddingTop: 16,
+              }}
             >
               {children}
             </View>
           </ScrollView>
         ) : (
-          <View className={cn('flex-1', className)} {...props}>
+          <View className={cn('flex-1', className)} style={{ flex: 1 }} {...props}>
             <View
               className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
-              style={{ maxWidth: appLayoutMetrics.contentMaxWidth }}
+              style={{
+                flex: 1,
+                width: '100%',
+                alignSelf: 'center',
+                maxWidth: appLayoutMetrics.contentMaxWidth,
+                paddingHorizontal: appLayoutMetrics.pagePadding,
+                paddingTop: 16,
+              }}
             >
               {children}
             </View>

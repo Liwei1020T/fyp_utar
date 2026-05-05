@@ -661,23 +661,56 @@ export default function AdminBookingDetailScreen() {
       <AppSection variant="compact">
         <AppCard variant="highlighted" padding="lg">
           <View className="gap-4">
-            <View className="flex-row items-start justify-between gap-3">
-              <View className="flex-1">
-                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+            <View className="gap-3" style={{ gap: 12 }}>
+              <View
+                className="flex-row items-start justify-between gap-3"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <HeroText
+                  className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700"
+                  style={{
+                    color: '#2563EB',
+                    fontSize: 11,
+                    fontWeight: '700',
+                    letterSpacing: 1.9,
+                    textTransform: 'uppercase',
+                  }}
+                >
                   Current status
                 </HeroText>
-                <HeroText className="mt-1 text-[28px] font-bold tracking-tight text-neutral-950">
-                  {formatBookingStatus(booking.status)}
-                </HeroText>
-                <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-                  {getStatusHeroCopy(booking.status)}
-                </HeroText>
+                <AppChip
+                  label={formatBookingStatus(booking.status)}
+                  variant={getBookingStatusVariant(booking.status)}
+                  size="md"
+                />
               </View>
-              <AppChip
-                label={formatBookingStatus(booking.status)}
-                variant={getBookingStatusVariant(booking.status)}
-                size="md"
-              />
+
+              <HeroText
+                className="text-[28px] font-bold tracking-tight text-neutral-950"
+                style={{
+                  color: '#0A1020',
+                  fontSize: 30,
+                  fontWeight: '800',
+                  lineHeight: 36,
+                }}
+              >
+                {formatBookingStatus(booking.status)}
+              </HeroText>
+              <HeroText
+                className="text-sm leading-5 text-neutral-500"
+                style={{
+                  color: '#737373',
+                  fontSize: 14,
+                  lineHeight: 22,
+                }}
+              >
+                {getStatusHeroCopy(booking.status)}
+              </HeroText>
             </View>
 
             <View className="gap-2.5 rounded-[22px] border border-white/80 bg-white/80 px-4 py-4">

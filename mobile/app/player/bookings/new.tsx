@@ -495,18 +495,26 @@ export default function NewBookingScreen() {
                 </HeroText>
                 <View className="rounded-[24px] border border-separator bg-surface-secondary p-1 shadow-soft">
                   <View className="rounded-[20px] border border-field-border bg-field-background px-4 py-3">
-                    <View className="flex-row items-center justify-between gap-3">
+                    <View className="flex-row items-center justify-between gap-2">
                       <AppIconButton
                         icon={<Minus size={16} color="#2F64B6" />}
                         accessibilityLabel="Decrease requested tension"
                         variant="surface"
                         onPress={() => onChange(Math.max(18, Number(value) - 1))}
                       />
-                      <View className="items-center">
-                        <HeroText className="text-[28px] font-bold tracking-tight text-neutral-950">
+                      <View className="min-w-0 flex-1 items-center" style={{ minWidth: 0, flex: 1, alignItems: 'center' }}>
+                        <HeroText
+                          className="text-[28px] font-bold tracking-tight text-neutral-950"
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                        >
                           {String(value)} lbs
                         </HeroText>
-                        <HeroText className="mt-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
+                        <HeroText
+                          className="mt-1 text-xs uppercase tracking-[0.18em] text-neutral-400"
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                        >
                           Requested tension
                         </HeroText>
                       </View>

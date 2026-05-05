@@ -17,6 +17,7 @@
 - Mobile setup: `cd mobile && nvm use && npm install`
 - Mobile typecheck: `cd mobile && npx tsc --noEmit`
 - Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
+- Mobile Expo Go smoke: start backend with `--host 0.0.0.0`, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
 - Backend setup: `cd backend && uv sync --extra dev`
 - Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
 - Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
@@ -40,7 +41,7 @@
   - NLP artifact handoff: default runtime workbook in `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`
   - legacy AI-service artifact handoff: `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
 - State/data boundaries:
-  - `backend/` owns runtime data, auth, bookings, recommendation logs, and recommendation run history
+  - `backend/` owns runtime data, auth, bookings, and recommendation logs
   - `mobile/` stays hybrid: live FYP1 player/admin core flow plus hidden/mock-first FYP2 domains
   - `ml/nlp-workbench/` is offline experimentation and artifact generation, not a public service
 
@@ -68,16 +69,19 @@
 ## Quick Start
 
 - Local Postgres:
-  - `docker compose up -d postgres`
+  - `rtk docker compose up -d postgres`
 - Backend:
   - `cd backend && cp .env.example .env`
-  - `cd backend && uv sync --extra dev`
-  - `cd backend && ./.venv/bin/alembic upgrade head`
-  - `cd backend && ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
+  - `cd backend && rtk uv sync --extra dev`
+  - `cd backend && rtk ./.venv/bin/alembic upgrade head`
+  - Browser-only local run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
+  - Expo Go phone run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload`
 - Mobile:
   - `cd mobile && nvm use`
   - `cd mobile && npm install`
-  - `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
+  - Browser web: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
+  - Expo Go: run `rtk ifconfig en0`, copy the `inet` Wi-Fi IP, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
+  - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone; those point to the phone, not the Mac.
 - NLP:
   - `cd ml/nlp-workbench && python3 -m pip install -r requirements.txt`
   - Run the notebook top-to-bottom to populate `ml/nlp-workbench/outputs/` (legacy AI-service compatibility artifacts)

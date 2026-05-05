@@ -192,7 +192,7 @@ compatibility.
 | [backend/app/entrypoints/api/routes/catalog_routes.py](../backend/app/entrypoints/api/routes/catalog_routes.py) | Public string catalog list/detail. |
 | [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail. |
 | [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Recommendation preview/profile endpoints. |
-| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, status updates, check-in, queue, settings, analytics, recommendation logs, and recommendation run inspection. |
+| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, status updates, check-in, queue, settings, analytics, logs. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
 
 ### Backend Domains And Use Cases
@@ -204,7 +204,7 @@ compatibility.
 | Catalog | `domain/catalog`, `use_cases/catalog`, `dto/catalog.py` | String catalog plus admin inventory fields and approved-catalog guard. |
 | Booking | `domain/booking`, `use_cases/booking`, `dto/booking.py` | Booking creation, list/detail, admin status transitions, status note validation. |
 | Store | `domain/store`, `use_cases/store`, `dto/store.py` | Business hours, slots, check-in, service queue, store settings, analytics. |
-| Recommendation | `domain/recommendation`, `use_cases/recommendation`, `dto/recommendation.py` | Recommendation generation, score caching, run persistence, and admin recommendation audit views. |
+| Recommendation | `domain/recommendation`, `use_cases/recommendation`, `dto/recommendation.py` | Recommendation generation and admin log listing. |
 
 When adding behavior, follow the clean-architecture direction:
 `routes -> use_cases -> domain/ports -> adapters`.
@@ -215,7 +215,7 @@ When adding behavior, follow the clean-architecture direction:
 | --- | --- |
 | [backend/app/adapters/persistence/sqlalchemy/session.py](../backend/app/adapters/persistence/sqlalchemy/session.py) | SQLAlchemy engine/session lifecycle, schema helpers, DB health checks. |
 | [backend/app/adapters/persistence/sqlalchemy/base.py](../backend/app/adapters/persistence/sqlalchemy/base.py) | Declarative base. |
-| [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, business hours, settings, recommendation logs, recommendation runs, and password reset codes. |
+| [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, business hours, settings, recommendation logs, password reset codes. |
 | [backend/app/adapters/persistence/sqlalchemy/repositories](../backend/app/adapters/persistence/sqlalchemy/repositories) | Concrete repository implementations and ORM-domain mappers. |
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
@@ -246,7 +246,7 @@ through a separate internal HTTP service by default.
 | Path | Purpose |
 | --- | --- |
 | [backend/tests/conftest.py](../backend/tests/conftest.py) | Test env defaults and per-test SQLite DB reset/seed fixture. |
-| [backend/tests/test_unified_backend_flows.py](../backend/tests/test_unified_backend_flows.py) | End-to-end API flow coverage: auth, profile, recommendation runs/logs, booking, admin controls, and store ops. |
+| [backend/tests/test_unified_backend_flows.py](../backend/tests/test_unified_backend_flows.py) | End-to-end API flow coverage: auth, profile, booking, admin controls, recommendation logs, store ops. |
 | [backend/tests/test_sqlalchemy_repositories.py](../backend/tests/test_sqlalchemy_repositories.py) | Repository persistence behavior. |
 | [backend/tests/test_recommendation_use_case.py](../backend/tests/test_recommendation_use_case.py) | Recommendation use-case behavior. |
 | [backend/tests/test_booking_policies.py](../backend/tests/test_booking_policies.py) | Booking domain status transition and note policies. |
@@ -293,7 +293,7 @@ asks to version a specific artifact.
 | Add a backend endpoint | `backend/app/entrypoints/api/routes/*` | Matching use case, DTO, port/repository, tests, `backend/docs/api-contract.md`. |
 | Change business rules | `backend/app/domain/*/policies.py` or `backend/app/use_cases/*` | Route DTOs, tests for policy/use case. |
 | Change database schema | `backend/app/adapters/persistence/sqlalchemy/models/*` | Alembic revision, repositories, `backend/docs/database.md`, tests. |
-| Change recommendation behavior | `backend/app/domain/recommendation/scoring.py`, `backend/app/adapters/persistence/sqlalchemy/recommendation_matrix_import.py`, and `backend/ai_service/*` | NLP workbook import, recommendation tests, and admin recommendation audit endpoints. |
+| Change recommendation behavior | `backend/app/adapters/services/ai/recommendation_engine_adapter.py` and `backend/ai_service/*` | NLP outputs and recommendation tests. |
 | Change mobile/backend field names | `backend/app/dto/*`, `mobile/types/backend.ts`, `mobile/services/backendMappers.ts` | API contract docs and backend/mobile validation. |
 | Regenerate NLP artifacts | `ml/nlp-workbench/*.ipynb` | Backend `.env` `RECOMMENDATION_MATRIX_SOURCE_PATH` for unified runtime and `AI_*_PATH` for legacy compatibility. |
 

@@ -361,21 +361,24 @@ export default function PlayerBookingDetailScreen() {
       <View className="gap-4">
         <AppCard variant="dark" className="rounded-[28px]" padding="md">
           <View className="gap-3">
-            <View className="flex-row items-start justify-between gap-3">
-              <View className="min-w-0 flex-1">
+            <View className="gap-3">
+              <View className="flex-row items-start justify-between gap-3">
                 <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
                   Status overview
                 </HeroText>
-                <HeroText className="mt-2 text-[26px] font-bold tracking-tight text-white">
-                  {getHeroStatusLabel(booking.status)}
-                </HeroText>
+                <AppChip
+                  label={formatBookingStatus(booking.status)}
+                  variant={getBookingStatusVariant(booking.status)}
+                  className={heroStatusChip.className}
+                  textClassName={heroStatusChip.textClassName}
+                />
               </View>
-              <AppChip
-                label={formatBookingStatus(booking.status)}
-                variant={getBookingStatusVariant(booking.status)}
-                className={heroStatusChip.className}
-                textClassName={heroStatusChip.textClassName}
-              />
+              <HeroText
+                className="text-[26px] font-bold tracking-tight text-white"
+                style={{ fontSize: 30, lineHeight: 36, fontWeight: '800' }}
+              >
+                {getHeroStatusLabel(booking.status)}
+              </HeroText>
             </View>
 
             <View className="rounded-[20px] bg-white/10 px-4 py-3">

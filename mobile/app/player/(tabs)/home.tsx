@@ -129,7 +129,7 @@ export default function PlayerHomeScreen() {
           </View>
 
           <AppButton
-            label="Generate Recommendation"
+            label="Generate setup"
             variant="primary"
             size="md"
             className="mt-4 w-full border-primary-600 bg-primary-600 shadow-[0_12px_24px_rgba(37,99,235,0.22)]"

@@ -99,63 +99,63 @@ export default function BookingTrackingScreen() {
       <View className="gap-4">
         <AppCard variant="elevated" padding="md" className="rounded-[24px]">
           <View className="gap-3">
-            <View className="flex-row items-start justify-between gap-3">
-              <View className="min-w-0 flex-1">
+            <View className="gap-3">
+              <View className="flex-row items-start justify-between gap-3">
                 <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
                   Booking {orderCode}
                 </HeroText>
-                <HeroText className="mt-1 text-[18px] font-bold tracking-tight text-neutral-950">
-                  Your restring journey
-                </HeroText>
+                <AppChip label={currentStatus} variant="primary" className="self-start" />
               </View>
-              <AppChip label={currentStatus} variant="primary" className="self-start" />
+              <HeroText className="text-[24px] font-bold tracking-tight text-neutral-950">
+                Your restring journey
+              </HeroText>
             </View>
 
             <View className="flex-row flex-wrap gap-2">
-              <View className="min-w-[31%] flex-1 rounded-[18px] bg-secondary-50 px-3 py-3">
+              <View className="rounded-[18px] bg-secondary-50 px-3 py-3" style={{ width: '48%' }}>
                 <View className="flex-row items-center gap-2">
                   <Clock3 size={15} color="#2F64B6" />
-                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400" numberOfLines={2}>
                     Current status
                   </HeroText>
                 </View>
-                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950">
+                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950" numberOfLines={2}>
                   {currentStatus}
                 </HeroText>
               </View>
 
-              <View className="min-w-[31%] flex-1 rounded-[18px] bg-secondary-50 px-3 py-3">
+              <View className="rounded-[18px] bg-secondary-50 px-3 py-3" style={{ width: '48%' }}>
                 <View className="flex-row items-center gap-2">
                   <ArrowRight size={15} color="#2F64B6" />
-                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-                    Next expected step
+                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400" numberOfLines={2}>
+                    Next step
                   </HeroText>
                 </View>
-                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950">
+                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950" numberOfLines={2}>
                   {nextStep}
                 </HeroText>
               </View>
 
-              <View className="min-w-[31%] flex-1 rounded-[18px] bg-secondary-50 px-3 py-3">
+              <View className="rounded-[18px] bg-secondary-50 px-3 py-3" style={{ width: '48%' }}>
                 <View className="flex-row items-center gap-2">
                   <CalendarClock size={15} color="#2F64B6" />
-                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400" numberOfLines={2}>
                     Drop-off time
                   </HeroText>
                 </View>
-                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950">
+                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950" numberOfLines={3}>
                   {formatDropOffDateTime(booking)}
                 </HeroText>
               </View>
 
-              <View className="min-w-[31%] flex-1 rounded-[18px] bg-secondary-50 px-3 py-3">
+              <View className="rounded-[18px] bg-secondary-50 px-3 py-3" style={{ width: '48%' }}>
                 <View className="flex-row items-center gap-2">
                   <CalendarClock size={15} color="#2F64B6" />
-                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                  <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400" numberOfLines={2}>
                     Expected ready
                   </HeroText>
                 </View>
-                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950">
+                <HeroText className="mt-2 text-[14px] font-bold tracking-tight text-neutral-950" numberOfLines={3}>
                   {booking.expectedCompletionAt
                     ? formatTrackingDateTime(booking.expectedCompletionAt)
                     : '-'}

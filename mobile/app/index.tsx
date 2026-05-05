@@ -27,9 +27,15 @@ export default function IndexScreen() {
   return (
     <View
       className="flex-1 items-center justify-center px-8"
-      style={{ backgroundColor: appChromeColors.pageAuth }}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 32,
+        backgroundColor: appChromeColors.pageAuth,
+      }}
     >
-      <View className="items-center">
+      <View className="items-center" style={{ alignItems: 'center' }}>
         <View className="h-20 w-20 items-center justify-center rounded-[20px] bg-white shadow-float">
           <Activity size={34} color={appChromeColors.primary} strokeWidth={1.8} />
         </View>

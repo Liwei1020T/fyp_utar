@@ -240,7 +240,7 @@ export default function RecommendationResultsScreen() {
         )}
 
         <AppSection eyebrow="Ranked shortlist" title="Decision cards">
-          <View className="gap-5 pb-10">
+          <View className="gap-5 pb-36">
             {hasResults &&
               liveResults.map((item, index) => {
                 const isSelected = item.stringId ? compareSelection.includes(item.stringId) : false;
@@ -310,11 +310,16 @@ export default function RecommendationResultsScreen() {
 
                     {item.scoreBreakdown ? (
                       <View className="mt-4 rounded-2xl border border-primary-100 bg-primary-50/70 p-4">
-                        <View className="flex-row items-center justify-between">
+                        <View className="gap-2">
                           <HeroText className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-700">
                             Score model
                           </HeroText>
-                          <AppChip label="NLP inside Preference" variant="info" size="sm" />
+                          <AppChip
+                            label="NLP inside Preference"
+                            variant="info"
+                            size="sm"
+                            className="self-start"
+                          />
                         </View>
                         <View className="mt-4 flex-row flex-wrap gap-3">
                           <ScoreMeter

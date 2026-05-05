@@ -29,13 +29,35 @@ export function AuthShell({
       tone="auth"
       contentContainerClassName="justify-center py-8"
     >
-      <View className="w-full self-center" style={{ maxWidth: 430 }}>
-        <View className="mb-8 flex-row items-center justify-between gap-4">
-          <View className="min-w-0 flex-row items-center gap-3">
-            <View className="h-11 w-11 items-center justify-center rounded-lg bg-white shadow-soft">
+      <View className="w-full self-center" style={{ width: '100%', alignSelf: 'center', maxWidth: 430 }}>
+        <View
+          className="mb-8 flex-row items-center justify-between gap-4"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            marginBottom: 32,
+          }}
+        >
+          <View
+            className="min-w-0 flex-row items-center gap-3"
+            style={{ minWidth: 0, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+          >
+            <View
+              className="h-11 w-11 items-center justify-center rounded-lg bg-white shadow-soft"
+              style={{
+                width: 44,
+                height: 44,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 10,
+                backgroundColor: appChromeColors.surface,
+              }}
+            >
               <Activity size={21} color={appChromeColors.primary} />
             </View>
-            <View className="min-w-0 flex-1">
+            <View className="min-w-0 flex-1" style={{ minWidth: 0, flex: 1 }}>
               <HeroText className="text-[15px] font-semibold tracking-normal text-[#1D1D1F]">
                 StringSense
               </HeroText>
@@ -54,7 +76,7 @@ export function AuthShell({
           ) : null}
         </View>
 
-        <View className="mb-6">
+        <View className="mb-6" style={{ marginBottom: 24 }}>
           {eyebrow ? (
             <AppChip
               label={eyebrow}
@@ -74,7 +96,7 @@ export function AuthShell({
 
         <View>{children}</View>
 
-        {footer ? <View className="mt-5">{footer}</View> : null}
+        {footer ? <View className="mt-5" style={{ marginTop: 20 }}>{footer}</View> : null}
       </View>
     </AppScreen>
   );

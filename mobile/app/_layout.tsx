@@ -1,11 +1,11 @@
 import '../global.css';
 
-import { useEffect } from 'react';
+import { Component, useEffect, type ReactNode } from 'react';
 import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { appChromeColors } from '../components/ui/theme';
 import {
@@ -22,6 +22,45 @@ import {
 } from '../services/backendMappers';
 
 const queryClient = new QueryClient();
+
+class RootErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Root render failed', error);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            padding: 24,
+            backgroundColor: appChromeColors.pageAuth,
+          }}
+        >
+          <Text style={{ color: appChromeColors.danger, fontSize: 18, fontWeight: '700' }}>
+            StringSense could not start
+          </Text>
+          <Text style={{ marginTop: 12, color: appChromeColors.textPrimary, lineHeight: 22 }}>
+            {this.state.error.message}
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function BackendSessionBootstrap() {
   const hasHydrated = useAppStore((state) => state.hasHydrated);
@@ -114,18 +153,20 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: appChromeColors.page }}>
       <View style={{ flex: 1, backgroundColor: appChromeColors.page }}>
-        <QueryClientProvider client={queryClient}>
-          <HeroUINativeProvider>
-            <BackendSessionBootstrap />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: appChromeColors.page },
-              }}
-            />
-            <StatusBar style="dark" />
-          </HeroUINativeProvider>
-        </QueryClientProvider>
+        <RootErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <HeroUINativeProvider>
+              <BackendSessionBootstrap />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: appChromeColors.page },
+                }}
+              />
+              <StatusBar style="dark" />
+            </HeroUINativeProvider>
+          </QueryClientProvider>
+        </RootErrorBoundary>
       </View>
     </GestureHandlerRootView>
   );

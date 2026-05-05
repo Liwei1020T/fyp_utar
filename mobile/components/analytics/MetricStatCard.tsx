@@ -19,14 +19,21 @@ export function MetricStatCard({
   icon,
 }: MetricStatCardProps) {
   const { width } = useWindowDimensions();
-  const flexBasis =
-    width >= 900 ? '23%' : width >= 640 ? '31%' : '47%';
+  const cardWidth =
+    width >= 900 ? '23%' : width >= 640 ? '31%' : width >= 360 ? '47%' : '100%';
 
   return (
-    <View style={{ flexBasis, flexGrow: 1, minWidth: 148 }}>
-      <AppCard variant="elevated" className="h-full" padding="md">
+    <View style={{ width: cardWidth, minWidth: 0 }}>
+      <AppCard variant="elevated" padding="md">
         <View
           className={`h-11 w-11 items-center justify-center rounded-[18px] border border-white/70 ${accentClassName}`}
+          style={{
+            width: 44,
+            height: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 18,
+          }}
         >
           {icon}
         </View>

@@ -12,17 +12,25 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 
 ## Quick Start
 
-### 1. Start the backend
+### 1. Start Postgres
+
+```bash
+rtk docker compose up -d postgres
+```
+
+### 2. Start the backend
+
+For browser-only testing on the same Mac, `127.0.0.1` is enough. For Expo Go on a phone, the backend must listen on `0.0.0.0` so the phone can reach it through the Mac Wi-Fi IP.
 
 ```bash
 cd backend
 cp .env.example .env
-uv sync --extra dev
-./.venv/bin/alembic upgrade head
-./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload
+rtk uv sync --extra dev
+rtk ./.venv/bin/alembic upgrade head
+rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload
 ```
 
-### 2. Start the mobile app
+### 3. Start the mobile app in a browser
 
 ```bash
 cd mobile
@@ -33,7 +41,25 @@ EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
 
 The mobile workspace pins Node `20.19.0` via `mobile/.nvmrc` and `mobile/package.json` allows the Node `20.x` line.
 
-### 3. Run the NLP workbench when you need fresh recommendation artifacts
+### 4. Start the mobile app on Expo Go
+
+Find the Mac Wi-Fi IP first. On this machine it usually appears as the `inet` value under `en0`.
+
+```bash
+rtk ifconfig en0
+```
+
+Then start Expo in LAN mode. Replace `<MAC_WIFI_IP>` with the IP from the previous command, for example `192.168.0.80`.
+
+```bash
+cd mobile
+nvm use
+EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan
+```
+
+Open Expo Go on the phone and scan the QR code. The phone and Mac must be on the same Wi-Fi. Do not use `localhost` or `127.0.0.1` for Expo Go, because on a phone those addresses point to the phone itself, not the Mac.
+
+### 5. Run the NLP workbench when you need fresh recommendation artifacts
 
 ```bash
 cd ml/nlp-workbench
@@ -44,29 +70,6 @@ jupyter lab
 Run `stringsense_complete_absa_pipeline_notebook.ipynb` from top to bottom. The generated outputs go into `ml/nlp-workbench/outputs/`.
 
 The unified backend default recommendation source points to `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
-
-## Recommendation Runtime Summary
-
-The active FYP1 recommender is:
-
-- explainable
-- content-based
-- rule-enhanced
-- confidence-aware
-- budget-tier-based
-
-The live backend uses:
-
-- profile preference weights persisted in `profiles` and `user_preference_matrix`
-- official performance plus `nlp_review` matrix fusion from the V9 workbook
-- recommendation cache rows in `recommendation_score_cache`
-- historical run persistence in `recommendation_runs` and `recommendation_run_items`
-
-The canonical player budget input is now `budget_tier`:
-
-- `below_30`
-- `between_30_50`
-- `above_50`
 
 ## Backend and NLP Integration
 

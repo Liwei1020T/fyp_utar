@@ -49,27 +49,40 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
    npm install
    ```
 
-3. **Run the App:**
+3. **Run the App in a browser:**
    ```bash
-   npm run web
+   EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
    ```
 
-4. **Run Mobile Targets:**
+4. **Run on Expo Go using a physical phone:**
+   Start the backend from `../backend` with `--host 0.0.0.0`, then find the Mac Wi-Fi IP:
+   ```bash
+   rtk ifconfig en0
+   ```
+
+   Use the `inet` value as `<MAC_WIFI_IP>`:
+   ```bash
+   EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan
+   ```
+
+   Example:
+   ```bash
+   EXPO_PUBLIC_API_BASE_URL=http://192.168.0.80:3001/api npm run start -- --lan
+   ```
+
+   Open Expo Go on the phone and scan the QR code. The phone and Mac must be on the same Wi-Fi. Do not use `localhost` or `127.0.0.1` for Expo Go because those point to the phone itself.
+
+5. **Run Native Simulator Targets:**
    ```bash
    npm run ios
    npm run android
    ```
 
-5. **Navigate:**
+6. **Navigate:**
    - The app starts at `/auth/welcome`.
    - Player flow now uses phone number + password against the Python backend.
    - Admin FYP1 booking, inventory, business-hours, and limited store-settings flows can use the Python backend.
    - Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`.
-
-6. **Optional live backend override:**
-   ```bash
-   EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
-   ```
 
 ## Styling Runtime
 - `global.css` must stay imported from `app/_layout.tsx`.

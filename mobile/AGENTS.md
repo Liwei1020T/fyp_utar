@@ -126,7 +126,13 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 - Use `nvm use`
 - Install with `npm install`
-- Start with `EXPO_PUBLIC_API_BASE_URL=http://localhost:3001/api npm run web`
+- Browser web: start with `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
+- Expo Go on a physical phone:
+  - Start the sibling backend in `../backend` with `./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload`
+  - Run `rtk ifconfig en0` from the workspace and copy the `inet` Wi-Fi IP
+  - Start with `EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
+  - Keep the phone and Mac on the same Wi-Fi
+  - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone
 - Start the sibling backend in `../backend` when testing live player flows
 - Create a player through `/auth/register` or use an existing local backend player account for the player flow
 - Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`

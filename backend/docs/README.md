@@ -1,6 +1,7 @@
 # Backend Docs Index
 
 - [Architecture](./architecture.md)
+- [Recommendation Design](./recommendation-design.md)
 - [API Contract](./api-contract.md)
 - [Database Ownership](./database.md)
 - [Clean Architecture Migration Map](./clean-architecture-migration-map.md)

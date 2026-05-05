@@ -318,11 +318,10 @@ export default function AdminCheckInScreen() {
               leftAdornment={<Search size={16} color="#64748B" />}
             />
 
-            <View className="flex-row gap-3">
+            <View className="gap-3" style={{ gap: 12 }}>
               <AppButton
                 label="Scan code"
                 variant="outline"
-                className="flex-1"
                 leadingIcon={<ScanLine size={16} color="#5E6B7D" />}
                 onPress={() => {
                   setLookupError('QR scan can be added later. Use the order ID for now.');
@@ -330,7 +329,6 @@ export default function AdminCheckInScreen() {
               />
               <AppButton
                 label="Find booking"
-                className="flex-1"
                 trailingIcon={<Search size={16} color="#FFFFFF" />}
                 onPress={() => void runLookup()}
                 isLoading={isLookingUp}

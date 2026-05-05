@@ -46,7 +46,7 @@
 - State/data boundaries:
   - SQLAlchemy + Alembic own the active core business tables
   - the unified Python backend owns workflow writes
-  - recommendation logs, score cache rows, and recommendation runs remain business-owned data
+  - recommendation logs remain business-owned data
 
 ## Change Rules
 
