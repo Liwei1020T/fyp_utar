@@ -16,6 +16,7 @@ import {
   formatBookingStatus,
   formatCurrency,
   formatDateLabel,
+  formatLocalDateInputValue,
 } from '../../../lib/formatters';
 
 const FILTER_OPTIONS = [
@@ -206,7 +207,8 @@ export default function AdminBookingsScreen() {
       .sort(compareBookings);
   }, [adminBookings, filter, search]);
 
-  const todayCount = adminBookings.length;
+  const today = formatLocalDateInputValue(new Date());
+  const todayCount = adminBookings.filter((item) => item.dropOffDate === today).length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyCount = adminBookings.filter((item) => item.status === 'ready_for_collection').length;
 

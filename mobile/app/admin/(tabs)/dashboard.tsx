@@ -21,6 +21,7 @@ import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { appChromeColors } from '../../../components/ui/theme';
+import { formatLocalDateInputValue } from '../../../lib/formatters';
 import { useAppStore, useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
 
 const PRIMARY_ACTIONS = [
@@ -72,7 +73,9 @@ export default function AdminDashboardScreen() {
     return null;
   }
 
-  const adminBookings = bookings.filter((item) => item.adminId === user.id);
+  const today = formatLocalDateInputValue(new Date());
+  const adminBookings = bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled');
+  const todayBookings = adminBookings.filter((item) => item.dropOffDate === today);
   const awaitingDropOffCount = adminBookings.filter((item) => item.status === 'awaiting_dropoff').length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyForCollectionCount = adminBookings.filter(
@@ -102,7 +105,7 @@ export default function AdminDashboardScreen() {
           <View className="flex-row flex-wrap gap-3">
             <MetricStatCard
               title="Today bookings"
-              value={String(adminBookings.length)}
+              value={String(todayBookings.length)}
               icon={<CalendarRange size={20} color={appChromeColors.primary} />}
             />
             <MetricStatCard
