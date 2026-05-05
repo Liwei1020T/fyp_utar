@@ -75,7 +75,7 @@ export default function AdminDashboardScreen() {
 
   const today = formatLocalDateInputValue(new Date());
   const adminBookings = bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled');
-  const todayBookings = adminBookings.filter((item) => item.dropOffDate === today);
+  const todayBookings = adminBookings.filter((item) => formatLocalDateInputValue(item.createdAt) === today);
   const awaitingDropOffCount = adminBookings.filter((item) => item.status === 'awaiting_dropoff').length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyForCollectionCount = adminBookings.filter(

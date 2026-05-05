@@ -208,7 +208,7 @@ export default function AdminBookingsScreen() {
   }, [adminBookings, filter, search]);
 
   const today = formatLocalDateInputValue(new Date());
-  const todayCount = adminBookings.filter((item) => item.dropOffDate === today).length;
+  const todayCount = adminBookings.filter((item) => formatLocalDateInputValue(item.createdAt) === today).length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyCount = adminBookings.filter((item) => item.status === 'ready_for_collection').length;
 
