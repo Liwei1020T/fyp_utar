@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowRight, Scale, Sparkles } from 'lucide-react-native';
+import { ArrowRight, Scale } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -168,7 +168,6 @@ export default function RecommendationResultsScreen() {
   }
 
   const isLive = Boolean(token);
-  const algorithmVersion = liveResults[0]?.algorithmVersion;
   const hasResults = liveResults.length > 0;
   const isWaitingForInitialResults = isLive && !hasResults && (!hasLoadedCache || isLoadingCache);
 
@@ -216,28 +215,7 @@ export default function RecommendationResultsScreen() {
               onPress={() => router.replace('/player/recommend')}
             />
           </AppCard>
-        ) : (
-          <AppCard variant="subtle" className="mb-6 rounded-2xl border border-primary-100" padding="md">
-            <View className="flex-row items-center gap-3">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-                <Sparkles size={20} color="#2F64B6" />
-              </View>
-              <View className="flex-1">
-                <HeroText className="text-base font-bold text-neutral-900">
-                  Backend recommendation ready
-                </HeroText>
-                <HeroText className="text-xs text-neutral-500" numberOfLines={1}>
-                  {`${liveResults.length} ranked strings · NLP folded into Preference`}
-                </HeroText>
-                {algorithmVersion ? (
-                  <HeroText className="mt-1 text-[10px] font-bold uppercase tracking-widest text-primary-600">
-                    {algorithmVersion}
-                  </HeroText>
-                ) : null}
-              </View>
-            </View>
-          </AppCard>
-        )}
+        ) : null}
 
         <AppSection eyebrow="Ranked shortlist" title="Decision cards">
           <View className="gap-5 pb-36">
