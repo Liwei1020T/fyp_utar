@@ -33,6 +33,7 @@ export default function AdminBusinessHoursScreen() {
   const [closedDatesText, setClosedDatesText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
   const hours = localHours ?? businessHours.find((item) => item.adminId === user?.id);
 
@@ -62,6 +63,7 @@ export default function AdminBusinessHoursScreen() {
         updateBusinessHours(user.id, mapped);
         setLocalHours(mapped);
         setClosedDatesText(mapped.specialClosedDates.join(', '));
+        setSaveSuccessMessage(null);
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -84,6 +86,7 @@ export default function AdminBusinessHoursScreen() {
     dayName: BusinessHours['days'][number]['day'],
     patch: Partial<BusinessHours['days'][number]>,
   ) => {
+    setSaveSuccessMessage(null);
     setLocalHours((current) =>
       current
         ? {
@@ -94,6 +97,11 @@ export default function AdminBusinessHoursScreen() {
           }
         : current,
     );
+  };
+
+  const updateClosedDatesText = (value: string) => {
+    setSaveSuccessMessage(null);
+    setClosedDatesText(value);
   };
 
   const saveBusinessHours = async () => {
@@ -122,7 +130,9 @@ export default function AdminBusinessHoursScreen() {
       } else {
         updateBusinessHours(user.id, nextHours);
       }
+      setSaveSuccessMessage('Business hours saved. Player booking slots now use the updated schedule.');
     } catch (saveError) {
+      setSaveSuccessMessage(null);
       setError(
         saveError instanceof BackendApiError
           ? saveError.message
@@ -202,10 +212,21 @@ export default function AdminBusinessHoursScreen() {
             label="Special closed dates"
             helperText="Comma-separated YYYY-MM-DD dates."
             value={closedDatesText}
-            onChangeText={setClosedDatesText}
+            onChangeText={updateClosedDatesText}
           />
         </View>
       </AppSection>
+
+      {saveSuccessMessage ? (
+        <View className="mt-4 rounded-[20px] border border-success-100 bg-success-50 px-4 py-3">
+          <HeroText className="text-[13px] font-semibold text-success-700">
+            Business hours saved
+          </HeroText>
+          <HeroText className="mt-1 text-[12px] leading-5 text-success-700">
+            {saveSuccessMessage}
+          </HeroText>
+        </View>
+      ) : null}
 
       {error ? (
         <HeroText className="mt-4 text-sm font-semibold text-danger-600">
