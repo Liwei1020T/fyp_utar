@@ -35,6 +35,8 @@ class ConfirmCheckInUseCase:
         return self.booking_repository.update_status(
             booking_id=booking.id,
             next_status=next_status,
+            expected_completion_datetime=None,
+            update_expected_completion_datetime=False,
             changed_by_user_id=admin_user_id,
             note=(note or "Checked in at the service counter.").strip(),
         )
