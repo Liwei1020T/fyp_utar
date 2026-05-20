@@ -17,6 +17,7 @@ import type {
   BackendRecommendationPayload,
   BackendRecommendationDetailResponse,
   BackendRecommendationResponse,
+  BackendRecommendationRun,
   BackendServiceQueue,
   BackendSlot,
   BackendStoreBusinessHours,
@@ -519,6 +520,40 @@ export const backendApi = {
     const searchParams = new URLSearchParams({ limit: String(limit) });
     return requestJson<BackendPopularString[]>(
       `/admin/analytics/popular-strings?${searchParams.toString()}`,
+      { token },
+    );
+  },
+  adminListRecommendationRuns(
+    token: string,
+    params?: {
+      phone_number?: string;
+      algorithm_version?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.phone_number) {
+      searchParams.set('phone_number', params.phone_number);
+    }
+    if (params?.algorithm_version) {
+      searchParams.set('algorithm_version', params.algorithm_version);
+    }
+    if (params?.limit != null) {
+      searchParams.set('limit', String(params.limit));
+    }
+    if (params?.offset != null) {
+      searchParams.set('offset', String(params.offset));
+    }
+    const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
+    return requestJson<BackendPage<BackendRecommendationRun>>(
+      `/admin/recommendations/runs${suffix}`,
+      { token },
+    );
+  },
+  adminFetchRecommendationRun(token: string, runId: string) {
+    return requestJson<BackendRecommendationRun>(
+      `/admin/recommendations/runs/${runId}`,
       { token },
     );
   },

@@ -7,6 +7,7 @@ import {
   CalendarRange,
   Clock3,
   LogOut,
+  ScanSearch,
   Settings2,
   Store,
   TimerReset,
@@ -208,6 +209,22 @@ export default function AdminDashboardScreen() {
                 <HeroText className="flex-1 text-sm leading-6 text-slate-600">
                   {lowStockCount} string SKU{lowStockCount === 1 ? '' : 's'} flagged for stock review.
                 </HeroText>
+              </View>
+            </AppCard>
+            <AppCard variant="elevated" padding="md" onPress={() => router.push('/admin/recommendations')}>
+              <View className="flex-row items-center gap-3">
+                <View className="h-10 w-10 items-center justify-center rounded-[16px] bg-primary-50">
+                  <ScanSearch size={18} color={appChromeColors.primary} />
+                </View>
+                <View className="flex-1">
+                  <HeroText className="text-[14px] font-semibold tracking-tight text-slate-900">
+                    Recommendation runs
+                  </HeroText>
+                  <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                    Review saved recommendation histories, profile snapshots, and score breakdowns.
+                  </HeroText>
+                </View>
+                <ArrowRight size={16} color={appChromeColors.textMuted} />
               </View>
             </AppCard>
           </View>

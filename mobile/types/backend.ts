@@ -416,6 +416,34 @@ export interface BackendRecommendationDetailResponse {
   generated_at?: string | null;
 }
 
+export interface BackendRecommendationRunItem {
+  id: string;
+  catalog_id: string;
+  rank_position: number;
+  final_score: number;
+  preference_match_score?: number | null;
+  rule_fit_score?: number | null;
+  budget_fit_score?: number | null;
+  confidence_score?: number | null;
+  nlp_review_score?: number | null;
+  score_breakdown: Record<string, unknown>;
+  rationale: Record<string, unknown>;
+}
+
+export interface BackendRecommendationRun {
+  id: string;
+  user_id?: string | null;
+  phone_number?: string | null;
+  username?: string | null;
+  algorithm_version: string;
+  matrix_version?: string | null;
+  feature_source_version?: string | null;
+  request_snapshot: Record<string, unknown>;
+  profile_snapshot: Record<string, unknown>;
+  generated_at?: string | null;
+  items: BackendRecommendationRunItem[];
+}
+
 export interface BackendRecommendationScoreBreakdown {
   preference_match?: number;
   rule_fit?: number;

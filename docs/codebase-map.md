@@ -100,6 +100,8 @@ Zod.
 | [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing trending strings. |
 | [mobile/app/admin/business-hours.tsx](../mobile/app/admin/business-hours.tsx) | Store business hours editor. |
 | [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Admin check-in lookup and confirmation. |
+| [mobile/app/admin/recommendations/index.tsx](../mobile/app/admin/recommendations/index.tsx) | Admin recommendation run history list backed by the unified backend. |
+| [mobile/app/admin/recommendations/[runId].tsx](../mobile/app/admin/recommendations/%5BrunId%5D.tsx) | Admin recommendation run detail with request/profile snapshots and score breakdown review. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Deferred FYP2/mock-first admin service queue lanes; backend sessions redirect away from this route. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Deferred FYP2/mock-first payment monitoring screen; backend sessions redirect away from this route. |
 | [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Limited FYP1 store settings editor for store name, contact, address, support text, booking notes, booking policy text, and backend-persisted home trending strings. |

@@ -20,6 +20,7 @@ This document is the source of truth for the FYP1 demo scope. The FYP1 target is
 - View booking list and booking detail.
 - Update booking status.
 - Add booking-specific comments and optional photos.
+- View recommendation run history and inspect saved score breakdowns.
 - View inventory list and inventory detail.
 - Update inventory price, stock level, availability, and shop note.
 - Edit business hours, break windows, slot duration, capacity, and special closed dates.
@@ -31,6 +32,7 @@ This document is the source of truth for the FYP1 demo scope. The FYP1 target is
 - Player profile persistence.
 - String catalog and inventory persistence.
 - Explainable confidence-aware recommendation flow.
+- Recommendation log and run-history persistence for admin audit.
 - Booking creation, listing, detail, status update, and status history.
 - Booking update persistence for player/admin comments and photos.
 - Local FYP upload storage under `backend/var/uploads/`.

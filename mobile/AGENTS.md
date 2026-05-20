@@ -46,7 +46,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Player workspace: `app/player/(tabs)` plus detail flows under `app/player/**`
   Covers the live FYP1 recommendation, catalog, booking, tracking, and profile flow. Payment, chat, wallet, rackets, notifications, QR check-in, and feedback route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
 - Admin workspace: `app/admin/(tabs)` plus operations screens under `app/admin/**`
-  Covers the live FYP1 dashboard, bookings, inventory, business hours, check-in, and limited settings flow. Chat, analytics, payments, and service queue route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
+  Covers the live FYP1 dashboard, bookings, recommendation run audit, inventory, business hours, check-in, and limited settings flow. Chat, analytics, payments, and service queue route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
 - Admin inventory components: `components/admin/inventory/**`
@@ -69,7 +69,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Player core journey:
   auth -> recommend/catalog -> string detail/compare -> booking draft -> booking summary confirmation -> booking detail/tracking
 - Admin core journey:
-  auth -> operations dashboard -> counter check-in/bookings/inventory -> booking or inventory detail -> operational updates
+  auth -> operations dashboard -> counter check-in/bookings/inventory/recommendation runs -> booking, inventory, or recommendation detail -> operational updates
 - Shared state mutation hotspots:
   `submitBookingPayment`, `updateBookingStatus`, `appendChatMessage`, `requestAdminSupport`, `topUpWallet`, `updateBusinessHours`, `updateStringItem`
 
@@ -87,7 +87,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 5. Keep mutable business behavior in the store, not scattered across screens.
    Screens may derive display state, but durable mutations should live in `store/appStore.ts`.
 6. Treat the player core flow as hybrid.
-   Player auth, profile, strings, recommendation, bookings, booking photos/comments, and FYP1 admin booking, inventory, business-hours, and limited store-settings operations may use the live backend, while FYP2 player/admin domains stay mocked or hidden.
+   Player auth, profile, strings, recommendation, bookings, booking photos/comments, and FYP1 admin booking, recommendation audit, inventory, business-hours, and limited store-settings operations may use the live backend, while FYP2 player/admin domains stay mocked or hidden.
 
 ## Runtime and Styling Constraints
 

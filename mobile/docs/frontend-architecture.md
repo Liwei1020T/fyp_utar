@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the FYP1 player flow plus admin booking, inventory, business-hours, limited store-settings, and booking photo/comment operations can use the live Python backend, while deferred FYP2 domains remain mock-first or hidden inside one codebase.
+StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the FYP1 player flow plus admin booking, recommendation audit, inventory, business-hours, limited store-settings, and booking photo/comment operations can use the live Python backend, while deferred FYP2 domains remain mock-first or hidden inside one codebase.
 
 The app is optimized for:
 
@@ -11,7 +11,7 @@ The app is optimized for:
 - strong visual consistency through shared UI primitives
 - role-based navigation for player and admin experiences
 
-At runtime, the FYP1-visible product flow is backend-oriented. Player auth, profile, strings, recommendation, bookings, booking photos/comments, admin booking management, inventory, business hours, and limited store settings can be hydrated from the backend, while FYP2 modules such as chat, payment/wallet, notifications, racket passport, QR check-in, service queue, advanced analytics, and advanced settings stay deferred.
+At runtime, the FYP1-visible product flow is backend-oriented. Player auth, profile, strings, recommendation, bookings, booking photos/comments, admin booking management, admin recommendation run review, inventory, business hours, and limited store settings can be hydrated from the backend, while FYP2 modules such as chat, payment/wallet, notifications, racket passport, QR check-in, service queue, advanced analytics, and advanced settings stay deferred.
 
 The player home `Trending Strings` carousel is now backend-backed through admin store settings. Admins manage the featured string IDs from `/admin/settings`, the backend persists them on `/api/admin/store-settings`, and player surfaces hydrate them through `GET /api/store-settings` before rendering only those admin-picked strings.
 
@@ -155,6 +155,7 @@ Additional operational stack screens:
 - business hours
 - settings
 - check-in for order-ID-based counter drop-off confirmation
+- recommendation run history and detail review for admin audit of saved recommendation outputs
 - payments monitor, service queue, and chat detail route files exist for FYP2/mock-first work and are redirected away from backend sessions.
 
 `app/admin/index.tsx` redirects to `/admin/dashboard`.
