@@ -12,11 +12,11 @@ from ai_service.schemas import StringRecord
 
 
 DEFAULT_MATRIX_PATH = (
-    "/mnt/data/latest_full_rerun_outputs/"
+    "../ml/nlp-workbench-latest/output/"
     "latest_practical_string_feature_matrix_v8_v6dict.csv"
 )
 DEFAULT_REVIEW_SIGNALS_PATH = (
-    "/mnt/data/latest_full_rerun_outputs/latest_review_aspect_signals_v6dict.csv"
+    "../ml/nlp-workbench-latest/output/rule_based_review_aspect_signals.csv"
 )
 DEFAULT_JSONL_FALLBACK_PATH = (
     BACKEND_ROOT / "data/raw/badminton_strings_recommender.jsonl"

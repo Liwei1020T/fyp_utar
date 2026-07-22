@@ -25,5 +25,6 @@ backend/*.db
 backend/*.zip
 backend/var/
 
-ml/nlp-workbench/outputs/*
-!ml/nlp-workbench/outputs/.gitkeep
+ml/nlp-workbench-latest/output/*
+!ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv
+!ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx

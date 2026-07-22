@@ -11,7 +11,7 @@ just to find the right ownership boundary.
 3. Read [docs/fyp1-scope.md](./fyp1-scope.md) before changing visible demo scope.
 4. Read [mobile/docs/frontend-architecture.md](../mobile/docs/frontend-architecture.md) before changing Expo screens, state, or UI primitives.
 5. Read [backend/docs/architecture.md](../backend/docs/architecture.md), [backend/docs/api-contract.md](../backend/docs/api-contract.md), and [backend/docs/database.md](../backend/docs/database.md) before changing API behavior.
-6. Read [ml/nlp-workbench/README.md](../ml/nlp-workbench/README.md) before regenerating AI/NLP artifacts.
+6. Read [ml/nlp-workbench-latest/README.md](../ml/nlp-workbench-latest/README.md) before regenerating AI/NLP artifacts.
 
 ## Workspace Roots
 
@@ -257,31 +257,32 @@ through a separate internal HTTP service by default.
 
 ## NLP Workbench
 
-NLP lives in [ml/nlp-workbench](../ml/nlp-workbench). It is an offline notebook
-workflow, not a public runtime service.
+NLP lives in [ml/nlp-workbench-latest](../ml/nlp-workbench-latest). It is the
+canonical offline notebook workflow, not a public runtime service.
 
 | Path | Purpose |
 | --- | --- |
-| [ml/nlp-workbench/README.md](../ml/nlp-workbench/README.md) | Notebook inputs, outputs, and run instructions. |
-| [ml/nlp-workbench/requirements.txt](../ml/nlp-workbench/requirements.txt) | Notebook Python dependencies. |
-| [ml/nlp-workbench/stringsense_complete_absa_pipeline_notebook.ipynb](../ml/nlp-workbench/stringsense_complete_absa_pipeline_notebook.ipynb) | Main pipeline; run top-to-bottom to generate backend recommendation artifacts. |
-| [ml/nlp-workbench/stringsense_absa_labeling_notebook.ipynb](../ml/nlp-workbench/stringsense_absa_labeling_notebook.ipynb) | Labeling/support notebook for ABSA data work. |
-| [ml/nlp-workbench/data/domain_dictionary_optimized_v6.csv](../ml/nlp-workbench/data/domain_dictionary_optimized_v6.csv) | Domain dictionary input. |
-| [ml/nlp-workbench/data/normalization_rules_v6.csv](../ml/nlp-workbench/data/normalization_rules_v6.csv) | Text/string normalization rules. |
-| [ml/nlp-workbench/data/nlp_absa_long_dataset_latest.csv](../ml/nlp-workbench/data/nlp_absa_long_dataset_latest.csv) | Long-form ABSA dataset input. |
-| [ml/nlp-workbench/data/nlp_absa_high_confidence_latest.csv](../ml/nlp-workbench/data/nlp_absa_high_confidence_latest.csv) | High-confidence ABSA dataset input. |
-| [ml/nlp-workbench/outputs/.gitkeep](../ml/nlp-workbench/outputs/.gitkeep) | Keeps the generated-output directory in git. |
+| [ml/nlp-workbench-latest/README.md](../ml/nlp-workbench-latest/README.md) | Canonical notebook inputs, outputs, and run instructions. |
+| [ml/nlp-workbench-latest/requirements.txt](../ml/nlp-workbench-latest/requirements.txt) | Notebook and package dependencies. |
+| [ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb](../ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb) | Main pipeline; run top-to-bottom to generate recommendation artifacts. |
+| [ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb](../ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb) | Labeling/support notebook for ABSA data work. |
+| [ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv](../ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv) | Current domain dictionary input. |
+| [ml/nlp-workbench-latest/data/normalization_rules_v8.csv](../ml/nlp-workbench-latest/data/normalization_rules_v8.csv) | Current text/string normalization rules. |
+| [ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv) | Long-form ABSA dataset input. |
+| [ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv) | High-confidence ABSA dataset input. |
+| [ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx](../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx) | Current unified backend recommendation matrix source. |
 
-The backend expects generated files such as:
+The latest notebook can also generate CSV compatibility files under
+`ml/nlp-workbench-latest/output/`:
 
-- `ml/nlp-workbench/outputs/patched_practical_string_feature_matrix.csv`
-- `ml/nlp-workbench/outputs/rule_based_review_aspect_signals.csv`
+- `ml/nlp-workbench-latest/output/patched_practical_string_feature_matrix.csv`
+- `ml/nlp-workbench-latest/output/rule_based_review_aspect_signals.csv`
 
 The unified backend public runtime default recommendation source is:
 
 - `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
 
-The `ml/nlp-workbench/outputs/*` artifacts remain valid for legacy `AI_*_PATH` compatibility and manual import workflows.
+These latest-root CSV artifacts support the standalone `AI_*_PATH` compatibility settings and manual import workflows.
 
 Generated notebook outputs should stay out of commits unless the task explicitly
 asks to version a specific artifact.
@@ -297,7 +298,7 @@ asks to version a specific artifact.
 | Change database schema | `backend/app/adapters/persistence/sqlalchemy/models/*` | Alembic revision, repositories, `backend/docs/database.md`, tests. |
 | Change recommendation behavior | `backend/app/adapters/services/ai/recommendation_engine_adapter.py` and `backend/ai_service/*` | NLP outputs and recommendation tests. |
 | Change mobile/backend field names | `backend/app/dto/*`, `mobile/types/backend.ts`, `mobile/services/backendMappers.ts` | API contract docs and backend/mobile validation. |
-| Regenerate NLP artifacts | `ml/nlp-workbench/*.ipynb` | Backend `.env` `RECOMMENDATION_MATRIX_SOURCE_PATH` for unified runtime and `AI_*_PATH` for legacy compatibility. |
+| Regenerate NLP artifacts | `ml/nlp-workbench-latest/*.ipynb` | Backend `.env` `RECOMMENDATION_MATRIX_SOURCE_PATH` for unified runtime and `AI_*_PATH` for compatibility. |
 
 ## Validation Shortlist
 

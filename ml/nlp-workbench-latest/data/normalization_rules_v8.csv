@@ -1,0 +1,28 @@
+﻿pattern,replacement,notes
+掉榜,掉磅,Common typo normalization
+发木|木木的|木感,发木,Elasticity / sound / comfort negative cue family
+声脆如铃,声脆,Sound-positive normalization
+爆竹一样|像爆竹|爆竹般,爆竹声,Sound-positive normalization
+打铁一样|像打铁|打铁般,打铁声,Sound-positive normalization
+不够清脆,不清脆,Sound-negative normalization
+总是跑线|老跑线,总跑线,String movement normalization
+有点震手|稍微震手|略震手,震手,Mild negative collapsed to negative
+有点掉磅|稍微掉磅|略微掉磅,掉磅明显,Mild negative collapsed to negative
+有点发闷|稍微发闷,发闷,Elasticity / sound negative normalization
+总是跑线|老跑线|总跑线,跑线严重,v6 normalization
+不够脆|没那么脆,不清脆,v6 normalization
+音效没了,音效消失,v6 normalization
+有点震手|稍微震手,震手,v6 normalization
+有点掉磅|稍微掉磅,掉磅明显,v6 normalization
+贵但好用,贵但好用,v6 keep as explicit price-performance phrase
+声音很好听,声音好听,merge latest positive sound variant
+声音真好听,声音好听,merge latest positive sound variant
+音好听,声音好听,merge shorthand sound variant
+性价比比较高,性价比高,merge value phrase variant
+杀球真的爽,杀球很爽,merge attack phrase variant
+有点小贵,小贵,merge value phrase variant
+太容易断了,太容易断,merge durability phrase variant
+掉磅太快了,掉磅太快,merge tension retention phrase variant
+几乎完全不跑线,不跑线,merge movement phrase variant
+还不跑线,不跑线,merge movement phrase variant
+声音不错,声音好,merge softer positive sound variant

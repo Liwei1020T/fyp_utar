@@ -21,29 +21,29 @@
 - Backend setup: `cd backend && uv sync --extra dev`
 - Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
 - Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
-- NLP notebook setup: `cd ml/nlp-workbench && python3 -m pip install -r requirements.txt`
-- NLP notebook run: `cd ml/nlp-workbench && jupyter lab`
+- NLP notebook setup: `cd ml/nlp-workbench-latest && python3 -m pip install -r requirements.txt`
+- NLP notebook run: `cd ml/nlp-workbench-latest && jupyter lab`
 
 ## Architecture Map
 
 - Entry points:
   - Mobile app: `mobile/app/_layout.tsx`
   - Public backend: `backend/app/main.py`
-  - NLP workbench: `ml/nlp-workbench/stringsense_complete_absa_pipeline_notebook.ipynb`
+  - NLP workbench: `ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb`
 - Core modules:
   - `mobile/`: Expo Router app for player and admin flows
   - `backend/`: FastAPI + SQLAlchemy backend plus in-process AI logic
-  - `ml/nlp-workbench/`: notebook, datasets, and generated CSV artifacts for recommendation signals
+  - `ml/nlp-workbench-latest/`: canonical notebook, datasets, and generated recommendation artifacts
   - `docs/`: workspace-level orientation docs
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
   - NLP artifact handoff: default runtime workbook in `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`
-  - legacy AI-service artifact handoff: `ml/nlp-workbench/outputs/` -> backend `AI_*_PATH` config
+  - AI-service compatibility artifact handoff: `ml/nlp-workbench-latest/output/` -> backend `AI_*_PATH` config
 - State/data boundaries:
   - `backend/` owns runtime data, auth, bookings, and recommendation logs
   - `mobile/` stays hybrid: live FYP1 player/admin core flow plus hidden/mock-first FYP2 domains
-  - `ml/nlp-workbench/` is offline experimentation and artifact generation, not a public service
+  - `ml/nlp-workbench-latest/` is offline experimentation and artifact generation, not a public service
 
 ## Change Rules
 
@@ -83,6 +83,6 @@
   - Expo Go: run `rtk ifconfig en0`, copy the `inet` Wi-Fi IP, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
   - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone; those point to the phone, not the Mac.
 - NLP:
-  - `cd ml/nlp-workbench && python3 -m pip install -r requirements.txt`
-  - Run the notebook top-to-bottom to populate `ml/nlp-workbench/outputs/` (legacy AI-service compatibility artifacts)
+  - `cd ml/nlp-workbench-latest && python3 -m pip install -r requirements.txt`
+  - Run the latest notebook top-to-bottom to populate `ml/nlp-workbench-latest/output/`
   - Unified backend default matrix source uses `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`

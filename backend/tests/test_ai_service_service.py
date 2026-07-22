@@ -76,3 +76,14 @@ def test_relative_fallback_catalog_path_resolves_from_backend_root():
     resolved_path = data_loader.get_fallback_jsonl_path()
 
     assert resolved_path == BACKEND_ROOT / "data/raw/custom-catalog.jsonl"
+
+
+def test_default_matrix_path_uses_canonical_latest_csv(monkeypatch):
+    monkeypatch.delenv("AI_MATRIX_CSV_PATH", raising=False)
+
+    resolved_path = data_loader.get_matrix_path()
+
+    assert resolved_path == (
+        BACKEND_ROOT
+        / "../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv"
+    )

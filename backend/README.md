@@ -31,7 +31,7 @@ Key variables:
 
 In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`).
 
-`AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` remain for standalone `ai_service/` compatibility and can point at `../ml/nlp-workbench/outputs/`.
+`AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` remain for standalone `ai_service/` compatibility and use CSV artifacts under `../ml/nlp-workbench-latest/output/`.
 
 Legacy AI env vars such as `AI_INTERNAL_API_KEY` are only needed if you still run `ai_service/` directly for standalone compatibility checks.
 

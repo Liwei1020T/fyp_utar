@@ -2,9 +2,8 @@
 
 The recommendation system uses offline NLP workbench artifacts as item-side feature signals. These artifacts support the backend recommender but are not a separate public runtime service in FYP1.
 
-Source folders:
+Canonical source folder:
 
-- `ml/nlp-workbench/`
 - `ml/nlp-workbench-latest/`
 - `ml/nlp-workbench-latest/data/`
 - `ml/nlp-workbench-latest/output/`
@@ -45,4 +44,3 @@ Include:
 2. A short explanation of how review-derived features become recommendation inputs.
 3. The recommender formula from Appendix D.
 4. A note that FYP1 uses NLP-derived feature signals, not a deployed deep learning ranking service.
-

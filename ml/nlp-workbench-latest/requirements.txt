@@ -1,0 +1,8 @@
+pandas
+numpy
+jieba
+scikit-learn
+openpyxl
+matplotlib
+wordcloud
+joblib

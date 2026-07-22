@@ -1,0 +1,321 @@
+﻿aspect,term_type,term,polarity,english_gloss,notes,source
+attack,aspect_term,下压,,downward attack,core aspect vocabulary,current
+attack,aspect_term,后场,,rear court power,core aspect vocabulary,current
+attack,aspect_term,杀球,,smash / attack,core aspect vocabulary,current
+attack,aspect_term,进攻,,attacking play,core aspect vocabulary,current
+attack,aspect_term,重杀,,power smash,core aspect vocabulary,current
+attack,negative_term,下压无力,negative,weak downward attack,domain phrase for negative sentiment,current
+attack,negative_term,不够硬,negative,not crisp/stiff enough for attack,domain phrase for negative sentiment,current
+attack,negative_term,不犀利,negative,not sharp enough,domain phrase for negative sentiment,current
+attack,negative_term,后场吃力,negative,rear-court feels hard,Useful attack-negative cue,v5_addition
+attack,negative_term,杀球无力,negative,weak smash power,domain phrase for negative sentiment,current
+attack,negative_term,杀球没有,negative,smash less effective,domain phrase for negative sentiment,current
+attack,negative_term,进攻一般,negative,average attack,domain phrase for negative sentiment,current
+attack,negative_term,进攻乏力,negative,weak attack,domain phrase for negative sentiment,current
+attack,negative_term,重杀无力,negative,weak power smash,domain phrase for negative sentiment,current
+attack,positive_term,下压不容易失误,positive,reliable attack trajectory,domain phrase for positive sentiment,current
+attack,positive_term,下压好,positive,good downward attack,domain phrase for positive sentiment,current
+attack,positive_term,发力好,positive,good power transfer,domain phrase for positive sentiment,current
+attack,positive_term,暴力,positive,powerful / aggressive,domain phrase for positive sentiment,current
+attack,positive_term,暴力杀球,positive,violent / powerful smash,Explicit attack-positive phrase,v5_addition
+attack,positive_term,杀得死,positive,strong killing power,domain phrase for positive sentiment,current
+attack,positive_term,杀球很爽,positive,smashes feel great,latest-data positive attack phrase,latest_raw_v7
+attack,positive_term,杀球爽,positive,satisfying smash feel,domain phrase for positive sentiment,current
+attack,positive_term,杀球真的爽,positive,smashes feel really great,latest-data positive attack phrase,latest_raw_v7
+attack,positive_term,点杀,positive,drop smash / point kill,High-frequency attack cue absent in current dictionary,v5_addition
+attack,positive_term,爆破感,positive,explosive impact,domain phrase for positive sentiment,current
+attack,positive_term,突击,positive,burst attack,Frequent attacking cue in community reviews,v5_addition
+attack,positive_term,进攻利器,positive,weapon for attack,Direct attack endorsement,v5_addition
+attack,positive_term,进攻好,positive,good attacking response,domain phrase for positive sentiment,current
+attack,positive_term,进攻很猛,positive,very strong in attack,latest-data positive attack phrase,latest_raw_v7
+attack,positive_term,进攻性,positive,attacking performance,domain phrase for positive sentiment,current
+attack,positive_term,进攻需求,positive,meets attacking needs,domain phrase for positive sentiment,current
+attack,positive_term,进攻首选,positive,top choice for attacking play,latest-data positive attack phrase,latest_raw_v7
+attack,positive_term,重杀猛,positive,strong power smash,domain phrase for positive sentiment,current
+attack,positive_term,重炮,positive,heavy cannon-like attack,Strong attack metaphor,v5_addition
+comfort,aspect_term,容错率,,forgiveness,core aspect vocabulary,current
+comfort,aspect_term,手感,,feel / touch,core aspect vocabulary,current
+comfort,aspect_term,柔和,,soft feel,core aspect vocabulary,current
+comfort,aspect_term,细腻,,fine touch,core aspect vocabulary,current
+comfort,aspect_term,舒服,,comfort,core aspect vocabulary,current
+comfort,aspect_term,舒适,,comfort,core aspect vocabulary,current
+comfort,aspect_term,震手,,arm/hand shock,core aspect vocabulary,current
+comfort,negative_term,不舒服,negative,uncomfortable,domain phrase for negative sentiment,current
+comfort,negative_term,伤手,negative,hurts the arm/hand,domain phrase for negative sentiment,current
+comfort,negative_term,发麻,negative,numbing feel,domain phrase for negative sentiment,current
+comfort,negative_term,太硬,negative,too stiff,domain phrase for negative sentiment,current
+comfort,negative_term,太硬了,negative,too hard,latest-data negative comfort phrase,latest_raw_v7
+comfort,negative_term,手感不好,negative,bad feel,domain phrase for negative sentiment,current
+comfort,negative_term,手感差,negative,poor feel,domain phrase for negative sentiment,current
+comfort,negative_term,生硬,negative,stiff / harsh,domain phrase for negative sentiment,current
+comfort,negative_term,硌手,negative,jarring on hand,Comfort-negative cue,v5_addition
+comfort,negative_term,硬得离谱,negative,far too stiff,slang phrase,current
+comfort,negative_term,费手,negative,hard on the hand,Comfort-negative cue,v5_addition
+comfort,negative_term,过硬,negative,overly stiff,domain phrase for negative sentiment,current
+comfort,negative_term,震手,negative,harsh on the arm,domain phrase for negative sentiment,current
+comfort,positive_term,不费手,positive,not taxing on hand/arm,prioritized v6 refinement,v6
+comfort,positive_term,不震手,positive,not harsh on arm,prioritized v6 refinement,v6
+comfort,positive_term,好上手,positive,easy to use,domain phrase for positive sentiment,current
+comfort,positive_term,容错率高,positive,high forgiveness,domain phrase for positive sentiment,current
+comfort,positive_term,很舒服,positive,very comfortable,latest-data positive comfort phrase,latest_raw_v7
+comfort,positive_term,手感不错,positive,feel is good,latest-data positive comfort phrase,latest_raw_v7
+comfort,positive_term,手感好,positive,good feel,domain phrase for positive sentiment,current
+comfort,positive_term,手感很好,positive,feel is very good,latest-data positive comfort phrase,latest_raw_v7
+comfort,positive_term,手感柔和,positive,soft touch,domain phrase,current
+comfort,positive_term,手感清晰,positive,clear feel,domain phrase for positive sentiment,current
+comfort,positive_term,柔和,positive,soft and comfortable,domain phrase for positive sentiment,current
+comfort,positive_term,省力,positive,less tiring / effortless,prioritized v6 refinement,v6
+comfort,positive_term,细腻,positive,fine / delicate feel,domain phrase for positive sentiment,current
+comfort,positive_term,舒服,positive,comfortable,domain phrase for positive sentiment,current
+comfort,positive_term,舒适,positive,comfortable,domain phrase for positive sentiment,current
+comfort,positive_term,轻松,positive,easy / effortless,Common comfort-positive cue,v5_addition
+comfort,positive_term,顺手,positive,feels natural in hand,Common comfort-positive cue,v5_addition
+control,aspect_term,小球,,soft net shot / touch,core aspect vocabulary,current
+control,aspect_term,指向性,,directional precision,core aspect vocabulary,current
+control,aspect_term,控制,,control,core aspect vocabulary,current
+control,aspect_term,控球,,ball control,core aspect vocabulary,current
+control,aspect_term,方向性,,directionality,core aspect vocabulary,current
+control,aspect_term,网前,,net play / touch,core aspect vocabulary,current
+control,aspect_term,落点,,placement,core aspect vocabulary,current
+control,aspect_term,防守,,defensive control,core aspect vocabulary,current
+control,negative_term,不太好控制,negative,not easy to control,domain phrase for negative sentiment,current
+control,negative_term,不好控制,negative,hard to control,domain phrase for negative sentiment,current
+control,negative_term,不好驾驭,negative,hard to handle,Control-negative cue,v5_addition
+control,negative_term,不如低磅好控制,negative,worse control than lower tension,domain phrase for negative sentiment,current
+control,negative_term,不稳定,negative,unstable,Control-negative cue,v5_addition
+control,negative_term,发飘,negative,trajectory floats,latest-data negative control phrase,latest_raw_v7
+control,negative_term,失控,negative,out of control,Control-negative cue,v5_addition
+control,negative_term,容错率低,negative,low forgiveness / harder control,boundary-fixed v8: keep under control only,current
+control,negative_term,控制差,negative,poor control,domain phrase for negative sentiment,current
+control,negative_term,控制差一点,negative,control is slightly weaker,latest-data negative control phrase,latest_raw_v7
+control,negative_term,控制比较弱,negative,weaker control,domain phrase for negative sentiment,current
+control,negative_term,控球一般,negative,average control,domain phrase for negative sentiment,current
+control,negative_term,方向性差,negative,poor directionality,domain phrase for negative sentiment,current
+control,negative_term,网前不行,negative,weak at the net,latest-data negative control phrase,latest_raw_v7
+control,negative_term,落点飘,negative,placement drifts,domain phrase for negative sentiment,current
+control,negative_term,飘,negative,floating / imprecise placement,slang phrase,current
+control,positive_term,借力轻松,positive,easy leverage / easy handling,prioritized v6 refinement,v6
+control,positive_term,出球清脆准确,positive,precise response,domain phrase for positive sentiment,current
+control,positive_term,发力轻松,positive,easy power transfer,prioritized v6 refinement,v6
+control,positive_term,好控制,positive,easy to control,domain phrase for positive sentiment,current
+control,positive_term,好控球,positive,easy to control,latest-data positive control phrase,latest_raw_v7
+control,positive_term,小球好,positive,good touch / net shots,domain phrase for positive sentiment,current
+control,positive_term,指向性好,positive,good directional precision,domain phrase for positive sentiment,current
+control,positive_term,指哪打哪,positive,very precise placement,slang phrase,current
+control,positive_term,控制好,positive,good control,domain phrase for positive sentiment,current
+control,positive_term,控制能力很好,positive,control ability is very good,latest-data positive control phrase,latest_raw_v7
+control,positive_term,控制还不错,positive,control is quite good,latest-data positive control phrase,latest_raw_v7
+control,positive_term,控球准,positive,accurate control,latest-data positive control phrase,latest_raw_v7
+control,positive_term,控球好,positive,good shuttle control,domain phrase for positive sentiment,current
+control,positive_term,控球很好,positive,control is very good,latest-data positive control phrase,latest_raw_v7
+control,positive_term,控网,positive,net control,Domain-specific control cue,v5_addition
+control,positive_term,方向性好,positive,good directionality,domain phrase for positive sentiment,current
+control,positive_term,方向性极度好,positive,excellent directionality,domain phrase for positive sentiment,current
+control,positive_term,稳定,positive,stable / controlled,Very frequent control-positive cue,v5_addition
+control,positive_term,稳定好上手,positive,stable and easy to handle,prioritized v6 refinement,v6
+control,positive_term,网前好,positive,good net control,domain phrase for positive sentiment,current
+control,positive_term,网前搓球,positive,net spin/control,latest-data positive control phrase,latest_raw_v7
+control,positive_term,网前细腻,positive,delicate at the net,Control-positive cue,v5_addition
+control,positive_term,网前舒服,positive,good touch at net,domain phrase for positive sentiment,current
+control,positive_term,落点准,positive,accurate placement,domain phrase for positive sentiment,current
+control,positive_term,落点容易控制,positive,easy placement control,domain phrase for positive sentiment,current
+control,positive_term,被动好处理,positive,easy under pressure,prioritized v6 refinement,v6
+control,positive_term,防守稳,positive,stable defense,domain phrase for positive sentiment,current
+durability,aspect_term,寿命,,string lifespan,core aspect vocabulary,current
+durability,aspect_term,耐打,,durability,core aspect vocabulary,current
+durability,aspect_term,耐用,,durability / lifespan,core aspect vocabulary,current
+durability,aspect_term,耐磨,,abrasion resistance,core aspect vocabulary,current
+durability,negative_term,一个月一条,negative,short lifespan,domain phrase for negative sentiment,current
+durability,negative_term,不太耐打,negative,not very durable,domain phrase for negative sentiment,current
+durability,negative_term,不耐打,negative,not durable,domain phrase for negative sentiment,current
+durability,negative_term,不耐用,negative,not durable,domain phrase for negative sentiment,current
+durability,negative_term,伤护线管,negative,harms grommets / durability concern,domain phrase for negative sentiment,current
+durability,negative_term,太容易断了,negative,breaks too easily,latest-data negative durability phrase,latest_raw_v7
+durability,negative_term,太细了，容易断,negative,too thin and easy to break,domain phrase,current
+durability,negative_term,容易崩线,negative,prone to snapping,domain phrase for negative sentiment,current
+durability,negative_term,容易断,negative,breaks easily,domain phrase for negative sentiment,current
+durability,negative_term,断线,negative,string breaks,Very frequent durability-negative cue,v5_addition
+durability,negative_term,断线快,negative,breaks quickly,domain phrase for negative sentiment,current
+durability,negative_term,易断,negative,easy to break,domain phrase for negative sentiment,current
+durability,negative_term,磨损快,negative,wears quickly,Durability-negative cue,v5_addition
+durability,negative_term,磨断,negative,worn through,domain phrase for negative sentiment,current
+durability,negative_term,脆断,negative,snaps brittlely,Durability-negative cue,v5_addition
+durability,negative_term,起毛快,negative,frays quickly,Durability-negative cue,v5_addition
+durability,negative_term,过脆容易断,negative,too brittle and breaks easily,domain phrase for negative sentiment,current
+durability,positive_term,不易断,positive,not easy to break,Durability-positive cue,v5_addition
+durability,positive_term,寿命长,positive,long lifespan,domain phrase for positive sentiment,current
+durability,positive_term,很耐打,positive,very durable,domain phrase for positive sentiment,current
+durability,positive_term,比较耐打,positive,relatively durable,latest-data positive durability phrase,latest_raw_v7
+durability,positive_term,结实,positive,solid / sturdy,Durability-positive cue,v5_addition
+durability,positive_term,耐打,positive,durable,domain phrase for positive sentiment,current
+durability,positive_term,耐打很顶,positive,excellent durability,domain phrase for positive sentiment,current
+durability,positive_term,耐打的,positive,durable,latest-data positive durability phrase,latest_raw_v7
+durability,positive_term,耐操,positive,rough-use durable,Forum slang for durability,v5_addition
+durability,positive_term,耐用,positive,long lasting,domain phrase for positive sentiment,current
+durability,positive_term,耐磨,positive,wear resistant,domain phrase for positive sentiment,current
+durability,positive_term,非常耐打,positive,very durable,latest-data positive durability phrase,latest_raw_v7
+durability,positive_term,顶,positive,very durable / solid,domain phrase for positive sentiment,current
+elasticity,aspect_term,借力,,easy power transfer,core aspect vocabulary,current
+elasticity,aspect_term,出球,,shuttle release / rebound,core aspect vocabulary,current
+elasticity,aspect_term,回弹,,repulsion / rebound,core aspect vocabulary,current
+elasticity,aspect_term,弹性,,repulsion / elasticity,core aspect vocabulary,current
+elasticity,aspect_term,爆发力,,explosive rebound,core aspect vocabulary,current
+elasticity,negative_term,不出球,negative,poor shuttle release,prioritized v6 refinement,v6
+elasticity,negative_term,不弹,negative,not lively,domain phrase for negative sentiment,current
+elasticity,negative_term,偏肉,negative,mushy / soft response,latest-data negative elasticity phrase,latest_raw_v7
+elasticity,negative_term,出球慢,negative,slow shuttle release,domain phrase for negative sentiment,current
+elasticity,negative_term,发肉,negative,mushy / not lively,prioritized v6 refinement,v6
+elasticity,negative_term,回弹不够,negative,insufficient rebound,boundary-fixed v8: keep under elasticity only,current
+elasticity,negative_term,回弹慢,negative,slow rebound,domain phrase for negative sentiment,current
+elasticity,negative_term,回球发肉,negative,shots feel mushy,domain phrase,current
+elasticity,negative_term,太粘,negative,too sticky / delayed release,domain phrase for negative sentiment,current
+elasticity,negative_term,弹性偏弱,negative,weaker repulsion,domain phrase for negative sentiment,current
+elasticity,negative_term,弹性差,negative,poor repulsion,domain phrase for negative sentiment,current
+elasticity,negative_term,弹性差了点,negative,elasticity is a bit weak,latest-data negative elasticity phrase,latest_raw_v7
+elasticity,negative_term,有点肉,negative,slightly mushy,latest-data negative elasticity phrase,latest_raw_v7
+elasticity,negative_term,肉,negative,mushy feel,domain phrase for negative sentiment,current
+elasticity,negative_term,肉感,negative,mushy feel,Elasticity-negative cue,v5_addition
+elasticity,negative_term,黏,negative,sticky / delayed release,domain phrase for negative sentiment,current
+elasticity,positive_term,借力好,positive,easy power,domain phrase for positive sentiment,current
+elasticity,positive_term,出球利索,positive,quick shuttle release,Elasticity-positive cue,v5_addition
+elasticity,positive_term,出球干脆,positive,clean / crisp shuttle release,Frequent elasticity-positive cue,v5_addition
+elasticity,positive_term,出球快,positive,quick shuttle release,domain phrase for positive sentiment,current
+elasticity,positive_term,反弹好,positive,good bounce back,domain phrase for positive sentiment,current
+elasticity,positive_term,回弹好,positive,good rebound,domain phrase for positive sentiment,current
+elasticity,positive_term,回弹快,positive,quick rebound,domain phrase for positive sentiment,current
+elasticity,positive_term,弹床反馈快,positive,quick string-bed feedback,domain phrase,current
+elasticity,positive_term,弹床好,positive,good string-bed rebound,domain phrase for positive sentiment,current
+elasticity,positive_term,弹性不错,positive,elasticity is good,latest-data positive elasticity phrase,latest_raw_v7
+elasticity,positive_term,弹性优异,positive,excellent repulsion,domain phrase for positive sentiment,current
+elasticity,positive_term,弹性好,positive,good repulsion,domain phrase for positive sentiment,current
+elasticity,positive_term,弹性尚佳,positive,decent repulsion,domain phrase for positive sentiment,current
+elasticity,positive_term,弹性很好,positive,elasticity is very good,latest-data positive elasticity phrase,latest_raw_v7
+elasticity,positive_term,很弹,positive,very bouncy,latest-data positive elasticity phrase,latest_raw_v7
+elasticity,positive_term,爆发力好,positive,explosive power,domain phrase for positive sentiment,current
+elasticity,positive_term,爽弹,positive,lively rebound,domain phrase for positive sentiment,current
+elasticity,positive_term,高弹,positive,high repulsion,domain phrase for positive sentiment,current
+sound,aspect_term,响度,,loudness,core aspect vocabulary,current
+sound,aspect_term,声音,,sound,core aspect vocabulary,current
+sound,aspect_term,音效,,hitting sound,core aspect vocabulary,current
+sound,negative_term,不响,negative,not loud,domain phrase for negative sentiment,current
+sound,negative_term,不够脆,negative,not crisp enough,prioritized v6 refinement,v6
+sound,negative_term,不清脆,negative,not crisp,Sound-negative cue,v5_addition
+sound,negative_term,发闷,negative,muffled sound,boundary-fixed v8: keep under sound only,v6
+sound,negative_term,声音一般,negative,average sound,domain phrase for negative sentiment,current
+sound,negative_term,声音不好听,negative,sound is not nice,latest-data negative sound phrase,latest_raw_v7
+sound,negative_term,声音闷,negative,dull sound,domain phrase for negative sentiment,current
+sound,negative_term,很沉闷,negative,very muffled,latest-data negative sound phrase,latest_raw_v7
+sound,negative_term,有点木,negative,a bit wooden / dull,latest-data negative sound phrase,latest_raw_v7
+sound,negative_term,木,negative,woody / dull feel,domain phrase for negative sentiment,current
+sound,negative_term,沉闷,negative,muffled sound,domain phrase for negative sentiment,current
+sound,negative_term,没声音,negative,no satisfying sound,short form,current
+sound,negative_term,没那么脆,negative,less crisp,prioritized v6 refinement,v6
+sound,negative_term,闷响,negative,dull thud,Sound-negative cue,v5_addition
+sound,negative_term,音效差,negative,poor sound,domain phrase for negative sentiment,current
+sound,negative_term,音效没了,negative,sound effect gone,prioritized v6 refinement,v6
+sound,negative_term,音效消失,negative,sound effect disappears,Late-stage sound degradation cue,v5_addition
+sound,positive_term,响亮,positive,loud sound,domain phrase for positive sentiment,current
+sound,positive_term,响啊,positive,very loud,domain phrase for positive sentiment,current
+sound,positive_term,声脆,positive,crisp sound,Sound-positive cue,v5_addition
+sound,positive_term,声脆如铃,positive,bell-like crisp sound,prioritized v6 refinement,v6
+sound,positive_term,声音不错,positive,sound is good,latest-data positive sound phrase,latest_raw_v7
+sound,positive_term,声音好听,positive,pleasant sound,domain phrase for positive sentiment,current
+sound,positive_term,声音很好听,positive,sounds very nice,latest-data positive sound phrase,latest_raw_v7
+sound,positive_term,声音清脆,positive,crisp sound,domain phrase for positive sentiment,current
+sound,positive_term,声音脆,positive,crisp sound,short form,current
+sound,positive_term,好听,positive,pleasant sound,latest-data positive sound phrase,latest_raw_v7
+sound,positive_term,尖锐,positive,sharp sound,context-dependent but kept as positive cue,v6
+sound,positive_term,很响,positive,very loud,domain phrase for positive sentiment,current
+sound,positive_term,很提,positive,lively / lifting sound,prioritized v6 refinement,v6
+sound,positive_term,打铁声,positive,metallic crisp sound,prioritized v6 refinement,v6
+sound,positive_term,清脆,positive,crisp sound,domain phrase for positive sentiment,current
+sound,positive_term,清脆嘹亮,positive,bright and crisp,Sound-positive cue,v5_addition
+sound,positive_term,炸裂,positive,explosive sound,prioritized v6 refinement,v6
+sound,positive_term,爆竹声,positive,firecracker-like sound,prioritized v6 refinement,v6
+sound,positive_term,脆响,positive,crisp and loud,domain phrase for positive sentiment,current
+sound,positive_term,音好听,positive,nice sound,latest-data positive sound phrase,latest_raw_v7
+sound,positive_term,音效可以,positive,good sound,domain phrase for positive sentiment,current
+sound,positive_term,音爆,positive,sonic boom-like sound,High-frequency sound-positive cue,v5_addition
+string_movement,aspect_term,移位,,string-bed displacement,core aspect vocabulary,current
+string_movement,aspect_term,走线,,string movement,core aspect vocabulary,current
+string_movement,aspect_term,跑线,,string movement,core aspect vocabulary,current
+string_movement,negative_term,乱跑,negative,moves around,domain phrase for negative sentiment,current
+string_movement,negative_term,容易跑线,negative,prone to movement,domain phrase for negative sentiment,current
+string_movement,negative_term,总跑线,negative,keeps moving,String-movement negative cue,v5_addition
+string_movement,negative_term,有点跑线,negative,slightly moves,latest-data negative movement phrase,latest_raw_v7
+string_movement,negative_term,爱跑线,negative,tends to move,latest-data negative movement phrase,latest_raw_v7
+string_movement,negative_term,移位明显,negative,obvious displacement,domain phrase for negative sentiment,current
+string_movement,negative_term,走线严重,negative,severe string movement,High-frequency string-movement cue,v5_addition
+string_movement,negative_term,跑位严重,negative,string movement severe,slang phrase,current
+string_movement,negative_term,跑线,negative,strings move around,domain phrase for negative sentiment,current
+string_movement,negative_term,跑线严重,negative,severe string movement,domain phrase for negative sentiment,current
+string_movement,positive_term,不乱跑,positive,does not wander,String-movement positive cue,v5_addition
+string_movement,positive_term,不容易走线,positive,not easy to misalign,latest-data positive movement phrase,latest_raw_v7
+string_movement,positive_term,不爱跑线,positive,stable string bed,domain phrase for positive sentiment,current
+string_movement,positive_term,不移位,positive,does not move much,domain phrase for positive sentiment,current
+string_movement,positive_term,不跑线,positive,stable string bed,domain phrase for positive sentiment,current
+string_movement,positive_term,很稳,positive,very stable string bed,String-bed stability cue,v5_addition
+string_movement,positive_term,线床稳定,positive,stable string bed,domain phrase for positive sentiment,current
+string_movement,positive_term,还不跑线,positive,still does not move,latest-data positive movement phrase,latest_raw_v7
+tension_retention,aspect_term,保磅,,tension retention,core aspect vocabulary,current
+tension_retention,aspect_term,掉磅,,tension loss,core aspect vocabulary,current
+tension_retention,aspect_term,磅数,,tension level / pounds,core aspect vocabulary,current
+tension_retention,negative_term,不保磅,negative,poor tension retention,domain phrase for negative sentiment,current
+tension_retention,negative_term,保磅差,negative,poor tension holding,High-value tension-retention cue,v5_addition
+tension_retention,negative_term,保磅差点意思,negative,tension retention is slightly lacking,latest-data negative retention phrase,latest_raw_v7
+tension_retention,negative_term,容易掉磅,negative,easily loses tension,latest-data negative retention phrase,latest_raw_v7
+tension_retention,negative_term,很快掉磅,negative,quick tension loss,domain phrase for negative sentiment,current
+tension_retention,negative_term,很快松,negative,loosens quickly,domain phrase,current
+tension_retention,negative_term,或掉磅,negative,possible tension loss,domain phrase for negative sentiment,current
+tension_retention,negative_term,掉磅严重,negative,severe tension loss,domain phrase for negative sentiment,current
+tension_retention,negative_term,掉磅太快,negative,drops tension too fast,latest-data negative retention phrase,latest_raw_v7
+tension_retention,negative_term,掉磅太快了,negative,drops tension far too fast,latest-data negative retention phrase,latest_raw_v7
+tension_retention,negative_term,掉磅快,negative,loses tension quickly,domain phrase for negative sentiment,current
+tension_retention,negative_term,掉磅明显,negative,noticeable tension loss,Tension-retention negative cue,v5_addition
+tension_retention,negative_term,掉磅有点快,negative,drops tension a bit fast,latest-data negative retention phrase,latest_raw_v7
+tension_retention,negative_term,松得快,negative,loosens quickly,domain phrase for negative sentiment,current
+tension_retention,positive_term,不掉磅,positive,does not lose tension easily,domain phrase for positive sentiment,current
+tension_retention,positive_term,保磅不错,positive,good tension retention,domain phrase for positive sentiment,current
+tension_retention,positive_term,保磅可以,positive,acceptable tension retention,Tension-retention positive cue,v5_addition
+tension_retention,positive_term,保磅好,positive,good tension retention,domain phrase for positive sentiment,current
+tension_retention,positive_term,保磅稳,positive,stable tension retention,Tension-retention positive cue,v5_addition
+tension_retention,positive_term,保磅还行,positive,tension retention is acceptable,latest-data positive retention phrase,latest_raw_v7
+tension_retention,positive_term,弹性保持时间很长,positive,holds tension/feel for long time,domain phrase for positive sentiment,current
+tension_retention,positive_term,掉磅慢,positive,slow tension loss,domain phrase for positive sentiment,current
+tension_retention,positive_term,磅数稳定,positive,stable tension,domain phrase for positive sentiment,current
+value_for_money,aspect_term,价位,,price level,core aspect vocabulary,current
+value_for_money,aspect_term,价格,,price,core aspect vocabulary,current
+value_for_money,aspect_term,性价比,,value for money,core aspect vocabulary,current
+value_for_money,aspect_term,涨价,,price increase,core aspect vocabulary,current
+value_for_money,negative_term,不值,negative,not worth it,prioritized v6 refinement,v6
+value_for_money,negative_term,不划算,negative,not worth it,domain phrase for negative sentiment,current
+value_for_money,negative_term,价位高,negative,high price,domain phrase for negative sentiment,current
+value_for_money,negative_term,价格偏高,negative,price too high,domain phrase for negative sentiment,current
+value_for_money,negative_term,偏贵,negative,rather expensive,prioritized v6 refinement,v6
+value_for_money,negative_term,太贵,negative,too expensive,domain phrase for negative sentiment,current
+value_for_money,negative_term,太贵了,negative,too expensive,latest-data negative value phrase,latest_raw_v7
+value_for_money,negative_term,小贵,negative,slightly expensive,prioritized v6 refinement,v6
+value_for_money,negative_term,性价比低,negative,poor value for money,domain phrase for negative sentiment,current
+value_for_money,negative_term,有点小贵,negative,slightly expensive,latest-data negative value phrase,latest_raw_v7
+value_for_money,negative_term,涨价,negative,price increased,domain phrase for negative sentiment,current
+value_for_money,negative_term,贵了,negative,too expensive,Value-negative cue,v5_addition
+value_for_money,negative_term,贵但好用,negative,expensive though good,kept as weak-negative cost caveat,v6
+value_for_money,negative_term,贵多了,negative,much more expensive,domain phrase for negative sentiment,current
+value_for_money,negative_term,越来越低,negative,value getting worse,domain phrase for negative sentiment,current
+value_for_money,negative_term,路边一条,negative,value feels poor after price rise,slang phrase,current
+value_for_money,negative_term,钱包清零,negative,too expensive / wallet-emptying,domain phrase for negative sentiment,current
+value_for_money,positive_term,不贵,positive,not expensive,domain phrase for positive sentiment,current
+value_for_money,positive_term,价位合理,positive,reasonable price,domain phrase for positive sentiment,current
+value_for_money,positive_term,价格友好,positive,budget friendly,domain phrase,current
+value_for_money,positive_term,价格合理,positive,reasonable price,domain phrase for positive sentiment,current
+value_for_money,positive_term,便宜,positive,cheap,domain phrase for positive sentiment,current
+value_for_money,positive_term,便宜好用,positive,cheap and works well,Value-positive cue,v5_addition
+value_for_money,positive_term,便宜耐用,positive,cheap and durable,latest-data positive value phrase,latest_raw_v7
+value_for_money,positive_term,值,positive,worth it,prioritized v6 refinement,v6
+value_for_money,positive_term,值这个价,positive,worth this price,Value-positive cue,v5_addition
+value_for_money,positive_term,划算,positive,worth the money,domain phrase for positive sentiment,current
+value_for_money,positive_term,口粮线,positive,daily affordable option,prioritized v6 refinement,v6
+value_for_money,positive_term,平替,positive,cost-effective substitute,prioritized v6 refinement,v6
+value_for_money,positive_term,很值,positive,worth it,latest-data positive value phrase,latest_raw_v7
+value_for_money,positive_term,性价比比较高,positive,relatively high value for money,latest-data positive value phrase,latest_raw_v7
+value_for_money,positive_term,性价比高,positive,good value for money,domain phrase for positive sentiment,current

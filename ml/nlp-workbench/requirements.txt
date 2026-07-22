@@ -1,6 +1,0 @@
-pandas
-numpy
-jieba
-scikit-learn
-openpyxl
-joblib
