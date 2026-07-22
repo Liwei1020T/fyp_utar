@@ -1558,5 +1558,765 @@
     "mtime": 1774950749.0,
     "ast_hash": "f45278e12d1ee46749b206c7c9053631",
     "semantic_hash": "f45278e12d1ee46749b206c7c9053631"
+  },
+  "AGENTS.md": {
+    "mtime": 1784738529.52,
+    "ast_hash": "26c4564dbbb0d62edff6db2bb24df2f9",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1784738529.23,
+    "ast_hash": "d4544d0354351b2dad2db5634d4c27ef",
+    "semantic_hash": ""
+  },
+  "appendix/00_appendix_index.md": {
+    "mtime": 1776978746.45,
+    "ast_hash": "3717ef2b80b172eb5968727444ea9f2a",
+    "semantic_hash": ""
+  },
+  "appendix/B_api_endpoint_summary.md": {
+    "mtime": 1776978746.45,
+    "ast_hash": "196eee8333a49f622f1cc0dc4353ff16",
+    "semantic_hash": ""
+  },
+  "appendix/C_database_schema_summary.md": {
+    "mtime": 1776978746.45,
+    "ast_hash": "839a49815a7fe49a0b690ae6f497687c",
+    "semantic_hash": ""
+  },
+  "appendix/D_recommendation_algorithm.md": {
+    "mtime": 1776978746.45,
+    "ast_hash": "9bf06e89c6848e2fa19b9214b5f3c141",
+    "semantic_hash": ""
+  },
+  "appendix/E_key_code_extracts.md": {
+    "mtime": 1776978746.46,
+    "ast_hash": "89ea5b7d060fe9404c85da813b9ae49a",
+    "semantic_hash": ""
+  },
+  "appendix/F_testing_evidence.md": {
+    "mtime": 1776978746.46,
+    "ast_hash": "8790dcd4984d3d43075abe90b0c80077",
+    "semantic_hash": ""
+  },
+  "appendix/G_nlp_artifacts.md": {
+    "mtime": 1784738533.21,
+    "ast_hash": "d3c9cd51f9cc2c20d422ce9fd2bcb77d",
+    "semantic_hash": ""
+  },
+  "backend/AGENTS.md": {
+    "mtime": 1784738531.85,
+    "ast_hash": "d0f99c3c6229f4662bb354cac8e8d7d8",
+    "semantic_hash": ""
+  },
+  "backend/README.md": {
+    "mtime": 1784738531.39,
+    "ast_hash": "d9ad6835ca15199d1eae17b27a97aede",
+    "semantic_hash": ""
+  },
+  "backend/ai_service/requirements.txt": {
+    "mtime": 1775055268.0,
+    "ast_hash": "321b53e2ad5949652a36927386d1e98b",
+    "semantic_hash": ""
+  },
+  "backend/docs/README.md": {
+    "mtime": 1776160680.53,
+    "ast_hash": "c024608999b949a21ce4d1f875a60e75",
+    "semantic_hash": ""
+  },
+  "backend/docs/api-contract.md": {
+    "mtime": 1776155728.6,
+    "ast_hash": "7b20c84b1715b00a47ba67d915e9b9b1",
+    "semantic_hash": ""
+  },
+  "backend/docs/architecture.md": {
+    "mtime": 1776154529.36,
+    "ast_hash": "1368a202b7322eca5f935c59f1e293db",
+    "semantic_hash": ""
+  },
+  "backend/docs/clean-architecture-migration-map.md": {
+    "mtime": 1775405916.45,
+    "ast_hash": "6c9da7cb86354783a956a7ac088c07ef",
+    "semantic_hash": ""
+  },
+  "backend/docs/database.md": {
+    "mtime": 1784737092.36,
+    "ast_hash": "b47aa0525ba2281bab3a4be3586cde11",
+    "semantic_hash": ""
+  },
+  "backend/docs/recommendation-design.md": {
+    "mtime": 1776161271.82,
+    "ast_hash": "92e5587a9826208f8417587132b676d2",
+    "semantic_hash": ""
+  },
+  "backend/docs/runbook.md": {
+    "mtime": 1784737092.36,
+    "ast_hash": "8727c5fb5fe242fce2efaae401085b4b",
+    "semantic_hash": ""
+  },
+  "compose.yaml": {
+    "mtime": 1775556909.18,
+    "ast_hash": "d7c4917acbd99c5ddd14d4bd0c31e860",
+    "semantic_hash": ""
+  },
+  "docs/README.md": {
+    "mtime": 1784738532.51,
+    "ast_hash": "21a5891fad845a3cbc951f4d79d94751",
+    "semantic_hash": ""
+  },
+  "docs/codebase-map.md": {
+    "mtime": 1784738533.84,
+    "ast_hash": "c79cee0039b24edf13c82fc5893a3755",
+    "semantic_hash": ""
+  },
+  "docs/fyp1-scope.md": {
+    "mtime": 1779257701.53,
+    "ast_hash": "448f846844f9468665c1ca5b990196b3",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-05-31-bert-absa-review-optimization-design.md": {
+    "mtime": 1780216520.39,
+    "ast_hash": "a41e6aa0b74c59d3dbb79a65578f7f6f",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-05-31-context-aware-cf-recommendation-design.md": {
+    "mtime": 1780240016.8,
+    "ast_hash": "07791e37411eb24a232caec26304309b",
+    "semantic_hash": ""
+  },
+  "ml/nlp-workbench-latest/README.md": {
+    "mtime": 1784739163.53,
+    "ast_hash": "68fc812e13757d16b2d26ad30812fd36",
+    "semantic_hash": ""
+  },
+  "ml/nlp-workbench-latest/requirements.txt": {
+    "mtime": 1784737781.14,
+    "ast_hash": "1f0126873f0cc70674847c2cb8309e31",
+    "semantic_hash": ""
+  },
+  "mobile/AGENTS.md": {
+    "mtime": 1779257749.61,
+    "ast_hash": "6b2393b345d3e3fc9bc3885716092efd",
+    "semantic_hash": ""
+  },
+  "mobile/DESIGN.md": {
+    "mtime": 1776055626.0,
+    "ast_hash": "b384cbdff3d6af6ecf9ccb4ad9523cdc",
+    "semantic_hash": ""
+  },
+  "mobile/README.md": {
+    "mtime": 1777970776.97,
+    "ast_hash": "e5158cb7352909519895bad3254e7b0b",
+    "semantic_hash": ""
+  },
+  "mobile/docs/admin-inventory-alignment.md": {
+    "mtime": 1776047824.04,
+    "ast_hash": "0a7ecdac063a0f9fc230954b4dc7d28a",
+    "semantic_hash": ""
+  },
+  "mobile/docs/frontend-architecture.md": {
+    "mtime": 1779257739.35,
+    "ast_hash": "913db0d3c6b4f3097f03f05264c99cc8",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-bookings-snapshot.md": {
+    "mtime": 1775406115.02,
+    "ast_hash": "fe06a909e69384650e413ae536a9e484",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-dashboard-snapshot.md": {
+    "mtime": 1775406090.12,
+    "ast_hash": "aafa5df37e16e9fcf9796bc2c19d0d4a",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/auth-login-snapshot.md": {
+    "mtime": 1775406008.01,
+    "ast_hash": "6f24047d77d0f017541c6d6058548516",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/auth-welcome-snapshot.md": {
+    "mtime": 1775405942.68,
+    "ast_hash": "441ae08379214aeca0060c1f661da516",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-home-snapshot.md": {
+    "mtime": 1775406365.36,
+    "ast_hash": "b6dc51bd138bc2b47e37bb85d603e1ed",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/route-inventory.txt": {
+    "mtime": 1775405750.99,
+    "ast_hash": "d9a32ff2836575826e66a2e5ef5f5869",
+    "semantic_hash": ""
+  },
+  "appendix/B_api_endpoint_summary_screenshot_01.png": {
+    "mtime": 1776979008.77,
+    "ast_hash": "4182b9b68b6ce345981d3052fa0d111b",
+    "semantic_hash": ""
+  },
+  "appendix/B_api_endpoint_summary_screenshot_02.png": {
+    "mtime": 1776979008.82,
+    "ast_hash": "8fd2e14c2c2eaebeab0198a21df838ec",
+    "semantic_hash": ""
+  },
+  "appendix/B_api_endpoint_summary_screenshot_03.png": {
+    "mtime": 1776979008.85,
+    "ast_hash": "dbc139ef58ed216352b8c9fc5067cac7",
+    "semantic_hash": ""
+  },
+  "appendix/C_database_schema_summary_screenshot_01.png": {
+    "mtime": 1776979008.91,
+    "ast_hash": "e41c12236f5c4a09e8a29a81047686d8",
+    "semantic_hash": ""
+  },
+  "appendix/C_database_schema_summary_screenshot_02.png": {
+    "mtime": 1776979008.98,
+    "ast_hash": "05f2703c7405d6b270573920c942e25b",
+    "semantic_hash": ""
+  },
+  "appendix/D_recommendation_algorithm_screenshot_01.png": {
+    "mtime": 1776979009.04,
+    "ast_hash": "d3b4e55b395c08c65854d124d8069cbe",
+    "semantic_hash": ""
+  },
+  "appendix/D_recommendation_algorithm_screenshot_02.png": {
+    "mtime": 1776979009.1,
+    "ast_hash": "d441add7f15fb0a0ebe3c3a525c70903",
+    "semantic_hash": ""
+  },
+  "appendix/D_recommendation_algorithm_screenshot_03.png": {
+    "mtime": 1776979009.15,
+    "ast_hash": "667e92c468766514854f5942740e16f5",
+    "semantic_hash": ""
+  },
+  "appendix/D_recommendation_algorithm_screenshot_04.png": {
+    "mtime": 1776979009.18,
+    "ast_hash": "f9500f021dcb96f5fcd98ef438cbdfe6",
+    "semantic_hash": ""
+  },
+  "appendix/E_key_code_extracts_screenshot_01.png": {
+    "mtime": 1776979009.25,
+    "ast_hash": "0303749618eba9607916000131538456",
+    "semantic_hash": ""
+  },
+  "appendix/E_key_code_extracts_screenshot_02.png": {
+    "mtime": 1776979009.28,
+    "ast_hash": "ddbbefe6a02741c18631b37395dfb980",
+    "semantic_hash": ""
+  },
+  "appendix/E_key_code_extracts_screenshot_03.png": {
+    "mtime": 1776979009.31,
+    "ast_hash": "425845021337a437a88b4cfeafd504cc",
+    "semantic_hash": ""
+  },
+  "appendix/F_testing_evidence_screenshot_01.png": {
+    "mtime": 1776979009.38,
+    "ast_hash": "8da78d1cfeb7a483df64c753e28ed3fd",
+    "semantic_hash": ""
+  },
+  "appendix/F_testing_evidence_screenshot_02.png": {
+    "mtime": 1776979009.42,
+    "ast_hash": "d83b7bd8b86b6634f65ab4a3ef4043d6",
+    "semantic_hash": ""
+  },
+  "appendix/G_nlp_artifacts_screenshot_01.png": {
+    "mtime": 1776979009.49,
+    "ast_hash": "22b7873311891c1c43b57e1f7bde3063",
+    "semantic_hash": ""
+  },
+  "appendix/G_nlp_artifacts_screenshot_02.png": {
+    "mtime": 1776979009.54,
+    "ast_hash": "f3d250a9fdb407bf40cfb0256b90a969",
+    "semantic_hash": ""
+  },
+  "appendix/admin-booking-detail-before.png": {
+    "mtime": 1776978209.8,
+    "ast_hash": "063be0eb80e3b4c988dd09a83e5aa52f",
+    "semantic_hash": ""
+  },
+  "appendix/admin-bookings-before.png": {
+    "mtime": 1776978209.79,
+    "ast_hash": "8814939f55d715d28912bc47d4a9b3d4",
+    "semantic_hash": ""
+  },
+  "appendix/admin-business-hours-before.png": {
+    "mtime": 1776978209.81,
+    "ast_hash": "1aca15da62381445c5c1c89f60a63881",
+    "semantic_hash": ""
+  },
+  "appendix/admin-dashboard-after.png": {
+    "mtime": 1776978209.79,
+    "ast_hash": "dbe63353999c9df9a9e4c306fa7e42c1",
+    "semantic_hash": ""
+  },
+  "appendix/admin-inventory-before.png": {
+    "mtime": 1776978209.8,
+    "ast_hash": "9e232d7c508cbee60b2b87b521346031",
+    "semantic_hash": ""
+  },
+  "appendix/admin-inventory-detail-before.png": {
+    "mtime": 1776978209.81,
+    "ast_hash": "53545333e56d9f33f483c8ff7b74938c",
+    "semantic_hash": ""
+  },
+  "appendix/admin-settings-before.png": {
+    "mtime": 1776978209.82,
+    "ast_hash": "4144f24390003e33140672415ea98b7a",
+    "semantic_hash": ""
+  },
+  "appendix/auth-forgot-before-full.png": {
+    "mtime": 1776978201.52,
+    "ast_hash": "3b5d8fbcf83a89c13748ac1c0e57622e",
+    "semantic_hash": ""
+  },
+  "appendix/auth-login-before-full.png": {
+    "mtime": 1776978201.5,
+    "ast_hash": "4824450c077ecb18b1cb6ffbf139c794",
+    "semantic_hash": ""
+  },
+  "appendix/auth-register-before-full.png": {
+    "mtime": 1776978201.5,
+    "ast_hash": "e96fa6ff05f8eefcecfb8c487af048c8",
+    "semantic_hash": ""
+  },
+  "appendix/auth-welcome-before-full.png": {
+    "mtime": 1776978201.49,
+    "ast_hash": "c808c5507778762e1ef87976b18e2f41",
+    "semantic_hash": ""
+  },
+  "appendix/edge_swagger_api_overview_actual.png": {
+    "mtime": 1776979644.7,
+    "ast_hash": "af0683bbd72179697ce9f6820b84dcc1",
+    "semantic_hash": ""
+  },
+  "appendix/edge_swagger_recommendation_generate_actual.png": {
+    "mtime": 1776979660.25,
+    "ast_hash": "c2c68571fc3c703fd7a44485d5d08d4c",
+    "semantic_hash": ""
+  },
+  "appendix/player-booking-detail-before-full.png": {
+    "mtime": 1776978201.59,
+    "ast_hash": "0d368569eea723db853329da0bfe33d6",
+    "semantic_hash": ""
+  },
+  "appendix/player-booking-new-before-full.png": {
+    "mtime": 1776978201.57,
+    "ast_hash": "2c0d9c1a33afef91f852bc4cf1c2aafe",
+    "semantic_hash": ""
+  },
+  "appendix/player-booking-summary-before-full.png": {
+    "mtime": 1776978201.58,
+    "ast_hash": "9cb47c44c1d61bd527bf99b595047f8e",
+    "semantic_hash": ""
+  },
+  "appendix/player-booking-tracking-before-full.png": {
+    "mtime": 1776978201.59,
+    "ast_hash": "27aad7243d78c061f2d0335e275a1d9e",
+    "semantic_hash": ""
+  },
+  "appendix/player-home-before-full.png": {
+    "mtime": 1776978201.53,
+    "ast_hash": "9a6f888d784baa3d5727bc54676d255c",
+    "semantic_hash": ""
+  },
+  "appendix/player-profile-before-full.png": {
+    "mtime": 1776978201.54,
+    "ast_hash": "97252d8d26b2d2b8ea9e9c10a16119f9",
+    "semantic_hash": ""
+  },
+  "appendix/player-recommend-before-full.png": {
+    "mtime": 1776978201.54,
+    "ast_hash": "cb2cd72fae26c8cbeaf6d26954ec432d",
+    "semantic_hash": ""
+  },
+  "appendix/player-recommend-results-before-full.png": {
+    "mtime": 1776978201.55,
+    "ast_hash": "f5af1c17f651959e7daeb5f38d406611",
+    "semantic_hash": ""
+  },
+  "appendix/player-string-detail-before-full.png": {
+    "mtime": 1776978201.57,
+    "ast_hash": "93272063673122650d68bf841c6d6126",
+    "semantic_hash": ""
+  },
+  "appendix/player-strings-before-full.png": {
+    "mtime": 1776978201.56,
+    "ast_hash": "69e82e7372aafec4a678301b830ac001",
+    "semantic_hash": ""
+  },
+  "appendix/swagger_admin_inventory_chrome.png": {
+    "mtime": 1776979491.39,
+    "ast_hash": "bbdf5000654f1b186335f5cfae3c7539",
+    "semantic_hash": ""
+  },
+  "appendix/swagger_api_overview_chrome.png": {
+    "mtime": 1776979456.12,
+    "ast_hash": "b46d5a0bba565b4c51e628d382d2a52e",
+    "semantic_hash": ""
+  },
+  "appendix/swagger_booking_create_chrome.png": {
+    "mtime": 1776979493.96,
+    "ast_hash": "076227723469caa3f499d09fa2951a45",
+    "semantic_hash": ""
+  },
+  "appendix/swagger_recommendation_generate_chrome.png": {
+    "mtime": 1776979494.1,
+    "ast_hash": "8bf6d4797ad4eca9557d0a82d406dac6",
+    "semantic_hash": ""
+  },
+  "appendix/vscode_api_router_actual.png": {
+    "mtime": 1776979581.18,
+    "ast_hash": "ca20736c0e7b2578736b38b1ada62019",
+    "semantic_hash": ""
+  },
+  "appendix/vscode_backend_tests_actual.png": {
+    "mtime": 1776979618.01,
+    "ast_hash": "3468fc6f329b0127a62055d6463ca343",
+    "semantic_hash": ""
+  },
+  "appendix/vscode_mobile_backend_api_actual.png": {
+    "mtime": 1776979598.89,
+    "ast_hash": "279118727772ea07a068f839a1e6415c",
+    "semantic_hash": ""
+  },
+  "appendix/vscode_recommendation_scoring_actual.png": {
+    "mtime": 1776979559.27,
+    "ast_hash": "72fd0bc7317485084bfe5896d3eaa1e5",
+    "semantic_hash": ""
+  },
+  "mobile/assets/adaptive-icon.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "97dae5a0e62ad8551d8a31897b425e63",
+    "semantic_hash": ""
+  },
+  "mobile/assets/favicon.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "4f1cb2cac2370cd5050681232e8575a8",
+    "semantic_hash": ""
+  },
+  "mobile/assets/icon.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "4e3f888fc8475f69fd5fa32f1ad5216a",
+    "semantic_hash": ""
+  },
+  "mobile/assets/splash-icon.png": {
+    "mtime": 499162500.0,
+    "ast_hash": "97dae5a0e62ad8551d8a31897b425e63",
+    "semantic_hash": ""
+  },
+  "mobile/output/auth-forgot-before-full.png": {
+    "mtime": 1775442302.65,
+    "ast_hash": "3b5d8fbcf83a89c13748ac1c0e57622e",
+    "semantic_hash": ""
+  },
+  "mobile/output/auth-login-before-full.png": {
+    "mtime": 1775442230.35,
+    "ast_hash": "4824450c077ecb18b1cb6ffbf139c794",
+    "semantic_hash": ""
+  },
+  "mobile/output/auth-register-before-full.png": {
+    "mtime": 1775442266.62,
+    "ast_hash": "e96fa6ff05f8eefcecfb8c487af048c8",
+    "semantic_hash": ""
+  },
+  "mobile/output/auth-welcome-before-full.png": {
+    "mtime": 1775442198.87,
+    "ast_hash": "c808c5507778762e1ef87976b18e2f41",
+    "semantic_hash": ""
+  },
+  "mobile/output/auth-welcome-before.png": {
+    "mtime": 1775442180.05,
+    "ast_hash": "1b66ac6d33da1de9240dec1f1267d283",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-booking-detail-before-full.png": {
+    "mtime": 1775442632.2,
+    "ast_hash": "0d368569eea723db853329da0bfe33d6",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-booking-new-before-full.png": {
+    "mtime": 1775442510.14,
+    "ast_hash": "2c0d9c1a33afef91f852bc4cf1c2aafe",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-booking-summary-before-full.png": {
+    "mtime": 1775442540.4,
+    "ast_hash": "9cb47c44c1d61bd527bf99b595047f8e",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-booking-tracking-before-full.png": {
+    "mtime": 1775442659.14,
+    "ast_hash": "27aad7243d78c061f2d0335e275a1d9e",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-home-before-full.png": {
+    "mtime": 1775442351.1,
+    "ast_hash": "9a6f888d784baa3d5727bc54676d255c",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-profile-before-full.png": {
+    "mtime": 1775442715.32,
+    "ast_hash": "97252d8d26b2d2b8ea9e9c10a16119f9",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-recommend-before-full.png": {
+    "mtime": 1775442376.13,
+    "ast_hash": "cb2cd72fae26c8cbeaf6d26954ec432d",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-recommend-results-before-full.png": {
+    "mtime": 1775442400.24,
+    "ast_hash": "f5af1c17f651959e7daeb5f38d406611",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-string-detail-before-full.png": {
+    "mtime": 1775442484.53,
+    "ast_hash": "93272063673122650d68bf841c6d6126",
+    "semantic_hash": ""
+  },
+  "mobile/output/player-strings-before-full.png": {
+    "mtime": 1775442461.68,
+    "ast_hash": "69e82e7372aafec4a678301b830ac001",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-analytics-after.png": {
+    "mtime": 1775407058.0,
+    "ast_hash": "5856b35a4835c5588214fbcce26e311b",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-analytics-before.png": {
+    "mtime": 1775406181.0,
+    "ast_hash": "1ce86db619f100b8088ad2b56695df1a",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-booking-detail-before.png": {
+    "mtime": 1775406298.15,
+    "ast_hash": "063be0eb80e3b4c988dd09a83e5aa52f",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-bookings-before.png": {
+    "mtime": 1775406114.99,
+    "ast_hash": "8814939f55d715d28912bc47d4a9b3d4",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-business-hours-before.png": {
+    "mtime": 1775406218.95,
+    "ast_hash": "1aca15da62381445c5c1c89f60a63881",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-chat-after.png": {
+    "mtime": 1775407068.68,
+    "ast_hash": "0f05f046d9a20f2bb78efd9a6c871e51",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-chat-before.png": {
+    "mtime": 1775406165.04,
+    "ast_hash": "32654b4b47765d4c0aedf382b38777ed",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-chat-detail-before.png": {
+    "mtime": 1775406319.08,
+    "ast_hash": "b477b9d502bbfd382774482a7dfd5185",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-check-in-after.png": {
+    "mtime": 1775407095.22,
+    "ast_hash": "7383668163963c8303f734ced297cbf2",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-check-in-before.png": {
+    "mtime": 1775406257.44,
+    "ast_hash": "7383668163963c8303f734ced297cbf2",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-dashboard-after.png": {
+    "mtime": 1775407047.47,
+    "ast_hash": "dbe63353999c9df9a9e4c306fa7e42c1",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-dashboard-before.png": {
+    "mtime": 1775406090.1,
+    "ast_hash": "dbe63353999c9df9a9e4c306fa7e42c1",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-inventory-before.png": {
+    "mtime": 1775406138.27,
+    "ast_hash": "9e232d7c508cbee60b2b87b521346031",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-inventory-detail-before.png": {
+    "mtime": 1775406308.35,
+    "ast_hash": "53545333e56d9f33f483c8ff7b74938c",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-payments-before.png": {
+    "mtime": 1775406238.22,
+    "ast_hash": "1fce01af3af97248204e2d5bab535259",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-service-queue-after.png": {
+    "mtime": 1775407079.43,
+    "ast_hash": "cabb68f5556417e05ea0c784a864176a",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-service-queue-before.png": {
+    "mtime": 1775406203.08,
+    "ast_hash": "cabb68f5556417e05ea0c784a864176a",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/admin-settings-before.png": {
+    "mtime": 1775406276.75,
+    "ast_hash": "4144f24390003e33140672415ea98b7a",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/auth-forgot-before.png": {
+    "mtime": 1775406037.19,
+    "ast_hash": "6c13df091c4d305636773513edf592cc",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/auth-login-before.png": {
+    "mtime": 1775406008.19,
+    "ast_hash": "0f78ccca1216768d04d8c86ec51fa68d",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/auth-register-before.png": {
+    "mtime": 1775406028.8,
+    "ast_hash": "5b1754b952d1071a4776cedf0595245d",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/auth-welcome-before.png": {
+    "mtime": 1775405942.85,
+    "ast_hash": "7bfcb1739e0337a8f317c57e7498b0cd",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-booking-detail-before.png": {
+    "mtime": 1775406528.26,
+    "ast_hash": "ebdd77f5f0f089b75991facf87ea237c",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-booking-new-before.png": {
+    "mtime": 1775406507.96,
+    "ast_hash": "37c20682e5d48bbbda28fd951a3c06ee",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-booking-summary-before.png": {
+    "mtime": 1775406518.09,
+    "ast_hash": "35e2a304314a5b6a0340b785013e126e",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-booking-tracking-before.png": {
+    "mtime": 1775406538.58,
+    "ast_hash": "9d0d0155b1ff33dad60212e2ffad2a07",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-bookings-before.png": {
+    "mtime": 1775406495.21,
+    "ast_hash": "b0e599121218977e8f7d89c2cf924e44",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-chat-before.png": {
+    "mtime": 1775406595.61,
+    "ast_hash": "364b9fd3e08d410342417ba81a7795f4",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-chat-detail-before.png": {
+    "mtime": 1775406606.31,
+    "ast_hash": "81ed99454497456a496f84c8a59dc880",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-checkin-before.png": {
+    "mtime": 1775406735.37,
+    "ast_hash": "718a4acb53013156cce27757d089d463",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-compare-before.png": {
+    "mtime": 1775406463.92,
+    "ast_hash": "1ce4da226f828a15a331a1048afe933e",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-feedback-before.png": {
+    "mtime": 1775406747.13,
+    "ast_hash": "6faf035b669a6dbbab54aba97ac3657d",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-home-before.png": {
+    "mtime": 1775406365.33,
+    "ast_hash": "24c1168f1f6b7baa2d878a63e0576896",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-notification-preferences-before.png": {
+    "mtime": 1775406663.17,
+    "ast_hash": "ce04d505d66b5f23609377e1c26c7545",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-notifications-before.png": {
+    "mtime": 1775406651.85,
+    "ast_hash": "ec4cea10acc0d6015dbbfa4371908a4a",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-payment-before.png": {
+    "mtime": 1775406549.49,
+    "ast_hash": "9ce8e5f5a0e6251556f3f1d15ed2d65d",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-payment-result-before.png": {
+    "mtime": 1775406561.23,
+    "ast_hash": "f01f53d79a183dee9fa8887d6edc8da4",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-profile-before.png": {
+    "mtime": 1775406618.37,
+    "ast_hash": "bb9c48410b1da5136aa5287ff7b4f44d",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-profile-edit-before.png": {
+    "mtime": 1775406633.94,
+    "ast_hash": "08197c984260da5f88fdba286071b27c",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-racket-detail-before.png": {
+    "mtime": 1775406724.2,
+    "ast_hash": "20ce026f1f12fc475ddcf7f72ebb804b",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-rackets-before.png": {
+    "mtime": 1775406713.34,
+    "ast_hash": "eaec0d25704508900c2b6698aba0483e",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-recommend-before.png": {
+    "mtime": 1775406400.18,
+    "ast_hash": "ff4b3f1c9159736293913bafff9e13e8",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-recommend-explain-before.png": {
+    "mtime": 1775406434.51,
+    "ast_hash": "10ea64c8cc2ccf042dbef885be4cb92e",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-recommend-results-before.png": {
+    "mtime": 1775406409.87,
+    "ast_hash": "52a24bfa1ea782ba91fce91abf5c287b",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-string-detail-before.png": {
+    "mtime": 1775406449.97,
+    "ast_hash": "10ea64c8cc2ccf042dbef885be4cb92e",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-strings-before.png": {
+    "mtime": 1775406389.04,
+    "ast_hash": "4d0a5f8b67ec2efe9937e01a521275fd",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-wallet-before.png": {
+    "mtime": 1775406692.93,
+    "ast_hash": "61f28276c0b61c9208d687b6bd8bf9ae",
+    "semantic_hash": ""
+  },
+  "mobile/output/playwright/player-wallet-topup-before.png": {
+    "mtime": 1775406703.55,
+    "ast_hash": "d68ac890df73e3ef26df6ad0190f2856",
+    "semantic_hash": ""
   }
 }
