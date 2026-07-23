@@ -1,5 +1,9 @@
 # Graph Report - .  (2026-07-23)
 
+> Generated before the same-day API-only page remediation. Preserve this report
+> as a graph snapshot; use `docs/codebase-map.md` for the current route, model,
+> migration, and test inventory.
+
 ## Corpus Check
 - cluster-only mode — file stats not available
 

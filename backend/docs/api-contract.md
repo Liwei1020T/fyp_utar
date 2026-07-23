@@ -34,6 +34,14 @@ Error responses use:
 - `GET /health`
 - `GET /api/health`
 
+### Persisted Media
+
+- `GET /api/media/{media_path}`
+
+This route requires an unexpired `exp` value and matching HMAC `sig` query
+parameter. Booking and catalog DTOs generate these time-limited URLs; callers
+cannot retrieve an arbitrary upload path.
+
 ### Auth
 
 - `POST /api/auth/register`
@@ -91,10 +99,19 @@ Example forgot-password reset request:
 }
 ```
 
+The backend owns code generation, expiry, attempt limits, one-time use, and the
+password update. It does not currently send the code through SMS or WhatsApp.
+`PASSWORD_RESET_DEV_PREVIEW_ENABLED` is local-development support only; keep it
+disabled outside an explicitly controlled development session. Production
+self-service reset requires a selected delivery provider and credentials.
+
 ### Profile
 
 - `GET /api/profile`
 - `PUT /api/profile`
+
+`GET /api/profile` returns `200` with `null` until a newly registered player
+saves their profile. Profile absence is an onboarding state, not an API error.
 
 Example profile request:
 
@@ -120,6 +137,72 @@ Example profile request:
 }
 ```
 
+### Notifications
+
+- `GET /api/notifications`
+- `PATCH /api/notifications/read`
+- `GET /api/notifications/preferences`
+- `PUT /api/notifications/preferences`
+
+Preferences are stored per authenticated user and contain boolean `booking`,
+`payment`, `service`, `chat`, and `recommendation` fields. The feed derives
+owned booking, service, conversation, payment, and recommendation events, then
+applies those preferences. Read event IDs are persisted per user.
+
+### Booking Support Conversations
+
+- `GET /api/conversations`
+- `POST /api/bookings/{booking_id}/support`
+- `GET /api/conversations/{conversation_id}`
+- `POST /api/conversations/{conversation_id}/messages`
+- `POST /api/conversations/{conversation_id}/read`
+- `GET /api/admin/conversations`
+- `GET /api/admin/conversations/{conversation_id}`
+- `POST /api/admin/conversations/{conversation_id}/messages`
+- `POST /api/admin/conversations/{conversation_id}/read`
+- `POST /api/admin/conversations/{conversation_id}/resolve`
+- `POST /api/admin/conversations/{conversation_id}/close`
+
+Conversation IDs equal their booking IDs. Only explicitly requested booking
+support threads are listed. State is persisted as `waiting_admin`,
+`admin_joined`, `resolved`, or `closed`; messages remain attached to the
+booking update history with a dedicated conversation channel.
+
+### Rackets and Feedback
+
+- `GET /api/rackets`
+- `POST /api/rackets`
+- `GET /api/rackets/{racket_id}`
+- `PATCH /api/rackets/{racket_id}`
+- `GET /api/bookings/{booking_id}/feedback`
+- `POST /api/bookings/{booking_id}/feedback`
+
+Rackets are owned physical records with stable IDs. A booking may reference an
+owned racket and keeps the racket brand/model snapshot used at booking time.
+Racket detail history includes only completed bookings for that racket.
+Structured feedback is allowed once per owned completed booking, with a
+1-to-5 rating and whitelisted sentiment tags.
+
+### Payments and Wallet
+
+- `GET /api/payments`
+- `GET /api/payments/bookings/{booking_id}/quote`
+- `POST /api/payments/bookings/{booking_id}`
+- `GET /api/wallet`
+- `POST /api/wallet/top-ups`
+- `GET /api/admin/payments`
+- `PATCH /api/admin/payments/{payment_id}`
+
+External card, online-banking, and e-wallet records start as `pending`. The
+admin endpoint verifies them as `paid`, `failed`, or `cancelled`. Wallet top-up
+credit is written only when the admin verifies the associated payment.
+
+`wallet_balance` booking payments are server-validated against the persisted
+ledger and complete immediately only when sufficient balance exists.
+
+The quote endpoint returns the server-owned current amount, wallet balance, and
+any active payment so checkout never trusts a stale catalog snapshot.
+
 ### Strings
 
 - `GET /api/strings`
@@ -133,6 +216,7 @@ Example profile request:
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
+- `PUT /api/admin/inventory/strings/{id}/editor`
 - `GET /api/admin/inventory/strings/{id}/movements`
 - `GET /api/admin/strings/{id}/official-performance`
 - `PUT /api/admin/strings/{id}/official-performance`
@@ -184,6 +268,11 @@ Inventory responses extend the base string shape with:
 - `availability_status` (`in_stock`, `low_stock`, `out_of_stock`)
 - `availability` (`in_stock`, `low_stock`, `out_of_stock`)
 - `admin_note`
+
+The editor endpoint updates catalog master fields, official performance, and
+inventory in one transaction. Product image upload/removal remains a separate
+media operation so the UI can report a structured-save success independently
+from a media failure.
 
 Catalog string responses also include admin-editor fields such as:
 

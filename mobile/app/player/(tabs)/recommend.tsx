@@ -89,7 +89,7 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
     setSubmitError(null);
 
     if (!token) {
-      router.push('/player/results');
+      setSubmitError('Your player session expired. Sign in again to generate recommendations.');
       return;
     }
 
@@ -281,8 +281,8 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
               Advanced preferences
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              These editable inputs are also sent to the FYP1 scorer, so
-              elasticity, tension retention, and string movement are not ignored.
+              These editable inputs help the recommendation engine account for
+              elasticity, tension retention, and string movement.
             </HeroText>
             <View className="mt-4 flex-row flex-wrap gap-2">
               {advancedPreferences.map((item) => (
@@ -302,7 +302,8 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
           <View className="flex-row items-center gap-2">
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
-              FYP1 uses rule-enhanced content-based recommendation: preference match, official/NLP feature fusion, rule fit, and budget fit. No collaborative filtering is used yet.
+              Recommendations combine your preferences with verified string
+              specifications, playing characteristics, and budget fit.
             </HeroText>
           </View>
         </AppCard>

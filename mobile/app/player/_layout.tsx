@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Redirect, useSegments } from 'expo-router';
 import { View } from 'react-native';
 import { RoleGuard } from '../../components/roles/RoleGuard';
 import { appChromeColors } from '../../components/ui/theme';
@@ -14,37 +13,34 @@ import {
 } from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
+  mapBackendConversationToConversation,
+  mapBackendNotificationToNotification,
+  mapBackendPaymentToPayment,
+  mapBackendRacketToRacketPassport,
   mapBackendStringToStringItem,
   mapBackendUserToPlayerProfile,
+  mapBackendWallet,
 } from '../../services/backendMappers';
 
-const DEFERRED_PLAYER_SEGMENTS = new Set([
-  'chat',
-  'chatbot',
-  'check-in',
-  'feedback',
-  'notifications',
-  'payments',
-  'rackets',
-  'wallet',
-]);
-
 export default function PlayerLayout() {
-  const segments = useSegments();
   const user = useCurrentUser();
   const hasHydrated = useAppStore((state) => state.hasHydrated);
   const token = useBackendAccessToken();
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const logout = useAppStore((state) => state.logout);
   const setBackendPlayerSession = useAppStore(
     (state) => state.setBackendPlayerSession,
   );
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const setLiveConversations = useAppStore((state) => state.setLiveConversations);
+  const setLiveNotifications = useAppStore((state) => state.setLiveNotifications);
+  const setLivePayments = useAppStore((state) => state.setLivePayments);
+  const setLiveRackets = useAppStore((state) => state.setLiveRackets);
+  const setLiveWallet = useAppStore((state) => state.setLiveWallet);
   const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
 
   useEffect(() => {
-    if (!hasHydrated || sessionSource !== 'backend' || !token || user?.role !== 'player') {
+    if (!hasHydrated || !token || user?.role !== 'player') {
       return;
     }
 
@@ -52,12 +48,28 @@ export default function PlayerLayout() {
 
     const hydrate = async () => {
       try {
-        const [userResult, profileResult, stringsResult, bookingsResult, storeSettingsResult] = await Promise.allSettled([
+        const [
+          userResult,
+          profileResult,
+          stringsResult,
+          bookingsResult,
+          storeSettingsResult,
+          paymentsResult,
+          walletResult,
+          notificationsResult,
+          conversationsResult,
+          racketsResult,
+        ] = await Promise.allSettled([
           backendApi.fetchCurrentUser(token),
           backendApi.fetchProfile(token),
           backendApi.listStrings(token),
           backendApi.listBookings(token),
           backendApi.fetchStoreSettings(token),
+          backendApi.listPayments(token),
+          backendApi.fetchWallet(token),
+          backendApi.listNotifications(token),
+          backendApi.listPlayerConversations(token),
+          backendApi.listRackets(token),
         ]);
 
         if (cancelled) {
@@ -92,11 +104,12 @@ export default function PlayerLayout() {
           console.warn('Failed to hydrate live player strings', stringsResult.reason);
         }
 
+        let liveBookings = useAppStore.getState().liveBookings;
         if (bookingsResult.status === 'fulfilled') {
           const priceByStringId = new Map(
             liveStrings.map((item) => [item.id, item.price]),
           );
-          const liveBookings = bookingsResult.value.items.map((item) =>
+          liveBookings = bookingsResult.value.items.map((item) =>
             mapBackendBookingToBooking(item, priceByStringId),
           );
           setLiveBookings(liveBookings);
@@ -123,6 +136,54 @@ export default function PlayerLayout() {
         } else if (storeSettingsResult.status === 'rejected') {
           console.warn('Failed to hydrate live store settings', storeSettingsResult.reason);
         }
+
+        if (paymentsResult.status === 'fulfilled') {
+          setLivePayments(paymentsResult.value.map(mapBackendPaymentToPayment));
+        } else {
+          console.warn('Failed to hydrate live payments', paymentsResult.reason);
+        }
+
+        if (walletResult.status === 'fulfilled') {
+          const wallet = mapBackendWallet(walletResult.value);
+          setLiveWallet(wallet.balance, wallet.transactions);
+        } else {
+          console.warn('Failed to hydrate live wallet', walletResult.reason);
+        }
+
+        if (notificationsResult.status === 'fulfilled') {
+          setLiveNotifications(
+            notificationsResult.value.map(mapBackendNotificationToNotification),
+          );
+        } else {
+          console.warn(
+            'Failed to hydrate live notifications',
+            notificationsResult.reason,
+          );
+        }
+
+        if (conversationsResult.status === 'fulfilled') {
+          setLiveConversations(
+            conversationsResult.value.map((item) =>
+              mapBackendConversationToConversation(
+                item,
+                liveBookings.find((booking) => booking.id === item.booking_id),
+              ),
+            ),
+          );
+        } else {
+          console.warn(
+            'Failed to hydrate live conversations',
+            conversationsResult.reason,
+          );
+        }
+
+        if (racketsResult.status === 'fulfilled') {
+          setLiveRackets(
+            racketsResult.value.map(mapBackendRacketToRacketPassport),
+          );
+        } else {
+          console.warn('Failed to hydrate live rackets', racketsResult.reason);
+        }
       } catch (error) {
         if (isBackendAuthError(error)) {
           logout();
@@ -140,10 +201,14 @@ export default function PlayerLayout() {
   }, [
     hasHydrated,
     logout,
-    sessionSource,
     setBackendPlayerSession,
     setLiveBookings,
+    setLiveConversations,
+    setLiveNotifications,
+    setLivePayments,
+    setLiveRackets,
     setLiveStrings,
+    setLiveWallet,
     token,
     updateAdminSettings,
     user?.role,
@@ -151,10 +216,6 @@ export default function PlayerLayout() {
 
   if (!hasHydrated) {
     return <View style={{ flex: 1, backgroundColor: appChromeColors.page }} />;
-  }
-
-  if (segments.some((segment) => DEFERRED_PLAYER_SEGMENTS.has(segment))) {
-    return <Redirect href="/player" />;
   }
 
   return <RoleGuard role="player" />;

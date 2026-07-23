@@ -1,6 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from 'expo-router';
 import { SendHorizontal } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -11,64 +15,201 @@ import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { ChatBubble } from '../../../components/chat/ChatBubble';
 import { formatConversationMode } from '../../../lib/formatters';
-import { useAppStore, useConversations } from '../../../store/appStore';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useBookings,
+  useConversations,
+  useCurrentUser,
+} from '../../../store/appStore';
+import { BackendApiError, backendApi } from '../../../services/backendApi';
+import { mapBackendConversationToConversation } from '../../../services/backendMappers';
+import type { BackendBookingConversation } from '../../../types/backend';
+
+const POLL_INTERVAL_MS = 15_000;
+
+function hasUnreadAdminMessages(conversation: BackendBookingConversation) {
+  return conversation.messages.some(
+    (message) =>
+      message.author_role === 'admin' &&
+      (conversation.player_last_read_at === null ||
+        message.created_at === null ||
+        message.created_at > conversation.player_last_read_at),
+  );
+}
 
 export default function PlayerChatDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
+  const conversationId = params.id;
+  const user = useCurrentUser();
   const conversations = useConversations();
-  const appendChatMessage = useAppStore((state) => state.appendChatMessage);
-  const requestAdminSupport = useAppStore((state) => state.requestAdminSupport);
-  const resolveConversation = useAppStore((state) => state.resolveConversation);
+  const bookings = useBookings();
+  const token = useBackendAccessToken();
+  const setLiveConversations = useAppStore(
+    (state) => state.setLiveConversations,
+  );
+  const conversation = conversations.find(
+    (item) => item.id === conversationId && item.playerId === user?.id,
+  );
   const [draft, setDraft] = useState('');
-  const conversation = useMemo(
-    () => conversations.find((item) => item.id === params.id) ?? conversations[0],
-    [conversations, params.id]
+  const [isLoading, setIsLoading] = useState(
+    Boolean(token && conversationId && !conversation),
+  );
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cacheConversation = useCallback(
+    (response: BackendBookingConversation) => {
+      const mapped = mapBackendConversationToConversation(
+        response,
+        bookings.find((booking) => booking.id === response.booking_id),
+      );
+      const current = useAppStore.getState().liveConversations;
+      setLiveConversations(
+        current.some((item) => item.id === mapped.id)
+          ? current.map((item) => (item.id === mapped.id ? mapped : item))
+          : [mapped, ...current],
+      );
+    },
+    [bookings, setLiveConversations],
   );
 
-  if (!conversation) {
+  const refreshConversation = useCallback(
+    async (showLoading = false) => {
+      if (!token || !conversationId || user?.role !== 'player') {
+        return;
+      }
+
+      if (showLoading) {
+        setIsLoading(true);
+      }
+      setError(null);
+      try {
+        let response = await backendApi.fetchPlayerConversation(
+          token,
+          conversationId,
+        );
+        if (hasUnreadAdminMessages(response)) {
+          response = await backendApi.markPlayerConversationRead(
+            token,
+            conversationId,
+          );
+        }
+        cacheConversation(response);
+      } catch (loadError) {
+        setError(
+          loadError instanceof BackendApiError
+            ? loadError.message
+            : 'Failed to load this conversation.',
+        );
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [cacheConversation, conversationId, token, user?.role],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!token || !conversationId || user?.role !== 'player') {
+        return;
+      }
+
+      void refreshConversation(true);
+      const intervalId = setInterval(
+        () => void refreshConversation(),
+        POLL_INTERVAL_MS,
+      );
+      return () => clearInterval(intervalId);
+    }, [conversationId, refreshConversation, token, user?.role]),
+  );
+
+  if (!user || user.role !== 'player') {
     return null;
   }
 
-  const sendMessage = (message: string) => {
-    if (!message.trim()) {
+  const sendMessage = async (message: string) => {
+    const body = message.trim();
+    if (!body || !token || !conversationId || !conversation) {
+      return;
+    }
+    if (conversation.mode === 'resolved' || conversation.mode === 'closed') {
+      setError('This conversation is no longer open for replies.');
       return;
     }
 
-    appendChatMessage(conversation.id, {
-      role: 'user',
-      senderName: 'You',
-      body: message,
-    });
-
-    const responder =
-      conversation.mode === 'admin_joined'
-        ? {
-            role: 'admin' as const,
-            senderName: 'Daniel Tan',
-            body: 'Admin note received. We can adjust timing, service notes, or drop-off details directly from the shop desk.',
-          }
-        : conversation.mode === 'waiting_admin'
-          ? {
-              role: 'system' as const,
-              senderName: 'System',
-              body: 'Admin support request is queued. The next reply will come from the shop once the admin joins.',
-            }
-          : {
-              role: 'ai' as const,
-              senderName: 'StringSense AI',
-              body: 'Based on your profile, I would keep the current shortlist and use a slightly safer tension if comfort matters today.',
-            };
-
-    appendChatMessage(conversation.id, responder);
-    setDraft('');
+    setIsSending(true);
+    setError(null);
+    try {
+      const response = await backendApi.sendPlayerConversationMessage(
+        token,
+        conversationId,
+        { body },
+      );
+      cacheConversation(response);
+      setDraft('');
+    } catch (sendError) {
+      setError(
+        sendError instanceof BackendApiError
+          ? sendError.message
+          : 'Failed to send message.',
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
+
+  if (!conversation) {
+    return (
+      <AppScreen
+        headerVariant="secondary"
+        title="Conversation unavailable"
+        subtitle="Return to booking support or retry this exact conversation link."
+        showBackButton
+        onBackPress={() => router.back()}
+      >
+        <AppCard variant="subtle" padding="lg">
+          <HeroText className="text-base font-semibold text-neutral-900">
+            {isLoading ? 'Loading conversation...' : 'Conversation not found'}
+          </HeroText>
+          <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
+            {isLoading
+              ? 'Fetching the persisted player and shop message history.'
+              : error ??
+                (conversationId
+                  ? 'This conversation does not exist or is not available to this player.'
+                  : 'The conversation link is missing its booking identifier.')}
+          </HeroText>
+          <View className="mt-4 gap-3">
+            {!isLoading && token && conversationId ? (
+              <AppButton
+                label="Retry"
+                variant="outline"
+                onPress={() => void refreshConversation(true)}
+              />
+            ) : null}
+            <AppButton
+              label="Back to booking support"
+              onPress={() => router.replace('/player/chat')}
+            />
+          </View>
+        </AppCard>
+      </AppScreen>
+    );
+  }
+
+  const isClosed =
+    conversation.mode === 'resolved' || conversation.mode === 'closed';
+  const canReply = Boolean(token && !isClosed && !isSending);
 
   return (
     <AppScreen
       headerVariant="secondary"
       title={conversation.title}
-      subtitle="Conversation modes show whether AI or the admin desk is currently leading the thread."
+      subtitle="Player and shop replies are persisted in the linked booking."
       showBackButton
       onBackPress={() => router.back()}
     >
@@ -86,7 +227,31 @@ export default function PlayerChatDetailScreen() {
         </View>
       </AppCard>
 
-      <AppSection eyebrow="Quick prompts" title="Suggested next messages" variant="compact">
+      {error ? (
+        <AppCard
+          variant="subtle"
+          className="border border-red-100"
+          padding="md"
+        >
+          <HeroText className="text-sm font-medium leading-6 text-red-600">
+            {error}
+          </HeroText>
+          {token ? (
+            <AppButton
+              label="Refresh conversation"
+              variant="outline"
+              className="mt-4"
+              onPress={() => void refreshConversation()}
+            />
+          ) : null}
+        </AppCard>
+      ) : null}
+
+      <AppSection
+        eyebrow="Quick prompts"
+        title="Suggested next messages"
+        variant="compact"
+      >
         <View className="flex-row flex-wrap gap-2">
           {conversation.quickPrompts.map((item) => (
             <AppChip
@@ -94,68 +259,56 @@ export default function PlayerChatDetailScreen() {
               label={item}
               size="md"
               variant="neutral"
-              onPress={() => sendMessage(item)}
+              onPress={canReply ? () => void sendMessage(item) : undefined}
             />
           ))}
         </View>
       </AppSection>
-
-      {conversation.mode !== 'admin_joined' && conversation.mode !== 'resolved' ? (
-        <AppSection eyebrow="Handoff" title="Need the shop to take over?" variant="compact">
-          <View className="gap-3">
-            <AppCard variant="subtle" padding="md">
-              <HeroText className="text-sm leading-6 text-neutral-600">
-                AI replies first by default. Tap below when the thread needs a real admin response for booking, timing, or after-sales support.
-              </HeroText>
-            </AppCard>
-            <AppButton
-              label={
-                conversation.mode === 'waiting_admin'
-                  ? 'Admin request sent'
-                  : 'Request Admin Support'
-              }
-              variant={conversation.mode === 'waiting_admin' ? 'outline' : 'secondary'}
-              size="lg"
-              onPress={() => requestAdminSupport(conversation.id)}
-            />
-          </View>
-        </AppSection>
-      ) : null}
 
       <AppSection eyebrow="Messages" title="Thread activity">
         <View className="gap-4">
           {conversation.messages.map((message) => (
             <ChatBubble key={message.id} message={message} />
           ))}
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="Composer" title="Reply in this thread" className="mb-8">
-        <AppInput
-          className="mb-2"
-          placeholder="Type a message to AI or the admin desk..."
-          value={draft}
-          onChangeText={setDraft}
-          multiline
-          inputClassName="min-h-24"
-        />
-        <View className="gap-3">
-          <AppButton
-            label="Send message"
-            size="lg"
-            leadingIcon={<SendHorizontal size={18} color="white" />}
-            onPress={() => sendMessage(draft)}
-          />
-          {conversation.mode !== 'resolved' ? (
-            <AppButton
-              label="Mark resolved"
-              variant="outline"
-              size="lg"
-              onPress={() => resolveConversation(conversation.id)}
-            />
+          {conversation.messages.length === 0 ? (
+            <AppCard variant="subtle" padding="md">
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                No messages yet. Send the first booking support message below.
+              </HeroText>
+            </AppCard>
           ) : null}
         </View>
       </AppSection>
+
+      {!token || isClosed ? (
+        <AppCard variant="subtle" className="mb-8" padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            {!token
+              ? 'Your player session expired. Sign in again to send messages.'
+              : 'This conversation is closed for player replies.'}
+          </HeroText>
+        </AppCard>
+      ) : (
+        <AppSection eyebrow="Composer" title="Reply in this thread" className="mb-8">
+          <AppInput
+            className="mb-2"
+            placeholder="Type a message to the shop desk..."
+            accessibilityLabel="Message to the shop desk"
+            value={draft}
+            onChangeText={setDraft}
+            multiline
+            inputClassName="min-h-24"
+          />
+          <AppButton
+            label="Send message"
+            size="lg"
+            isLoading={isSending}
+            isDisabled={!draft.trim()}
+            leadingIcon={<SendHorizontal size={18} color="white" />}
+            onPress={() => void sendMessage(draft)}
+          />
+        </AppSection>
+      )}
     </AppScreen>
   );
 }

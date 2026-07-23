@@ -1,48 +1,48 @@
-- generic [ref=e104]:
-  - generic [ref=e109]:
-    - generic [ref=e113]:
-      - generic [ref=e115]:
-        - img [ref=e117]
-        - generic [ref=e121]
-      - button "Log out" [ref=e125] [cursor=pointer]:
-        - img [ref=e126]
-    - generic [ref=e131]:
-      - generic [ref=e134]:
-        - generic [ref=e135]: Shop operations
-        - generic [ref=e136]: Keep the service queue moving without losing the premium feel.
-        - generic [ref=e137]: Today’s prototype covers drop-offs, active jobs, inventory, assigned chat threads, and analytics all inside the admin role.
-      - generic [ref=e138]:
-        - generic [ref=e140]
-        - generic [ref=e144]
-      - generic [ref=e195]:
-        - generic [ref=e197]
-        - generic [ref=e201]
-      - generic [ref=e227]:
-        - generic [ref=e229]
-        - generic [ref=e233]
-  - tablist [ref=e254]:
-    - tab "Overview" [selected] [ref=e256] [cursor=pointer]:
-      - generic [ref=e257]:
-        - img [ref=e260]
-        - img [ref=e267]
-      - generic [ref=e272]: Overview
-    - tab "Bookings" [ref=e274] [cursor=pointer]:
-      - generic [ref=e275]:
-        - img [ref=e278]
-        - img [ref=e282]
-      - generic [ref=e284]: Bookings
-    - tab "Inventory" [ref=e286] [cursor=pointer]:
-      - generic [ref=e287]:
-        - img [ref=e290]
-        - img [ref=e302]
-      - generic [ref=e312]: Inventory
-    - tab "Chat" [ref=e314] [cursor=pointer]:
-      - generic [ref=e315]:
-        - img [ref=e318]
-        - img [ref=e322]
-      - generic [ref=e324]: Chat
-    - tab "Analytics" [ref=e326] [cursor=pointer]:
-      - generic [ref=e327]:
-        - img [ref=e330]
-        - img [ref=e334]
-      - generic [ref=e336]: Analytics
+# Admin Dashboard Playwright Snapshot
+
+Captured from the real PostgreSQL-backed administrator session on 2026-07-23.
+
+- generic [ref=f29e16]:
+  - generic [ref=f29e22]:
+    - generic [ref=f29e25]:
+      - generic [ref=f29e26]:
+        - generic [ref=f29e27]: Admin overview
+        - generic [ref=f29e28]: StringSense counter operations.
+      - button "Log out" [ref=f29e30] [cursor=pointer]
+    - generic [ref=f29e37]:
+      - generic [ref=f29e38]:
+        - generic [ref=f29e40]:
+          - generic [ref=f29e41]: Today
+          - generic [ref=f29e42]: Operational snapshot
+        - generic [ref=f29e44]:
+          - generic [ref=f29e48]
+          - generic [ref=f29e57]
+          - generic [ref=f29e67]
+          - generic [ref=f29e77]
+      - generic [ref=f29e85]:
+        - generic [ref=f29e86]:
+          - generic [ref=f29e87]
+          - generic [ref=f29e91] [cursor=pointer]: 1 awaiting
+        - generic [ref=f29e94]:
+          - button "Check-in Confirm player racket drop-off at the counter." [ref=f29e97] [cursor=pointer]
+          - button "Bookings Update service status and monitor the queue." [ref=f29e111] [cursor=pointer]
+          - button "Service queue See active rackets grouped by service stage." [ref=f29e124] [cursor=pointer]
+          - button "Payments Verify pending payments and wallet top-ups." [ref=f29e138] [cursor=pointer]
+          - button "Inventory Review string stock and low-stock items." [ref=f29e151] [cursor=pointer]
+          - button "Business hours Adjust slots and store availability windows." [ref=f29e172] [cursor=pointer]
+          - button "Store settings Edit store profile, notes, and policies." [ref=f29e186] [cursor=pointer]
+      - generic [ref=f29e198]:
+        - generic [ref=f29e200]:
+          - generic [ref=f29e201]: Highlights
+          - generic [ref=f29e202]: What needs attention?
+        - generic [ref=f29e204]:
+          - generic [ref=f29e205]: 1 booking waiting for racket drop-off.
+          - generic [ref=f29e213]: 5 jobs currently on the stringing bench.
+          - generic [ref=f29e221]: 0 string SKUs flagged for stock review.
+          - button "Recommendation runs Review saved recommendation histories, profile snapshots, and score breakdowns." [ref=f29e238] [cursor=pointer]
+  - tablist [ref=f29e254]:
+    - tab "Overview" [selected] [ref=f29e256] [cursor=pointer]
+    - tab "Bookings" [ref=f29e274] [cursor=pointer]
+    - tab "Inventory" [ref=f29e286] [cursor=pointer]
+    - tab "Chat" [ref=f29e314] [cursor=pointer]
+    - tab "Analytics" [ref=f29e326] [cursor=pointer]

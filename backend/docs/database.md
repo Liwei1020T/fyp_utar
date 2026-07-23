@@ -24,6 +24,17 @@ The active migration sequence is:
 - [20260414_0016_repair_recommendation_schema_drift.py](../migrations/versions/20260414_0016_repair_recommendation_schema_drift.py)
 - [20260414_0017_remove_legacy_budget_range_columns.py](../migrations/versions/20260414_0017_remove_legacy_budget_range_columns.py)
 - [20260423_0018_repair_booking_columns_drift.py](../migrations/versions/20260423_0018_repair_booking_columns_drift.py)
+- [20260723_0019_notification_preferences.py](../migrations/versions/20260723_0019_notification_preferences.py)
+- [20260723_0020_commerce_ledger.py](../migrations/versions/20260723_0020_commerce_ledger.py)
+- [20260723_0021_notification_reads.py](../migrations/versions/20260723_0021_notification_reads.py)
+- [20260723_0022_rackets_feedback.py](../migrations/versions/20260723_0022_rackets_feedback.py)
+- [20260723_0023_booking_conversations.py](../migrations/versions/20260723_0023_booking_conversations.py)
+- [20260723_0024_booking_update_channel.py](../migrations/versions/20260723_0024_booking_update_channel.py)
+
+Revisions 0019–0024 can adopt the complete tables produced by
+`AUTO_CREATE_SCHEMA` while still adding missing columns to older tables. This
+keeps local development databases upgradeable without stamping over real
+schema gaps; arbitrary partially created tables remain unsupported.
 
 ## Active Business Tables
 
@@ -40,11 +51,12 @@ Stores the canonical recommendation and profile fields:
 
 - `skill_level`
 - `playing_style`
-- `budget_min`
-- `budget_max`
+- `budget_tier`
 - `preferred_tension`
 - `game_type`
 - `frequency_per_week`
+- `preferred_feel`
+- `recent_goal`
 - `pref_attack`
 - `pref_comfort`
 - `pref_control`
@@ -54,6 +66,7 @@ Stores the canonical recommendation and profile fields:
 - `pref_string_movement`
 - `pref_tension_retention`
 - `pref_value_for_money`
+- `notification_preferences`
 
 ### Catalog Normalization
 
@@ -181,13 +194,15 @@ These rows are regenerated when a complete profile is saved and when profile rec
 
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
-The active algorithm version is `fyp1_preference_official_nlp_rule_budget_v3`.
+The active algorithm version is
+`fyp1_similarity_confidence_rule_budget_tier_v5`.
 
 Score fields:
 
 - `preference_match_score`
 - `rule_fit_score`
 - `budget_fit_score`
+- `confidence_score`
 - `nlp_review_score`
 - `final_score`
 
@@ -199,12 +214,17 @@ Stores the single-store weekly schedule plus special closed dates used to genera
 
 ### `store_settings`
 
-Stores the single-store support copy, policy text, contact details, and other admin-facing settings used by the operations UI.
+Stores the single-store support copy, policy text, contact details, booking
+notes, and persisted `trending_string_ids` used by the player home screen.
 
 ### `bookings`
 
-Stores service-tracking bookings only. Slot conflict detection remains intentionally out of scope.
+Stores service-tracking bookings. Creation uses a server-owned slot ID,
+validates store schedule and future time, and reserves slot capacity under a
+database lock.
 Current lifecycle values are `awaiting_dropoff`, `in_progress`, `ready_for_collection`, `completed`, `cancelled`, and `rejected`.
+An optional owned `racket_id` links a durable physical racket while
+`racket_brand` and `racket_model` retain the booking-time snapshot.
 
 ### `booking_status_history`
 
@@ -212,10 +232,64 @@ Stores booking status transitions plus optional admin operator notes for auditab
 
 ### `booking_updates`
 
-Stores player/admin booking comments and optional uploaded photo metadata. Photo files are stored locally under `backend/var/uploads/booking-updates/` for the FYP demo and exposed through relative `/media/...` URLs.
+Stores player/admin booking comments and optional uploaded photo metadata. Photo
+files are stored locally under `backend/var/uploads/booking-updates/` for the
+FYP demo and exposed through time-limited signed `/api/media/...` URLs.
+The `channel` field distinguishes ordinary service updates from persisted
+booking-conversation messages.
+
+### `booking_conversations`
+
+Stores one support-conversation state record per booking, including the support
+request time and player/admin read timestamps. Message bodies remain in
+`booking_updates` so the booking keeps one chronological activity trail.
+
+### `rackets`
+
+Stores user-owned physical racket passports with a stable ID, nickname,
+brand/model, optional frame metadata, preferred use, and notes.
+
+### `booking_feedback`
+
+Stores one structured feedback row per completed booking. The unique booking
+constraint and ownership checks prevent duplicate or cross-user submissions.
+
+### `notification_reads`
+
+Stores stable derived notification event IDs that a user has read. Notification
+content remains derived from owned source records rather than duplicated.
+
+### `payments`
+
+Stores booking-payment and wallet-top-up records:
+
+- user and optional booking ownership
+- method and status
+- server-owned amount and unique reference
+- `booking_payment` or `wallet_top_up` type
+- audit timestamps and shop verification note
+
+External payment records remain `pending` until admin verification. Wallet
+booking payments may complete immediately after a server-side balance check.
+
+### `wallet_transactions`
+
+Append-only credit/debit ledger rows linked one-to-one to a completed payment.
+Wallet balance is derived from this ledger; it is not a client-editable stored
+counter.
 
 ### `recommendation_logs`
 
 Stores request snapshots, result snapshots, and `algorithm_version`.
+
+### `recommendation_runs` and `recommendation_run_items`
+
+Store immutable admin-audit history for generated recommendations:
+
+- the run keeps request/profile snapshots plus algorithm, matrix, and feature
+  source versions;
+- item rows keep rank, final score, score layers, evidence, and rationale;
+- the mobile admin run list/detail reads these historical rows rather than the
+  mutable latest-result cache.
 
 The active runtime schema authority is limited to `app/adapters/persistence/sqlalchemy/models/` plus the root `migrations/` history.

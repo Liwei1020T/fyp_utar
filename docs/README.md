@@ -2,6 +2,9 @@
 
 - [Low-Token Codebase Map](./codebase-map.md)
 - [FYP1 Scope](./fyp1-scope.md)
+- [Current Mock-Page Remediation](./plans/mock-page-remediation.md)
+- [Customer and Administrator Acceptance Record (2026-07-24)](./customer-admin-acceptance-2026-07-24.md)
+- [Administrator Acceptance Record (2026-07-23)](./admin-acceptance-2026-07-23.md)
 - [FYP2 Readiness Gate 5 Result](./plans/fyp2-readiness/04-remediation-results-and-readiness.md)
 - [Workspace Root](../README.md)
 - [Mobile README](../mobile/README.md)

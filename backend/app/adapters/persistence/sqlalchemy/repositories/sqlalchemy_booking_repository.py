@@ -14,6 +14,7 @@ from app.adapters.persistence.sqlalchemy.models import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
+from app.adapters.persistence.sqlalchemy.models.racket_feedback import Racket
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_booking_record
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.enums import BookingStatus
@@ -66,6 +67,7 @@ class SqlAlchemyBookingRepository:
         *,
         user_id: str,
         string_id: str,
+        racket_id: str | None = None,
         racket_brand: str | None,
         racket_model: str | None,
         requested_tension: float | None,
@@ -78,6 +80,7 @@ class SqlAlchemyBookingRepository:
         booking = Booking(
             user_id=user_id,
             string_id=string_id,
+            racket_id=racket_id,
             racket_brand=racket_brand,
             racket_model=racket_model,
             requested_tension=requested_tension,
@@ -101,6 +104,20 @@ class SqlAlchemyBookingRepository:
         refreshed = self.get_by_id(booking.id)
         assert refreshed is not None
         return refreshed
+
+    def get_owned_racket_identity(
+        self,
+        *,
+        racket_id: str,
+        user_id: str,
+    ) -> tuple[str, str] | None:
+        row = self.db.execute(
+            select(Racket.brand, Racket.model).where(
+                Racket.id == racket_id,
+                Racket.user_id == user_id,
+            )
+        ).one_or_none()
+        return (row.brand, row.model) if row is not None else None
 
     def get_by_id(self, booking_id: str) -> BookingRecord | None:
         booking = (

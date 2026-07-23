@@ -29,7 +29,7 @@ import {
   useCurrentUser,
   useStrings,
 } from '../../../store/appStore';
-import type { Booking, BookingStatus, BookingUpdate, PlayerProfile } from '../../../types/domain';
+import type { Booking, BookingStatus, BookingUpdate } from '../../../types/domain';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
@@ -39,7 +39,6 @@ import {
   formatLocalDateInputValue,
   formatLocalTimeValue,
 } from '../../../lib/formatters';
-import { getStringById, getUserById } from '../../../services/mockAppService';
 import {
   BackendApiError,
   backendApi,
@@ -325,7 +324,6 @@ export default function AdminBookingDetailScreen() {
   const user = useCurrentUser();
   const bookings = useBookings();
   const strings = useStrings();
-  const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
   const booking = bookings.find((item) => item.id === params.id);
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
@@ -442,8 +440,7 @@ export default function AdminBookingDetailScreen() {
     return null;
   }
 
-  const player = getUserById(booking.playerId) as PlayerProfile | undefined;
-  const stringItem = getStringById(booking.stringId);
+  const stringItem = strings.find((item) => item.id === booking.stringId);
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const priceState = getPriceStateLabel(booking);
   const workflowCTA = getWorkflowActionLabel(status);
@@ -512,9 +509,7 @@ export default function AdminBookingDetailScreen() {
     }
 
     if (!token || user?.role !== 'admin') {
-      updateBookingStatus(booking.id, status, {
-        expectedCompletionAt: expectedCompletion.value,
-      });
+      setError('Your admin session expired. Sign in again before updating the workflow.');
       return;
     }
 
@@ -781,6 +776,7 @@ export default function AdminBookingDetailScreen() {
                         label={formatBookingStatus(item)}
                         variant={isCurrent || isSelected ? getBookingStatusVariant(item) : 'neutral'}
                         size="sm"
+                        style={{ pointerEvents: 'none' }}
                       />
                       {isCurrent ? <CheckCircle2 size={15} color="#2F64B6" /> : null}
                     </View>
@@ -918,14 +914,12 @@ export default function AdminBookingDetailScreen() {
             <SummaryRow label="Order ID" value={orderCode} />
             <SummaryRow
               label="Player"
-              value={booking.customerName ?? player?.name ?? 'Walk-in player'}
+              value={booking.customerName ?? 'Walk-in player'}
             />
             <SummaryRow
               label="Contact"
               value={
                 booking.customerPhone
-                ?? player?.phone
-                ?? player?.email
                 ?? 'No contact provided'
               }
             />

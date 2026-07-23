@@ -24,7 +24,6 @@ export function TrendingStrings() {
   const strings = useStrings();
   const preferredAdminId = usePreferredAdminId();
   const hasHydrated = useAppStore((state) => state.hasHydrated);
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const adminSettings = useAppStore((state) => state.adminSettings);
   const configuredTrendingIds = preferredAdminId
     ? adminSettings.find((item) => item.adminId === preferredAdminId)?.trendingStringIds ?? []
@@ -35,7 +34,6 @@ export function TrendingStrings() {
   const trending = configuredTrending.slice(0, 5);
   const isHydratingConfiguredTrending =
     hasHydrated &&
-    sessionSource === 'backend' &&
     user?.role === 'player' &&
     configuredTrendingIds.length > 0 &&
     strings.length === 0;

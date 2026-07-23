@@ -4,6 +4,7 @@ import { BarChart3, Clock3, Flame, Gauge } from 'lucide-react-native';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
+import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { HeroText } from '../../../components/ui/heroui';
 import { useBackendAccessToken, useCurrentUser, useStrings } from '../../../store/appStore';
@@ -18,8 +19,8 @@ export default function AdminAnalyticsScreen() {
   const [analytics, setAnalytics] = useState<BackendAnalyticsSummary | null>(null);
   const [popularStrings, setPopularStrings] = useState<BackendPopularString[]>([]);
   const [isLoading, setIsLoading] = useState(Boolean(token));
-  const [hasLoadedAnalytics, setHasLoadedAnalytics] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -27,7 +28,6 @@ export default function AdminAnalyticsScreen() {
       setAnalytics(null);
       setPopularStrings([]);
       setIsLoading(false);
-      setHasLoadedAnalytics(false);
       setError(null);
       return;
     }
@@ -36,7 +36,6 @@ export default function AdminAnalyticsScreen() {
       setAnalytics(null);
       setPopularStrings([]);
       setIsLoading(false);
-      setHasLoadedAnalytics(false);
       setError('Backend login is required to view live analytics.');
       return;
     }
@@ -44,6 +43,8 @@ export default function AdminAnalyticsScreen() {
     let cancelled = false;
 
     const hydrate = async () => {
+      setAnalytics(null);
+      setPopularStrings([]);
       setIsLoading(true);
       setError(null);
       try {
@@ -56,7 +57,6 @@ export default function AdminAnalyticsScreen() {
         }
         setAnalytics(summary);
         setPopularStrings(popular);
-        setHasLoadedAnalytics(true);
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -64,7 +64,6 @@ export default function AdminAnalyticsScreen() {
               ? loadError.message
               : 'Failed to load analytics.',
           );
-          setHasLoadedAnalytics(true);
         }
       } finally {
         if (!cancelled) {
@@ -78,7 +77,7 @@ export default function AdminAnalyticsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [isAdmin, token]);
+  }, [isAdmin, loadAttempt, token]);
 
   const popularStringCards = useMemo(
     () =>
@@ -100,7 +99,7 @@ export default function AdminAnalyticsScreen() {
     return null;
   }
 
-  if (token && !hasLoadedAnalytics && isLoading) {
+  if (isLoading && analytics === null) {
     return (
       <AppScreen
         tone="admin"
@@ -120,22 +119,65 @@ export default function AdminAnalyticsScreen() {
     );
   }
 
-  return (
-    <AppScreen tone="admin" headerVariant="primary" title="Admin analytics" subtitle="Operations trends, busy slots, popular strings, and payment workload." >
-      {error ? (
-        <AppCard variant="subtle" className="mb-6 border border-red-100" padding="md">
-          <HeroText className="text-sm font-medium text-red-600">
-            {error}
+  if (analytics === null) {
+    return (
+      <AppScreen
+        tone="admin"
+        headerVariant="primary"
+        title="Admin analytics"
+        subtitle="Operations trends, busy slots, popular strings, and payment workload."
+      >
+        <AppCard variant="subtle" className="mt-6 border border-red-100" padding="lg">
+          <HeroText className="text-lg font-bold text-neutral-900">
+            Analytics unavailable
           </HeroText>
+          <HeroText className="mt-2 text-sm leading-6 text-red-600">
+            {error ?? 'The live analytics summary could not be loaded.'}
+          </HeroText>
+          {token ? (
+            <AppButton
+              className="mt-4"
+              label="Retry"
+              variant="outline"
+              onPress={() => setLoadAttempt((current) => current + 1)}
+            />
+          ) : null}
         </AppCard>
-      ) : null}
+      </AppScreen>
+    );
+  }
 
+  return (
+    <AppScreen
+      tone="admin"
+      headerVariant="primary"
+      title="Admin analytics"
+      subtitle="Operations trends, busy slots, popular strings, and payment workload."
+    >
       <AppSection eyebrow="Metrics" title="Shop performance">
         <View className="flex-row flex-wrap gap-3">
-          <MetricStatCard title="Weekly bookings" value={String(analytics?.weekly_bookings ?? 0)} icon={<BarChart3 size={20} color="#2F64B6" />} />
-          <MetricStatCard title="Pending payment" value={String(analytics?.pending_payment_count ?? 0)} icon={<Clock3 size={20} color="#22766D" />} accentClassName="bg-[#E4F2F0]" />
-          <MetricStatCard title="Ready pickup" value={String(analytics?.ready_for_collection_count ?? 0)} icon={<Gauge size={20} color="#6550B8" />} accentClassName="bg-[#ECE7FA]" />
-          <MetricStatCard title="Revenue" value={formatCurrency(analytics?.today_revenue ?? 0)} icon={<BarChart3 size={20} color="#2F64B6" />} />
+          <MetricStatCard
+            title="Weekly bookings"
+            value={String(analytics.weekly_bookings)}
+            icon={<BarChart3 size={20} color="#2F64B6" />}
+          />
+          <MetricStatCard
+            title="Pending payment"
+            value={String(analytics.pending_payment_count)}
+            icon={<Clock3 size={20} color="#22766D" />}
+            accentClassName="bg-[#E4F2F0]"
+          />
+          <MetricStatCard
+            title="Ready pickup"
+            value={String(analytics.ready_for_collection_count)}
+            icon={<Gauge size={20} color="#6550B8" />}
+            accentClassName="bg-[#ECE7FA]"
+          />
+          <MetricStatCard
+            title="Revenue"
+            value={formatCurrency(analytics.today_revenue)}
+            icon={<BarChart3 size={20} color="#2F64B6" />}
+          />
         </View>
       </AppSection>
 
@@ -163,7 +205,7 @@ export default function AdminAnalyticsScreen() {
 
       <AppSection eyebrow="Busy slots" title="When the desk gets crowded">
         <View className="gap-3">
-          {analytics?.busy_slots.map((slot) => (
+          {analytics.busy_slots.map((slot) => (
             <AppCard key={slot} variant="highlighted" padding="sm">
               <View className="flex-row items-center gap-3">
                 <Flame size={18} color="#C98A2E" />
@@ -171,7 +213,7 @@ export default function AdminAnalyticsScreen() {
               </View>
             </AppCard>
           ))}
-          {!isLoading && (analytics?.busy_slots.length ?? 0) === 0 ? (
+          {!isLoading && analytics.busy_slots.length === 0 ? (
             <AppCard variant="subtle" padding="sm">
               <HeroText className="text-sm text-neutral-600">
                 Busy-slot analytics will appear after more booking activity is recorded.

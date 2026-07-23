@@ -106,6 +106,10 @@ export default function AdminBusinessHoursScreen() {
     if (!localHours || !user || user.role !== 'admin') {
       return;
     }
+    if (!token) {
+      setError('Your admin session expired. Sign in again before saving.');
+      return;
+    }
     const nextHours = {
       ...localHours,
       specialClosedDates: closedDatesText
@@ -116,18 +120,14 @@ export default function AdminBusinessHoursScreen() {
     setError(null);
     setIsSaving(true);
     try {
-      if (token) {
-        const response = await backendApi.updateBusinessHours(
-          token,
-          mapBusinessHoursToBackendPayload(nextHours),
-        );
-        const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
-        updateBusinessHours(user.id, mapped);
-        setLocalHours(mapped);
-        setClosedDatesText(mapped.specialClosedDates.join(', '));
-      } else {
-        updateBusinessHours(user.id, nextHours);
-      }
+      const response = await backendApi.updateBusinessHours(
+        token,
+        mapBusinessHoursToBackendPayload(nextHours),
+      );
+      const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
+      updateBusinessHours(user.id, mapped);
+      setLocalHours(mapped);
+      setClosedDatesText(mapped.specialClosedDates.join(', '));
       setSaveSuccessMessage('Business hours saved. Player booking slots now use the updated schedule.');
     } catch (saveError) {
       setSaveSuccessMessage(null);

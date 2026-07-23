@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
 from datetime import timedelta
 
 from app.domain.booking.enums import BookingStatus
@@ -16,13 +17,26 @@ from app.ports.repositories.catalog_repository import CatalogRepository
 from app.ports.services.clock import Clock
 
 
+@dataclass(frozen=True)
+class AnalyticsPayment:
+    status: str
+    payment_type: str
+    amount: float
+    updated_at: datetime
+
+
 @dataclass
 class GetStoreAnalyticsUseCase:
     booking_repository: BookingRepository
     catalog_repository: CatalogRepository
     clock: Clock
 
-    def execute_summary(self) -> AnalyticsSummary:
+    def execute_summary(
+        self,
+        *,
+        payments: list[AnalyticsPayment],
+        store_timezone: str,
+    ) -> AnalyticsSummary:
         bookings = self.booking_repository.list_all_for_analytics()
         strings = self.catalog_repository.list_inventory(
             brand=None,
@@ -31,7 +45,8 @@ class GetStoreAnalyticsUseCase:
             limit=None,
             offset=0,
         ).items
-        now = self.clock.now().replace(tzinfo=None)
+        now = normalize_datetime(self.clock.now(), store_timezone)
+        assert now is not None
         week_ago = now - timedelta(days=7)
         today = now.date()
 
@@ -40,13 +55,22 @@ class GetStoreAnalyticsUseCase:
         in_progress_count = 0
         ready_for_collection_count = 0
         completed_today = 0
+        pending_payment_count = 0
         today_revenue = 0.0
         slot_counter: Counter[str] = Counter()
         string_counter: Counter[str] = Counter()
 
+        for payment in payments:
+            if payment.status == "pending":
+                pending_payment_count += 1
+            elif payment.status == "paid" and payment.payment_type == "booking_payment":
+                paid_at = normalize_datetime(payment.updated_at, store_timezone)
+                if paid_at is not None and paid_at.date() == today:
+                    today_revenue += payment.amount
+
         for booking in bookings:
-            created_at = normalize_datetime(booking.created_at)
-            updated_at = normalize_datetime(booking.updated_at)
+            created_at = normalize_datetime(booking.created_at, store_timezone)
+            updated_at = normalize_datetime(booking.updated_at, store_timezone)
             if created_at is not None and created_at >= week_ago:
                 weekly_bookings += 1
 
@@ -62,17 +86,16 @@ class GetStoreAnalyticsUseCase:
                 and updated_at.date() == today
             ):
                 completed_today += 1
-                for item in strings:
-                    if item.id == booking.string_id:
-                        today_revenue += item.price_rm or 0.0
-                        break
 
             if booking.status not in {
                 BookingStatus.CANCELLED.value,
                 BookingStatus.REJECTED.value,
             }:
                 string_counter[booking.string_id] += 1
-                drop_off = normalize_datetime(booking.drop_off_datetime)
+                drop_off = normalize_datetime(
+                    booking.drop_off_datetime,
+                    store_timezone,
+                )
                 if drop_off is not None:
                     slot_counter[
                         slot_busy_label(drop_off.date(), drop_off.strftime("%H:%M"))
@@ -86,7 +109,7 @@ class GetStoreAnalyticsUseCase:
         ]
         return AnalyticsSummary(
             weekly_bookings=weekly_bookings,
-            pending_payment_count=0,
+            pending_payment_count=pending_payment_count,
             awaiting_dropoff_count=awaiting_dropoff_count,
             in_progress_count=in_progress_count,
             ready_for_collection_count=ready_for_collection_count,
@@ -97,7 +120,10 @@ class GetStoreAnalyticsUseCase:
             busy_slots=[label for label, _ in slot_counter.most_common(3)],
             popular_string_ids=popular_string_ids,
             workload_mix=[
-                AnalyticsWorkloadEntry(label="Pending payment", value=0),
+                AnalyticsWorkloadEntry(
+                    label="Pending payment",
+                    value=pending_payment_count,
+                ),
                 AnalyticsWorkloadEntry(
                     label="Awaiting drop-off",
                     value=awaiting_dropoff_count,

@@ -23,7 +23,6 @@ import {
   useStrings,
 } from '../../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../../services/backendApi';
-import { getStringById } from '../../../../services/mockAppService';
 import type {
   BackendRecommendationRationale,
   BackendRecommendationResult,
@@ -240,9 +239,7 @@ export default function RecommendationExplanationScreen() {
   const [backendDetail, setBackendDetail] = useState<BackendRecommendationResult | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
 
-  const stringItem =
-    strings.find((item) => item.id === params.id) ??
-    (token ? undefined : getStringById(params.id));
+  const stringItem = strings.find((item) => item.id === params.id);
   const liveResult = liveResults.find(
     (item) => item.catalogId === params.id || item.stringId === params.id || item.id === params.id,
   );

@@ -2,16 +2,16 @@
 
 ## 1. Overview
 
-StringSense is an Expo + React Native frontend prototype for a badminton string recommendation and service management product. The current frontend is now a hybrid system: the FYP1 player flow plus admin booking, recommendation audit, inventory, business-hours, limited store-settings, and booking photo/comment operations can use the live Python backend, while deferred FYP2 domains remain mock-first or hidden inside one codebase.
+StringSense is an Expo + React Native frontend for a badminton string recommendation and service management product. Every authenticated route uses the unified Python API or backend-derived persisted records. The mobile runtime has no seeded mock session or local business-data fallback.
 
 The app is optimized for:
 
 - fast FYP prototyping
-- realistic FYP1 product flows with live backend persistence
+- realistic FYP delivery flows with live backend persistence
 - strong visual consistency through shared UI primitives
 - role-based navigation for player and admin experiences
 
-At runtime, the FYP1-visible product flow is backend-oriented. Player auth, profile, strings, recommendation, bookings, booking photos/comments, admin booking management, admin recommendation run review, inventory, business hours, and limited store settings can be hydrated from the backend, while FYP2 modules such as chat, payment/wallet, notifications, racket passport, QR check-in, service queue, advanced analytics, and advanced settings stay deferred.
+At runtime, player auth, profile, strings, recommendations, bookings, support messages, payments, wallet, notifications, racket service history, check-in, feedback, and the admin operations surface use live backend state.
 
 The player home `Trending Strings` carousel is now backend-backed through admin store settings. Admins manage the featured string IDs from `/admin/settings`, the backend persists them on `/api/admin/store-settings`, and player surfaces hydrate them through `GET /api/store-settings` before rendering only those admin-picked strings.
 
@@ -33,9 +33,8 @@ The player home `Trending Strings` carousel is now backend-backed through admin 
 
 ### State and data
 
-- Zustand for application state, live backend snapshots, hybrid session state, and mock mutations
+- Zustand for authenticated session state, live backend snapshots, and transient UI drafts
 - Explicit API hydration through `services/backendApi.ts` and DTO mapping through `services/backendMappers.ts`
-- Local mock datasets in `mocks/` remain available for mock mode and deferred FYP2 routes, never as fallback records inside a backend session
 
 ### Forms and validation
 
@@ -52,6 +51,7 @@ flowchart TD
     C --> C2[HeroUINativeProvider]
     B --> D[Root Stack]
     U[Native SecureStore] --> V[services/backendSessionStorage.ts]
+    W[Web Current-Tab Session Storage] --> V
     V --> B
 
     D --> E[app/index.tsx]
@@ -66,15 +66,11 @@ flowchart TD
     J --> L[Player Tabs + Detail Screens]
     K --> M[Admin Tabs + Detail Screens]
 
-    N[mocks/*] --> O[store/appStore.ts]
-    N --> P[services/mockAppService.ts]
     R[Unified Python API app/main.py] --> S[services/backendApi.ts]
     S --> T[services/backendMappers.ts]
     T --> O
     O --> L
     O --> M
-    P --> L
-    P --> M
 
     Q[components/ui + components/shared] --> L
     Q --> M
@@ -89,8 +85,8 @@ Responsibilities:
 - imports `global.css`
 - wraps the app in `GestureHandlerRootView`
 - injects `HeroUINativeProvider`
-- restores native tokens from SecureStore and revalidates them before auth redirects resolve
-- keeps web bearer tokens memory-only, so a full browser refresh returns to login
+- restores native tokens from SecureStore and web tokens from current-tab session storage
+- revalidates every restored token through `/auth/me` before auth redirects resolve
 - renders an Expo Router `Stack` with hidden native headers
 
 This file is the composition root for the frontend.
@@ -127,14 +123,14 @@ Main tab workspace:
 - `recommend`
 - `bookings`
 - `profile`
-- `chat` exists in the tab shell for future work, but backend sessions redirect deferred player routes away from FYP1 live mode.
+- `chat`
 
 Additional stack screens extend the tab workflow:
 
 - booking creation, summary, detail, and tracking
 - string detail, compare, and explanation
 - profile edit
-- payment, feedback, racket passport, notifications, wallet, and QR check-in route files exist for FYP2/mock-first work and are redirected away from backend sessions.
+- payment, feedback, racket service history, notifications, wallet, and counter check-in
 
 `app/player/index.tsx` redirects to `/player/home`.
 
@@ -147,7 +143,8 @@ Main tab workspace:
 - `dashboard`
 - `bookings`
 - `inventory`
-- `chat` and `analytics` exist in the tab shell for future work, but backend sessions redirect those deferred admin routes away from FYP1 live mode.
+- `chat`
+- `analytics`
 
 Additional operational stack screens:
 
@@ -157,7 +154,7 @@ Additional operational stack screens:
 - settings
 - check-in for order-ID-based counter drop-off confirmation
 - recommendation run history and detail review for admin audit of saved recommendation outputs
-- payments monitor, service queue, and chat detail route files exist for FYP2/mock-first work and are redirected away from backend sessions.
+- payments monitor, service queue, and booking-support chat detail
 
 `app/admin/index.tsx` redirects to `/admin/dashboard`.
 
@@ -180,42 +177,30 @@ The frontend’s mutable source of truth is `store/appStore.ts`.
 The store owns:
 
 - current session state, including refresh-time backend session bootstrap state
-- backend player session bridge
-- live player profile, strings, bookings, and recommendation results
-- users
-- strings
-- bookings
-- payments for deferred mock-first checkout flows
-- conversations for deferred mock-first chat flows
-- notifications for deferred mock-first notification flows
+- live player/admin profiles, strings, bookings, and recommendation results
+- live payment snapshots
+- persisted support conversation snapshots
+- live backend notifications and persisted read state
 - business hours
-- rackets for deferred mock-first racket passport flows
-- wallets and wallet transactions for deferred mock-first wallet flows
+- live physical racket passports and completed service history
+- live wallets and transactions
 - admin settings
-- notification preferences
 - compare selection
 - booking draft
-- last payment outcome
 
 ### Store actions
 
-The store handles all user-visible prototype mutations:
+The store handles session, successful API snapshots, and transient UI state:
 
-- auth login, quick login, logout, player registration
-- backend session hydration, native SecureStore persistence, web memory-only handling, and refresh-time revalidation
-- player profile updates
+- backend session hydration, native SecureStore persistence, current-tab web session persistence, and refresh-time revalidation
+- logout and successful player-profile replacement
 - booking draft creation and clearing
-- deferred mock-first booking payment flow
-- booking cancellation
-- admin booking status updates
 - string compare selection
-- deferred mock-first chat message append, admin handoff request, and resolution
-- business hours updates
-- inventory updates
-- notification read state
-- deferred mock-first wallet top-up
-- deferred mock-first notification preference updates
-- admin settings updates
+- successful business-hours, inventory, notification-read, and admin-settings snapshots
+
+Payment, wallet, support-chat, and live booking writes call `backendApi.ts`
+directly. The store receives the successful backend response as a replacement
+snapshot; it does not simulate those writes locally.
 
 ### Derived accessors
 
@@ -240,21 +225,21 @@ This keeps screens relatively simple while avoiding a separate selector layer.
 
 ## 7. Data Layer Model
 
-The current frontend uses two parallel data access patterns.
+The current frontend uses one runtime data path.
 
 ### 7.1 Mutable runtime state: `store/appStore.ts`
 
-This is the live application state after the app starts. Once a user logs in or performs actions, screens should treat the Zustand store as the authoritative mutable state.
+This is the display state after the app starts. Screens read Zustand snapshots,
+while the backend remains authoritative for live-session writes.
 
 Examples:
 
 - newly created bookings
 - updated profile data
 - modified business hours
-- wallet balance changes
-- new chat messages
+- wallet, payment, and conversation snapshots returned by the backend
 
-### 7.2 Hybrid player backend bridge
+### 7.2 Unified backend bridge
 
 `services/backendApi.ts` and `services/backendMappers.ts` provide:
 
@@ -264,48 +249,17 @@ Examples:
 - live string catalog reads
 - live booking reads/creates
 - live confidence-aware recommendation requests
+- persisted booking-support conversations
+- server-owned payment quotes, payments, wallet top-ups, and wallet history
+- owned notifications, read IDs, preferences, rackets, and feedback
+- administrator inventory, booking, check-in, queue, commerce, store, analytics,
+  and recommendation-audit operations
 
 The mapped backend responses are normalized back into the RN domain model so most screens can keep their existing structure.
 
-### 7.3 Read helpers over seed data: `services/mockAppService.ts`
-
-This file exposes synchronous helper functions such as:
-
-- `getStringById`
-- `getBookingsForPlayer`
-- `getAdminAnalytics`
-- `getConversationsForAdmin`
-
-These helpers read from `MOCK_*` constants in mock/deferred mode. For live users, admins, strings, and bookings they read only the backend snapshots in Zustand and return missing data as missing instead of crossing into mock records.
-
-### 7.4 Mock data sources: `mocks/`
-
-The mock layer is split by domain:
-
-- `users.ts`
-- `strings.ts`
-- `bookings.ts`
-- `payments.ts`
-- `slots.ts`
-- `rackets.ts`
-- `notifications.ts`
-- `chats.ts`
-- `analytics.ts`
-- `businessHours.ts`
-- `settings.ts`
-- `wallet.ts`
-
-`mocks/index.ts` re-exports these modules as a single import surface.
-
-### Architectural note
-
-The deferred prototype layer still mixes:
-
-- direct reads from Zustand state
-- direct reads from `services/mockAppService.ts`
-- direct imports from mock constants in some screens
-
-Live FYP1 paths use an explicit live/mock seam and fail closed. When deferred FYP2 domains become live, their direct mock reads must move behind the same boundary before their routes are enabled.
+All writes reach a backend endpoint before the store is updated. A missing
+token or failed request leaves the previous snapshot unchanged and presents an
+error; no route creates local business records as a fallback.
 
 ## 8. Domain Model
 
@@ -411,7 +365,7 @@ The player experience is organized around a consumer lifecycle:
 5. booking summary confirmation
 6. service tracking
 
-Deferred FYP2/mock-first support modules still have route files, but are hidden from backend sessions:
+Live support and retention modules:
 
 - chat
 - notifications
@@ -427,7 +381,8 @@ The admin workspace is structured as an operations console:
 1. operations-first dashboard with compact counter actions
 2. booking queue
 3. inventory management
-4. business hours, counter check-in, and limited store settings
+4. support, payments, analytics, and recommendation audit
+5. business hours, counter check-in, and store settings
 
 Operational tools live outside the tabs:
 
@@ -435,7 +390,7 @@ Operational tools live outside the tabs:
 - business hours
 - settings
 
-Deferred FYP2/mock-first admin route files remain for service queue, payments monitor, chat, and advanced analytics, but are hidden from backend sessions.
+The admin surface also includes live service queue, payments monitor, booking support, and analytics.
 
 ## 11. Feature Module Breakdown
 
@@ -445,7 +400,7 @@ Files in `app/auth/` provide:
 
 - role-based backend login
 - player self-registration
-- welcome screen for demo branching
+- role-based welcome and backend login entry
 
 ### Recommendation and catalog
 
@@ -484,35 +439,33 @@ The live FYP1 flow is draft-based:
 4. optional booking photo is uploaded afterward through the booking update endpoint
 5. booking status, comments, and photos hydrate from the backend
 
-Payment, player check-in, and post-service feedback routes remain deferred FYP2/mock-first files and are redirected away from backend sessions.
+Payment, player check-in, and post-service feedback use persisted backend
+records. Feedback is a dedicated structured record that is allowed once per
+owned completed booking.
 
-### Deferred Chat
+### Booking Support Chat
 
 Shared components:
 
 - `components/chat/ChatBubble.tsx`
 - `components/chat/ConversationCard.tsx`
 
-Deferred screen flows:
+Live screen flows:
 
 - player chat tab + detail
 - admin chat tab + detail
 
-The same conversation model supports:
+Each booking is one support thread. Conversation state and read timestamps are
+persisted separately, while player and admin messages use the dedicated
+conversation channel in booking updates and are shared by both role surfaces.
 
-- AI-only mode
-- waiting for admin
-- admin joined
-- resolved
-- closed
+### Profile And Player Retention Modules
 
-### Profile And Deferred Player Retention Modules
-
-The live FYP1 profile captures recommendation preferences. The retention modules remain FYP2/mock-first:
+The profile captures recommendation preferences, while retention modules use live backend history:
 
 - profile and priorities
 - budget tier, preferred feel, and recent goal now persist through the backend profile contract
-- racket passport history
+- owned physical racket passports and completed linked service history
 - wallet top-up and balance
 - notifications and preferences
 
@@ -526,7 +479,7 @@ Admin-specific screens model the operational back office:
 - business hours
 - shop settings
 
-Service queue, payments monitor, chat, and advanced analytics remain deferred FYP2/mock-first files and are redirected away from backend sessions.
+Service queue, payments monitor, booking support, and analytics are live admin operations.
 
 Supporting inventory UI now lives in `components/admin/inventory/`, where shared thumbnail cards and preview cards keep the list and detail editor aligned.
 
@@ -638,7 +591,7 @@ Player `flow` pages:
 - `/player/bookings/summary`
 - `/player/profile/edit`
 
-Deferred FYP2/mock-first player pages that backend sessions redirect away from:
+Additional live player pages:
 
 - `/player/chat`
 - `/player/chat/[id]`
@@ -671,13 +624,15 @@ Admin `flow` pages:
 - `/admin/check-in`
   Use for counter-side order lookup, drop-off checklist completion, and booking handover confirmation.
 
-Deferred FYP2/mock-first admin pages that backend sessions redirect away from:
+Additional live admin pages:
 
 - `/admin/chat`
 - `/admin/chat/[id]`
 - `/admin/analytics`
 - `/admin/payments`
 - `/admin/service-queue`
+- `/admin/recommendations`
+- `/admin/recommendations/[runId]`
 
 ## 14. Screen Composition Pattern
 
@@ -696,27 +651,27 @@ This pattern makes the app easy to extend because new screens can remain visuall
 - Clear role separation between player and admin experiences
 - Good domain typing in `types/domain.ts`
 - Reusable layout and UI primitives reduce visual drift
-- Mock-first architecture allows rapid demo iteration
+- API-only runtime data ownership is explicit
 - Route guards keep access control centralized
 - Store actions capture meaningful product flows instead of only low-level field updates
 
 ## 16. Current Architectural Constraints
 
-- Data access is split across store state, mock services, and direct mock imports
 - Live request lifecycle and cache invalidation are still manually coordinated by layouts and screens
 - Some business logic lives directly inside screens, especially ranking and feature-specific derivations
-- The test surface is currently very thin; the repo only includes a small HeroUI compatibility smoke component in `tests/heroui-compat.smoke.tsx`
+- Mobile unit coverage remains thin; route behavior is currently protected by
+  backend integration tests plus the browser acceptance record in
+  `docs/customer-admin-acceptance-2026-07-24.md`
 
 ## 17. Recommended Evolution Path
 
-When this frontend moves beyond FYP mock mode, the cleanest migration path is:
+The next evolution path is:
 
-1. Replace direct `MOCK_*` reads with API-backed query functions
-2. Keep `types/domain.ts` as the domain contract and add mapping if backend DTOs differ
-3. Choose one server-state owner for each newly enabled FYP2 domain before adding a cache library
-4. Continue narrowing Zustand toward session state, snapshots, drafts, and transient local workflows
-5. Keep `components/ui` and `components/shared` as the stable design-system layer
-6. Preserve Expo Router route groups and role guards; they already map well to product boundaries
+1. Keep `types/domain.ts` as the domain contract and map backend DTO changes explicitly
+2. Choose one server-state owner for each domain before adding a cache library
+3. Continue narrowing Zustand toward session state, snapshots, drafts, and transient local workflows
+4. Keep `components/ui` and `components/shared` as the stable design-system layer
+5. Preserve Expo Router route groups and role guards; they already map well to product boundaries
 
 ## 18. Directory Guide
 
@@ -742,11 +697,7 @@ Application state, mutations, and convenience selectors.
 
 ### `services/`
 
-Read-oriented helper functions over the mock domain.
-
-### `mocks/`
-
-Seed datasets for all major product domains.
+Backend API access, DTO mapping, and session persistence.
 
 ### `types/`
 
@@ -766,9 +717,10 @@ The current frontend is a role-based Expo Router application with:
 
 - a shared provider shell
 - route-group access control
-- a centralized Zustand mock-state store
-- a mock service helper layer
+- centralized Zustand session and live-snapshot state
+- persisted support conversations, notification read state, and physical racket passports
+- a persisted payment and wallet workflow
 - a reusable HeroUI-based design system
-- feature modules covering the full player and admin demo journeys
+- feature modules covering the full player and admin journeys
 
-It is best understood as a production-shaped FYP1 prototype with a hybrid transition layer: the core player flow plus admin booking, inventory, business-hours, limited settings, and booking update flows are backend-connected, while advanced product areas remain intentionally hidden, local, or mock-driven for FYP2.
+It is best understood as a production-shaped FYP workspace: every authenticated route page has an API or backend-derived persisted data path and fails closed when that path is unavailable.

@@ -2,6 +2,13 @@
 
 Date: 2026-07-23
 
+> This file preserves the original Gate 5 decision and its evidence. Later on
+> the same date, the 17 mock-first FYP2 pages were connected to persisted
+> backend records. Current runtime status is in
+> [../mock-page-remediation.md](../mock-page-remediation.md), and the latest
+> customer/admin browser evidence is in
+> [../../customer-admin-acceptance-2026-07-24.md](../../customer-admin-acceptance-2026-07-24.md).
+
 ## Decision
 
 **TECHNICALLY READY FOR USER APPROVAL. FYP2 DEVELOPMENT HAS NOT STARTED.**
@@ -14,6 +21,20 @@ Gate 5 condition is the user's explicit approval to begin FYP2 development.
 This decision supersedes the historical `NOT READY` result in
 [02-system-review.md](02-system-review.md). It does not authorize an automatic
 transition into FYP2 work.
+
+## Post-Gate 5 Runtime Update
+
+The subsequent user-approved mock-page remediation extended the accepted
+foundation without changing the historical Gate 5 evidence above:
+
+- all 17 former mock-first pages now use API or backend-derived persisted data;
+- the explicit mobile mock session and `mobile/mocks/` runtime data were
+  removed;
+- Alembic now has a single head at `20260723_0024`;
+- the backend suite now reports 66 passing tests when the real-PostgreSQL
+  concurrency URL is enabled;
+- all administrator route pages and their critical reads/writes were exercised
+  in a real browser against local PostgreSQL.
 
 ## Selected architecture
 
@@ -53,7 +74,7 @@ The approved sequence was executed as `F -> A -> C -> B -> D -> E`:
 | P1-9 | Resolved | Conditional-hook paths were reordered and Expo ESLint is now a project gate. |
 | P1-10 | Resolved | Unused legacy review/RAG/recommendation adapters were removed from eager dependency construction; a boundary test protects startup ownership. |
 | P1-11 | Resolved | Mobile production/full audits, backend locked dependency audit and NLP locked dependency audit report no known vulnerabilities. |
-| P1-12 | Resolved for the primary mobile target | iOS/Android tokens persist in SecureStore and are validated during bootstrap; logout clears the token. Web intentionally remains memory-only, so a full web reload requires login. |
+| P1-12 | Resolved | iOS/Android tokens persist in SecureStore; Web uses current-tab session storage so refresh and deep links work without creating a long-lived browser login. Every restored token is validated during bootstrap, and logout clears it. |
 | P1-13 | Closed without fabricated data | Zero/absent source prices are treated as missing, never as `RM 0` or an invented value. The current live inventory has one hidden price-pending item; admin summary and `Price Missing` filter both report one. |
 
 ### P2 findings
@@ -109,7 +130,7 @@ The two reproducible NLP runs reported:
 These are explicit product/deployment boundaries, not hidden pass claims:
 
 1. The primary target is Expo mobile. Native sessions persist securely; the
-   web smoke target deliberately keeps tokens in memory.
+   web smoke target limits persistence to the current browser tab.
 2. A plain Python static server has no SPA rewrite rule, so directly reloading a
    nested exported web URL returns the server's 404. Client-side navigation is
    valid; a real web host must route unmatched paths to `index.html`.

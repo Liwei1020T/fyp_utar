@@ -104,23 +104,23 @@ DEFAULT_BUSINESS_HOURS_DAYS = [
     },
 ]
 
-DEFAULT_SPECIAL_CLOSED_DATES = ["2026-04-14"]
+DEFAULT_SPECIAL_CLOSED_DATES: list[str] = []
 
 DEFAULT_STORE_SETTINGS = {
-    "store_name": "Apex String Lab",
-    "store_contact": "+60 12-999 4421",
+    "store_name": "StringSence",
+    "store_contact": "Not configured",
     "support_text": (
         "Ask us about tension pairing, string feel, or drop-off timing and "
         "we will reply from the admin operations desk."
     ),
-    "payment_notes": ("Payment handling stays outside the FYP1 demo flow."),
+    "payment_notes": ("External payments require shop verification."),
     "booking_notes": (
         "Drop-off slots are generated from business hours and slot capacity settings."
     ),
     "store_policy_text": (
         "Reschedule or cancellation is allowed before the admin starts work on the racket."
     ),
-    "address": "Level 2, Jalil Sports Hub, Bukit Jalil, Kuala Lumpur",
+    "address": "Not configured",
     "trending_string_ids": [],
 }
 

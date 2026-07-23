@@ -5,12 +5,23 @@ import type {
   BackendCheckInLookupResponse,
   BackendCheckInRequest,
   BackendBooking,
+  BackendBookingConversation,
+  BackendBookingPaymentQuote,
+  BackendCreateFeedbackPayload,
+  BackendCreateRacketPayload,
+  BackendFeedback,
   BackendForgotPasswordRequestResponse,
   BackendInventoryUpdatePayload,
+  BackendMarkNotificationsReadPayload,
+  BackendMarkNotificationsReadResponse,
   BackendMessageResponse,
+  BackendNotification,
+  BackendNotificationPreferences,
+  BackendNotificationPreferencesPayload,
   BackendOfficialPerformance,
   BackendOfficialPerformancePayload,
   BackendPage,
+  BackendPayment,
   BackendPopularString,
   BackendProfile,
   BackendProfilePayload,
@@ -18,6 +29,9 @@ import type {
   BackendRecommendationDetailResponse,
   BackendRecommendationResponse,
   BackendRecommendationRun,
+  BackendRacket,
+  BackendRacketDetail,
+  BackendSendConversationMessagePayload,
   BackendServiceQueue,
   BackendSlot,
   BackendStoreBusinessHours,
@@ -27,6 +41,8 @@ import type {
   BackendString,
   BackendStringEditorUpdatePayload,
   BackendStringWritePayload,
+  BackendUpdateRacketPayload,
+  BackendWallet,
 } from '../types/backend';
 import { Platform } from 'react-native';
 
@@ -282,12 +298,105 @@ export const backendApi = {
     return requestJson<BackendAuthResponse['user']>('/auth/me', { token });
   },
   fetchProfile(token: string) {
-    return requestJson<BackendProfile>('/profile', { token });
+    return requestJson<BackendProfile | null>('/profile', { token });
   },
   saveProfile(token: string, payload: BackendProfilePayload) {
     return requestJson<BackendProfile>('/profile', {
       method: 'PUT',
       body: payload,
+      token,
+    });
+  },
+  fetchNotificationPreferences(token: string) {
+    return requestJson<BackendNotificationPreferences>(
+      '/notifications/preferences',
+      { token },
+    );
+  },
+  updateNotificationPreferences(
+    token: string,
+    payload: BackendNotificationPreferencesPayload,
+  ) {
+    return requestJson<BackendNotificationPreferences>(
+      '/notifications/preferences',
+      {
+        method: 'PUT',
+        body: payload,
+        token,
+      },
+    );
+  },
+  listNotifications(token: string, limit = 100) {
+    const searchParams = new URLSearchParams({ limit: String(limit) });
+    return requestJson<BackendNotification[]>(
+      `/notifications?${searchParams.toString()}`,
+      { token },
+    );
+  },
+  markNotificationsRead(
+    token: string,
+    payload: BackendMarkNotificationsReadPayload,
+  ) {
+    return requestJson<BackendMarkNotificationsReadResponse>(
+      '/notifications/read',
+      {
+        method: 'PATCH',
+        body: payload,
+        token,
+      },
+    );
+  },
+  listPayments(token: string) {
+    return requestJson<BackendPayment[]>('/payments', { token });
+  },
+  fetchBookingPaymentQuote(token: string, bookingId: string) {
+    return requestJson<BackendBookingPaymentQuote>(
+      `/payments/bookings/${bookingId}/quote`,
+      { token },
+    );
+  },
+  createBookingPayment(
+    token: string,
+    bookingId: string,
+    method: BackendPayment['method'],
+    expectedAmount?: number,
+  ) {
+    return requestJson<BackendPayment>(`/payments/bookings/${bookingId}`, {
+      method: 'POST',
+      body: {
+        method,
+        ...(expectedAmount != null ? { expected_amount: expectedAmount } : {}),
+      },
+      token,
+    });
+  },
+  fetchWallet(token: string) {
+    return requestJson<BackendWallet>('/wallet', { token });
+  },
+  requestWalletTopUp(
+    token: string,
+    payload: {
+      amount: number;
+      method: 'card' | 'online_banking' | 'e_wallet';
+    },
+  ) {
+    return requestJson<BackendPayment>('/wallet/top-ups', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  adminListPayments(token: string) {
+    return requestJson<BackendPayment[]>('/admin/payments', { token });
+  },
+  adminUpdatePayment(
+    token: string,
+    paymentId: string,
+    status: 'paid' | 'failed' | 'cancelled',
+  ) {
+    return requestJson<BackendPayment>(`/admin/payments/${paymentId}`, {
+      method: 'PATCH',
+      body: { status },
       token,
     });
   },
@@ -299,6 +408,101 @@ export const backendApi = {
   },
   fetchBooking(token: string, bookingId: string) {
     return requestJson<BackendBooking>(`/bookings/${bookingId}`, { token });
+  },
+  listPlayerConversations(token: string) {
+    return requestJson<BackendBookingConversation[]>('/conversations', {
+      token,
+    });
+  },
+  requestBookingSupport(token: string, bookingId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/bookings/${bookingId}/support`,
+      {
+        method: 'POST',
+        token,
+      },
+    );
+  },
+  fetchPlayerConversation(token: string, conversationId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/conversations/${conversationId}`,
+      { token },
+    );
+  },
+  sendPlayerConversationMessage(
+    token: string,
+    conversationId: string,
+    payload: BackendSendConversationMessagePayload,
+  ) {
+    return requestJson<BackendBookingConversation>(
+      `/conversations/${conversationId}/messages`,
+      {
+        method: 'POST',
+        body: payload,
+        token,
+      },
+    );
+  },
+  markPlayerConversationRead(token: string, conversationId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/conversations/${conversationId}/read`,
+      {
+        method: 'POST',
+        token,
+      },
+    );
+  },
+  adminListConversations(token: string) {
+    return requestJson<BackendBookingConversation[]>('/admin/conversations', {
+      token,
+    });
+  },
+  adminFetchConversation(token: string, conversationId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/admin/conversations/${conversationId}`,
+      { token },
+    );
+  },
+  adminSendConversationMessage(
+    token: string,
+    conversationId: string,
+    payload: BackendSendConversationMessagePayload,
+  ) {
+    return requestJson<BackendBookingConversation>(
+      `/admin/conversations/${conversationId}/messages`,
+      {
+        method: 'POST',
+        body: payload,
+        token,
+      },
+    );
+  },
+  adminMarkConversationRead(token: string, conversationId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/admin/conversations/${conversationId}/read`,
+      {
+        method: 'POST',
+        token,
+      },
+    );
+  },
+  adminResolveConversation(token: string, conversationId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/admin/conversations/${conversationId}/resolve`,
+      {
+        method: 'POST',
+        token,
+      },
+    );
+  },
+  adminCloseConversation(token: string, conversationId: string) {
+    return requestJson<BackendBookingConversation>(
+      `/admin/conversations/${conversationId}/close`,
+      {
+        method: 'POST',
+        token,
+      },
+    );
   },
   adminListBookings(
     token: string,
@@ -645,6 +849,7 @@ export const backendApi = {
     token: string,
     payload: {
       string_id: string;
+      racket_id?: string;
       racket_brand?: string;
       racket_model?: string;
       requested_tension?: number;
@@ -674,6 +879,46 @@ export const backendApi = {
         token,
       }),
     );
+  },
+  listRackets(token: string) {
+    return requestJson<BackendRacket[]>('/rackets', { token });
+  },
+  createRacket(token: string, payload: BackendCreateRacketPayload) {
+    return requestJson<BackendRacket>('/rackets', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  fetchRacket(token: string, racketId: string) {
+    return requestJson<BackendRacketDetail>(`/rackets/${racketId}`, { token });
+  },
+  updateRacket(
+    token: string,
+    racketId: string,
+    payload: BackendUpdateRacketPayload,
+  ) {
+    return requestJson<BackendRacket>(`/rackets/${racketId}`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    });
+  },
+  createBookingFeedback(
+    token: string,
+    bookingId: string,
+    payload: BackendCreateFeedbackPayload,
+  ) {
+    return requestJson<BackendFeedback>(`/bookings/${bookingId}/feedback`, {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  fetchBookingFeedback(token: string, bookingId: string) {
+    return requestJson<BackendFeedback | null>(`/bookings/${bookingId}/feedback`, {
+      token,
+    });
   },
   previewRecommendations(token: string, payload: BackendRecommendationPayload) {
     return requestJson<BackendRecommendationResponse>('/recommendations/preview', {

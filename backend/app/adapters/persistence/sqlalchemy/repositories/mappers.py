@@ -255,6 +255,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         user_id=booking.user_id,
         string_id=booking.string_id,
         string_name=string_name,
+        racket_id=booking.racket_id,
         customer_phone_number=booking.user.phone_number if booking.user else None,
         customer_username=booking.user.username if booking.user else None,
         racket_brand=booking.racket_brand,

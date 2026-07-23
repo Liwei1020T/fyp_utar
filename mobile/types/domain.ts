@@ -141,7 +141,12 @@ export type BookingStatus =
   | 'cancelled'
   | 'rejected';
 
-export type PaymentStatus = 'unpaid' | 'paid' | 'failed' | 'cancelled';
+export type PaymentStatus =
+  | 'unpaid'
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'cancelled';
 
 export type PaymentMethod =
   | 'card'
@@ -361,13 +366,33 @@ export interface NotificationItem {
   route: string;
 }
 
+export type FeedbackSentimentTag =
+  | 'crisp_feel'
+  | 'good_communication'
+  | 'fast_turnaround'
+  | 'would_book_again';
+
+export interface BookingFeedback {
+  id: string;
+  bookingId: string;
+  userId: string;
+  rating: number;
+  stringFeedback?: string;
+  serviceFeedback?: string;
+  sentimentTags: FeedbackSentimentTag[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface RacketStringLog {
   bookingId: string;
   stringId: string;
+  stringName?: string;
   tension: number;
   installedAt: string;
   feelRating: number;
   durabilityNote: string;
+  feedback?: BookingFeedback;
 }
 
 export interface RacketPassport {

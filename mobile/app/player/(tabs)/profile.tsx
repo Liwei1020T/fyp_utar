@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
+  BadgeCheck,
   ChevronRight,
   Gauge,
   LogOut,
@@ -9,6 +10,7 @@ import {
   Settings2,
   Settings,
   Sparkles,
+  Wallet,
 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -71,9 +73,21 @@ export default function PlayerProfileScreen() {
     },
     {
       title: 'App settings',
-      subtitle: 'Manage notification preferences and prototype app controls.',
+      subtitle: 'Manage your persisted notification preferences.',
       icon: <Settings2 size={18} color="#2F64B6" />,
       route: '/player/notifications/preferences',
+    },
+    {
+      title: 'Racket passport',
+      subtitle: 'Review rackets and stringing history from completed bookings.',
+      icon: <BadgeCheck size={18} color="#2F64B6" />,
+      route: '/player/rackets',
+    },
+    {
+      title: 'Wallet',
+      subtitle: 'Review verified balance, transactions, and pending top-ups.',
+      icon: <Wallet size={18} color="#2F64B6" />,
+      route: '/player/wallet',
     },
   ] as const;
   const profileFacts = [
@@ -191,6 +205,9 @@ export default function PlayerProfileScreen() {
             <Pressable
               key={item.title}
               onPress={() => router.push(item.route as never)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.title}. ${item.subtitle}`}
+              accessibilityHint={`Open ${item.title.toLowerCase()}`}
               className="active:opacity-70"
             >
               <AppCard

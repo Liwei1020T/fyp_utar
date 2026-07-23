@@ -16,9 +16,9 @@ Canonical source folder:
 | ABSA labeling notebook | `ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb` | Supports review/aspect labeling workflow. |
 | Domain dictionary | `ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv` | Stores badminton-string domain terms and feature mappings. |
 | Normalization rules | `ml/nlp-workbench-latest/data/normalization_rules_v8.csv` | Stores text normalization rules for NLP preprocessing. |
-| High-confidence ABSA data | `ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv` | Stores high-confidence aspect-level review data. |
-| Long ABSA dataset | `ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv` | Stores longer-form review/aspect records. |
-| Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | CSV feature matrix for item-side recommendation features. |
+| High-confidence ABSA data | `ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv` | Historical pre-boundary output retained for audit; not the current training input. |
+| Long ABSA dataset | `ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv` | Historical pre-boundary output retained for audit; not the current training input. |
+| Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | Compatibility CSV for the optional standalone AI-service path. |
 | Practical feature matrix XLSX | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` | Current default backend recommendation matrix source. |
 
 ## Backend Integration

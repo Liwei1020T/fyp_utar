@@ -1,41 +1,57 @@
 import type {
   AdminProfile,
   Booking,
+  BookingFeedback,
   BookingStatus,
   BookingStatusEntry,
   BookingUpdate,
   BookingSlot,
   BudgetRange,
   BusinessHours,
+  ChatConversation,
+  NotificationItem,
+  Payment,
   PlayerProfile,
   PlayFrequency,
   PlayingStyle,
   PreferredFeel,
   RecommendationMatch,
   RecommendationScoreBreakdown,
+  RacketPassport,
   SkillLevel,
   StringItem,
+  WalletBalance,
+  WalletTransaction,
 } from '../types/domain';
 import type {
   BackendAdminInventoryString,
   BackendAuthUser,
   BackendBooking,
+  BackendBookingConversation,
   BackendBookingStatusHistory,
   BackendBookingUpdate,
   BackendBudgetTier,
   BackendInventoryAvailability,
+  BackendFeedback,
+  BackendNotification,
   BackendOfficialPerformance,
+  BackendPayment,
   BackendPricingMode,
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
   BackendRecommendationResponse,
+  BackendRacket,
+  BackendRacketDetail,
   BackendString,
   BackendSlot,
   BackendStoreBusinessHours,
+  BackendWallet,
+  BackendWalletTransaction,
 } from '../types/backend';
 import {
   formatBookingOrderCode,
+  formatConversationMode,
   formatLocalDateInputValue,
   formatLocalTimeValue,
 } from '../lib/formatters';
@@ -287,7 +303,7 @@ export function mapBackendUserToPlayerProfile(
       stringMovement: mapBackendPreference(profile?.pref_string_movement),
     },
     homeVenue: 'Klang Valley',
-    preferredAdminId: 'admin-001',
+    preferredAdminId: 'main',
     recentGoal:
       profile?.recent_goal ??
       'Use your saved profile to generate a grounded shortlist for the next restring.',
@@ -763,7 +779,7 @@ function mapBackendBookingUpdateToBookingUpdate(
 export function mapBackendBookingToBooking(
   booking: BackendBooking,
   priceByStringId: Map<string, number>,
-  adminId = 'admin-001',
+  adminId = 'main',
 ): Booking {
   const status = mapBackendStatus(booking.status);
   const slotMatch = booking.slot_id?.match(
@@ -778,12 +794,13 @@ export function mapBackendBookingToBooking(
 
   return {
     id: booking.id,
-    orderCode: booking.order_code ?? formatBookingOrderCode(booking.id),
+    orderCode: booking.order_code,
     playerId: booking.user_id,
     adminId,
     stringId: booking.string_id,
     status,
     paymentStatus: 'unpaid',
+    racketId: booking.racket_id ?? undefined,
     racketBrand: booking.racket_brand ?? 'Unknown',
     racketModel: booking.racket_model ?? 'Unknown',
     requestedTension: booking.requested_tension ?? 24,
@@ -808,17 +825,191 @@ export function mapBackendBookingToBooking(
     amountPaid: 0,
     walletUsed: 0,
     bookingToken: booking.id,
-    checkInReference:
-      booking.check_in_reference ?? `LIVE-${booking.id.slice(0, 8).toUpperCase()}`,
+    checkInReference: booking.check_in_reference,
     queuePosition: 0,
     paymentRuleNote:
-      'Payment status is not tracked by the live booking API; shown price is the current catalog estimate.',
+      'Payment status and totals are reconciled from the live payment ledger.',
     timeline: historyToTimeline(
       booking.status_history,
       status,
       booking.created_at ?? new Date().toISOString(),
     ),
     updates: (booking.updates ?? []).map(mapBackendBookingUpdateToBookingUpdate),
+  };
+}
+
+export function mapBackendNotificationToNotification(
+  notification: BackendNotification,
+): NotificationItem {
+  return {
+    id: notification.id,
+    userId: notification.user_id,
+    category: notification.category,
+    title: notification.title,
+    body: notification.body,
+    createdAt: notification.created_at,
+    read: notification.read,
+    route: notification.route,
+  };
+}
+
+export function mapBackendConversationToConversation(
+  conversation: BackendBookingConversation,
+  booking?: Booking,
+  adminId?: string,
+): ChatConversation {
+  const updatedAt =
+    conversation.updated_at ??
+    conversation.created_at ??
+    conversation.support_requested_at;
+  const messages = conversation.messages.map((message) => {
+    const isAdmin = message.author_role === 'admin';
+    return {
+      id: message.id,
+      role: isAdmin ? 'admin' : 'user',
+      senderName:
+        isAdmin
+          ? 'Shop admin'
+          : booking?.customerName ?? 'Player',
+      body: message.body,
+      sentAt: message.created_at ?? updatedAt,
+    } satisfies ChatConversation['messages'][number];
+  });
+
+  return {
+    id: conversation.id,
+    playerId: conversation.player_id,
+    adminId: booking?.adminId ?? adminId,
+    bookingId: conversation.booking_id,
+    stringId: booking?.stringId,
+    title: `Booking ${booking?.orderCode ?? formatBookingOrderCode(conversation.booking_id)}`,
+    mode: conversation.state,
+    statusLabel: formatConversationMode(conversation.state),
+    summary: messages.at(-1)?.body ?? 'Support requested for this booking.',
+    updatedAt,
+    quickPrompts: [
+      'Can you confirm my drop-off time?',
+      'I need to update my service note.',
+      'When will my racket be ready?',
+    ],
+    messages,
+  };
+}
+
+export function mapBackendFeedbackToBookingFeedback(
+  feedback: BackendFeedback,
+): BookingFeedback {
+  return {
+    id: feedback.id,
+    bookingId: feedback.booking_id,
+    userId: feedback.user_id,
+    rating: feedback.rating,
+    stringFeedback: feedback.string_feedback ?? undefined,
+    serviceFeedback: feedback.service_feedback ?? undefined,
+    sentimentTags: feedback.sentiment_tags,
+    createdAt: feedback.created_at,
+    updatedAt: feedback.updated_at,
+  };
+}
+
+export function mapBackendRacketToRacketPassport(
+  racket: BackendRacket | BackendRacketDetail,
+): RacketPassport {
+  const serviceHistory =
+    'service_history' in racket ? racket.service_history : [];
+  const stringHistory = serviceHistory.map((entry) => {
+    const feedback = entry.feedback
+      ? mapBackendFeedbackToBookingFeedback(entry.feedback)
+      : undefined;
+    return {
+      bookingId: entry.booking_id,
+      stringId: entry.string_id,
+      stringName: entry.string_name,
+      tension: entry.requested_tension ?? 0,
+      installedAt: entry.serviced_at,
+      feelRating: feedback ? feedback.rating * 2 : 0,
+      durabilityNote:
+        feedback?.stringFeedback ??
+        feedback?.serviceFeedback ??
+        'No feedback recorded.',
+      feedback,
+    };
+  });
+  const tensions = serviceHistory.flatMap((entry) =>
+    entry.requested_tension == null ? [] : [entry.requested_tension],
+  );
+  const preferredRange: [number, number] =
+    tensions.length > 0
+      ? [Math.min(...tensions), Math.max(...tensions)]
+      : [0, 0];
+  const currentService = serviceHistory[0];
+
+  return {
+    id: racket.id,
+    playerId: racket.user_id,
+    nickname: racket.nickname,
+    brand: racket.brand,
+    model: racket.model,
+    weightClass: racket.weight_class ?? 'Not recorded',
+    balancePoint: racket.balance_point ?? 'Not recorded',
+    gripSize: racket.grip_size ?? 'Not recorded',
+    preferredUse: racket.preferred_use ?? 'Not recorded',
+    notes: racket.notes ?? '',
+    serviceCount: serviceHistory.length,
+    currentStringId: currentService?.string_id ?? '',
+    currentTension: currentService?.requested_tension ?? 0,
+    preferredRange,
+    lastServicedAt: currentService?.serviced_at ?? racket.updated_at,
+    stringHistory,
+  };
+}
+
+export function mapBackendPaymentToPayment(
+  payment: BackendPayment,
+): Payment {
+  return {
+    id: payment.id,
+    bookingId: payment.booking_id ?? undefined,
+    playerId: payment.user_id,
+    method: payment.method,
+    status: payment.status,
+    amount: payment.amount,
+    type: payment.type,
+    createdAt: payment.created_at,
+    reference: payment.reference,
+    note: payment.note ?? undefined,
+  };
+}
+
+export function mapBackendWalletTransaction(
+  transaction: BackendWalletTransaction,
+): WalletTransaction {
+  return {
+    id: transaction.id,
+    userId: transaction.user_id,
+    type: transaction.type,
+    direction: transaction.direction,
+    status: transaction.status,
+    amount: transaction.amount,
+    description: transaction.description,
+    createdAt: transaction.created_at,
+    relatedBookingId: transaction.related_booking_id ?? undefined,
+    methodLabel: transaction.method_label ?? undefined,
+  };
+}
+
+export function mapBackendWallet(wallet: BackendWallet): {
+  balance: WalletBalance;
+  transactions: WalletTransaction[];
+} {
+  return {
+    balance: {
+      userId: wallet.user_id,
+      availableBalance: wallet.available_balance,
+      pendingTopUp: wallet.pending_top_up,
+      lifetimeTopUps: wallet.lifetime_top_ups,
+    },
+    transactions: wallet.transactions.map(mapBackendWalletTransaction),
   };
 }
 

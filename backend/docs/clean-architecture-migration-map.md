@@ -32,6 +32,13 @@
 - Old: `stringsense_backend/modules/store_ops.py`
 - New: `app/entrypoints/api/routes/store_routes.py` plus store/admin actions in `app/entrypoints/api/routes/admin_routes.py`
 
+Current post-migration route modules with no legacy one-file equivalent:
+
+- `app/entrypoints/api/routes/commerce_routes.py`
+- `app/entrypoints/api/routes/notification_routes.py`
+- `app/entrypoints/api/routes/booking_conversation_routes.py`
+- `app/entrypoints/api/routes/racket_feedback_routes.py`
+
 ## Business Logic
 
 - Old: booking transition rules in route helpers and shared enums in `stringsense_backend/core/domain.py`

@@ -23,9 +23,15 @@ export function ConversationCard({ conversation, onPress }: ConversationCardProp
           : conversation.mode === 'closed'
             ? 'neutral'
             : 'primary';
+  const updatedLabel = formatDateTime(conversation.updatedAt);
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${conversation.title}. ${conversation.summary}. ${conversation.statusLabel}. Updated ${updatedLabel}`}
+      accessibilityHint="Open this conversation"
+    >
       <AppCard variant="elevated" padding="md">
         <View className="flex-row items-start gap-4">
           <View className="h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50">
@@ -47,7 +53,7 @@ export function ConversationCard({ conversation, onPress }: ConversationCardProp
               <AppChip label={conversation.statusLabel} variant={statusVariant} />
             </View>
             <HeroText className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-              Updated {formatDateTime(conversation.updatedAt)}
+              Updated {updatedLabel}
             </HeroText>
           </View>
         </View>

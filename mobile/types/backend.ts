@@ -21,6 +21,50 @@ export interface BackendMessageResponse {
   message: string;
 }
 
+export interface BackendNotificationPreferences {
+  booking: boolean;
+  payment: boolean;
+  service: boolean;
+  chat: boolean;
+  recommendation: boolean;
+}
+
+export interface BackendNotificationPreferencesPayload {
+  booking?: boolean;
+  payment?: boolean;
+  service?: boolean;
+  chat?: boolean;
+  recommendation?: boolean;
+}
+
+export type BackendNotificationCategory =
+  | 'booking'
+  | 'payment'
+  | 'service'
+  | 'chat'
+  | 'recommendation'
+  | 'system';
+
+export interface BackendNotification {
+  id: string;
+  user_id: string;
+  category: BackendNotificationCategory;
+  title: string;
+  body: string;
+  created_at: string;
+  read: boolean;
+  route: string;
+}
+
+export interface BackendMarkNotificationsReadPayload {
+  event_ids: string[];
+}
+
+export interface BackendMarkNotificationsReadResponse {
+  marked_count: number;
+  marked_read_ids: string[];
+}
+
 export interface BackendForgotPasswordRequestResponse
   extends BackendMessageResponse {
   dev_code_preview: string | null;
@@ -287,10 +331,11 @@ export interface BackendBookingUpdate {
 
 export interface BackendBooking {
   id: string;
-  order_code?: string | null;
+  order_code: string;
   user_id: string;
   string_id: string;
   string_name: string;
+  racket_id: string | null;
   customer_phone_number: string | null;
   customer_username: string | null;
   racket_brand: string | null;
@@ -306,10 +351,116 @@ export interface BackendBooking {
   status: string;
   created_at: string | null;
   updated_at: string | null;
-  check_in_reference?: string | null;
+  check_in_reference: string;
   latest_admin_note: string | null;
   status_history: BackendBookingStatusHistory[] | null;
   updates: BackendBookingUpdate[] | null;
+}
+
+export type BackendConversationState =
+  | 'waiting_admin'
+  | 'admin_joined'
+  | 'resolved'
+  | 'closed';
+
+export interface BackendSendConversationMessagePayload {
+  body: string;
+}
+
+export interface BackendBookingConversationMessage {
+  id: string;
+  author_user_id: string;
+  author_role: string;
+  body: string;
+  created_at: string | null;
+}
+
+export interface BackendBookingConversation {
+  id: string;
+  booking_id: string;
+  player_id: string;
+  state: BackendConversationState;
+  support_requested_at: string;
+  player_last_read_at: string | null;
+  admin_last_read_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  messages: BackendBookingConversationMessage[];
+}
+
+export interface BackendCreateRacketPayload {
+  nickname: string;
+  brand: string;
+  model: string;
+  weight_class?: string | null;
+  balance_point?: string | null;
+  grip_size?: string | null;
+  preferred_use?: string | null;
+  notes?: string | null;
+}
+
+export interface BackendUpdateRacketPayload {
+  nickname?: string;
+  brand?: string;
+  model?: string;
+  weight_class?: string | null;
+  balance_point?: string | null;
+  grip_size?: string | null;
+  preferred_use?: string | null;
+  notes?: string | null;
+}
+
+export interface BackendRacket {
+  id: string;
+  user_id: string;
+  nickname: string;
+  brand: string;
+  model: string;
+  weight_class: string | null;
+  balance_point: string | null;
+  grip_size: string | null;
+  preferred_use: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BackendFeedbackSentimentTag =
+  | 'crisp_feel'
+  | 'good_communication'
+  | 'fast_turnaround'
+  | 'would_book_again';
+
+export interface BackendCreateFeedbackPayload {
+  rating: number;
+  string_feedback?: string | null;
+  service_feedback?: string | null;
+  sentiment_tags?: BackendFeedbackSentimentTag[];
+}
+
+export interface BackendFeedback {
+  id: string;
+  booking_id: string;
+  user_id: string;
+  rating: number;
+  string_feedback: string | null;
+  service_feedback: string | null;
+  sentiment_tags: BackendFeedbackSentimentTag[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendRacketServiceHistory {
+  booking_id: string;
+  string_id: string;
+  string_name: string;
+  requested_tension: number | null;
+  serviced_at: string;
+  feedback: BackendFeedback | null;
+}
+
+export interface BackendRacketDetail extends BackendRacket {
+  service_history: BackendRacketServiceHistory[];
 }
 
 export interface BackendCheckInLookupResponse {
@@ -321,6 +472,49 @@ export interface BackendCheckInRequest {
   booking_id?: string | null;
   reference?: string | null;
   note?: string | null;
+}
+
+export interface BackendPayment {
+  id: string;
+  booking_id: string | null;
+  user_id: string;
+  method: 'card' | 'online_banking' | 'e_wallet' | 'wallet_balance';
+  status: 'pending' | 'paid' | 'failed' | 'cancelled';
+  amount: number;
+  type: 'booking_payment' | 'wallet_top_up';
+  reference: string;
+  note: string | null;
+  created_at: string;
+}
+
+export interface BackendBookingPaymentQuote {
+  booking_id: string;
+  string_fee: number;
+  service_fee: number;
+  total_amount: number;
+  wallet_balance: number;
+  active_payment: BackendPayment | null;
+}
+
+export interface BackendWalletTransaction {
+  id: string;
+  user_id: string;
+  type: 'top_up' | 'booking_payment';
+  direction: 'credit' | 'debit';
+  status: 'completed';
+  amount: number;
+  description: string;
+  created_at: string;
+  related_booking_id: string | null;
+  method_label: string | null;
+}
+
+export interface BackendWallet {
+  user_id: string;
+  available_balance: number;
+  pending_top_up: number;
+  lifetime_top_ups: number;
+  transactions: BackendWalletTransaction[];
 }
 
 export interface BackendServiceQueueItem {

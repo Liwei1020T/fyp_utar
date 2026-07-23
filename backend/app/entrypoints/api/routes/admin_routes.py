@@ -10,7 +10,11 @@ from fastapi import File
 from fastapi import Form
 from fastapi import Query
 from fastapi import UploadFile
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.models import Payment
+from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
 from app.dto.booking import BookingSortField
@@ -102,6 +106,7 @@ from app.use_cases.recommendation.get_recommendation_run import (
 from app.use_cases.store.confirm_checkin import ConfirmCheckInUseCase
 from app.use_cases.store.get_business_hours import GetBusinessHoursUseCase
 from app.use_cases.store.get_queue import GetQueueUseCase
+from app.use_cases.store.get_store_analytics import AnalyticsPayment
 from app.use_cases.store.get_store_analytics import GetStoreAnalyticsUseCase
 from app.use_cases.store.get_store_settings import GetStoreSettingsUseCase
 from app.use_cases.store.list_slots import ListSlotsUseCase
@@ -835,12 +840,24 @@ def admin_analytics_summary(
     booking_repository=Depends(get_booking_repository),
     catalog_repository=Depends(get_catalog_repository),
     clock=Depends(get_clock),
+    db: Session = Depends(get_db),
 ) -> AnalyticsSummaryOut:
     summary = GetStoreAnalyticsUseCase(
         booking_repository=booking_repository,
         catalog_repository=catalog_repository,
         clock=clock,
-    ).execute_summary()
+    ).execute_summary(
+        payments=[
+            AnalyticsPayment(
+                status=payment.status,
+                payment_type=payment.payment_type,
+                amount=float(payment.amount),
+                updated_at=payment.updated_at,
+            )
+            for payment in db.execute(select(Payment)).scalars()
+        ],
+        store_timezone=get_settings().store_timezone,
+    )
     return analytics_summary_to_dto(summary)
 
 

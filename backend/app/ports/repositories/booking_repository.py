@@ -16,6 +16,7 @@ class BookingRepository(Protocol):
         *,
         user_id: str,
         string_id: str,
+        racket_id: str | None = None,
         racket_brand: str | None,
         racket_model: str | None,
         requested_tension: float | None,
@@ -25,6 +26,13 @@ class BookingRepository(Protocol):
         status: str,
         changed_by_user_id: str | None,
     ) -> BookingRecord: ...
+
+    def get_owned_racket_identity(
+        self,
+        *,
+        racket_id: str,
+        user_id: str,
+    ) -> tuple[str, str] | None: ...
 
     def get_by_id(self, booking_id: str) -> BookingRecord | None: ...
 

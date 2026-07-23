@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
 
   return (
     <AuthShell
-      eyebrow="FYP system access"
+      eyebrow="Secure workspace access"
       title="Log in to StringSense"
       subtitle="Choose a workspace, then continue with a backend-backed login."
       footer={

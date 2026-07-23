@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import JSON
 from sqlalchemy import Numeric
 from sqlalchemy import String as SAString
 from sqlalchemy import func
@@ -52,6 +53,10 @@ class Profile(Base):
     pref_string_movement: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_tension_retention: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_value_for_money: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notification_preferences: Mapped[dict[str, bool]] = mapped_column(
+        JSON,
+        default=dict,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

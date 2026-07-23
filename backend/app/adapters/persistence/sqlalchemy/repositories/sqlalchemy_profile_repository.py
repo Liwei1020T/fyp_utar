@@ -61,3 +61,28 @@ class SqlAlchemyProfileRepository:
         self.db.commit()
         self.db.refresh(record)
         return to_profile(record)
+
+    def get_notification_preferences(self, user_id: str) -> dict[str, bool]:
+        record = self._get_or_create_notification_profile(user_id)
+        return dict(record.notification_preferences or {})
+
+    def update_notification_preferences(
+        self,
+        user_id: str,
+        preferences: dict[str, bool],
+    ) -> dict[str, bool]:
+        record = self._get_or_create_notification_profile(user_id)
+        record.notification_preferences = dict(preferences)
+        self.db.commit()
+        return dict(record.notification_preferences)
+
+    def _get_or_create_notification_profile(self, user_id: str) -> Profile:
+        record = self.db.execute(
+            select(Profile).where(Profile.user_id == user_id)
+        ).scalar_one_or_none()
+        if record is None:
+            record = Profile(user_id=user_id, notification_preferences={})
+            self.db.add(record)
+            self.db.commit()
+            self.db.refresh(record)
+        return record

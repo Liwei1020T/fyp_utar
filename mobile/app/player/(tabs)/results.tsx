@@ -14,7 +14,6 @@ import {
   useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
-  useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
@@ -74,7 +73,6 @@ export default function RecommendationResultsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
-  const strings = useStrings();
   const liveResults = useLiveRecommendationResults();
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
   const setLiveRecommendationResults = useAppStore(
@@ -99,32 +97,27 @@ export default function RecommendationResultsScreen() {
       return;
     }
 
-    if (isLoadingCache || hasLoadedCache || cacheError) {
-      return;
-    }
-
     const accessToken = token;
     let isMounted = true;
     setIsLoadingCache(true);
+    setHasLoadedCache(false);
     setCacheError(null);
 
     async function loadCachedResults() {
       try {
+        const cachedStrings = useAppStore.getState().liveStrings;
         const availableStrings =
-          strings.length > 0
-            ? strings
+          cachedStrings.length > 0
+            ? cachedStrings
             : (await backendApi.listStrings(accessToken)).items.map((item) =>
                 mapBackendStringToStringItem(item),
               );
-        if (!isMounted) {
-          return;
-        }
-        if (strings.length === 0) {
-          setLiveStrings(availableStrings);
-        }
         const response = await backendApi.fetchCachedRecommendations(accessToken, 'me');
         if (!isMounted) {
           return;
+        }
+        if (cachedStrings.length === 0) {
+          setLiveStrings(availableStrings);
         }
         setLiveRecommendationResults(
           mapRecommendationResponse(response, availableStrings),
@@ -153,13 +146,9 @@ export default function RecommendationResultsScreen() {
       isMounted = false;
     };
   }, [
-    cacheError,
-    hasLoadedCache,
-    isLoadingCache,
     liveResults.length,
     setLiveRecommendationResults,
     setLiveStrings,
-    strings,
     token,
   ]);
 

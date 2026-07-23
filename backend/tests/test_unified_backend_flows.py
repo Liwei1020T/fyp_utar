@@ -95,6 +95,13 @@ def test_auth_profile_booking_and_admin_status_flow():
     assert me_response.status_code == 200
     assert me_response.json()["phone_number"] == "+60123456789"
 
+    empty_profile_response = client.get(
+        "/api/profile",
+        headers=headers(customer_token),
+    )
+    assert empty_profile_response.status_code == 200
+    assert empty_profile_response.json() is None
+
     upsert_profile_response = client.put(
         "/api/profile",
         headers=headers(customer_token),
@@ -715,7 +722,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     )
     assert hours_response.status_code == 200
     assert len(hours_response.json()["days"]) == 7
-    assert hours_response.json()["special_closed_dates"] == ["2026-04-14"]
+    assert hours_response.json()["special_closed_dates"] == []
 
     slots_before_booking = client.get(
         f"/api/slots?date={slot_date.isoformat()}",
@@ -772,7 +779,7 @@ def test_admin_business_hours_settings_and_slots_flow():
         headers=headers(admin_token),
     )
     assert settings_response.status_code == 200
-    assert settings_response.json()["store_name"] == "Apex String Lab"
+    assert settings_response.json()["store_name"] == "StringSence"
     assert settings_response.json()["trending_string_ids"] == []
     featured_string_id = first_string_id(admin_token)
 
@@ -780,18 +787,18 @@ def test_admin_business_hours_settings_and_slots_flow():
         "/api/admin/store-settings",
         headers=headers(admin_token),
         json={
-            "store_name": "Apex String Lab Express",
+            "store_name": "StringSence Test Branch",
             "store_contact": "+60 12-111 2222",
             "support_text": "Admin desk handles booking and string setup support.",
-            "payment_notes": "Payments are still reconciled manually in the FYP demo.",
+            "payment_notes": "External payments require shop verification.",
             "booking_notes": "Slots are capped by configured store capacity.",
             "store_policy_text": "Completed bookings are final after collection.",
-            "address": "Bukit Jalil, Kuala Lumpur",
+            "address": "Utar Kampar Test Counter",
             "trending_string_ids": [featured_string_id],
         },
     )
     assert update_settings_response.status_code == 200
-    assert update_settings_response.json()["store_name"] == "Apex String Lab Express"
+    assert update_settings_response.json()["store_name"] == "StringSence Test Branch"
     assert update_settings_response.json()["trending_string_ids"] == [
         featured_string_id
     ]
@@ -1009,6 +1016,10 @@ def test_admin_check_in_and_service_queue_flow():
     lanes = {lane["status"]: lane["items"] for lane in queue_response.json()["lanes"]}
     assert len(lanes["in_progress"]) == 1
     assert lanes["in_progress"][0]["booking"]["id"] == booking_id
+    assert lanes["in_progress"][0]["booking"]["drop_off_datetime"].endswith("+00:00")
+    assert lanes["in_progress"][0]["booking"]["slot_id"] == (
+        f"slot-{slot_date.isoformat()}-11:00"
+    )
     assert len(lanes["awaiting_dropoff"]) == 1
     assert lanes["awaiting_dropoff"][0]["queue_position"] == 1
 
@@ -1500,3 +1511,90 @@ def test_admin_string_image_upload_rejects_oversized_image_upload():
         "Uploaded image must be 5 MB or smaller"
     )
     assert string_image_file_names() == before_files
+
+
+def test_notification_preferences_and_verified_wallet_payment_flow():
+    customer_token = register_customer(phone_number="+60125550999")
+    admin_token = login_admin()
+
+    preferences_response = client.get(
+        "/api/notifications/preferences",
+        headers=headers(customer_token),
+    )
+    assert preferences_response.status_code == 200
+    assert preferences_response.json()["booking"] is True
+
+    updated_preferences = {
+        **preferences_response.json(),
+        "payment": False,
+    }
+    update_preferences_response = client.put(
+        "/api/notifications/preferences",
+        headers=headers(customer_token),
+        json=updated_preferences,
+    )
+    assert update_preferences_response.status_code == 200
+    assert update_preferences_response.json()["payment"] is False
+
+    top_up_response = client.post(
+        "/api/wallet/top-ups",
+        headers=headers(customer_token),
+        json={"amount": 500, "method": "online_banking"},
+    )
+    assert top_up_response.status_code == 200
+    assert top_up_response.json()["status"] == "pending"
+    top_up_id = top_up_response.json()["id"]
+
+    pending_wallet = client.get("/api/wallet", headers=headers(customer_token))
+    assert pending_wallet.status_code == 200
+    assert pending_wallet.json()["available_balance"] == 0
+    assert pending_wallet.json()["pending_top_up"] == 500
+
+    verify_top_up_response = client.patch(
+        f"/api/admin/payments/{top_up_id}",
+        headers=headers(admin_token),
+        json={"status": "paid"},
+    )
+    assert verify_top_up_response.status_code == 200
+    assert verify_top_up_response.json()["status"] == "paid"
+
+    funded_wallet = client.get("/api/wallet", headers=headers(customer_token))
+    assert funded_wallet.status_code == 200
+    assert funded_wallet.json()["available_balance"] == 500
+    assert funded_wallet.json()["pending_top_up"] == 0
+    assert len(funded_wallet.json()["transactions"]) == 1
+
+    inventory_response = client.get(
+        "/api/admin/inventory/strings",
+        headers=headers(admin_token),
+    )
+    assert inventory_response.status_code == 200
+    priced_string = next(
+        item
+        for item in inventory_response.json()["items"]
+        if item["pricing_mode"] == "fixed_price" and item["selling_price"] > 0
+    )
+    booking_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={
+            "string_id": priced_string["id"],
+            "racket_brand": "Yonex",
+            "racket_model": "Astrox 99",
+            "requested_tension": 26,
+        },
+    )
+    assert booking_response.status_code == 200
+
+    wallet_payment_response = client.post(
+        f"/api/payments/bookings/{booking_response.json()['id']}",
+        headers=headers(customer_token),
+        json={"method": "wallet_balance"},
+    )
+    assert wallet_payment_response.status_code == 200
+    assert wallet_payment_response.json()["status"] == "paid"
+
+    debited_wallet = client.get("/api/wallet", headers=headers(customer_token))
+    assert debited_wallet.status_code == 200
+    assert debited_wallet.json()["available_balance"] < 500
+    assert len(debited_wallet.json()["transactions"]) == 2

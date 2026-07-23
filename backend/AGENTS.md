@@ -36,6 +36,7 @@
   - booking state transition enforcement
   - recommendation flow: frontend -> unified Python backend -> in-process AI module
   - admin string CRUD/import
+  - commerce flow: player payment/top-up request -> admin verification -> persisted payment and wallet ledger
 - Config/runtime rules:
   - Unified backend reads `.env` through `pydantic-settings`
   - relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root
@@ -46,6 +47,8 @@
 - State/data boundaries:
   - SQLAlchemy + Alembic own the active core business tables
   - the unified Python backend owns workflow writes
+  - booking support, player feedback, and derived notifications reuse persisted booking updates/history
+  - payment status and wallet balance come only from `payments` and `wallet_transactions`
   - recommendation logs remain business-owned data
 
 ## Change Rules

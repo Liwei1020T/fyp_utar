@@ -12,7 +12,7 @@ import { HeroText } from '../../components/ui/heroui';
 import { useAppStore, useBackendAccessToken, useCurrentUser, useStrings } from '../../store/appStore';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 
-function normalizeFyp1PolicyText(value: string) {
+function normalizeStorePolicyText(value: string) {
   if (/payment is completed|payment completes|full payment/i.test(value)) {
     return 'Reschedule or cancellation is allowed before the admin starts work on the racket.';
   }
@@ -53,7 +53,7 @@ export default function AdminSettingsScreen() {
     setAddress(settings.address);
     setSupportText(settings.supportText);
     setBookingNotes(settings.bookingNotes);
-    setPolicyText(normalizeFyp1PolicyText(settings.storePolicyText));
+    setPolicyText(normalizeStorePolicyText(settings.storePolicyText));
     setPaymentNotes(settings.paymentNotes);
     setTrendingStringIds(settings.trendingStringIds ?? []);
   }, [settings]);
@@ -119,7 +119,7 @@ export default function AdminSettingsScreen() {
           supportText: response.support_text,
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
-          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
+          storePolicyText: normalizeStorePolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? [],
         });
         updateAdminSettings('main', {
@@ -129,7 +129,7 @@ export default function AdminSettingsScreen() {
           supportText: response.support_text,
           paymentNotes: response.payment_notes,
           bookingNotes: response.booking_notes,
-          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
+          storePolicyText: normalizeStorePolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? [],
         });
       } catch (loadError) {
@@ -154,53 +154,45 @@ export default function AdminSettingsScreen() {
     if (!user || user.role !== 'admin') {
       return;
     }
+    if (!token) {
+      setError('Your admin session expired. Sign in again before saving.');
+      return;
+    }
 
     setError(null);
     setIsSaving(true);
     try {
-      if (token) {
-        const response = await backendApi.adminUpdateStoreSettings(token, {
-          store_name: storeName,
-          store_contact: storeContact,
-          support_text: supportText,
-          payment_notes: paymentNotes || 'Payments are deferred for FYP2.',
-          booking_notes: bookingNotes,
-          store_policy_text: policyText,
-          address,
-          trending_string_ids: trendingStringIds,
-        });
-        updateAdminSettings(user.id, {
-          storeName: response.store_name,
-          storeContact: response.store_contact,
-          address: response.address,
-          supportText: response.support_text,
-          paymentNotes: response.payment_notes,
-          bookingNotes: response.booking_notes,
-          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
-          trendingStringIds: response.trending_string_ids ?? trendingStringIds,
-        });
-        updateAdminSettings('main', {
-          storeName: response.store_name,
-          storeContact: response.store_contact,
-          address: response.address,
-          supportText: response.support_text,
-          paymentNotes: response.payment_notes,
-          bookingNotes: response.booking_notes,
-          storePolicyText: normalizeFyp1PolicyText(response.store_policy_text),
-          trendingStringIds: response.trending_string_ids ?? trendingStringIds,
-        });
-      } else {
-        updateAdminSettings(user.id, {
-          storeName,
-          storeContact,
-          address,
-          supportText,
-          paymentNotes,
-          bookingNotes,
-          storePolicyText: policyText,
-          trendingStringIds,
-        });
-      }
+      const response = await backendApi.adminUpdateStoreSettings(token, {
+        store_name: storeName,
+        store_contact: storeContact,
+        support_text: supportText,
+        payment_notes:
+          paymentNotes || 'External payments require shop verification.',
+        booking_notes: bookingNotes,
+        store_policy_text: policyText,
+        address,
+        trending_string_ids: trendingStringIds,
+      });
+      updateAdminSettings(user.id, {
+        storeName: response.store_name,
+        storeContact: response.store_contact,
+        address: response.address,
+        supportText: response.support_text,
+        paymentNotes: response.payment_notes,
+        bookingNotes: response.booking_notes,
+        storePolicyText: normalizeStorePolicyText(response.store_policy_text),
+        trendingStringIds: response.trending_string_ids ?? trendingStringIds,
+      });
+      updateAdminSettings('main', {
+        storeName: response.store_name,
+        storeContact: response.store_contact,
+        address: response.address,
+        supportText: response.support_text,
+        paymentNotes: response.payment_notes,
+        bookingNotes: response.booking_notes,
+        storePolicyText: normalizeStorePolicyText(response.store_policy_text),
+        trendingStringIds: response.trending_string_ids ?? trendingStringIds,
+      });
       showSaveSuccess();
     } catch (saveError) {
       setSaveSuccessMessage(null);
@@ -223,7 +215,7 @@ export default function AdminSettingsScreen() {
       tone="admin"
       headerVariant="secondary"
       title="Store settings"
-      subtitle="FYP1 store settings for contact info, support copy, address, and booking policy text."
+      subtitle="Manage public contact details, support copy, booking policy, and featured strings."
       showBackButton
       onBackPress={() => router.back()}
     >

@@ -27,7 +27,8 @@ Key variables:
 - `JWT_SECRET_KEY`: signing key for bearer tokens
 - `APPROVED_STRINGS_SOURCE_PATH`: approved normalized catalog source; relative paths resolve from the backend root
 - `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix source file (`.csv` or `.xlsx`); relative paths resolve from the backend root
-- `SEED_ADMIN_*`: optional admin seed controls
+- `SEED_ADMIN_*`: optional admin seed controls; enabling them requires a valid
+  username, 9-to-15-digit phone number, and password
 - `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
 
 In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`).
@@ -66,9 +67,9 @@ uv sync --extra dev
 ```bash
 cd backend
 ./.venv/bin/alembic upgrade head
+```
 
 `AUTO_CREATE_SCHEMA=true` is only a convenience for creating missing tables in local/test setups. It does not repair drift in existing tables, so schema changes still require `./.venv/bin/alembic upgrade head`.
-```
 
 3. Start the unified backend:
 
@@ -96,6 +97,7 @@ Public unified Python endpoints:
 
 - `GET /health`
 - `GET /api/health`
+- `GET /api/media/{media_path}`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/forgot-password/request-code`
@@ -103,12 +105,32 @@ Public unified Python endpoints:
 - `GET /api/auth/me`
 - `GET /api/profile`
 - `PUT /api/profile`
+- `GET /api/notifications`
+- `PATCH /api/notifications/read`
+- `GET /api/notifications/preferences`
+- `PUT /api/notifications/preferences`
+- `GET /api/conversations`
+- `POST /api/bookings/{id}/support`
+- `GET /api/conversations/{id}`
+- `POST /api/conversations/{id}/messages`
+- `POST /api/conversations/{id}/read`
+- `GET /api/rackets`
+- `POST /api/rackets`
+- `GET /api/rackets/{id}`
+- `PATCH /api/rackets/{id}`
+- `GET /api/bookings/{id}/feedback`
+- `POST /api/bookings/{id}/feedback`
 - `GET /api/strings`
 - `GET /api/strings/{id}`
 - `POST /api/bookings`
 - `GET /api/bookings`
 - `GET /api/bookings/{id}`
 - `POST /api/bookings/{id}/updates`
+- `GET /api/payments`
+- `GET /api/payments/bookings/{id}/quote`
+- `POST /api/payments/bookings/{id}`
+- `GET /api/wallet`
+- `POST /api/wallet/top-ups`
 - `POST /api/recommendations/preview`
 - `POST /api/recommendations/profile`
 - `POST /api/recommendations/generate`
@@ -146,7 +168,17 @@ Public unified Python endpoints:
 - `PUT /api/admin/store-settings`
 - `GET /api/admin/analytics/summary`
 - `GET /api/admin/analytics/popular-strings`
+- `GET /api/admin/payments`
+- `PATCH /api/admin/payments/{id}`
+- `GET /api/admin/conversations`
+- `GET /api/admin/conversations/{id}`
+- `POST /api/admin/conversations/{id}/messages`
+- `POST /api/admin/conversations/{id}/read`
+- `POST /api/admin/conversations/{id}/resolve`
+- `POST /api/admin/conversations/{id}/close`
 - `GET /api/admin/recommendations/logs`
+- `GET /api/admin/recommendations/runs`
+- `GET /api/admin/recommendations/runs/{run_id}`
 
 More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-contract.md](./docs/api-contract.md), and [docs/database.md](./docs/database.md).
 

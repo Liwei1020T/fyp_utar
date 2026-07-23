@@ -140,56 +140,50 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
 
   const onSubmit = async (data: ProfileForm) => {
     setSaveError(null);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-
-    if (token) {
-      try {
-        const profile = await backendApi.saveProfile(
-          token,
-          buildBackendProfilePayload({
-            name: data.name,
-            skillLevel: data.skillLevel,
-            playingStyle: data.playingStyle,
-            playFrequency: data.playFrequency,
-            budgetRange: data.budgetRange,
-            preferredFeel: data.preferredFeel,
-            preferredTension: data.preferredTension,
-            recentGoal: data.recentGoal,
-            priorities,
-            advancedPreferences,
-          }),
-        );
-        updatePlayerProfile(
-          user.id,
-          mapBackendUserToPlayerProfile(
-            {
-              id: user.id,
-              username: profile.username,
-              phone_number: user.phone,
-              role: 'customer',
-              auth_provider: 'local',
-              external_auth_id: null,
-              is_active: true,
-            },
-            profile,
-          ),
-        );
-      } catch (error) {
-        setSaveError(
-          error instanceof BackendApiError
-            ? error.message
-            : 'Failed to save your live player profile.',
-        );
-        return;
-      }
+    if (!token) {
+      setSaveError('Your player session expired. Sign in again before saving.');
+      return;
     }
 
-    updatePlayerProfile(user.id, {
-      ...data,
-      priorities,
-      advancedPreferences,
-    });
-    router.replace('/player/profile');
+    try {
+      const profile = await backendApi.saveProfile(
+        token,
+        buildBackendProfilePayload({
+          name: data.name,
+          skillLevel: data.skillLevel,
+          playingStyle: data.playingStyle,
+          playFrequency: data.playFrequency,
+          budgetRange: data.budgetRange,
+          preferredFeel: data.preferredFeel,
+          preferredTension: data.preferredTension,
+          recentGoal: data.recentGoal,
+          priorities,
+          advancedPreferences,
+        }),
+      );
+      updatePlayerProfile(
+        user.id,
+        mapBackendUserToPlayerProfile(
+          {
+            id: user.id,
+            username: profile.username,
+            phone_number: user.phone,
+            role: 'customer',
+            auth_provider: 'local',
+            external_auth_id: null,
+            is_active: true,
+          },
+          profile,
+        ),
+      );
+      router.replace('/player/profile');
+    } catch (error) {
+      setSaveError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Failed to save your live player profile.',
+      );
+    }
   };
 
   return (
@@ -428,7 +422,7 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
       <AppSection
         eyebrow="ADVANCED"
         title="Advanced recommendation preferences"
-        subtitle="Optional fine-tuning for the FYP1 scorer's extra content features."
+        subtitle="Optional fine-tuning for advanced string performance signals."
       >
         <View className="mt-2 gap-4">
           {advancedPreferenceKeys.map((item) => (

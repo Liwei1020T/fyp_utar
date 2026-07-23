@@ -19,10 +19,11 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { TrendingStrings } from '../../../components/player/TrendingStrings';
-import { getStringById } from '../../../services/mockAppService';
 import {
   useBookings,
   useCurrentUser,
+  useNotifications,
+  useStrings,
 } from '../../../store/appStore';
 import { formatBookingStatus, formatDateLabel } from '../../../lib/formatters';
 import type { Booking } from '../../../types/domain';
@@ -62,14 +63,21 @@ export default function PlayerHomeScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
+  const notifications = useNotifications();
+  const strings = useStrings();
 
   if (!user || user.role !== 'player') {
     return null;
   }
 
   const playerBookings = bookings.filter((item) => item.playerId === user.id);
+  const hasUnreadNotifications = notifications.some(
+    (item) => item.userId === user.id && !item.read,
+  );
   const latestBooking = playerBookings[0];
-  const latestString = latestBooking ? getStringById(latestBooking.stringId) : undefined;
+  const latestString = latestBooking
+    ? strings.find((item) => item.id === latestBooking.stringId)
+    : undefined;
 
   return (
     <AppScreen
@@ -80,11 +88,20 @@ export default function PlayerHomeScreen() {
       subtitle="Recommendations, bookings, and service updates in one place."
       headerRight={
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            hasUnreadNotifications
+              ? 'Open notifications, unread alerts available'
+              : 'Open notifications'
+          }
+          accessibilityHint="View booking, payment, chat, and recommendation alerts"
           onPress={() => router.push('/player/notifications')}
           className="h-10 w-10 items-center justify-center rounded-xl border border-[#DCE6F7] bg-white shadow-sm"
         >
           <Bell size={20} color="#475569" strokeWidth={2} />
-          <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
+          {hasUnreadNotifications ? (
+            <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
+          ) : null}
         </Pressable>
       }
     >

@@ -21,10 +21,9 @@ import {
   useBackendAccessToken,
   useCurrentUser,
   usePreferredAdminId,
+  useRackets,
   useStrings,
 } from '../../../store/appStore';
-import { MOCK_BOOKING_SLOTS } from '../../../mocks';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency, formatDateLabel, formatLocalDateInputValue } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendSlotToBookingSlot } from '../../../services/backendMappers';
@@ -72,18 +71,27 @@ export default function NewBookingScreen() {
 }
 
 function NewBookingContent({ user }: { user: PlayerProfile }) {
-  const params = useLocalSearchParams<{ stringId?: string }>();
+  const params = useLocalSearchParams<{ racketId?: string; stringId?: string }>();
   const router = useRouter();
   const preferredAdminId = usePreferredAdminId();
   const strings = useStrings();
+  const rackets = useRackets();
   const token = useBackendAccessToken();
   const setBookingDraft = useAppStore((state) => state.setBookingDraft);
+  const adminSettings = useAppStore((state) => state.adminSettings);
+  const playerRackets = rackets.filter((item) => item.playerId === user.id);
+  const [selectedRacketId, setSelectedRacketId] = useState<string | null>(
+    params.racketId ?? null,
+  );
+  const selectedRacket = playerRackets.find(
+    (item) => item.id === selectedRacketId,
+  );
 
   const requestedStringId = params.stringId;
   const requestedString = requestedStringId
-    ? strings.find((item) => item.id === requestedStringId) ?? getStringById(requestedStringId)
+    ? strings.find((item) => item.id === requestedStringId)
     : undefined;
-  const fallbackString = strings[0] ?? getStringById('string-001');
+  const fallbackString = strings[0];
   const [selectedStringId, setSelectedStringId] = useState(
     requestedString?.id ?? fallbackString?.id ?? ''
   );
@@ -92,7 +100,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     strings.find((item) => item.id === selectedStringId) ??
     requestedString ??
     fallbackString;
-  const adminId = preferredAdminId ?? user.preferredAdminId;
+  const adminId = preferredAdminId ?? 'main';
   const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [liveSlots, setLiveSlots] = useState<BookingSlot[]>([]);
@@ -103,9 +111,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     name: string;
     type: string;
   } | null>(null);
-  const sourceSlots = token
-    ? liveSlots
-    : MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId);
+  const sourceSlots = liveSlots;
   const slots = sourceSlots.filter((item) => item.adminId === adminId && item.date === selectedDate);
   const availableSlots = useMemo(
     () => slots.filter((item) => item.availableSpots > 0),
@@ -122,11 +128,15 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   const selectedSlot = slots.find(
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
-  const selectedAdmin = getAdminById(adminId);
-  const selectedAdminName = selectedAdmin?.businessName ?? 'Assigned shop';
-  const selectedAdminMeta = selectedAdmin
-    ? `${selectedAdmin.city} · Avg turnaround ${selectedAdmin.averageTurnaroundHours} hours`
-    : 'Drop-off service desk';
+  const currentStoreSettings = adminSettings.find(
+    (item) => item.adminId === 'main',
+  );
+  const selectedAdminName =
+    currentStoreSettings?.storeName.trim()
+    || 'Assigned shop';
+  const selectedAdminMeta =
+    currentStoreSettings?.address.trim()
+    || 'Drop-off service desk';
   const recommendedMin = selectedString?.recommendedTension[0] ?? 24;
   const recommendedMax = selectedString?.recommendedTension[1] ?? 29;
   const showPeriodFilter = slots.length > 6;
@@ -142,8 +152,8 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   } = useForm<BookingFormInput, unknown, BookingForm>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      racketBrand: 'Yonex',
-      racketModel: 'Astrox 88D Pro',
+      racketBrand: '',
+      racketModel: '',
       requestedTension: selectedString?.recommendedTension[0] ?? 26,
       notes: '',
     },
@@ -157,6 +167,14 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
 
     setValue('requestedTension', selectedString.recommendedTension[0]);
   }, [selectedString?.id, selectedString, setValue]);
+
+  useEffect(() => {
+    if (!selectedRacket) {
+      return;
+    }
+    setValue('racketBrand', selectedRacket.brand, { shouldValidate: true });
+    setValue('racketModel', selectedRacket.model, { shouldValidate: true });
+  }, [selectedRacket, setValue]);
 
   useEffect(() => {
     if (requestedString?.id) {
@@ -260,17 +278,21 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     }
   }, [availableSlots, selectedPeriod, selectedSlotId, selectedString, showPeriodFilter, slots]);
 
-  const onSubmit = async (data: BookingForm) => {
+  const onSubmit = (data: BookingForm) => {
+    if (!token) {
+      setSlotError('Your player session expired. Sign in again to continue.');
+      return;
+    }
+
     if (!selectedString || !selectedSlot || selectedSlot.availableSpots < 1) {
       setSlotError('Select an available drop-off slot before continuing.');
       return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 350));
     setBookingDraft({
       stringId: selectedString.id,
       adminId,
-      racketId: null,
+      racketId: selectedRacket?.id ?? null,
       racketBrand: data.racketBrand,
       racketModel: data.racketModel,
       requestedTension: data.requestedTension,
@@ -359,9 +381,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   const selectedTimeLabel = selectedSlot?.label ?? 'Select a slot';
   const slotSupportCopy = slotsError
     ? `${slotsError} Live slots are unavailable; retry before continuing.`
-    : token
-      ? 'Times reflect current shop availability.'
-      : 'Demo slots are shown for preview. Live login is required to confirm.';
+    : 'Times reflect current shop availability.';
   const selectedCategoryLabel =
     selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
   const selectedStringHasPrice = selectedString.priceStatus === 'priced' && selectedString.price > 0;
@@ -485,6 +505,78 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
 
       <AppSection eyebrow="Setup" title="Racket and tension" variant="compact">
         <AppCard variant="elevated" padding="md">
+          <HeroText className="mb-2 ml-1 text-sm font-semibold text-foreground">
+            Racket passport
+          </HeroText>
+          <View className="mb-4 gap-2">
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityLabel="Enter racket manually"
+              accessibilityState={{ checked: !selectedRacket }}
+              onPress={() => setSelectedRacketId(null)}
+            >
+              <AppCard
+                variant={!selectedRacket ? 'highlighted' : 'subtle'}
+                padding="sm"
+              >
+                <HeroText className="text-sm font-semibold text-neutral-900">
+                  Manual racket entry
+                </HeroText>
+                <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
+                  Use this for a frame that is not registered yet.
+                </HeroText>
+              </AppCard>
+            </Pressable>
+            {playerRackets.map((racket) => {
+              const isSelected = racket.id === selectedRacket?.id;
+              return (
+                <Pressable
+                  key={racket.id}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${racket.nickname}, ${racket.brand} ${racket.model}`}
+                  accessibilityState={{ checked: isSelected }}
+                  onPress={() => setSelectedRacketId(racket.id)}
+                >
+                  <AppCard
+                    variant={isSelected ? 'highlighted' : 'subtle'}
+                    padding="sm"
+                  >
+                    <View className="flex-row items-center justify-between gap-3">
+                      <View className="min-w-0 flex-1">
+                        <HeroText className="text-sm font-semibold text-neutral-900">
+                          {racket.nickname}
+                        </HeroText>
+                        <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
+                          {racket.brand} {racket.model}
+                        </HeroText>
+                      </View>
+                      {isSelected ? (
+                        <AppChip label="Selected" variant="primary" />
+                      ) : null}
+                    </View>
+                  </AppCard>
+                </Pressable>
+              );
+            })}
+            {playerRackets.length === 0 ? (
+              <AppCard variant="subtle" padding="sm">
+                <HeroText className="text-xs leading-5 text-neutral-500">
+                  No saved rackets yet. Continue manually or register one first.
+                </HeroText>
+              </AppCard>
+            ) : null}
+            {params.racketId && !selectedRacket ? (
+              <HeroText className="text-xs font-medium leading-5 text-amber-700">
+                The requested saved racket is unavailable. Choose another racket
+                or continue with manual entry.
+              </HeroText>
+            ) : null}
+            <AppButton
+              label="Register another racket"
+              variant="outline"
+              onPress={() => router.push('/player/rackets/new')}
+            />
+          </View>
           <Controller
             control={control}
             name="racketBrand"
@@ -495,6 +587,12 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
                 value={value}
                 onChangeText={onChange}
                 error={errors.racketBrand?.message}
+                isDisabled={Boolean(selectedRacket)}
+                helperText={
+                  selectedRacket
+                    ? 'Snapshot copied from the selected passport.'
+                    : undefined
+                }
               />
             )}
           />
@@ -508,6 +606,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
                 value={value}
                 onChangeText={onChange}
                 error={errors.racketModel?.message}
+                isDisabled={Boolean(selectedRacket)}
               />
             )}
           />

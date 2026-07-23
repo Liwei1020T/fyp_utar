@@ -3,10 +3,18 @@ from __future__ import annotations
 from app.adapters.persistence.sqlalchemy.models.booking import Booking
 from app.adapters.persistence.sqlalchemy.models.booking import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models.booking import BookingUpdate
+from app.adapters.persistence.sqlalchemy.models.booking_conversation import (
+    BookingConversation,
+)
+from app.adapters.persistence.sqlalchemy.models.commerce import Payment
+from app.adapters.persistence.sqlalchemy.models.commerce import WalletTransaction
+from app.adapters.persistence.sqlalchemy.models.notification import NotificationRead
 from app.adapters.persistence.sqlalchemy.models.password_reset_code import (
     PasswordResetCode,
 )
 from app.adapters.persistence.sqlalchemy.models.profile import Profile
+from app.adapters.persistence.sqlalchemy.models.racket_feedback import BookingFeedback
+from app.adapters.persistence.sqlalchemy.models.racket_feedback import Racket
 from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationLog,
 )
@@ -56,11 +64,16 @@ from app.adapters.persistence.sqlalchemy.models.user import User
 __all__ = [
     "Brand",
     "Booking",
+    "BookingConversation",
+    "BookingFeedback",
     "BookingStatusHistory",
     "BookingUpdate",
     "InventoryMovement",
+    "NotificationRead",
     "PasswordResetCode",
+    "Payment",
     "Profile",
+    "Racket",
     "RecommendationFeatureDefinition",
     "RecommendationLog",
     "RecommendationRun",
@@ -76,4 +89,5 @@ __all__ = [
     "StringRecommendationMatrix",
     "User",
     "UserPreferenceMatrix",
+    "WalletTransaction",
 ]

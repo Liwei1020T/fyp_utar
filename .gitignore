@@ -9,6 +9,7 @@ mobile/.expo/
 mobile/dist/
 mobile/web-build/
 mobile/.playwright-mcp/
+.playwright-cli/
 mobile/nohup.out
 mobile/web_server.log
 mobile/*.zip

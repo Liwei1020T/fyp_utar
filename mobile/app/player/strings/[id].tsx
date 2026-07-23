@@ -26,12 +26,10 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { StringProductImage } from '../../../components/shared/StringProductImage';
 import {
   useAppStore,
-  useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
   useStrings,
 } from '../../../store/appStore';
-import { getStringById } from '../../../services/mockAppService';
 import { formatLabel } from '../../../lib/formatters';
 import { formatTensionRange, getInventoryPriceLabel } from '../../../lib/inventory';
 import { AppRadarChart } from '../../../components/ui/AppRadarChart';
@@ -110,10 +108,7 @@ export default function StringDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const strings = useStrings();
-  const token = useBackendAccessToken();
-  const selectedString =
-    strings.find((item) => item.id === params.id) ??
-    (token ? undefined : getStringById(params.id));
+  const selectedString = strings.find((item) => item.id === params.id);
   const user = useCurrentUser();
   const playerUser = user?.role === 'player' ? user : null;
   const liveResults = useLiveRecommendationResults();

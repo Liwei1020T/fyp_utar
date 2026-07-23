@@ -1,13 +1,17 @@
 # StringSense: AI-Driven Mobile Platform
 
-StringSense is an AI-driven React Native mobile platform for badminton racket string recommendation and service management. This prototype is built for FYP 1, demonstrating a premium sports-tech UI and clean architecture.
+StringSense is an AI-driven React Native mobile platform for badminton racket
+string recommendation and service management. It is the mobile client for the
+integrated FYP workspace; the original FYP1 claim boundary remains documented
+separately while the current runtime also includes the completed FYP2
+operations modules.
 
 ## Tech Stack
 - **Framework:** Expo (React Native)
 - **Navigation:** Expo Router (File-based)
 - **UI System:** HeroUI Native
 - **Styling:** Uniwind (Tailwind-based)
-- **State Management:** Zustand for session, live snapshots, mock-only deferred domains, drafts, and local mutations
+- **State Management:** Zustand for the authenticated session, API snapshots, backend-derived views, and transient drafts
 - **Forms:** React Hook Form + Zod
 
 ## Features
@@ -17,21 +21,24 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
   - AI String Recommendation based on playing style and priorities.
   - Badminton String Catalog with detailed performance scores.
   - Booking system for stringing services with status tracking.
+  - Persisted payment/wallet, notifications, booking support, racket passport,
+    check-in, and completed-service feedback flows.
 - **Admin Flow:**
   - Secure Admin Login.
   - Operational Dashboard with key metrics.
-  - Booking Management and Status Updates.
-  - String Inventory Management.
-- **Coming in FYP 2:**
-  - Real-time AI Chatbot Assistant.
+  - Booking search, counter check-in, complete service lifecycle, notes, and photos.
+  - String Inventory Management, including atomic editor saves and media.
+  - Payment verification, support reply/resolve/close, and service queue.
+  - Business hours, store settings, persisted analytics, and recommendation-run audit.
+- **Future extension:**
+  - Generative AI assistant backed by a real model endpoint.
   - Advanced Recommendation Engine with NLP/DL.
 
 ## Project Structure
 - `app/`: Expo Router screens and layouts.
 - `components/ui/`: Reusable primitives wrapping HeroUI Native.
 - `components/shared/`: Common layout components like `AppScreen` and `AppSection`.
-- `mocks/`: Realistic badminton data layer.
-- `services/`: API abstraction layer for both mocks and the live player backend bridge.
+- `services/`: Typed API access, DTO mapping, SecureStore persistence on native, and current-tab session persistence on Web.
 - `global.css`: Root Uniwind + HeroUI Native style entry.
 - `tailwind.config.js`: Shared design tokens for colors and radii.
 
@@ -81,7 +88,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 6. **Navigate:**
    - The app starts at `/auth/welcome`.
    - Player flow now uses phone number + password against the Python backend.
-   - Admin FYP1 booking, inventory, business-hours, and limited store-settings flows can use the Python backend.
+   - Every admin route uses the Python backend or backend-derived persisted records.
    - Player accounts are created through registration.
    - Admin accounts are available only when the backend operator explicitly configures `SEED_ADMIN_ENABLED=true` and the companion `SEED_ADMIN_*` values; credentials are never bundled into the app.
 
@@ -93,10 +100,22 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 ## Architecture Decisions
 - **Modularity:** Separate domain logic (strings, bookings) from UI components.
 - **Surgical UI:** Used HeroUI Native as the primary design system to ensure a premium, modern aesthetic out of the box.
-- **Hybrid FYP1 MVP:** Player auth, profile, strings, recommendations, bookings, booking updates, and FYP1 admin operations can use the live Python backend while deferred FYP2 domains remain hidden, local, or mock-backed.
-- **Session lifecycle:** Native builds keep the backend bearer token in Expo SecureStore and revalidate it at startup. Web sessions remain memory-only and require login after a full refresh.
-- **Live/mock boundary:** Backend sessions fail closed when live users, strings, or bookings are missing; mock records are never used as a fallback for a live API submission.
+- **Live backend boundary:** Every authenticated route uses the unified Python API or backend-derived persisted records. The mobile runtime contains no seeded mock session.
+- **Session lifecycle:** Native builds keep the backend bearer token in Expo SecureStore. Web builds keep it only in the current tab's session storage. Both revalidate it through `/auth/me` before restoring the authenticated UI.
+- **Failure boundary:** Missing sessions and failed live reads/writes fail closed; the UI never substitutes local business records or reports a local-only success.
 - **Type Safety:** Strict TypeScript interfaces for all data models.
+
+## Validation
+
+```bash
+npx tsc --noEmit
+npm run lint -- --max-warnings=0
+npx expo export --platform web --output-dir /tmp/stringsense-web-export
+```
+
+The latest complete customer and administrator browser acceptance is recorded
+in
+[`../docs/customer-admin-acceptance-2026-07-24.md`](../docs/customer-admin-acceptance-2026-07-24.md).
 
 ---
 Built for FYP 2026.

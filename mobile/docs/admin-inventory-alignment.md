@@ -1,5 +1,9 @@
 # Admin Inventory Alignment
 
+Current implementation contract, browser-verified against PostgreSQL on
+2026-07-23. Earlier proposal language below has been normalized to the shipped
+screen behavior.
+
 ## 1. Purpose
 
 This module treats admin inventory as an operations surface, not a player catalog.
@@ -12,7 +16,7 @@ The admin inventory flow should help the shop team:
 - edit recommendation-facing scores without losing backend alignment
 - keep price handling truthful with `pending` and `quoted_at_shop` states instead of fake zero pricing
 
-## 2. Admin Inventory List Proposal
+## 2. Admin Inventory List
 
 ### Page intent
 
@@ -44,7 +48,7 @@ The admin inventory flow should help the shop team:
 - Never show `RM 0.00` as a placeholder for missing price.
 - Drive attention through chip color, summary counts, and section ordering.
 
-## 3. Admin String Detail Proposal
+## 3. Admin String Detail
 
 ### Page intent
 
@@ -57,8 +61,8 @@ The admin inventory flow should help the shop team:
 1. Header
    String name
    `Edit string data, media, scores, and shop inventory.`
-2. Optional backend sync scope note
-   Explains current live backend persistence limits
+2. Backend persistence scope note
+   Explains the atomic structured save and separate media transaction
 3. String preview card
    Image, full name, gauge, main trait, stock, and price state
 4. Catalog information section
@@ -114,7 +118,7 @@ Three information layers:
 | String preview card | Mixed read model | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, `main_trait`, `image_url`, `stock_level`, `selling_price`, `pricing_mode`, `availability_status` | Combines catalog and inventory for operational preview only |
 | Catalog information | String master data | `brand`, `model_name`, `original_name`, `gauge_main_mm`, `gauge_cross_mm`, `main_trait`, `category`, `tension_min_lbs`, `tension_max_lbs`, `material_summary_en`, `full_description`, `is_active` | Saved through the admin string endpoint |
 | Performance scores | Official performance | `repulsion_power`, `control`, `durability`, `shock_absorption`, `hitting_sound`, `status` | Frontend maps these onto the mobile app's 1-10 power/control/durability/comfort/sound controls |
-| Media | String master data | `image_url` plus uploaded asset stored under `/media/string-images/*` | Upload, replace, and remove now persist through dedicated admin media endpoints |
+| Media | String master data | `image_url` plus uploaded asset stored under the backend `string-images` upload area | Upload, replace, and remove persist through dedicated admin media endpoints; reads use signed `/api/media/...` URLs |
 | Shop data | Inventory snapshot | `stock_level`, `selling_price`, `pricing_mode`, `availability_status`, `admin_note` | Live backend persists stock, pricing mode, availability state, and note |
 
 ### Frontend domain model
@@ -199,10 +203,10 @@ Legacy top-level fields remain for compatibility with existing player flows, but
 │   Edit string data, media, scores, and shop        │
 │   inventory.                                       │
 ├────────────────────────────────────────────────────┤
-│ BACKEND SYNC SCOPE                                 │
-│ Live backend currently saves price, stock level,   │
-│ and shop note. Catalog, media, and score edits     │
-│ stay local until master-data endpoints exist.      │
+│ BACKEND PERSISTENCE SCOPE                          │
+│ Catalog, performance, and inventory fields save    │
+│ atomically. Media uploads/removals use their own   │
+│ backend request and report partial failure.        │
 │                                                    │
 │ STRING PREVIEW                                     │
 │ ┌────────────────────────────────────────────────┐ │

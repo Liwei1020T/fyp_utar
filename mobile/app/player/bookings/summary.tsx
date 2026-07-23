@@ -11,11 +11,11 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
+  useRackets,
   useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
 
@@ -27,12 +27,12 @@ export default function BookingSummaryScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookingDraft = useAppStore((state) => state.bookingDraft);
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const adminSettings = useAppStore((state) => state.adminSettings);
   const clearBookingDraft = useAppStore((state) => state.clearBookingDraft);
   const prependLiveBooking = useAppStore((state) => state.prependLiveBooking);
   const token = useBackendAccessToken();
   const strings = useStrings();
+  const rackets = useRackets();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -53,19 +53,17 @@ export default function BookingSummaryScreen() {
     );
   }
 
-  const stringItem =
-    strings.find((item) => item.id === bookingDraft.stringId) ??
-    getStringById(bookingDraft.stringId);
-  const admin = getAdminById(bookingDraft.adminId);
-  const currentStoreSettings =
-    (sessionSource === 'backend'
-      ? adminSettings.find((item) => item.adminId === 'main') ??
-        adminSettings.find((item) => item.adminId === bookingDraft.adminId)
-      : adminSettings.find((item) => item.adminId === bookingDraft.adminId) ??
-        adminSettings.find((item) => item.adminId === 'main'));
+  const stringItem = strings.find(
+    (item) => item.id === bookingDraft.stringId,
+  );
+  const selectedRacket = bookingDraft.racketId
+    ? rackets.find((item) => item.id === bookingDraft.racketId)
+    : undefined;
+  const currentStoreSettings = adminSettings.find(
+    (item) => item.adminId === 'main',
+  );
   const vendorLabel =
     normalizeStoreText(currentStoreSettings?.storeName) ||
-    admin?.businessName ||
     'Assigned shop';
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
@@ -84,7 +82,7 @@ export default function BookingSummaryScreen() {
 
   const handleProceed = async () => {
     if (!token) {
-      setSubmitError('Live backend login is required to confirm an FYP1 booking.');
+      setSubmitError('Your player session expired. Sign in again to confirm this booking.');
       return;
     }
 
@@ -94,6 +92,7 @@ export default function BookingSummaryScreen() {
       let photoUploadFailed = false;
       let booking = await backendApi.createBooking(token, {
         string_id: bookingDraft.stringId,
+        racket_id: bookingDraft.racketId ?? undefined,
         racket_brand: bookingDraft.racketBrand,
         racket_model: bookingDraft.racketModel,
         requested_tension: bookingDraft.requestedTension,
@@ -166,6 +165,11 @@ export default function BookingSummaryScreen() {
             <HeroText className="text-sm leading-6 text-neutral-500">
               {bookingDraft.racketBrand} {bookingDraft.racketModel} at {bookingDraft.requestedTension} lbs
             </HeroText>
+            {selectedRacket ? (
+              <HeroText className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-700">
+                Saved passport: {selectedRacket.nickname}
+              </HeroText>
+            ) : null}
           </View>
         </AppCard>
       </AppSection>
@@ -179,7 +183,9 @@ export default function BookingSummaryScreen() {
             },
             {
               label: 'Racket',
-              value: `${bookingDraft.racketBrand} ${bookingDraft.racketModel}`,
+              value: selectedRacket
+                ? `${selectedRacket.nickname} · ${bookingDraft.racketBrand} ${bookingDraft.racketModel}`
+                : `${bookingDraft.racketBrand} ${bookingDraft.racketModel}`,
             },
             {
               label: 'Requested tension',
@@ -240,9 +246,9 @@ export default function BookingSummaryScreen() {
           <HeroText className="text-sm leading-6 text-neutral-600">
             {token
               ? stringFee != null
-                ? 'This FYP1 flow confirms the booking directly with the live backend. Payment remains deferred to FYP2.'
-                : 'This FYP1 flow confirms the booking directly with the live backend. Final string quote is confirmed at shop.'
-              : 'Live backend login is required to confirm an FYP1 booking.'}
+                ? 'The booking is saved to the live backend. Continue from its booking detail to submit payment.'
+                : 'The booking is saved to the live backend. Payment unlocks after the shop confirms the final string quote.'
+              : 'Sign in to confirm this booking with the shop.'}
           </HeroText>
         </AppCard>
       </AppSection>
@@ -266,7 +272,15 @@ export default function BookingSummaryScreen() {
           label="Edit booking"
           variant="outline"
           size="lg"
-          onPress={() => router.push(`/player/bookings/new?stringId=${bookingDraft.stringId}`)}
+          onPress={() =>
+            router.push(
+              `/player/bookings/new?stringId=${bookingDraft.stringId}${
+                bookingDraft.racketId
+                  ? `&racketId=${bookingDraft.racketId}`
+                  : ''
+              }`,
+            )
+          }
         />
       </View>
     </AppScreen>

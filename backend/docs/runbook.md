@@ -52,7 +52,7 @@ cd backend
 - Startup seeding imports the V9 workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` and keeps it separate from official performance data.
 - Re-import compares artifact provenance, including `source_generated_at`, so a stale timestamp is repaired even when feature values are unchanged.
 - Import first sanitizes the workbook to the live runtime whitelist: matching metadata plus `repulsion` (from source `attack`), `comfort`, `control`, `durability`, `elasticity`, `sound`, `string_movement`, and `tension_retention`.
-- `BudgetFit` follows the saved budget range directly; missing price falls back to a neutral budget score.
+- `BudgetFit` follows the saved `budget_tier` directly; missing price falls back to a neutral budget score.
 - Structured catalog data such as gauge is used for RuleFit and filtering, not direct PreferenceMatch scoring.
 - Admin string write operations still require approved catalog membership.
 - Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.
@@ -62,9 +62,25 @@ cd backend
   - `POST /api/admin/recommendation-matrix/import` safely re-imports the CSV and reports matched, inserted, updated, and unmatched counts.
 - `AUTO_CREATE_SCHEMA=true` is meant for local development and tests; use Alembic migrations explicitly for controlled environments.
 - `AUTO_CREATE_SCHEMA=true` only creates missing tables from the ORM metadata. It does not repair drift inside existing tables, so local environments should still run `./.venv/bin/alembic upgrade head` after pulling schema changes.
-- Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is configured with companion credentials.
+- Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is
+  configured with a non-empty username/password and a valid 9-to-15-digit
+  companion phone number. Seed credentials belong in local process/env state,
+  never in mobile source or committed documentation.
+- Password-reset code generation and verification are implemented, but there is
+  no SMS or WhatsApp delivery provider. Keep
+  `PASSWORD_RESET_DEV_PREVIEW_ENABLED=false` outside controlled local
+  development, and do not describe password reset as production self-service
+  until a provider and credentials are configured.
 
-## 5. Optional Compatibility Component
+## 5. Commerce Boundary
+
+- External card, online-banking, and e-wallet requests remain `pending` until
+  an administrator verifies real receipt.
+- Wallet top-ups credit the append-only ledger exactly once after verification.
+- A future payment-provider webhook must replace manual verification for that
+  provider; it must not create a second payment ledger.
+
+## 6. Optional Compatibility Component
 
 This component still exists for compatibility checks and local experimentation:
 - `ai_service/` standalone HTTP entrypoint

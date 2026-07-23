@@ -34,6 +34,7 @@ class CreateBookingUseCase:
         *,
         user_id: str,
         string_id: str,
+        racket_id: str | None = None,
         racket_brand: str | None,
         racket_model: str | None,
         requested_tension: float | None,
@@ -47,6 +48,15 @@ class CreateBookingUseCase:
         if string_item is None:
             raise NotFoundError("String not found")
 
+        if racket_id is not None:
+            racket_identity = self.booking_repository.get_owned_racket_identity(
+                racket_id=racket_id,
+                user_id=user_id,
+            )
+            if racket_identity is None:
+                raise NotFoundError("Racket not found")
+            racket_brand, racket_model = racket_identity
+
         resolved_drop_off = self._resolve_drop_off_datetime(
             slot_id=slot_id,
             drop_off_datetime=drop_off_datetime,
@@ -54,6 +64,7 @@ class CreateBookingUseCase:
         return self.booking_repository.create_booking(
             user_id=user_id,
             string_id=string_id,
+            racket_id=racket_id,
             racket_brand=racket_brand,
             racket_model=racket_model,
             requested_tension=requested_tension,

@@ -8,8 +8,7 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
-import { useBookings, useCurrentUser } from '../../../store/appStore';
-import { getStringById } from '../../../services/mockAppService';
+import { useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
 import type { AdminProfile, Booking, BookingStatus } from '../../../types/domain';
 import {
   formatBookingOrderCode,
@@ -88,16 +87,14 @@ function compareBookings(a: Booking, b: Booking) {
 
 function AdminQueueCard({
   booking,
+  stringLabel,
   onPress,
 }: {
   booking: Booking;
+  stringLabel: string;
   onPress: () => void;
 }) {
-  const stringItem = getStringById(booking.stringId);
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
-  const stringLabel = stringItem
-    ? `${stringItem.brand} ${stringItem.model}`
-    : 'Selected string';
   const stringSpec = `${stringLabel} · ${booking.requestedTension} lbs`;
 
   return (
@@ -171,6 +168,7 @@ export default function AdminBookingsScreen() {
 function AdminBookingsContent({ user }: { user: AdminProfile }) {
   const router = useRouter();
   const bookings = useBookings();
+  const strings = useStrings();
   const bottomContentInset = useBottomContentInset(16);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
@@ -195,7 +193,7 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
           return true;
         }
 
-        const stringItem = getStringById(item.stringId);
+        const stringItem = strings.find((entry) => entry.id === item.stringId);
         const haystack = [
           item.id,
           item.orderCode,
@@ -212,7 +210,7 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
         return haystack.includes(normalizedSearch);
       })
       .sort(compareBookings);
-  }, [adminBookings, filter, search]);
+  }, [adminBookings, filter, search, strings]);
 
   const today = formatLocalDateInputValue(new Date());
   const todayCount = adminBookings.filter(
@@ -281,12 +279,20 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
             </HeroText>
           </AppCard>
         }
-        renderItem={({ item }) => (
-          <AdminQueueCard
-            booking={item}
-            onPress={() => router.push(`/admin/bookings/${item.id}`)}
-          />
-        )}
+        renderItem={({ item }) => {
+          const stringItem = strings.find((entry) => entry.id === item.stringId);
+          return (
+            <AdminQueueCard
+              booking={item}
+              stringLabel={
+                stringItem
+                  ? `${stringItem.brand} ${stringItem.model}`
+                  : 'Selected string'
+              }
+              onPress={() => router.push(`/admin/bookings/${item.id}`)}
+            />
+          );
+        }}
       />
     </AppScreen>
   );

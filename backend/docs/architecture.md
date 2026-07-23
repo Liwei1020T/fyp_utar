@@ -64,9 +64,19 @@ Explicitly avoided:
 - `catalog`
   - normalized master catalog, admin inventory controls, official performance persistence, and recommendation matrix inputs
 - `booking`
-  - booking creation, retrieval, admin listing, status changes
+  - booking creation, retrieval, admin listing, status changes, and service updates
+- `booking support`
+  - one persisted conversation state per booking, shared messages, read state,
+    resolve, and close lifecycle
 - `store`
   - business hours, slots, check-in, service queue, store settings, analytics
+- `commerce`
+  - payment requests, admin verification, and wallet ledger transactions
+- `notifications`
+  - owned derived event feed, persisted read IDs, and per-user preferences
+- `rackets and feedback`
+  - owned physical racket passports, completed service history, and one
+    structured feedback record per completed booking
 - `recommendation`
   - preview/profile recommendation generation, preference-vector persistence, score caching, explainability, and recommendation logging
 
@@ -79,6 +89,11 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/string_catalog_item.py`
   - now owns `brands`, `strings`, `string_catalog_metrics`, `string_catalog_tags`, `string_official_performance`, `inventory_items`, `inventory_movements`, `recommendation_feature_definitions`, `string_recommendation_matrix`, `user_preference_matrix`, and `recommendation_score_cache`
 - `models/booking.py`
+- `models/booking_conversation.py`
+- `models/notification.py`
+- `models/racket_feedback.py`
+- `models/commerce.py`
+  - owns `payments` and append-only `wallet_transactions`
 - `models/store_business_hours.py`
 - `models/store_settings.py`
 - `models/recommendation_log.py`
@@ -86,6 +101,21 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
+The current revision chain has one head at `20260723_0024`.
+
+The current commerce endpoint is a compact transactional boundary in
+`commerce_routes.py`. It uses row locks around booking, user-wallet, and
+payment transitions. Split it into provider-specific use cases only when an
+external gateway/webhook is selected.
+
+## Commerce Flow
+
+- A player creates a booking payment or wallet top-up request.
+- External methods remain `pending` until the admin verifies actual receipt.
+- Admin verification creates wallet credit exactly once for a top-up.
+- Wallet booking payment locks the account row, derives balance from the
+  ledger, and writes a debit only when funds are sufficient.
+- The mobile app never writes balance or paid status directly.
 
 ## Catalog Boundary
 

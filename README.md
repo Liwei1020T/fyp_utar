@@ -80,8 +80,8 @@ Experiment outputs are never promoted automatically. The unified backend default
 
 ## Validation
 
-- Mobile: `cd mobile && nvm use && npx tsc --noEmit`
+- Mobile: `cd mobile && nvm use && npx tsc --noEmit && npm run lint -- --max-warnings=0`
 - Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
 - NLP: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 
-More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md). The completed pre-FYP2 remediation and final approval gate are recorded in [docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md](./docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md).
+More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md). The current mock-data remediation status is recorded in [docs/plans/mock-page-remediation.md](./docs/plans/mock-page-remediation.md), and the latest complete customer and administrator browser evidence is in [docs/customer-admin-acceptance-2026-07-24.md](./docs/customer-admin-acceptance-2026-07-24.md). The earlier administrator-only acceptance remains in [docs/admin-acceptance-2026-07-23.md](./docs/admin-acceptance-2026-07-23.md), and the pre-FYP2 remediation gate remains preserved in [docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md](./docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md).

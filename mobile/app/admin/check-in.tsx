@@ -5,7 +5,6 @@ import {
   CalendarClock,
   Check,
   CircleCheck,
-  ScanLine,
   Search,
 } from 'lucide-react-native';
 import { AppButton } from '../../components/ui/AppButton';
@@ -23,7 +22,6 @@ import {
 } from '../../store/appStore';
 import { backendApi, BackendApiError } from '../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../services/backendMappers';
-import { getStringById, getUserById } from '../../services/mockAppService';
 import { formatBookingOrderCode, formatBookingStatus } from '../../lib/formatters';
 import { getBookingStatusVariant } from '../../components/ui/theme';
 import type { Booking } from '../../types/domain';
@@ -77,13 +75,6 @@ function getTodayLocalDate() {
   return `${year}-${month}-${day}`;
 }
 
-function getLookupTokens(booking: Booking) {
-  return [
-    booking.orderCode ?? formatBookingOrderCode(booking.id),
-    booking.id,
-  ].map((value) => value.trim().toUpperCase());
-}
-
 function getDropOffConfirmationStatus(booking: Booking) {
   if (booking.status === 'awaiting_dropoff' || booking.status === 'confirmed') {
     return 'Awaiting drop-off';
@@ -102,7 +93,6 @@ export default function AdminCheckInScreen() {
   const token = useBackendAccessToken();
   const bookings = useBookings();
   const strings = useStrings();
-  const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
 
   const todaysAwaitingDropOffBookings = useMemo(() => {
@@ -157,20 +147,6 @@ export default function AdminCheckInScreen() {
     setNotes('');
   };
 
-  const resolveLocalMatch = (value: string) => {
-    const normalized = value.trim().toUpperCase();
-
-    return (
-      bookings.find((item) => {
-        if (item.adminId !== user.id) {
-          return false;
-        }
-
-        return getLookupTokens(item).some((token) => token.includes(normalized));
-      }) ?? null
-    );
-  };
-
   const setSelectedBooking = (booking: Booking | null) => {
     setMatch(booking);
     setConfirmError(null);
@@ -193,11 +169,8 @@ export default function AdminCheckInScreen() {
     }
 
     if (!token) {
-      const localMatch = resolveLocalMatch(normalized);
-      setSelectedBooking(localMatch);
-      if (!localMatch) {
-        setLookupError('No booking matched that order ID.');
-      }
+      setMatch(null);
+      setLookupError('Your admin session expired. Sign in again to look up bookings.');
       return;
     }
 
@@ -246,8 +219,7 @@ export default function AdminCheckInScreen() {
     }
 
     if (!token) {
-      updateBookingStatus(match.id, 'in_progress');
-      router.push(`/admin/bookings/${match.id}`);
+      setConfirmError('Your admin session expired. Sign in again to confirm drop-off.');
       return;
     }
 
@@ -278,10 +250,15 @@ export default function AdminCheckInScreen() {
   };
 
   const matchedOrderId = match ? match.orderCode ?? formatBookingOrderCode(match.id) : null;
-  const matchedPlayer = match ? getUserById(match.playerId) : null;
-  const matchedString = match ? getStringById(match.stringId) : null;
+  const matchedString = match
+    ? strings.find((item) => item.id === match.stringId)
+    : null;
+  const matchedPlayerName =
+    match?.customerName
+    ?? 'Player booking';
   const matchedPlayerContact =
-    matchedPlayer && matchedPlayer.role === 'player' ? matchedPlayer.phone : '-';
+    match?.customerPhone
+    ?? '-';
 
   return (
     <AppScreen
@@ -319,14 +296,6 @@ export default function AdminCheckInScreen() {
             />
 
             <View className="gap-3" style={{ gap: 12 }}>
-              <AppButton
-                label="Scan code"
-                variant="outline"
-                leadingIcon={<ScanLine size={16} color="#5E6B7D" />}
-                onPress={() => {
-                  setLookupError('QR scan can be added later. Use the order ID for now.');
-                }}
-              />
               <AppButton
                 label="Find booking"
                 trailingIcon={<Search size={16} color="#FFFFFF" />}
@@ -403,7 +372,7 @@ export default function AdminCheckInScreen() {
                   <View className="flex-row items-start justify-between gap-4">
                     <HeroText className="text-sm font-medium text-neutral-500">Player</HeroText>
                     <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
-                      {matchedPlayer?.name ?? 'Player booking'}
+                      {matchedPlayerName}
                     </HeroText>
                   </View>
                   <View className="flex-row items-start justify-between gap-4">

@@ -39,9 +39,10 @@ This document is the source of truth for the FYP1 demo scope. The FYP1 target is
 - Business-hours-driven slot generation.
 - Limited store settings persistence.
 
-## FYP2 Deferred
+## Outside The FYP1 Proof
 
-These are not FYP1 deliverables and should not appear as completed demo features:
+These were not FYP1 deliverables. They may now exist as FYP2 work, but must not
+be cited as evidence that the original FYP1 scope included them:
 
 - Chat and admin support chat.
 - Payment, wallet, and checkout.
@@ -55,7 +56,8 @@ These are not FYP1 deliverables and should not appear as completed demo features
 - Advanced analytics dashboard.
 - Advanced admin settings beyond the limited FYP1 store settings listed above.
 
-Route files for deferred modules may remain in the repo for future work, but primary navigation and demo CTAs should not present them as completed FYP1 functionality.
+Current FYP2 implementation status is recorded in
+`docs/plans/mock-page-remediation.md`.
 
 ## Recommendation Positioning
 

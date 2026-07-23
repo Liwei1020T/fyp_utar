@@ -19,15 +19,18 @@ from app.use_cases.profile.upsert_my_profile import UpsertMyProfileUseCase
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
-@router.get("", response_model=ProfileOut)
+@router.get("", response_model=ProfileOut | None)
 def get_profile(
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
     user_repository=Depends(get_user_repository),
-) -> ProfileOut:
+) -> ProfileOut | None:
     profile = GetMyProfileUseCase(profile_repository=profile_repository).execute(
         current_user.user_id
     )
+    if profile is None:
+        return None
+
     user = user_repository.get_by_id(current_user.user_id)
     assert user is not None
     return profile_to_dto(profile, username=user.username)

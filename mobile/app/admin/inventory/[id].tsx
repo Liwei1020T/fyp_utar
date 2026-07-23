@@ -637,7 +637,6 @@ export default function AdminInventoryDetailScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const token = useBackendAccessToken();
   const strings = useStrings();
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const updateStringItem = useAppStore((state) => state.updateStringItem);
   const stringItem = strings.find((item) => item.id === params.id);
 
@@ -800,7 +799,7 @@ export default function AdminInventoryDetailScreen() {
     return normalizedForm.imageUrl !== initialNormalizedForm.imageUrl || pendingImageUpload != null;
   }, [initialNormalizedForm, normalizedForm, pendingImageUpload]);
 
-  if ((isHydrating && !form) || (params.id && !stringItem && sessionSource === 'backend')) {
+  if ((isHydrating && !form) || (params.id && !stringItem && Boolean(token))) {
     return (
       <AppScreen
         tone="admin"
@@ -844,7 +843,6 @@ export default function AdminInventoryDetailScreen() {
     );
   }
 
-  const backendSyncEnabled = sessionSource === 'backend' && Boolean(token);
   const summaryPrice = getInventoryPriceLabel(previewItem);
 
   const setField = <K extends keyof InventoryFormState>(
@@ -909,13 +907,14 @@ export default function AdminInventoryDetailScreen() {
       return;
     }
 
-    const localPatch = buildLocalPatch(stringItem, validation.data);
     setErrors({});
     setStatusBanner(null);
 
-    if (!backendSyncEnabled) {
-      updateStringItem(stringItem.id, localPatch);
-      Alert.alert('String saved', 'All edits were updated in the local admin workspace.');
+    if (!token) {
+      setStatusBanner({
+        tone: 'error',
+        message: 'Your admin session expired. Sign in again before saving.',
+      });
       return;
     }
 

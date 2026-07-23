@@ -13,6 +13,7 @@ from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.booking.enums import BookingStatus
+from app.domain.store.policies import booking_check_in_reference
 from app.domain.store.policies import booking_slot_id_for_stored_datetime
 from app.shared.upload_storage import build_signed_media_url
 from app.shared.serialization import isoformat_or_none
@@ -26,6 +27,7 @@ class CreateBookingPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     string_id: str
+    racket_id: str | None = Field(default=None, max_length=36)
     racket_brand: str | None = None
     racket_model: str | None = None
     requested_tension: float | None = Field(default=None, ge=16, le=35)
@@ -91,6 +93,7 @@ class BookingOut(BaseModel):
     user_id: str
     string_id: str
     string_name: str
+    racket_id: str | None = None
     customer_phone_number: str | None = None
     customer_username: str | None = None
     racket_brand: str | None = None
@@ -101,9 +104,12 @@ class BookingOut(BaseModel):
     expected_completion_datetime: str | None = None
     collection_datetime: str | None = None
     notes: str | None = None
+    cancellation_reason: str | None = None
+    completion_summary: str | None = None
     status: str
     created_at: str | None = None
     updated_at: str | None = None
+    check_in_reference: str
     latest_admin_note: str | None = None
     status_history: list[BookingStatusHistoryOut] | None = None
     updates: list[BookingUpdateOut] | None = None
@@ -150,6 +156,7 @@ def booking_to_dto(
         user_id=booking.user_id,
         string_id=booking.string_id,
         string_name=booking.string_name,
+        racket_id=booking.racket_id,
         customer_phone_number=booking.customer_phone_number if include_user else None,
         customer_username=booking.customer_username if include_user else None,
         racket_brand=booking.racket_brand,
@@ -169,9 +176,12 @@ def booking_to_dto(
         ),
         collection_datetime=isoformat_or_none(booking.collection_datetime),
         notes=booking.notes,
+        cancellation_reason=booking.cancellation_reason,
+        completion_summary=booking.completion_summary,
         status=booking.status,
         created_at=isoformat_or_none(booking.created_at),
         updated_at=isoformat_or_none(booking.updated_at),
+        check_in_reference=booking_check_in_reference(booking.id),
         latest_admin_note=booking.latest_admin_note,
         status_history=[
             booking_history_to_dto(entry) for entry in booking.status_history

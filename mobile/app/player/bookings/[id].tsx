@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
@@ -11,9 +11,10 @@ import {
   useAppStore,
   useBackendAccessToken,
   useBookings,
+  useConversations,
+  usePayments,
   useStrings,
 } from '../../../store/appStore';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
@@ -21,8 +22,11 @@ import {
 } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
-import { backendApi } from '../../../services/backendApi';
-import { mapBackendBookingToBooking } from '../../../services/backendMappers';
+import { BackendApiError, backendApi } from '../../../services/backendApi';
+import {
+  mapBackendBookingToBooking,
+  mapBackendConversationToConversation,
+} from '../../../services/backendMappers';
 import type { Booking, BookingStatus } from '../../../types/domain';
 
 const TRACKING_STAGES: {
@@ -238,13 +242,26 @@ export default function PlayerBookingDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; photoUpload?: string }>();
   const bookings = useBookings();
+  const conversations = useConversations();
+  const payments = usePayments();
   const strings = useStrings();
   const token = useBackendAccessToken();
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const adminSettings = useAppStore((state) => state.adminSettings);
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const setLiveConversations = useAppStore((state) => state.setLiveConversations);
+  const [isRequestingSupport, setIsRequestingSupport] = useState(false);
+  const [supportError, setSupportError] = useState<string | null>(null);
+  const [hasFeedback, setHasFeedback] = useState<boolean | null>(null);
   const booking = bookings.find((item) => item.id === params.id);
   const showPhotoUploadWarning = params.photoUpload === 'failed';
+  const activePayment = payments.find(
+    (item) =>
+      item.bookingId === booking?.id &&
+      (item.status === 'pending' || item.status === 'paid'),
+  );
+  const supportConversation = conversations.find(
+    (item) => item.bookingId === booking?.id,
+  );
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -303,6 +320,35 @@ export default function PlayerBookingDetailScreen() {
     };
   }, [params.id, setLiveBookings, strings, token]);
 
+  useEffect(() => {
+    if (!token || booking?.status !== 'completed') {
+      setHasFeedback(null);
+      return;
+    }
+
+    let cancelled = false;
+    void backendApi
+      .fetchBookingFeedback(token, booking.id)
+      .then((feedback) => {
+        if (!cancelled) {
+          setHasFeedback(feedback !== null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setHasFeedback(
+            error instanceof BackendApiError && error.statusCode === 404
+              ? false
+              : null,
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [booking?.id, booking?.status, token]);
+
   if (!booking) {
     return (
       <AppScreen title="Booking not found">
@@ -320,16 +366,10 @@ export default function PlayerBookingDetailScreen() {
     );
   }
 
-  const stringItem =
-    strings.find((item) => item.id === booking.stringId) ??
-    getStringById(booking.stringId);
-  const admin = getAdminById(booking.adminId);
-  const currentStoreSettings =
-    (sessionSource === 'backend'
-      ? adminSettings.find((item) => item.adminId === 'main') ??
-        adminSettings.find((item) => item.adminId === booking.adminId)
-      : adminSettings.find((item) => item.adminId === booking.adminId) ??
-        adminSettings.find((item) => item.adminId === 'main'));
+  const stringItem = strings.find((item) => item.id === booking.stringId);
+  const currentStoreSettings = adminSettings.find(
+    (item) => item.adminId === 'main',
+  );
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
     : 'Custom string selection';
@@ -337,7 +377,6 @@ export default function PlayerBookingDetailScreen() {
   const storeAddress = normalizeStoreText(currentStoreSettings?.address);
   const vendorLabel =
     storeName ||
-    admin?.businessName ||
     'Assigned shop';
   const shopAddress =
     storeAddress ||
@@ -345,6 +384,41 @@ export default function PlayerBookingDetailScreen() {
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const latestUpdate = getLatestUpdate(booking);
   const heroStatusChip = getHeroStatusChipClasses(booking.status);
+  const canCheckIn =
+    booking.status === 'confirmed' || booking.status === 'awaiting_dropoff';
+  const canOpenFeedback = booking.status === 'completed';
+
+  const openSupportConversation = async () => {
+    if (supportConversation) {
+      router.push(`/player/chat/${supportConversation.id}`);
+      return;
+    }
+    if (!token) {
+      setSupportError('Your player session expired. Sign in again to open support.');
+      return;
+    }
+
+    setIsRequestingSupport(true);
+    setSupportError(null);
+    try {
+      const response = await backendApi.requestBookingSupport(token, booking.id);
+      const conversation = mapBackendConversationToConversation(response, booking);
+      const current = useAppStore.getState().liveConversations;
+      setLiveConversations([
+        conversation,
+        ...current.filter((item) => item.id !== conversation.id),
+      ]);
+      router.push(`/player/chat/${conversation.id}`);
+    } catch (error) {
+      setSupportError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Failed to open booking support.',
+      );
+    } finally {
+      setIsRequestingSupport(false);
+    }
+  };
 
   return (
     <AppScreen
@@ -527,6 +601,53 @@ export default function PlayerBookingDetailScreen() {
         </AppCard>
 
         <View className="pt-1">
+          {booking.totalAmount > 0 && activePayment?.status !== 'paid' ? (
+            <AppButton
+              label={
+                activePayment?.status === 'pending'
+                  ? 'Payment awaiting verification'
+                  : 'Pay booking'
+              }
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              isDisabled={activePayment?.status === 'pending'}
+              onPress={() => router.push(`/player/payments/${booking.id}`)}
+            />
+          ) : null}
+          {canCheckIn ? (
+            <AppButton
+              label="Show check-in reference"
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              onPress={() =>
+                router.push(`/player/check-in?bookingId=${booking.id}`)
+              }
+            />
+          ) : null}
+          <AppButton
+            label="Message shop"
+            variant="outline"
+            size="lg"
+            className="mb-3"
+            isLoading={isRequestingSupport}
+            onPress={() => void openSupportConversation()}
+          />
+          {supportError ? (
+            <HeroText className="mb-3 text-sm font-medium text-red-600">
+              {supportError}
+            </HeroText>
+          ) : null}
+          {canOpenFeedback ? (
+            <AppButton
+              label={hasFeedback ? 'View service feedback' : 'Leave service feedback'}
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              onPress={() => router.push(`/player/feedback/${booking.id}`)}
+            />
+          ) : null}
           <AppButton
             label="View tracking"
             variant="primary"
