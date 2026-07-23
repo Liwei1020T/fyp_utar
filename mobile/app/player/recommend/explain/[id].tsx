@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Gauge,
-  ShieldCheck,
   Sparkles,
   Target,
   WalletCards,
@@ -62,32 +61,10 @@ function clampPercent(value?: number | null) {
 
 function toFeatureCopy(featureKey?: string, displayLabel?: string) {
   const label = displayLabel ?? humanizeFeature(featureKey ?? 'review support');
-  const normalized = (featureKey ?? displayLabel ?? '').toLowerCase();
-
-  if (normalized.includes('sound')) {
-    return {
-      title: 'Hitting sound support',
-      body: 'Players mention a cleaner impact sound, which supports the feel profile behind this pick.',
-    };
-  }
-
-  if (normalized.includes('tension')) {
-    return {
-      title: 'Tension retention support',
-      body: 'Reviews support its ability to hold play feel across more sessions.',
-    };
-  }
-
-  if (normalized.includes('durability')) {
-    return {
-      title: 'Durability support',
-      body: 'Community signals point to reliable lifespan for frequent play.',
-    };
-  }
 
   return {
-    title: `${label} support`,
-    body: 'Community feedback strengthens confidence in this part of the recommendation.',
+    title: `${label} review signal`,
+    body: `The imported review matrix contains a review-derived score for ${label.toLowerCase()}.`,
   };
 }
 
@@ -111,55 +88,25 @@ function getBudgetCopy(
   return `${formatCurrency(price)} is scored against your RM${minimum.toFixed(0)}-RM${maximum.toFixed(0)} tier.`;
 }
 
-function buildRecommendationSummary({
-  playingStyle,
-  skillLevel,
-  priorities,
-}: {
-  playingStyle: string;
-  skillLevel: string;
-  priorities: string[];
-}) {
-  const priorityCopy = priorities.length > 0
-    ? priorities.slice(0, 2).join(' and ').toLowerCase()
-    : 'your strongest preferences';
+function buildMatchReasons(reasons: string[]) {
+  const icons = [Sparkles, Target, Gauge];
+  const savedReasons = reasons.filter((reason) => reason.trim().length > 0).slice(0, 3);
 
-  return `A strong fit for your ${playingStyle.toLowerCase()} game and ${skillLevel.toLowerCase()} level, with the clearest advantage in ${priorityCopy}.`;
-}
+  if (savedReasons.length === 0) {
+    return [
+      {
+        title: 'Scorer reason unavailable',
+        body: 'No saved scorer reason was returned for this recommendation.',
+        Icon: AlertTriangle,
+      },
+    ];
+  }
 
-function buildMatchReasons({
-  suggestedTensionRange,
-  preferredTension,
-  playFrequency,
-  topPriorityLabels,
-}: {
-  suggestedTensionRange: string;
-  preferredTension: number;
-  playFrequency: string;
-  topPriorityLabels: string[];
-}) {
-  const firstPriority = topPriorityLabels[0]?.toLowerCase() ?? 'feel';
-  const playsOften = playFrequency === 'Tournament' || playFrequency === 'Weekly';
-
-  return [
-    {
-      title: 'Matches your feel priority',
-      body: `Its strongest profile supports ${firstPriority}, one of the main things you rated highly.`,
-      Icon: Sparkles,
-    },
-    {
-      title: 'Fits your tension setup',
-      body: `${preferredTension} lbs sits comfortably inside the ${suggestedTensionRange} window.`,
-      Icon: Gauge,
-    },
-    {
-      title: 'Ready for your play rhythm',
-      body: playsOften
-        ? 'Durability support makes it a safer choice for frequent sessions.'
-        : 'It gives you enough reliability without pushing you into an overly stiff setup.',
-      Icon: ShieldCheck,
-    },
-  ];
+  return savedReasons.map((reason, index) => ({
+    title: `Scorer reason ${index + 1}`,
+    body: reason,
+    Icon: icons[index] ?? Sparkles,
+  }));
 }
 
 function MatchReasonCard({
@@ -267,43 +214,20 @@ function ReviewStrength({
 }
 
 function getReviewStrengths(rationale: BackendRecommendationRationale | null) {
-  const evidence = rationale?.feature_evidence ?? [];
-  const preferredKeys = ['hitting_sound', 'tension_retention', 'durability'];
-
-  const fromEvidence = preferredKeys
-    .map((key) => evidence.find((entry) => entry.feature_key === key))
-    .filter(Boolean)
+  return (rationale?.feature_evidence ?? [])
+    .filter((entry) => entry.nlp_review_score != null)
+    .sort(
+      (left, right) =>
+        (right.nlp_review_score ?? 0) - (left.nlp_review_score ?? 0),
+    )
+    .slice(0, 3)
     .map((entry) => {
-      const copy = toFeatureCopy(entry?.feature_key, entry?.display_label);
+      const copy = toFeatureCopy(entry.feature_key, entry.display_label);
       return {
         ...copy,
-        score: entry?.nlp_review_score ?? entry?.effective_score ?? null,
+        score: entry.nlp_review_score,
       };
     });
-
-  if (fromEvidence.length >= 3) {
-    return fromEvidence.slice(0, 3);
-  }
-
-  const fallback = [
-    {
-      title: 'Hitting sound support',
-      body: 'Community feedback supports a satisfying impact feel.',
-      score: rationale?.nlp_review_scores?.hitting_sound ?? null,
-    },
-    {
-      title: 'Tension retention support',
-      body: 'Review signals help confirm the string can hold its feel longer.',
-      score: rationale?.nlp_review_scores?.tension_retention ?? null,
-    },
-    {
-      title: 'Durability support',
-      body: 'Players give useful confidence that it can handle regular play.',
-      score: rationale?.nlp_review_scores?.durability ?? null,
-    },
-  ];
-
-  return [...fromEvidence, ...fallback].slice(0, 3);
 }
 
 export default function RecommendationExplanationScreen() {
@@ -317,7 +241,8 @@ export default function RecommendationExplanationScreen() {
   const [detailError, setDetailError] = useState<string | null>(null);
 
   const stringItem =
-    strings.find((item) => item.id === params.id) ?? getStringById(params.id);
+    strings.find((item) => item.id === params.id) ??
+    (token ? undefined : getStringById(params.id));
   const liveResult = liveResults.find(
     (item) => item.catalogId === params.id || item.stringId === params.id || item.id === params.id,
   );
@@ -354,12 +279,12 @@ export default function RecommendationExplanationScreen() {
     rationale?.top_reasons?.[0] ??
     liveResult?.reasons[0] ??
     detailResult?.reasons?.[0] ??
-    'It lines up well with the way you play and the feel you prefer.';
+    'No saved scorer reason is available.';
   const bestReason = compactSentence(strongestReason);
   const tradeOff =
     rationale?.trade_off_summary ??
     liveResult?.tradeOffSummary ??
-    'String movement control is the area to watch if you prefer a locked-in string bed.';
+    'No evidence-backed trade-off was recorded.';
   const reviewStrengths = getReviewStrengths(rationale);
 
   useEffect(() => {
@@ -401,19 +326,12 @@ export default function RecommendationExplanationScreen() {
     return null;
   }
 
-  const preferredTension = user.preferredTension;
-  const playFrequency = user.playFrequency;
-  const matchReasons = buildMatchReasons({
-    suggestedTensionRange,
-    preferredTension,
-    playFrequency,
-    topPriorityLabels,
-  });
-  const recommendationSummary = buildRecommendationSummary({
-    playingStyle: user.playingStyle,
-    skillLevel: user.skillLevel,
-    priorities: topPriorityLabels,
-  });
+  const savedReasons =
+    rationale?.top_reasons ?? liveResult?.reasons ?? detailResult?.reasons ?? [];
+  const matchReasons = buildMatchReasons(savedReasons);
+  const recommendationSummary = rationale?.primary_fit_angle
+    ? `Saved scorer fit angle: ${compactSentence(rationale.primary_fit_angle)}.`
+    : 'This page shows the saved scorer output and only labels evidence that was returned by the backend.';
   const stringId = stringItem?.id ?? params.id;
   const canBook = Boolean(stringItem);
 
@@ -463,9 +381,9 @@ export default function RecommendationExplanationScreen() {
         </View>
 
         <View className="mt-4 flex-row flex-wrap gap-2">
-          <AppChip label={rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Profile match'} variant="accent" />
+          <AppChip label={rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Fit angle unavailable'} variant="accent" />
           <AppChip label={suggestedTensionRange} variant="info" />
-          <AppChip label={topPriorityLabels[0] ?? 'Balanced feel'} variant="secondary" />
+          <AppChip label={topPriorityLabels[0] ?? 'No saved priority'} variant="secondary" />
         </View>
 
         <HeroText className="mt-4 text-sm leading-6 text-primary-100">
@@ -559,10 +477,14 @@ export default function RecommendationExplanationScreen() {
               </View>
               <View className="flex-1">
                 <HeroText className="text-sm font-bold tracking-tight text-neutral-950">
-                  Community signals add confidence
+                  {reviewStrengths.length > 0
+                    ? 'Review-derived signals are present'
+                    : 'No review-derived support recorded'}
                 </HeroText>
                 <HeroText className="mt-1 text-[13px] leading-5 text-neutral-600">
-                  Reviews reinforce the strengths below, so the fit is not based only on specs.
+                  {reviewStrengths.length > 0
+                    ? 'The entries below come directly from NLP review scores in the saved rationale.'
+                    : 'The saved rationale did not include an NLP review score for this item.'}
                 </HeroText>
               </View>
             </View>
@@ -593,7 +515,9 @@ export default function RecommendationExplanationScreen() {
                 {compactSentence(tradeOff)}.
               </HeroText>
               <HeroText className="mt-2 text-[13px] leading-5 text-neutral-500">
-                Choose it if the strengths above matter more to you than this compromise.
+                {rationale?.trade_off_summary || liveResult?.tradeOffSummary
+                  ? 'Use this saved trade-off together with the score breakdown before booking.'
+                  : 'No additional trade-off claim has been inferred by the app.'}
               </HeroText>
             </View>
           </View>

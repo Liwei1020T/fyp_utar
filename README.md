@@ -5,7 +5,7 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 ## Workspace Layout
 
 - `mobile/`: Expo Router React Native app for player and admin flows
-- `backend/`: FastAPI + SQLAlchemy backend and in-process AI/recommendation modules
+- `backend/`: FastAPI + SQLAlchemy backend with the canonical in-process scorer at `backend/app/domain/recommendation/scoring.py`
 - `ml/nlp-workbench-latest/`: canonical notebook package, datasets, and recommendation artifacts
 - `docs/`: workspace-level documentation index
 
@@ -38,7 +38,7 @@ npm install
 EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
 ```
 
-The mobile workspace pins Node `20.19.0` via `mobile/.nvmrc` and `mobile/package.json` allows the Node `20.x` line.
+The mobile workspace pins Node `24.18.0` via `mobile/.nvmrc` and `mobile/package.json` allows the Node `24.x` LTS line.
 
 ### 4. Start the mobile app on Expo Go
 
@@ -62,23 +62,26 @@ Open Expo Go on the phone and scan the QR code. The phone and Mac must be on the
 
 ```bash
 cd ml/nlp-workbench-latest
-python3 -m pip install -r requirements.txt
-jupyter lab
+./scripts/bootstrap.sh
+.venv/bin/python -m pytest -q tests
+.venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2
 ```
 
-Run `stringsense_complete_absa_pipeline_notebook_latest.ipynb` from top to bottom. The generated outputs go into `ml/nlp-workbench-latest/output/`.
+The runner executes labeling and the complete pipeline in order and writes only to immutable `output/runs/<run-id>/` directories. It fails on data leakage, protected-input changes, or non-reproducible metrics/CSV outputs.
 
-The unified backend default recommendation source points to `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
+Experiment outputs are never promoted automatically. The unified backend default recommendation source remains `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` until a separate human-approved promotion task.
 
 ## Backend and NLP Integration
 
 - `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
-- Standalone `ai_service` compatibility CSV settings use the canonical latest output directory
+- The unified FastAPI app does not import the legacy AI adapters or `ai_service` during startup
+- Standalone `ai_service` compatibility CSV settings use the canonical latest output directory when that package is run explicitly
 - If those generated files do not exist yet, the backend can still fall back to `backend/data/raw/badminton_strings_recommender.jsonl`
 
 ## Validation
 
 - Mobile: `cd mobile && nvm use && npx tsc --noEmit`
 - Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
+- NLP: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 
-More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md).
+More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md). The completed pre-FYP2 remediation and final approval gate are recorded in [docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md](./docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md).

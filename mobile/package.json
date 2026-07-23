@@ -3,27 +3,28 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "engines": {
-    "node": ">=20.19.0 <21"
+    "node": ">=24.18.0 <25"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "expo lint"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@hookform/resolvers": "^5.2.2",
-    "@tanstack/react-query": "^5.95.2",
     "axios": "^1.14.0",
     "clsx": "^2.1.1",
-    "expo": "~54.0.33",
+    "expo": "~54.0.36",
     "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
-    "expo-font": "~14.0.11",
-    "expo-image-picker": "~17.0.10",
-    "expo-linking": "~8.0.11",
-    "expo-router": "~6.0.23",
+    "expo-font": "~14.0.12",
+    "expo-image-picker": "~17.0.11",
+    "expo-linking": "~8.0.12",
+    "expo-router": "~6.0.24",
+    "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "heroui-native": "^1.0.0",
@@ -48,7 +49,13 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "babel-preset-expo": "~54.0.10",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "uuid": "^11.1.1"
   },
   "private": true
 }

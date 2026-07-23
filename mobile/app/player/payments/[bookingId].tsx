@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, CreditCard, Landmark, Smartphone, Wallet } from 'lucide-react-native';
+import { CreditCard, Landmark, Smartphone, Wallet } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
@@ -21,13 +20,13 @@ import { getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
 
-const paymentOptions: Array<{
+const paymentOptions: {
   method: PaymentMethod;
   title: string;
   description: string;
   badge: string;
   icon: React.ReactNode;
-}> = [
+}[] = [
   {
     method: 'card',
     title: 'Card',

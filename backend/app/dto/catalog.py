@@ -141,6 +141,9 @@ class RecommendationMatrixEntryOut(BaseModel):
     confidence: float | None = None
     evidence_note: str | None = None
     source_ref: str | None = None
+    source_version: str | None = None
+    source_generated_at: str | None = None
+    review_count_snapshot: int | None = None
     updated_at: str | None = None
 
 
@@ -263,6 +266,27 @@ class OfficialPerformancePayload(BaseModel):
     control: float | None = Field(default=None, ge=0, le=10)
     notes: str | None = Field(default=None, max_length=4000)
     status: str | None = Field(default=None, max_length=40)
+
+
+class StringEditorUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    catalog: StringWritePayload | None = None
+    inventory: InventoryUpdatePayload | None = None
+    official_performance: OfficialPerformancePayload | None = None
+
+    @model_validator(mode="after")
+    def validate_at_least_one_section(self) -> "StringEditorUpdatePayload":
+        if not any(
+            section is not None
+            for section in (
+                self.catalog,
+                self.inventory,
+                self.official_performance,
+            )
+        ):
+            raise ValueError("At least one editor section must be provided")
+        return self
 
 
 def string_to_dto(item: StringItem) -> StringOut:
@@ -402,6 +426,9 @@ def recommendation_matrix_entry_to_dto(
         confidence=item.confidence,
         evidence_note=item.evidence_note,
         source_ref=item.source_ref,
+        source_version=item.source_version,
+        source_generated_at=isoformat_or_none(item.source_generated_at),
+        review_count_snapshot=item.review_count_snapshot,
         updated_at=isoformat_or_none(item.updated_at),
     )
 

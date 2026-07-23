@@ -10,7 +10,7 @@ import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { useBookings, useCurrentUser } from '../../../store/appStore';
 import { getStringById } from '../../../services/mockAppService';
-import type { Booking, BookingStatus } from '../../../types/domain';
+import type { AdminProfile, Booking, BookingStatus } from '../../../types/domain';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
@@ -36,6 +36,7 @@ const STATUS_PRIORITY: Record<BookingStatus, number> = {
   ready_for_collection: 2,
   completed: 3,
   cancelled: 5,
+  rejected: 5,
 };
 
 function getAdminActionLabel(status: BookingStatus) {
@@ -49,6 +50,7 @@ function getAdminActionLabel(status: BookingStatus) {
       return 'Action: Prepare for collection';
     case 'completed':
     case 'cancelled':
+    case 'rejected':
       return 'Action: No further action';
     case 'pending':
     case 'pending_payment':
@@ -157,16 +159,21 @@ function AdminQueueCard({
 }
 
 export default function AdminBookingsScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
-  const bookings = useBookings();
-  const bottomContentInset = useBottomContentInset(16);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
 
   if (!user || user.role !== 'admin') {
     return null;
   }
+
+  return <AdminBookingsContent user={user} />;
+}
+
+function AdminBookingsContent({ user }: { user: AdminProfile }) {
+  const router = useRouter();
+  const bookings = useBookings();
+  const bottomContentInset = useBottomContentInset(16);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
 
   const adminBookings = useMemo(
     () => bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled'),
@@ -208,7 +215,9 @@ export default function AdminBookingsScreen() {
   }, [adminBookings, filter, search]);
 
   const today = formatLocalDateInputValue(new Date());
-  const todayCount = adminBookings.filter((item) => formatLocalDateInputValue(item.createdAt) === today).length;
+  const todayCount = adminBookings.filter(
+    (item) => item.dropOffDate === today,
+  ).length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyCount = adminBookings.filter((item) => item.status === 'ready_for_collection').length;
 

@@ -11,6 +11,7 @@ from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_profile_repository
 from app.entrypoints.api.dependencies import get_recommendation_repository
+from app.entrypoints.api.dependencies import get_user_repository
 from app.use_cases.profile.get_my_profile import GetMyProfileUseCase
 from app.use_cases.profile.upsert_my_profile import UpsertMyProfileUseCase
 
@@ -22,11 +23,14 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 def get_profile(
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
+    user_repository=Depends(get_user_repository),
 ) -> ProfileOut:
     profile = GetMyProfileUseCase(profile_repository=profile_repository).execute(
         current_user.user_id
     )
-    return profile_to_dto(profile)
+    user = user_repository.get_by_id(current_user.user_id)
+    assert user is not None
+    return profile_to_dto(profile, username=user.username)
 
 
 @router.put("", response_model=ProfileOut)
@@ -35,6 +39,7 @@ def upsert_profile(
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
+    user_repository=Depends(get_user_repository),
 ) -> ProfileOut:
     profile = UpsertMyProfileUseCase(
         profile_repository=profile_repository,
@@ -44,7 +49,10 @@ def upsert_profile(
             user_id=current_user.user_id,
             created_at=None,
             updated_at=None,
-            **payload.model_dump(),
-        )
+            **payload.model_dump(exclude={"username"}),
+        ),
+        username=payload.username,
     )
-    return profile_to_dto(profile)
+    user = user_repository.get_by_id(current_user.user_id)
+    assert user is not None
+    return profile_to_dto(profile, username=user.username)

@@ -218,6 +218,7 @@ Recommendation matrix inspection responses include:
   - still returned separately from matrix rows
 - `matrix_by_source`
   - raw matrix rows grouped by source layer such as `nlp_review` and `hybrid_derived`
+  - each row exposes `source_version`, `source_generated_at`, and `review_count_snapshot` when the source provides them
 
 Recommendation matrix import responses include:
 
@@ -327,6 +328,7 @@ Recommendation response:
         "collaborative_filtering_used": false,
         "matrix_version": "latest_practical_string_feature_matrix_v9_v8dict",
         "feature_source_version": "latest_practical_string_feature_matrix_v9_v8dict",
+        "feature_source_generated_at": "2026-04-12T13:55:00+00:00",
         "feature_sources": {
           "repulsion": "nlp_review",
           "control": "nlp_review"
@@ -343,6 +345,9 @@ Recommendation response:
             "nlp_confidence": 1.0,
             "nlp_influence": 0.46,
             "fusion_confidence": 0.79,
+            "source_version": "latest_practical_string_feature_matrix_v9_v8dict",
+            "source_generated_at": "2026-04-12T13:55:00+00:00",
+            "source_ref": "https://example.invalid/source",
             "review_count_snapshot": 3109
           }
         ],

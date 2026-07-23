@@ -8,10 +8,12 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
+from app.config.settings import get_settings
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.booking.enums import BookingStatus
+from app.domain.store.policies import booking_slot_id_for_stored_datetime
 from app.shared.upload_storage import build_signed_media_url
 from app.shared.serialization import isoformat_or_none
 
@@ -27,9 +29,18 @@ class CreateBookingPayload(BaseModel):
     racket_brand: str | None = None
     racket_model: str | None = None
     requested_tension: float | None = Field(default=None, ge=16, le=35)
+    slot_id: str | None = Field(
+        default=None,
+        pattern=r"^slot-\d{4}-\d{2}-\d{2}-\d{2}:\d{2}$",
+    )
     drop_off_datetime: datetime | None = None
-    expected_completion_datetime: datetime | None = None
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def validate_single_slot_input(self) -> "CreateBookingPayload":
+        if self.slot_id is not None and self.drop_off_datetime is not None:
+            raise ValueError("Provide slot_id or drop_off_datetime, not both")
+        return self
 
 
 class UpdateBookingStatusPayload(BaseModel):
@@ -85,6 +96,7 @@ class BookingOut(BaseModel):
     racket_brand: str | None = None
     racket_model: str | None = None
     requested_tension: float | None = None
+    slot_id: str | None = None
     drop_off_datetime: str | None = None
     expected_completion_datetime: str | None = None
     collection_datetime: str | None = None
@@ -143,6 +155,14 @@ def booking_to_dto(
         racket_brand=booking.racket_brand,
         racket_model=booking.racket_model,
         requested_tension=booking.requested_tension,
+        slot_id=(
+            booking_slot_id_for_stored_datetime(
+                booking.drop_off_datetime,
+                get_settings().store_timezone,
+            )
+            if booking.drop_off_datetime is not None
+            else None
+        ),
         drop_off_datetime=isoformat_or_none(booking.drop_off_datetime),
         expected_completion_datetime=isoformat_or_none(
             booking.expected_completion_datetime

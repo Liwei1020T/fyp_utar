@@ -79,6 +79,7 @@ class RecommendationFeatureSignalModel:
     evidence_note: str | None = None
     source_ref: str | None = None
     source_version: str | None = None
+    source_generated_at: datetime | None = None
     review_count_snapshot: int | None = None
 
 

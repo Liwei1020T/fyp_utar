@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, ViewProps } from 'react-native';
-import { HeroText } from '../ui/heroui';
-import { cn } from '../ui/heroui';
+import { HeroText , cn } from '../ui/heroui';
 
 type AppSectionVariant = 'default' | 'compact' | 'hero';
 

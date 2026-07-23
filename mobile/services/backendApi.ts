@@ -25,6 +25,7 @@ import type {
   BackendStoreSettings,
   BackendStoreSettingsPayload,
   BackendString,
+  BackendStringEditorUpdatePayload,
   BackendStringWritePayload,
 } from '../types/backend';
 import { Platform } from 'react-native';
@@ -577,6 +578,20 @@ export const backendApi = {
       },
     );
   },
+  adminUpdateStringEditor(
+    token: string,
+    stringId: string,
+    payload: BackendStringEditorUpdatePayload,
+  ) {
+    return requestJson<BackendAdminInventoryString>(
+      `/admin/inventory/strings/${stringId}/editor`,
+      {
+        method: 'PUT',
+        body: payload,
+        token,
+      },
+    );
+  },
   adminUploadStringImage(
     token: string,
     stringId: string,
@@ -633,6 +648,7 @@ export const backendApi = {
       racket_brand?: string;
       racket_model?: string;
       requested_tension?: number;
+      slot_id?: string;
       drop_off_datetime?: string;
       notes?: string;
     },

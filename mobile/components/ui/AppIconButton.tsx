@@ -47,6 +47,7 @@ export function AppIconButton({
   return (
     <HeroButton
       {...props}
+      feedbackVariant="none"
       variant={nativeVariantMap[variant]}
       isIconOnly
       accessibilityRole="button"

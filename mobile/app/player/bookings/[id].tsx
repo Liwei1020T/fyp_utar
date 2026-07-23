@@ -25,10 +25,10 @@ import { backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
 import type { Booking, BookingStatus } from '../../../types/domain';
 
-const TRACKING_STAGES: Array<{
+const TRACKING_STAGES: {
   key: 'confirmed' | 'dropoff' | 'in_progress' | 'ready_for_collection' | 'completed';
   label: string;
-}> = [
+}[] = [
   { key: 'confirmed', label: 'Booking confirmed' },
   { key: 'dropoff', label: 'Drop-off scheduled' },
   { key: 'in_progress', label: 'In progress' },
@@ -51,6 +51,7 @@ function getCurrentStageKey(status: BookingStatus) {
     case 'completed':
       return 'completed';
     case 'cancelled':
+    case 'rejected':
     default:
       return 'confirmed';
   }
@@ -60,7 +61,7 @@ function getStageState(stageKey: (typeof TRACKING_STAGES)[number]['key'], bookin
   const currentIndex = TRACKING_STAGES.findIndex((stage) => stage.key === getCurrentStageKey(booking.status));
   const stageIndex = TRACKING_STAGES.findIndex((stage) => stage.key === stageKey);
 
-  if (booking.status === 'cancelled') {
+  if (booking.status === 'cancelled' || booking.status === 'rejected') {
     return 'upcoming' as const;
   }
 
@@ -135,6 +136,9 @@ function getNextStepLabel(status: BookingStatus) {
     case 'completed':
       return 'Service completed';
     case 'cancelled':
+      return 'Booking cancelled';
+    case 'rejected':
+      return 'Booking declined by shop';
     default:
       return 'Booking closed';
   }
@@ -166,6 +170,7 @@ function getHeroStatusChipClasses(status: BookingStatus) {
         textClassName: 'text-white font-semibold text-xs',
       };
     case 'cancelled':
+    case 'rejected':
       return {
         className: 'self-start border-red-200/35 bg-red-300/18',
         textClassName: 'text-white font-semibold text-xs',

@@ -24,6 +24,7 @@ import {
   deriveAdvancedPreferences,
   mapBackendUserToPlayerProfile,
 } from '../../../services/backendMappers';
+import type { PlayerProfile } from '../../../types/domain';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Please enter your name'),
@@ -88,15 +89,20 @@ const budgetOptions = ['Below RM30', 'RM30–RM50', 'RM50+'] as const;
 const preferredFeelOptions = ['Soft', 'Balanced', 'Crisp', 'Hard'] as const;
 
 export default function ProfileEditScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
-  const updatePlayerProfile = useAppStore((state) => state.updatePlayerProfile);
-  const token = useBackendAccessToken();
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!user || user.role !== 'player') {
     return null;
   }
+
+  return <ProfileEditContent user={user} />;
+}
+
+function ProfileEditContent({ user }: { user: PlayerProfile }) {
+  const router = useRouter();
+  const updatePlayerProfile = useAppStore((state) => state.updatePlayerProfile);
+  const token = useBackendAccessToken();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const normalizedPlayingStyle =
     user.playingStyle === 'Attacking' || user.playingStyle === 'Balanced'
@@ -141,6 +147,7 @@ export default function ProfileEditScreen() {
         const profile = await backendApi.saveProfile(
           token,
           buildBackendProfilePayload({
+            name: data.name,
             skillLevel: data.skillLevel,
             playingStyle: data.playingStyle,
             playFrequency: data.playFrequency,
@@ -157,7 +164,7 @@ export default function ProfileEditScreen() {
           mapBackendUserToPlayerProfile(
             {
               id: user.id,
-              username: data.name,
+              username: profile.username,
               phone_number: user.phone,
               role: 'customer',
               auth_provider: 'local',

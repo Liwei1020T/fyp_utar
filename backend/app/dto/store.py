@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+from datetime import time
 from typing import Literal
 
 from pydantic import BaseModel
@@ -37,10 +39,22 @@ class BusinessHoursDayPayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_day_window(self) -> "BusinessHoursDayPayload":
-        if self.open_time >= self.close_time:
+        try:
+            open_time = time.fromisoformat(self.open_time)
+            close_time = time.fromisoformat(self.close_time)
+            break_start = (
+                time.fromisoformat(self.break_start) if self.break_start else None
+            )
+            break_end = time.fromisoformat(self.break_end) if self.break_end else None
+        except ValueError as error:
+            raise ValueError("Business hours must use valid 24-hour times") from error
+        if open_time >= close_time:
             raise ValueError("open_time must be earlier than close_time")
-        if self.break_start and self.break_end and self.break_start >= self.break_end:
-            raise ValueError("break_start must be earlier than break_end")
+        if (break_start is None) != (break_end is None):
+            raise ValueError("break_start and break_end must be provided together")
+        if break_start is not None and break_end is not None:
+            if not open_time < break_start < break_end < close_time:
+                raise ValueError("Break must be fully inside the opening window")
         return self
 
 
@@ -52,8 +66,28 @@ class StoreBusinessHoursPayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_unique_days(self) -> "StoreBusinessHoursPayload":
-        if len({day.day for day in self.days}) != len(self.days):
+        weekdays = {
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        }
+        submitted_days = {day.day for day in self.days}
+        if len(submitted_days) != len(self.days):
             raise ValueError("Each weekday may only appear once")
+        if submitted_days != weekdays:
+            raise ValueError("Business hours must include all seven weekdays")
+        try:
+            parsed_closed_dates = [
+                date.fromisoformat(value) for value in self.special_closed_dates
+            ]
+        except ValueError as error:
+            raise ValueError("special_closed_dates must use YYYY-MM-DD") from error
+        if len(set(parsed_closed_dates)) != len(parsed_closed_dates):
+            raise ValueError("special_closed_dates must not contain duplicates")
         return self
 
 

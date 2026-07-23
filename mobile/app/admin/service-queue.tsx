@@ -1,16 +1,12 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { View } from 'react-native';
 import { AppCard } from '../../components/ui/AppCard';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { useBookings, useCurrentUser } from '../../store/appStore';
 
 export default function AdminServiceQueueScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
 

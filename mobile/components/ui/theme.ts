@@ -95,6 +95,7 @@ export function getBookingStatusVariant(status: BookingStatus): AppChipVariant {
     case 'confirmed':
       return 'primary';
     case 'cancelled':
+    case 'rejected':
       return 'danger';
     default:
       return 'neutral';

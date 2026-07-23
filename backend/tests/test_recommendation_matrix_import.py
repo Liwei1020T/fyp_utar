@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import UTC
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -100,6 +103,11 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
         "string_movement",
         "tension_retention",
     }.issubset(nlp_feature_keys)
+
+    nlp_entry = detail["matrix_by_source"]["nlp_review"][0]
+    assert nlp_entry["source_version"]
+    assert nlp_entry["source_generated_at"]
+    assert nlp_entry["review_count_snapshot"] is not None
     assert {
         "value_for_money",
         "stability",
@@ -161,3 +169,31 @@ def test_latest_v9_workbook_import_matches_catalog() -> None:
             "attacking_fit",
             "control_fit",
         }.issubset(aerobie_rows)
+
+
+def test_matrix_import_refreshes_stale_source_generated_at() -> None:
+    matrix_path = (
+        BACKEND_ROOT
+        / "../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx"
+    )
+    expected_generated_at = datetime.fromtimestamp(matrix_path.stat().st_mtime, tz=UTC)
+
+    with SessionLocal() as db:
+        row = db.get(
+            StringRecommendationMatrix,
+            ("yonex-bg80", "repulsion", "nlp_review"),
+        )
+        assert row is not None
+        row.source_generated_at = datetime(2000, 1, 1, tzinfo=UTC)
+        db.commit()
+
+        report = import_recommendation_matrix_csv(db, matrix_path)
+        db.commit()
+        db.refresh(row)
+
+        assert report.updated_entries >= 1
+        actual_generated_at = row.source_generated_at
+        assert actual_generated_at is not None
+        if actual_generated_at.tzinfo is None:
+            actual_generated_at = actual_generated_at.replace(tzinfo=UTC)
+        assert abs((actual_generated_at - expected_generated_at).total_seconds()) < 1e-6

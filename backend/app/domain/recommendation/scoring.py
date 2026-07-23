@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import UTC
+from datetime import datetime
 
 from app.domain.catalog.entities import StringItem
 from app.domain.recommendation.entities import RecommendationCandidateModel
@@ -204,6 +206,9 @@ class Fyp1ContentRecommendationScorer:
             )
             matrix_version = _candidate_matrix_version(candidate)
             feature_source_version = _candidate_feature_source_version(candidate)
+            feature_source_generated_at = _candidate_feature_source_generated_at(
+                candidate
+            )
             rationale_payload = {
                 "catalog_id": candidate.item.id,
                 "display_name": candidate.item.display_name,
@@ -211,6 +216,11 @@ class Fyp1ContentRecommendationScorer:
                 "model_name": candidate.item.model_name,
                 "matrix_version": matrix_version,
                 "feature_source_version": feature_source_version,
+                "feature_source_generated_at": (
+                    feature_source_generated_at.isoformat()
+                    if feature_source_generated_at is not None
+                    else None
+                ),
                 "review_count_snapshot": candidate.item.review_count,
                 "algorithm_family": (
                     "rule_enhanced_confidence_aware_content_based_official_nlp_budget_tier"
@@ -449,6 +459,12 @@ def _effective_item_features(
             "prior_score": prior_score,
             "missing_data_penalty": missing_data_penalty,
             "source_version": _signal_source_version(nlp_signal),
+            "source_generated_at": (
+                source_generated_at.isoformat()
+                if (source_generated_at := _signal_source_generated_at(nlp_signal))
+                is not None
+                else None
+            ),
             "source_ref": _signal_source_ref(nlp_signal),
             "review_count_snapshot": _signal_review_count_snapshot(nlp_signal)
             or candidate.item.review_count,
@@ -556,6 +572,7 @@ def _build_feature_evidence(
                 4,
             ),
             "source_version": meta.get("source_version"),
+            "source_generated_at": meta.get("source_generated_at"),
             "source_ref": meta.get("source_ref"),
             "review_count_snapshot": meta.get("review_count_snapshot"),
         }
@@ -1077,6 +1094,18 @@ def _candidate_feature_source_version(
     return _candidate_matrix_version(candidate)
 
 
+def _candidate_feature_source_generated_at(
+    candidate: RecommendationCandidateModel,
+) -> datetime | None:
+    source_map = candidate.matrix_by_source.get("nlp_review", {})
+    generated_values = [
+        generated_at
+        for value in source_map.values()
+        if (generated_at := _signal_source_generated_at(value)) is not None
+    ]
+    return max(generated_values, default=None)
+
+
 def _signal_score(value: object) -> float | None:
     if isinstance(value, RecommendationFeatureSignalModel):
         return clamp01(value.normalized_score)
@@ -1093,6 +1122,17 @@ def _signal_confidence(value: object) -> float | None:
 def _signal_source_version(value: object) -> str | None:
     if isinstance(value, RecommendationFeatureSignalModel):
         return value.source_version
+    return None
+
+
+def _signal_source_generated_at(value: object) -> datetime | None:
+    if isinstance(value, RecommendationFeatureSignalModel):
+        generated_at = value.source_generated_at
+        if generated_at is None:
+            return None
+        if generated_at.tzinfo is None:
+            return generated_at.replace(tzinfo=UTC)
+        return generated_at.astimezone(UTC)
     return None
 
 

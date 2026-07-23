@@ -1,7 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { HeroButton, HeroButtonProps } from './heroui';
-import { cn } from './heroui';
+import { HeroButton, type HeroButtonProps, cn } from './heroui';
 import type { ButtonVariant } from 'heroui-native';
 
 export type AppButtonVariant =
@@ -110,6 +109,7 @@ export function AppButton({
 
   return (
     <HeroButton
+      feedbackVariant="none"
       variant={nativeVariantMap[variant]}
       className={cn(
         'items-center justify-center border disabled:opacity-60',

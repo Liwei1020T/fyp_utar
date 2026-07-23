@@ -1,5 +1,4 @@
-import React from 'react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Redirect, useSegments } from 'expo-router';
 import { View } from 'react-native';
 import { RoleGuard } from '../../components/roles/RoleGuard';

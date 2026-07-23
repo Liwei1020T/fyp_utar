@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
@@ -13,7 +13,6 @@ import {
   splitPhoneIdentifier,
 } from '../../components/auth/PhoneNumberField';
 import { AppButton } from '../../components/ui/AppButton';
-import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
@@ -38,26 +37,20 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-const demoUsers: Array<{
+const roleOptions: {
   role: UserRole;
   label: string;
-  identifier: string;
-  password: string;
   description: string;
-}> = [
+}[] = [
   {
     role: 'player',
     label: 'Player',
-    identifier: '+60123456789',
-    password: 'password',
-    description: 'Use your phone-based player login.',
+    description: 'Use the phone number and password from your registered player account.',
   },
   {
     role: 'admin',
     label: 'Admin',
-    identifier: '+60190000000',
-    password: 'admin1234',
-    description: 'Use the seeded backend admin login for shop operations.',
+    description: 'Use an admin account configured by the backend operator.',
   },
 ];
 
@@ -70,7 +63,9 @@ export default function LoginScreen() {
   const setBackendAdminSession = useAppStore(
     (state) => state.setBackendAdminSession,
   );
-  const [selectedRole, setSelectedRole] = useState<UserRole>(params.role ?? 'player');
+  const [selectedRole, setSelectedRole] = useState<UserRole>(
+    params.role === 'admin' ? 'admin' : 'player',
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -88,24 +83,23 @@ export default function LoginScreen() {
     },
   });
 
-  const activeDemo = useMemo(
-    () => demoUsers.find((item) => item.role === selectedRole) ?? demoUsers[0],
-    [selectedRole]
-  );
+  const activeRole =
+    roleOptions.find((item) => item.role === selectedRole) ?? roleOptions[0];
   const countryCodeValue = watch('countryCode');
   const phoneNumberValue = watch('phoneNumber');
   const identifierValue = composePhoneIdentifier(countryCodeValue, phoneNumberValue);
 
   useEffect(() => {
-    const phoneParts = splitPhoneIdentifier(params.identifier ?? activeDemo.identifier);
+    if (!params.identifier) {
+      return;
+    }
+    const phoneParts = splitPhoneIdentifier(params.identifier);
     setValue('countryCode', phoneParts.countryCode);
     setValue('phoneNumber', phoneParts.phoneNumber);
-    setValue('password', activeDemo.password);
-  }, [activeDemo.identifier, activeDemo.password, params.identifier, setValue]);
+  }, [params.identifier, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
-    await new Promise((resolve) => setTimeout(resolve, 250));
     const phoneIdentifier = composePhoneIdentifier(data.countryCode, data.phoneNumber);
 
     try {
@@ -157,7 +151,7 @@ export default function LoginScreen() {
       subtitle={
         selectedRole === 'player'
           ? 'Use your phone and password to open the player flow.'
-          : 'Use the seeded backend admin phone and password to enter the operations workspace.'
+          : 'Use your backend-configured admin phone and password to enter the operations workspace.'
       }
       onBack={() => {
         if (router.canGoBack()) {
@@ -179,18 +173,23 @@ export default function LoginScreen() {
       <View className="gap-4">
         <View className="gap-3">
           <View className="flex-row gap-2">
-            {demoUsers.map((item) => (
+            {roleOptions.map((item) => (
               <AppChip
                 key={item.role}
                 label={item.label}
                 size="md"
                 variant={selectedRole === item.role ? 'primary' : 'neutral'}
-                onPress={() => setSelectedRole(item.role)}
+                onPress={() => {
+                  setSelectedRole(item.role);
+                  setFormError(null);
+                  setValue('phoneNumber', '');
+                  setValue('password', '');
+                }}
               />
             ))}
           </View>
           <HeroText className="text-sm leading-5 text-neutral-500">
-            {activeDemo.description}
+            {activeRole.description}
           </HeroText>
         </View>
 
@@ -233,7 +232,7 @@ export default function LoginScreen() {
               helperText={
                 selectedRole === 'player'
                   ? 'Use the password from your player account.'
-                  : 'Use the seeded admin password from the backend environment.'
+                  : 'Use the admin password configured by the backend operator.'
               }
               leftAdornment={<LockKeyhole size={18} color="#64748B" />}
             />
@@ -264,36 +263,6 @@ export default function LoginScreen() {
           </Pressable>
         ) : null}
 
-        <View className="gap-2">
-          {demoUsers.map((item) => (
-            <Pressable
-              key={item.role}
-              onPress={() => {
-                const phoneParts = splitPhoneIdentifier(item.identifier);
-                setSelectedRole(item.role);
-                setValue('countryCode', phoneParts.countryCode);
-                setValue('phoneNumber', phoneParts.phoneNumber);
-                setValue('password', item.password);
-              }}
-            >
-              <AppCard variant="subtle" padding="sm">
-                <View className="flex-row items-center justify-between gap-4">
-                  <View className="flex-1">
-                    <HeroText className="text-sm font-semibold text-neutral-900">
-                      {item.label} demo
-                    </HeroText>
-                    <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-                      {item.description}
-                    </HeroText>
-                  </View>
-                  <HeroText className="text-xs font-semibold text-primary-700">
-                    {item.identifier}
-                  </HeroText>
-                </View>
-              </AppCard>
-            </Pressable>
-          ))}
-        </View>
       </View>
     </AuthShell>
   );

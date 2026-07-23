@@ -31,11 +31,6 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_user_repository
     SqlAlchemyUserRepository,
 )
 from app.adapters.persistence.sqlalchemy.session import get_db
-from app.adapters.services.ai.rag_adapter import RagAdapter
-from app.adapters.services.ai.recommendation_engine_adapter import (
-    RecommendationEngineAdapter,
-)
-from app.adapters.services.ai.review_analysis_adapter import ReviewAnalysisAdapter
 from app.adapters.services.security.jwt_token_service import JwtTokenService
 from app.adapters.services.security.pbkdf2_password_hasher import (
     Pbkdf2PasswordHasher,
@@ -58,9 +53,6 @@ security = HTTPBearer(auto_error=False)
 _password_hasher = Pbkdf2PasswordHasher()
 _token_service = JwtTokenService()
 _clock = SystemClock()
-_recommendation_engine = RecommendationEngineAdapter()
-_review_analysis_service = ReviewAnalysisAdapter()
-_rag_service = RagAdapter()
 
 
 def get_password_hasher() -> Pbkdf2PasswordHasher:
@@ -73,18 +65,6 @@ def get_token_service() -> JwtTokenService:
 
 def get_clock() -> SystemClock:
     return _clock
-
-
-def get_recommendation_engine() -> RecommendationEngineAdapter:
-    return _recommendation_engine
-
-
-def get_review_analysis_service() -> ReviewAnalysisAdapter:
-    return _review_analysis_service
-
-
-def get_rag_service() -> RagAdapter:
-    return _rag_service
 
 
 def get_user_repository(db: Session = Depends(get_db)) -> SqlAlchemyUserRepository:

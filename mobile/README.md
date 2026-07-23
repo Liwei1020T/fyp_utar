@@ -7,7 +7,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 - **Navigation:** Expo Router (File-based)
 - **UI System:** HeroUI Native
 - **Styling:** Uniwind (Tailwind-based)
-- **State Management:** Zustand (Hybrid Local State), React Query provider for future and partial live data use
+- **State Management:** Zustand for session, live snapshots, mock-only deferred domains, drafts, and local mutations
 - **Forms:** React Hook Form + Zod
 
 ## Features
@@ -42,7 +42,7 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
    nvm use
    ```
 
-   The project pins Node `20.19.0` in `.nvmrc` and allows the `20.x` line in `package.json`.
+   The project pins Node `24.18.0` in `.nvmrc` and allows the `24.x` LTS line in `package.json`.
 
 2. **Install Dependencies:**
    ```bash
@@ -82,7 +82,8 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
    - The app starts at `/auth/welcome`.
    - Player flow now uses phone number + password against the Python backend.
    - Admin FYP1 booking, inventory, business-hours, and limited store-settings flows can use the Python backend.
-   - Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`.
+   - Player accounts are created through registration.
+   - Admin accounts are available only when the backend operator explicitly configures `SEED_ADMIN_ENABLED=true` and the companion `SEED_ADMIN_*` values; credentials are never bundled into the app.
 
 ## Styling Runtime
 - `global.css` must stay imported from `app/_layout.tsx`.
@@ -93,6 +94,8 @@ StringSense is an AI-driven React Native mobile platform for badminton racket st
 - **Modularity:** Separate domain logic (strings, bookings) from UI components.
 - **Surgical UI:** Used HeroUI Native as the primary design system to ensure a premium, modern aesthetic out of the box.
 - **Hybrid FYP1 MVP:** Player auth, profile, strings, recommendations, bookings, booking updates, and FYP1 admin operations can use the live Python backend while deferred FYP2 domains remain hidden, local, or mock-backed.
+- **Session lifecycle:** Native builds keep the backend bearer token in Expo SecureStore and revalidate it at startup. Web sessions remain memory-only and require login after a full refresh.
+- **Live/mock boundary:** Backend sessions fail closed when live users, strings, or bookings are missing; mock records are never used as a fallback for a live API submission.
 - **Type Safety:** Strict TypeScript interfaces for all data models.
 
 ---

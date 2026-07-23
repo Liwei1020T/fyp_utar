@@ -262,7 +262,7 @@ For each result, scorer stores:
 - score breakdown (`preference_match`, `rule_fit`, `budget_fit`, `confidence_score`, optional `nlp_review_score`)
 - top reasons and rule events
 - feature evidence rows with source and confidence metadata
-- matrix version and feature source version
+- matrix version, feature source version, artifact generation time, source reference, and review-count snapshot
 
 Persistence behavior by request type:
 

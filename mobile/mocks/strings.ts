@@ -49,6 +49,7 @@ function createMockStringItem(input: {
     brand: input.brand,
     modelName: input.model,
     localizedName: input.localizedName,
+    isHybrid: false,
     gaugeMinMm: input.gaugeMinMm,
     gaugeMaxMm: input.gaugeMaxMm,
     material: input.material,

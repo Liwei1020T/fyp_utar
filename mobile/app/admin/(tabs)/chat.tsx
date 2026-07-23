@@ -6,17 +6,23 @@ import { AppScreen, useBottomContentInset } from '../../../components/shared/App
 import { ConversationCard } from '../../../components/chat/ConversationCard';
 import { useConversations, useCurrentUser } from '../../../store/appStore';
 import { formatConversationMode } from '../../../lib/formatters';
+import type { AdminProfile } from '../../../types/domain';
 
 export default function AdminChatQueueScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
-  const conversations = useConversations();
-  const bottomContentInset = useBottomContentInset(16);
-  const [filter, setFilter] = useState<'all' | 'waiting_admin' | 'admin_joined' | 'resolved' | 'closed'>('all');
 
   if (!user || user.role !== 'admin') {
     return null;
   }
+
+  return <AdminChatQueueContent user={user} />;
+}
+
+function AdminChatQueueContent({ user }: { user: AdminProfile }) {
+  const router = useRouter();
+  const conversations = useConversations();
+  const bottomContentInset = useBottomContentInset(16);
+  const [filter, setFilter] = useState<'all' | 'waiting_admin' | 'admin_joined' | 'resolved' | 'closed'>('all');
 
   const adminConversations = useMemo(
     () =>

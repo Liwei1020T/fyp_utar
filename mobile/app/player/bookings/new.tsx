@@ -28,7 +28,7 @@ import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency, formatDateLabel, formatLocalDateInputValue } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendSlotToBookingSlot } from '../../../services/backendMappers';
-import type { BookingSlot } from '../../../types/domain';
+import type { BookingSlot, PlayerProfile } from '../../../types/domain';
 
 const bookingSchema = z.object({
   racketBrand: z.string().min(1, 'Racket brand is required'),
@@ -62,17 +62,22 @@ function getSlotPeriod(slot: BookingSlot): SlotPeriod {
 }
 
 export default function NewBookingScreen() {
-  const params = useLocalSearchParams<{ stringId?: string }>();
-  const router = useRouter();
   const user = useCurrentUser();
-  const preferredAdminId = usePreferredAdminId();
-  const strings = useStrings();
-  const token = useBackendAccessToken();
-  const setBookingDraft = useAppStore((state) => state.setBookingDraft);
 
   if (!user || user.role !== 'player') {
     return null;
   }
+
+  return <NewBookingContent user={user} />;
+}
+
+function NewBookingContent({ user }: { user: PlayerProfile }) {
+  const params = useLocalSearchParams<{ stringId?: string }>();
+  const router = useRouter();
+  const preferredAdminId = usePreferredAdminId();
+  const strings = useStrings();
+  const token = useBackendAccessToken();
+  const setBookingDraft = useAppStore((state) => state.setBookingDraft);
 
   const requestedStringId = params.stringId;
   const requestedString = requestedStringId
@@ -91,7 +96,6 @@ export default function NewBookingScreen() {
   const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [liveSlots, setLiveSlots] = useState<BookingSlot[]>([]);
-  const [didLoadLiveSlots, setDidLoadLiveSlots] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [bookingPhoto, setBookingPhoto] = useState<{
@@ -99,10 +103,9 @@ export default function NewBookingScreen() {
     name: string;
     type: string;
   } | null>(null);
-  const sourceSlots =
-    token && didLoadLiveSlots && !slotsError
-      ? liveSlots
-      : MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId);
+  const sourceSlots = token
+    ? liveSlots
+    : MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId);
   const slots = sourceSlots.filter((item) => item.adminId === adminId && item.date === selectedDate);
   const availableSlots = useMemo(
     () => slots.filter((item) => item.availableSpots > 0),
@@ -177,6 +180,7 @@ export default function NewBookingScreen() {
     const hydrateSlots = async () => {
       setIsLoadingSlots(true);
       setSlotsError(null);
+      setLiveSlots([]);
       try {
         const response = await backendApi.listSlots(token, {
           date_from: today,
@@ -189,7 +193,6 @@ export default function NewBookingScreen() {
           mapBackendSlotToBookingSlot(item, adminId),
         );
         setLiveSlots(mappedSlots);
-        setDidLoadLiveSlots(true);
         const firstAvailable = mappedSlots.find((item) => item.availableSpots > 0);
         if (firstAvailable) {
           setSelectedDate(firstAvailable.date);
@@ -197,6 +200,7 @@ export default function NewBookingScreen() {
         }
       } catch (error) {
         if (!cancelled) {
+          setLiveSlots([]);
           setSlotsError(
             error instanceof BackendApiError
               ? error.message
@@ -271,6 +275,7 @@ export default function NewBookingScreen() {
       racketModel: data.racketModel,
       requestedTension: data.requestedTension,
       notes: data.notes ?? '',
+      slotId: selectedSlot.id,
       dropOffDate: selectedSlot.date,
       dropOffTime: selectedSlot.time,
       photoUri: bookingPhoto?.uri,
@@ -324,7 +329,26 @@ export default function NewBookingScreen() {
   }
 
   if (!selectedString) {
-    return null;
+    return (
+      <AppScreen
+        title="Catalog unavailable"
+        subtitle="No live string data is available for a new booking."
+        showBackButton
+        onBackPress={() => router.back()}
+      >
+        <AppCard variant="subtle" className="mt-8" padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Return to the catalog and retry after the backend connection is restored.
+          </HeroText>
+          <View className="mt-4">
+            <AppButton
+              label="Back to catalog"
+              onPress={() => router.replace('/player/strings')}
+            />
+          </View>
+        </AppCard>
+      </AppScreen>
+    );
   }
 
   const tensionValue =
@@ -334,8 +358,10 @@ export default function NewBookingScreen() {
   const selectedDateLabel = formatDateLabel(selectedSlot?.date ?? selectedDate);
   const selectedTimeLabel = selectedSlot?.label ?? 'Select a slot';
   const slotSupportCopy = slotsError
-    ? `${slotsError} Showing local fallback slots.`
-    : 'Times reflect current shop availability.';
+    ? `${slotsError} Live slots are unavailable; retry before continuing.`
+    : token
+      ? 'Times reflect current shop availability.'
+      : 'Demo slots are shown for preview. Live login is required to confirm.';
   const selectedCategoryLabel =
     selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
   const selectedStringHasPrice = selectedString.priceStatus === 'priced' && selectedString.price > 0;

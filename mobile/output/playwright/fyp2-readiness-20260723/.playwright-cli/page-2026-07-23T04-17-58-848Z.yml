@@ -1,0 +1,322 @@
+- generic [ref=f3e159]:
+  - generic [ref=f3e160]:
+    - generic [ref=f3e165]:
+      - generic [ref=f3e169]:
+        - generic [ref=f3e170]: Welcome back, Aiman
+        - generic [ref=f3e171]: Recommendations, bookings, and service updates in one place.
+      - generic [ref=f3e180]:
+        - generic [ref=f3e184]:
+          - generic [ref=f3e186]:
+            - generic [ref=f3e187] [cursor=pointer]: Smart advisor
+            - generic [ref=f3e189]: Find your ideal setup
+            - generic [ref=f3e190]: Get a string and tension suggestion based on how you play.
+          - generic [ref=f3e195]:
+            - generic [ref=f3e196]:
+              - generic [ref=f3e197]: Tension
+              - generic [ref=f3e198]: 27 lbs
+            - generic [ref=f3e199]:
+              - generic [ref=f3e200]: Bookings
+              - generic [ref=f3e201]: 8 logged
+          - button [ref=f3e435] [cursor=pointer]:
+            - generic [ref=f3e203]: Generate setup
+        - generic [ref=f3e208]:
+          - generic [ref=f3e209]:
+            - generic [ref=f3e210]:
+              - generic [ref=f3e211]: Trending Strings
+              - generic [ref=f3e212]: Popular setups players are browsing this week.
+            - generic [ref=f3e213] [cursor=pointer]: See all
+          - generic [ref=f3e218]:
+            - generic [ref=f3e220] [cursor=pointer]:
+              - generic [ref=f3e222]:
+                - generic [ref=f3e223]: Yonex
+                - generic [ref=f3e225]: 0.65 mm
+              - generic [ref=f3e231]:
+                - generic [ref=f3e232]: BG66 ULTIMAX
+                - generic [ref=f3e233]: Yonex
+                - generic [ref=f3e234]:
+                  - generic [ref=f3e235]: Repulsion
+                  - generic [ref=f3e236]: RM 48.00
+            - generic [ref=f3e238] [cursor=pointer]:
+              - generic [ref=f3e240]:
+                - generic [ref=f3e241]: Yonex
+                - generic [ref=f3e243]: 0.63 mm
+              - generic [ref=f3e249]:
+                - generic [ref=f3e250]: EXBOLT 63
+                - generic [ref=f3e251]: Yonex
+                - generic [ref=f3e252]:
+                  - generic [ref=f3e253]: Repulsion
+                  - generic [ref=f3e254]: RM 76.00
+            - generic [ref=f3e256] [cursor=pointer]:
+              - generic [ref=f3e258]:
+                - generic [ref=f3e259]: Gosen
+                - generic [ref=f3e261]: 0.65 mm
+              - generic [ref=f3e267]:
+                - generic [ref=f3e268]: RYZONIC 65
+                - generic [ref=f3e269]: Gosen
+                - generic [ref=f3e270]:
+                  - generic [ref=f3e271]: Repulsion
+                  - generic [ref=f3e272]: RM 40.00
+            - generic [ref=f3e274] [cursor=pointer]:
+              - generic [ref=f3e276]:
+                - generic [ref=f3e277]: Victor
+                - generic [ref=f3e279]: 0.66 mm
+              - generic [ref=f3e285]:
+                - generic [ref=f3e286]: VBS-66 NANO
+                - generic [ref=f3e287]: Victor
+                - generic [ref=f3e288]:
+                  - generic [ref=f3e289]: Repulsion
+                  - generic [ref=f3e290]: RM 43.00
+        - generic [ref=f3e291]:
+          - generic [ref=f3e293]:
+            - generic [ref=f3e294]: Quick Actions
+            - generic [ref=f3e295]: Jump into the tasks you use most.
+          - generic [ref=f3e297]:
+            - generic [ref=f3e298] [cursor=pointer]: Get recommendation
+            - generic [ref=f3e306] [cursor=pointer]: Book restring
+            - generic [ref=f3e316] [cursor=pointer]: Browse strings
+            - generic [ref=f3e325] [cursor=pointer]: Track service
+        - generic [ref=f3e333]:
+          - generic [ref=f3e335]:
+            - generic [ref=f3e336]: Latest Booking
+            - generic [ref=f3e337]: Your current restring progress at a glance.
+          - generic [ref=f3e341]:
+            - generic [ref=f3e342]:
+              - generic [ref=f3e347]:
+                - generic [ref=f3e348]: Yonex Astrox 88D Pro
+                - generic [ref=f3e349]: RYZONIC 65 • Gosen • 27 lbs
+              - generic [ref=f3e350] [cursor=pointer]: In Progress
+            - generic [ref=f3e353]:
+              - generic [ref=f3e354]:
+                - generic [ref=f3e355]: Expected ready
+                - generic [ref=f3e356]: Thu, 7 May
+              - generic [ref=f3e357]:
+                - generic [ref=f3e358]: Price status
+                - generic [ref=f3e359]: Vendor quote
+            - generic [ref=f3e360]:
+              - generic [ref=f3e361]: Next step
+              - generic [ref=f3e362]: "Next: Waiting for stringing completion."
+            - button [ref=f3e444] [cursor=pointer]:
+              - generic [ref=f3e364]: Open Booking
+    - generic [ref=f3e449]:
+      - generic [ref=f3e452]:
+        - button [ref=f3e618] [cursor=pointer]
+        - generic [ref=f3e456]:
+          - generic [ref=f3e457]: Recommendation lab
+          - generic [ref=f3e458]: Generate a backend-scored shortlist from your saved player profile.
+      - generic [ref=f3e463]:
+        - generic [ref=f3e466]:
+          - generic [ref=f3e468]:
+            - generic [ref=f3e469] [cursor=pointer]: RECOMMENDATION
+            - generic [ref=f3e471]: Use your saved profile.
+          - generic [ref=f3e476]:
+            - generic [ref=f3e477]:
+              - generic [ref=f3e478]: Tension
+              - generic [ref=f3e479]: 27 lbs
+            - generic [ref=f3e480]:
+              - generic [ref=f3e481]: Priority
+              - generic [ref=f3e482]: Power
+        - generic [ref=f3e483]:
+          - generic [ref=f3e484]: Live Profile Summary
+          - generic [ref=f3e491]:
+            - generic [ref=f3e492]:
+              - generic [ref=f3e493]: Style
+              - generic [ref=f3e494]: Attacking
+            - generic [ref=f3e495]:
+              - generic [ref=f3e496]: Skill
+              - generic [ref=f3e497]: Advanced
+            - generic [ref=f3e498]:
+              - generic [ref=f3e499]: Top Priorities
+              - generic [ref=f3e500]: Power, Hitting, Comfort
+            - generic [ref=f3e501]:
+              - generic [ref=f3e502]: Budget
+              - generic [ref=f3e503]: RM30–RM50
+            - generic [ref=f3e504]:
+              - generic [ref=f3e505]: Feel
+              - generic [ref=f3e506]: Hard
+        - generic [ref=f3e507]:
+          - generic [ref=f3e509]:
+            - generic [ref=f3e510]: Context
+            - generic [ref=f3e511]: Saved Player Context
+          - generic [ref=f3e515]:
+            - generic [ref=f3e516]:
+              - generic [ref=f3e517]: Playing style
+              - generic [ref=f3e518]:
+                - generic [ref=f3e519] [cursor=pointer]: Attacking
+                - generic [ref=f3e521] [cursor=pointer]: Balanced
+                - generic [ref=f3e523] [cursor=pointer]: Control / Defensive
+            - generic [ref=f3e525]:
+              - generic [ref=f3e526]: Skill level
+              - generic [ref=f3e527]:
+                - generic [ref=f3e528] [cursor=pointer]: Beginner
+                - generic [ref=f3e530] [cursor=pointer]: Intermediate
+                - generic [ref=f3e532] [cursor=pointer]: Advanced
+            - generic [ref=f3e534]:
+              - generic [ref=f3e535]: Play frequency
+              - generic [ref=f3e536] [cursor=pointer]: 2-3 days / week
+        - generic [ref=f3e538]:
+          - generic [ref=f3e540]:
+            - generic [ref=f3e541]: Matrix input
+            - generic [ref=f3e542]: Saved Priority Weights
+          - generic [ref=f3e544]:
+            - generic [ref=f3e548]:
+              - generic [ref=f3e549]: Power and rebound
+              - generic [ref=f3e550]: 10/10
+            - generic [ref=f3e557]:
+              - generic [ref=f3e558]: Control and touch
+              - generic [ref=f3e559]: 6/10
+            - generic [ref=f3e566]:
+              - generic [ref=f3e567]: Durability
+              - generic [ref=f3e568]: 7/10
+            - generic [ref=f3e575]:
+              - generic [ref=f3e576]: Comfort
+              - generic [ref=f3e577]: 9/10
+            - generic [ref=f3e584]:
+              - generic [ref=f3e585]: Hitting sound
+              - generic [ref=f3e586]: 10/10
+            - generic [ref=f3e592]:
+              - generic [ref=f3e593]: Advanced preferences
+              - generic [ref=f3e594]: These editable inputs are also sent to the FYP1 scorer, so elasticity, tension retention, and string movement are not ignored.
+              - generic [ref=f3e595]:
+                - generic [ref=f3e596] [cursor=pointer]: Elasticity 8/10
+                - generic [ref=f3e598] [cursor=pointer]: Tension retention 4/10
+                - generic [ref=f3e600] [cursor=pointer]: String movement 3/10
+        - generic [ref=f3e602]: "FYP1 uses rule-enhanced content-based recommendation: preference match, official/NLP feature fusion, rule fit, and budget fit. No collaborative filtering is used yet."
+        - generic [ref=f3e611]:
+          - button [ref=f3e619] [cursor=pointer]:
+            - generic [ref=f3e613]: Generate recommendation
+          - generic [ref=f3e615] [cursor=pointer]: Edit profile and advanced preferences
+    - generic [ref=f3e625]:
+      - generic [ref=f3e629]:
+        - generic [ref=f3e630]: AI Shortlist
+        - generic [ref=f3e631]: Preference-led picks with rules, budget, and review evidence separated.
+      - generic [ref=f3e635]:
+        - generic [ref=f3e637]:
+          - generic [ref=f3e638]: Ranked shortlist
+          - generic [ref=f3e639]: Decision cards
+        - generic [ref=f3e641]:
+          - generic [ref=f3e644]:
+            - generic [ref=f3e645]:
+              - generic [ref=f3e646]:
+                - generic [ref=f3e647]:
+                  - generic [ref=f3e648] [cursor=pointer]: Attack pick
+                  - generic [ref=f3e650]: Li-Ning
+                - generic [ref=f3e651]: N63
+                - generic [ref=f3e652]: 91% match
+              - generic [ref=f3e653]:
+                - generic [ref=f3e654]: Rank
+                - generic [ref=f3e655]: "#1"
+                - generic [ref=f3e657]: RM 48.00
+            - generic [ref=f3e659]:
+              - generic [ref=f3e660]: Why this one
+              - generic [ref=f3e661]: matches your power and rebound priority
+              - generic [ref=f3e663]: "Trade-off: Domain-rule support is moderate here for your attacking profile."
+            - generic [ref=f3e664]:
+              - generic [ref=f3e665]:
+                - generic [ref=f3e666]: Score model
+                - generic [ref=f3e667] [cursor=pointer]: NLP inside Preference
+              - generic [ref=f3e669]:
+                - generic [ref=f3e671]:
+                  - generic [ref=f3e672]: Preference
+                  - generic [ref=f3e673]: 96%
+                - generic [ref=f3e677]:
+                  - generic [ref=f3e678]: Rule
+                  - generic [ref=f3e679]: 61%
+                - generic [ref=f3e683]:
+                  - generic [ref=f3e684]: Budget
+                  - generic [ref=f3e685]: 100%
+              - generic [ref=f3e688]: 13 review-derived signals are blended into Preference Match.
+            - generic [ref=f3e689]:
+              - generic [ref=f3e690] [cursor=pointer]: Repulsion
+              - generic [ref=f3e692] [cursor=pointer]: Sound
+            - generic [ref=f3e694]: "Suggested tension: 22-35 lbs"
+            - generic [ref=f3e696]:
+              - button "Book this string" [ref=f3e697] [cursor=pointer]
+              - generic [ref=f3e703]:
+                - button "Explain fit" [ref=f3e704] [cursor=pointer]
+                - button "Compare" [ref=f3e707] [cursor=pointer]
+          - generic [ref=f3e717]:
+            - generic [ref=f3e718]:
+              - generic [ref=f3e719]:
+                - generic [ref=f3e720]:
+                  - generic [ref=f3e721] [cursor=pointer]: Attack pick
+                  - generic [ref=f3e723]: Li-Ning
+                - generic [ref=f3e724]: No.1
+                - generic [ref=f3e725]: 91% match
+              - generic [ref=f3e726]:
+                - generic [ref=f3e727]: Rank
+                - generic [ref=f3e728]: "#2"
+                - generic [ref=f3e730]: RM 45.00
+            - generic [ref=f3e732]:
+              - generic [ref=f3e733]: Why this one
+              - generic [ref=f3e734]: matches your power and rebound priority
+              - generic [ref=f3e736]: "Trade-off: Domain-rule support is moderate here for your attacking profile."
+            - generic [ref=f3e737]:
+              - generic [ref=f3e738]:
+                - generic [ref=f3e739]: Score model
+                - generic [ref=f3e740] [cursor=pointer]: NLP inside Preference
+              - generic [ref=f3e742]:
+                - generic [ref=f3e744]:
+                  - generic [ref=f3e745]: Preference
+                  - generic [ref=f3e746]: 95%
+                - generic [ref=f3e750]:
+                  - generic [ref=f3e751]: Rule
+                  - generic [ref=f3e752]: 61%
+                - generic [ref=f3e756]:
+                  - generic [ref=f3e757]: Budget
+                  - generic [ref=f3e758]: 100%
+              - generic [ref=f3e761]: 13 review-derived signals are blended into Preference Match.
+            - generic [ref=f3e762]:
+              - generic [ref=f3e763] [cursor=pointer]: Repulsion
+              - generic [ref=f3e765] [cursor=pointer]: Sound
+            - generic [ref=f3e767]: "Suggested tension: 22-32 lbs"
+            - generic [ref=f3e769]:
+              - button "Book this string" [ref=f3e770] [cursor=pointer]
+              - generic [ref=f3e773]:
+                - button "Explain fit" [ref=f3e774] [cursor=pointer]
+                - button "Compare" [ref=f3e777] [cursor=pointer]
+          - generic [ref=f3e787]:
+            - generic [ref=f3e788]:
+              - generic [ref=f3e789]:
+                - generic [ref=f3e790]:
+                  - generic [ref=f3e791] [cursor=pointer]: Attack pick
+                  - generic [ref=f3e793]: Gosen
+                - generic [ref=f3e794]: RYZONIC 65
+                - generic [ref=f3e795]: 91% match
+              - generic [ref=f3e796]:
+                - generic [ref=f3e797]: Rank
+                - generic [ref=f3e798]: "#3"
+                - generic [ref=f3e800]: RM 40.00
+            - generic [ref=f3e802]:
+              - generic [ref=f3e803]: Why this one
+              - generic [ref=f3e804]: matches your power and rebound priority
+              - generic [ref=f3e806]: "Trade-off: Domain-rule support is moderate here for your attacking profile."
+            - generic [ref=f3e807]:
+              - generic [ref=f3e808]:
+                - generic [ref=f3e809]: Score model
+                - generic [ref=f3e810] [cursor=pointer]: NLP inside Preference
+              - generic [ref=f3e812]:
+                - generic [ref=f3e814]:
+                  - generic [ref=f3e815]: Preference
+                  - generic [ref=f3e816]: 95%
+                - generic [ref=f3e820]:
+                  - generic [ref=f3e821]: Rule
+                  - generic [ref=f3e822]: 61%
+                - generic [ref=f3e826]:
+                  - generic [ref=f3e827]: Budget
+                  - generic [ref=f3e828]: 100%
+              - generic [ref=f3e831]: 13 review-derived signals are blended into Preference Match.
+            - generic [ref=f3e832]:
+              - generic [ref=f3e833] [cursor=pointer]: Repulsion
+              - generic [ref=f3e835] [cursor=pointer]: Sound
+            - generic [ref=f3e837]: "Suggested tension: 22-35 lbs"
+            - generic [ref=f3e839]:
+              - button "Book this string" [ref=f3e840] [cursor=pointer]
+              - generic [ref=f3e843]:
+                - button "Explain fit" [ref=f3e844] [cursor=pointer]
+                - button "Compare" [ref=f3e847] [cursor=pointer]
+  - tablist [ref=f3e370]:
+    - tab "Home" [ref=f3e372] [cursor=pointer]
+    - tab "Strings" [ref=f3e386] [cursor=pointer]
+    - tab "RECO" [ref=f3e855] [cursor=pointer]
+    - tab "Bookings" [ref=f3e410] [cursor=pointer]
+    - tab "Profile" [ref=f3e422] [cursor=pointer]

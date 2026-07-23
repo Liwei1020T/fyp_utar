@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.models import Profile
+from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_profile
 from app.domain.profile.entities import PlayerProfile
 
@@ -18,7 +19,17 @@ class SqlAlchemyProfileRepository:
         ).scalar_one_or_none()
         return to_profile(profile) if profile else None
 
-    def upsert(self, profile: PlayerProfile) -> PlayerProfile:
+    def upsert(
+        self,
+        profile: PlayerProfile,
+        *,
+        username: str | None = None,
+    ) -> PlayerProfile:
+        user = self.db.get(User, profile.user_id)
+        assert user is not None
+        if username is not None:
+            user.username = username.strip()
+
         record = self.db.execute(
             select(Profile).where(Profile.user_id == profile.user_id)
         ).scalar_one_or_none()

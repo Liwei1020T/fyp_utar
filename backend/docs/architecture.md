@@ -7,12 +7,13 @@ Mobile App
   -> FastAPI Entrypoints (`app/entrypoints`)
       -> Application Use Cases (`app/use_cases`)
           -> Domain + Ports (`app/domain`, `app/ports`)
-              -> SQLAlchemy / JWT / AI Adapters (`app/adapters`)
+              -> SQLAlchemy / JWT Adapters (`app/adapters`)
                   -> PostgreSQL or SQLite test database
 ```
 
 - `app/` is now the primary runtime package.
-- `ai_service/` is preserved and reused behind adapter boundaries instead of being deleted.
+- `app/domain/recommendation/scoring.py` is the only recommendation implementation loaded by the unified runtime.
+- `ai_service/` is preserved for explicit standalone compatibility checks and is not imported during unified startup.
 
 ## Layering Rules
 
@@ -46,7 +47,7 @@ Explicitly avoided:
 - `app/adapters/persistence/sqlalchemy/`
   - SQLAlchemy session, split ORM models, repositories, seed helpers
 - `app/adapters/services/`
-  - JWT, password hashing, clock, and AI adapters
+  - JWT, password hashing, and clock adapters; legacy AI adapters remain compatibility-only
 - `app/dto/`
   - API request/response models and mapping helpers
 - `app/config/`
@@ -121,13 +122,14 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - `BudgetFit` is based on the canonical categorical player budget input: `below_30`, `between_30_50`, and `above_50`.
 - Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown, confidence score, artifact version metadata, and rationale payloads.
 - Generated recommendations are also persisted into `recommendation_runs` and `recommendation_run_items` for admin inspection and reproducibility.
+- Rationale preserves matrix version, feature-source version, artifact generation time, and per-feature source metadata.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 
 ## AI Boundary
 
 - `ai_service/` remains preserved for standalone compatibility, review analysis, and RAG-style helper logic.
 - The active profile recommender now lives in `app/domain/recommendation/scoring.py` and reads normalized catalog/matrix persistence through `app/ports/repositories/recommendation_repository.py`.
-- Review analysis and RAG helpers are preserved as adapters over `ai_service.service.RecommendationService`.
+- Legacy AI adapters and `ai_service.service.RecommendationService` are not wired into unified FastAPI dependencies or startup.
 
 ## Validation Contract
 

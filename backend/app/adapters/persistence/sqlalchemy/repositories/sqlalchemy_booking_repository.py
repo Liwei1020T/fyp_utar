@@ -11,13 +11,16 @@ from sqlalchemy.orm import joinedload
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models import BookingUpdate
+from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_booking_record
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.enums import BookingStatus
 from app.domain.booking.policies import booking_order_code
+from app.domain.store.entities import BookedSlot
 from app.domain.store.policies import ACTIVE_QUEUE_STATUSES
+from app.shared.constants import STORE_ID
 from app.shared.pagination import Page
 
 
@@ -50,6 +53,13 @@ class SqlAlchemyBookingRepository:
             ),
             joinedload(Booking.updates).joinedload(BookingUpdate.author),
         )
+
+    def lock_slot_capacity(self) -> None:
+        self.db.execute(
+            select(StoreBusinessHours.id)
+            .where(StoreBusinessHours.id == STORE_ID)
+            .with_for_update()
+        ).scalar_one()
 
     def create_booking(
         self,
@@ -234,21 +244,23 @@ class SqlAlchemyBookingRepository:
         assert refreshed is not None
         return refreshed
 
-    def list_slot_bookings(self) -> list[BookingRecord]:
-        items = (
-            self.db.execute(
-                self._detail_query().where(
-                    Booking.drop_off_datetime.is_not(None),
-                    Booking.status.not_in(
-                        [BookingStatus.CANCELLED.value, BookingStatus.REJECTED.value]
-                    ),
-                )
+    def list_slot_bookings(self) -> list[BookedSlot]:
+        rows = self.db.execute(
+            select(Booking.drop_off_datetime, Booking.status).where(
+                Booking.drop_off_datetime.is_not(None),
+                Booking.status.not_in(
+                    [BookingStatus.CANCELLED.value, BookingStatus.REJECTED.value]
+                ),
             )
-            .unique()
-            .scalars()
-            .all()
-        )
-        return [to_booking_record(item) for item in items]
+        ).all()
+        return [
+            BookedSlot(
+                drop_off_datetime=row.drop_off_datetime,
+                status=row.status,
+            )
+            for row in rows
+            if row.drop_off_datetime is not None
+        ]
 
     def get_by_order_code(self, order_code: str) -> BookingRecord | None:
         items = self.db.execute(self._detail_query()).unique().scalars().all()

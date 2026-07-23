@@ -284,6 +284,7 @@ def _matrix_by_source(
             evidence_note=entry.evidence_note,
             source_ref=entry.source_ref,
             source_version=entry.source_version,
+            source_generated_at=entry.source_generated_at,
             review_count_snapshot=entry.review_count_snapshot,
         )
     return {source_layer: dict(values) for source_layer, values in grouped.items()}

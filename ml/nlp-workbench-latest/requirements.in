@@ -1,0 +1,10 @@
+pandas
+numpy
+jieba
+scikit-learn
+openpyxl
+joblib
+nbformat
+nbclient
+ipykernel
+pytest

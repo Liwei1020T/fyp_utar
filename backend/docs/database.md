@@ -20,6 +20,10 @@ The active migration sequence is:
 - [20260413_0012_admin_string_editor_fields.py](../migrations/versions/20260413_0012_admin_string_editor_fields.py)
 - [20260413_0013_store_settings_trending_strings.py](../migrations/versions/20260413_0013_store_settings_trending_strings.py)
 - [20260413_0014_schema_drift_cleanup.py](../migrations/versions/20260413_0014_schema_drift_cleanup.py)
+- [20260414_0015_fyp1_recommendation_alignment.py](../migrations/versions/20260414_0015_fyp1_recommendation_alignment.py)
+- [20260414_0016_repair_recommendation_schema_drift.py](../migrations/versions/20260414_0016_repair_recommendation_schema_drift.py)
+- [20260414_0017_remove_legacy_budget_range_columns.py](../migrations/versions/20260414_0017_remove_legacy_budget_range_columns.py)
+- [20260423_0018_repair_booking_columns_drift.py](../migrations/versions/20260423_0018_repair_booking_columns_drift.py)
 
 ## Active Business Tables
 

@@ -38,19 +38,14 @@ import type {
 
 export function getUserById(id?: string | null): AppUser | undefined {
   const state = useAppStore.getState();
-  if (
-    state.sessionSource === 'backend' &&
-    state.livePlayerProfile &&
-    state.livePlayerProfile.id === id
-  ) {
-    return state.livePlayerProfile;
-  }
-  if (
-    state.sessionSource === 'backend' &&
-    state.liveAdminProfile &&
-    state.liveAdminProfile.id === id
-  ) {
-    return state.liveAdminProfile;
+  if (state.sessionSource === 'backend') {
+    if (state.livePlayerProfile?.id === id) {
+      return state.livePlayerProfile ?? undefined;
+    }
+    if (state.liveAdminProfile?.id === id) {
+      return state.liveAdminProfile ?? undefined;
+    }
+    return undefined;
   }
   return MOCK_USERS.find((item) => item.id === id);
 }
@@ -61,24 +56,20 @@ export function getUserByEmail(email: string) {
 
 export function getPlayerById(id?: string | null): PlayerProfile | undefined {
   const state = useAppStore.getState();
-  if (
-    state.sessionSource === 'backend' &&
-    state.livePlayerProfile &&
-    state.livePlayerProfile.id === id
-  ) {
-    return state.livePlayerProfile;
+  if (state.sessionSource === 'backend') {
+    return state.livePlayerProfile?.id === id
+      ? state.livePlayerProfile ?? undefined
+      : undefined;
   }
   return MOCK_PLAYERS.find((item) => item.id === id);
 }
 
 export function getAdminById(id?: string | null): AdminProfile | undefined {
   const state = useAppStore.getState();
-  if (
-    state.sessionSource === 'backend' &&
-    state.liveAdminProfile &&
-    state.liveAdminProfile.id === id
-  ) {
-    return state.liveAdminProfile;
+  if (state.sessionSource === 'backend') {
+    return state.liveAdminProfile?.id === id
+      ? state.liveAdminProfile ?? undefined
+      : undefined;
   }
   return MOCK_ADMINS.find((item) => item.id === id);
 }
@@ -86,8 +77,7 @@ export function getAdminById(id?: string | null): AdminProfile | undefined {
 export function getStringById(id?: string | null): StringItem | undefined {
   const state = useAppStore.getState();
   if (state.sessionSource === 'backend') {
-    const liveMatch = state.liveStrings.find((item) => item.id === id);
-    if (liveMatch) return liveMatch;
+    return state.liveStrings.find((item) => item.id === id);
   }
   return MOCK_STRINGS.find((item) => item.id === id);
 }
@@ -174,9 +164,7 @@ export function getRecommendedStringsForPlayer(playerId: string) {
   const player = getPlayerById(playerId);
   const state = useAppStore.getState();
   const sourceStrings =
-    state.sessionSource === 'backend' && state.liveStrings.length > 0
-      ? state.liveStrings
-      : MOCK_STRINGS;
+    state.sessionSource === 'backend' ? state.liveStrings : MOCK_STRINGS;
 
   if (!player) {
     return sourceStrings.slice(0, 3);

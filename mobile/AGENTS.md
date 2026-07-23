@@ -17,20 +17,22 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 
 ## Canonical Commands
 
-- Required Node line: `20.x`
-- Pinned project version in `.nvmrc`: `20.19.0`
+- Required Node line: `24.x` LTS
+- Pinned project version in `.nvmrc`: `24.18.0`
 - Setup: `nvm use` then `npm install`
 - Run web: `npm run web`
 - Run iOS: `npm run ios`
 - Run Android: `npm run android`
+- Lint: `npm run lint -- --max-warnings=0`
 - Typecheck: `npx tsc --noEmit`
-  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `20.19.0`.
+  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `24.18.0`.
 
 ## Validation Reality
 
-- There is no `npm run build`, `npm run lint`, or `npm test` script in this repo today. Do not invent them.
+- There is no `npm run build` or `npm test` script in this repo today. Do not invent them.
 - For UI or flow changes, use the smallest truthful validation available:
-  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `20.19.0` when possible
+  - `npm run lint -- --max-warnings=0`
+  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `24.18.0`
   - `npm run web` for runtime smoke validation
   - targeted manual route checks for touched flows
 - If a check cannot be run, mark it `unverified` and explain why.
@@ -38,7 +40,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 ## Architecture Map
 
 - App shell: `app/_layout.tsx`
-  Owns global providers, `global.css`, HeroUI Native, React Query, and the root Expo Router stack.
+  Owns global providers, `global.css`, HeroUI Native, native secure-session bootstrap, and the root Expo Router stack.
 - Root redirect: `app/index.tsx`
   Sends users to `/auth/welcome`, `/player`, or `/admin` based on session state.
 - Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/admin/_layout.tsx`, `components/roles/RoleGuard.tsx`
@@ -54,7 +56,9 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - State and mutation boundary: `store/appStore.ts`
   Mutable runtime source of truth for session, bookings, payments, chat, notifications, wallet, rackets, admin settings, and drafts.
 - Read helpers: `services/mockAppService.ts`, `services/backendApi.ts`, `services/backendMappers.ts`
-  Mock lookups stay available, while the player core flow can map live backend data into the app domain.
+  Mock lookups stay available only for mock/deferred mode. Backend sessions map live DTOs into the app domain and must fail closed rather than fall back to mock records.
+- Session storage: `services/backendSessionStorage.ts`
+  Native bearer tokens use Expo SecureStore and are revalidated through `/auth/me`; web bearer tokens stay in memory and are never written to browser storage.
 - Data contracts: `types/domain.ts`
   Canonical shared domain model. For inventory work, treat `StringItem.catalog` as master string data and `StringItem.inventory` as vendor-specific shop data; legacy top-level fields remain compatibility mirrors for older screens.
 - Seed data: `mocks/**`
@@ -135,7 +139,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
   - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone
 - Start the sibling backend in `../backend` when testing live player flows
 - Create a player through `/auth/register` or use an existing local backend player account for the player flow
-- Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`
+- Never bundle or document fixed admin credentials in the app. Admin accounts must be configured explicitly with backend `SEED_ADMIN_*` environment values.
 
 ## Maintenance Rule
 

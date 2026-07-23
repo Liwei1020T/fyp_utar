@@ -1,10 +1,7 @@
 import React from 'react';
-import { FlatList, Pressable, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { FlatList, View } from 'react-native';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen, useBottomContentInset } from '../../components/shared/AppScreen';
 import {
@@ -17,7 +14,6 @@ import { getPaymentStatusVariant } from '../../components/ui/theme';
 import { useCurrentUser, usePayments } from '../../store/appStore';
 
 export default function AdminPaymentsScreen() {
-  const router = useRouter();
   const bottomContentInset = useBottomContentInset(16);
   const user = useCurrentUser();
   const payments = usePayments();

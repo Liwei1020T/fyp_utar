@@ -3,7 +3,8 @@
 StringSense now runs on a unified Python backend:
 
 - `app/` is the active public backend runtime organized in clean architecture layers.
-- `ai_service/` remains as reusable AI logic and compatibility reference, but the active backend now calls AI logic in process instead of over internal HTTP.
+- `app/domain/recommendation/scoring.py` is the single active public recommendation implementation.
+- `ai_service/` remains a standalone compatibility reference and is not imported by unified FastAPI startup.
 
 ## Active Structure
 
@@ -122,6 +123,7 @@ Public unified Python endpoints:
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
+- `PUT /api/admin/inventory/strings/{id}/editor` (atomic catalog, official-performance, and inventory update)
 - `GET /api/admin/inventory/strings/{id}/movements`
 - `GET /api/admin/strings/{id}/official-performance`
 - `PUT /api/admin/strings/{id}/official-performance`
@@ -166,8 +168,9 @@ Final score:
 
 ```text
 FinalScore = 0.60 * PreferenceMatch
-           + 0.25 * RuleFit
+           + 0.15 * RuleFit
            + 0.15 * BudgetFit
+           + 0.10 * ConfidenceScore
 ```
 
 - `PreferenceMatch` compares normalized 1-to-10 user priorities against effective item features.
@@ -176,4 +179,5 @@ FinalScore = 0.60 * PreferenceMatch
 - `RuleFit` applies badminton-specific logic such as beginner thin-gauge penalties and attacking/control bonuses.
 - `BudgetFit` scores explicit alignment with the user's chosen budget range and current price only.
 - NLP/review signals are imported from the V9 workbench workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings` or `string_official_performance`.
+- Matrix inspection and recommendation rationale preserve `source_version`, `source_generated_at`, and `review_count_snapshot` for artifact provenance.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

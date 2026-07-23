@@ -1,0 +1,29 @@
+- generic [ref=e95]:
+  - generic [ref=e96]:
+    - generic [ref=e101]:
+      - generic [ref=e102]: StringSense
+      - generic [ref=e103]: Badminton stringing
+    - button "Go back" [ref=e104] [cursor=pointer]
+  - generic [ref=e107]:
+    - generic [ref=e108] [cursor=pointer]: Admin access
+    - generic [ref=e110]: Log in
+    - generic [ref=e111]: Use your backend-configured admin phone and password to enter the operations workspace.
+  - generic [ref=e113]:
+    - generic [ref=e114]:
+      - generic [ref=e115]:
+        - button "Player" [ref=e116] [cursor=pointer]
+        - button "Admin" [ref=e118] [cursor=pointer]
+      - generic [ref=e120]: Use an admin account configured by the backend operator.
+    - generic [ref=e121]:
+      - generic [ref=e122]: Phone number
+      - generic [ref=e123]:
+        - button "Choose country code" [ref=e124] [cursor=pointer]:
+          - generic [ref=e125]: "+60"
+        - textbox "190000000" [ref=e130]
+      - generic [ref=e131]: We will sign in with +60.
+    - generic [ref=e132]:
+      - generic [ref=e133]: Password
+      - textbox "password" [ref=e141]
+      - generic [ref=e142]: Use the admin password configured by the backend operator.
+    - button "Sign in" [ref=e143] [cursor=pointer]
+  - generic [ref=e146]: Need a player account? Create one

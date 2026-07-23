@@ -167,6 +167,9 @@ def normalize_legacy_feature_keys(db: Session) -> None:
                     confidence=entry.confidence,
                     evidence_note=entry.evidence_note,
                     source_ref=entry.source_ref,
+                    source_version=entry.source_version,
+                    source_generated_at=entry.source_generated_at,
+                    review_count_snapshot=entry.review_count_snapshot,
                 )
             )
         elif (
@@ -177,6 +180,9 @@ def normalize_legacy_feature_keys(db: Session) -> None:
             replacement.confidence = entry.confidence
             replacement.evidence_note = entry.evidence_note
             replacement.source_ref = entry.source_ref
+            replacement.source_version = entry.source_version
+            replacement.source_generated_at = entry.source_generated_at
+            replacement.review_count_snapshot = entry.review_count_snapshot
         db.delete(entry)
 
     legacy_definitions = (
@@ -256,12 +262,15 @@ def import_recommendation_matrix_csv(
                 "evidence_note",
                 "source_ref",
                 "source_version",
+                "source_generated_at",
                 "review_count_snapshot",
             ):
                 current_value = getattr(matrix_row, field)
                 next_value = entry_payload[field]
                 if field in {"raw_value", "normalized_score", "confidence"}:
                     values_match = _same_number(current_value, next_value)
+                elif field == "source_generated_at":
+                    values_match = _same_datetime(current_value, next_value)
                 else:
                     values_match = current_value == next_value
                 if not values_match:
@@ -621,6 +630,18 @@ def _same_number(left: Any, right: Any) -> bool:
     if left is None or right is None:
         return left is right
     return abs(float(left) - float(right)) <= 1e-9
+
+
+def _same_datetime(left: datetime | None, right: datetime | None) -> bool:
+    if left is None or right is None:
+        return left is right
+
+    def as_utc(value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
+
+    return abs((as_utc(left) - as_utc(right)).total_seconds()) <= 1e-6
 
 
 def _round_score(value: float | None, *, digits: int) -> float | None:

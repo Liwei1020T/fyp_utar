@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import date
+from datetime import timedelta
+
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -18,6 +21,12 @@ client = TestClient(app)
 JPEG_BYTES = b"\xff\xd8\xff\xe0" + b"\x00" * 32
 PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 WEBP_BYTES = b"RIFF" + b"\x10\x00\x00\x00" + b"WEBP" + b"\x00" * 32
+
+
+def next_weekday(weekday: int) -> date:
+    today = date.today()
+    days_ahead = (weekday - today.weekday()) % 7 or 7
+    return today + timedelta(days=days_ahead)
 
 
 def headers(token: str) -> dict[str, str]:
@@ -90,6 +99,7 @@ def test_auth_profile_booking_and_admin_status_flow():
         "/api/profile",
         headers=headers(customer_token),
         json={
+            "username": "Tan Wei Jie Updated",
             "skill_level": "intermediate",
             "playing_style": "attacking",
             "budget_tier": "between_30_50",
@@ -108,7 +118,15 @@ def test_auth_profile_booking_and_admin_status_flow():
         },
     )
     assert upsert_profile_response.status_code == 200
+    assert upsert_profile_response.json()["username"] == "Tan Wei Jie Updated"
     assert upsert_profile_response.json()["playing_style"] == "attacking"
+
+    updated_me_response = client.get(
+        "/api/auth/me",
+        headers=headers(customer_token),
+    )
+    assert updated_me_response.status_code == 200
+    assert updated_me_response.json()["username"] == "Tan Wei Jie Updated"
 
     booking_response = client.post(
         "/api/bookings",
@@ -247,7 +265,14 @@ def test_recommendations_logs_and_admin_string_controls():
         "confidence_score",
         "final_score",
     }
-    assert top_recommendation["rationale_payload"]["feature_sources"]
+    rationale = top_recommendation["rationale_payload"]
+    assert rationale["feature_sources"]
+    assert rationale["feature_source_generated_at"]
+    assert any(
+        row["source_generated_at"]
+        for row in rationale["feature_evidence"]
+        if row["nlp_review_score"] is not None
+    )
 
     cached_response = client.get(
         "/api/recommendations/me",
@@ -392,7 +417,7 @@ def test_admin_inventory_string_update_controls_public_availability():
     assert out_of_stock_response.status_code == 200
     assert out_of_stock_response.json()["stock_level"] == 0
     assert out_of_stock_response.json()["availability"] == "out_of_stock"
-    assert out_of_stock_response.json()["is_active"] is False
+    assert out_of_stock_response.json()["is_active"] is True
 
     public_lookup = client.get(
         f"/api/strings/{string_id}",
@@ -470,6 +495,13 @@ def test_admin_can_persist_official_performance_and_inventory_history():
     assert official_update.json()["repulsion_power"] == 9.2
     assert official_update.json()["status"] == "manually_curated"
 
+    inventory_before = client.get(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+    )
+    assert inventory_before.status_code == 200
+    previous_available_stock = inventory_before.json()["available_stock"]
+
     inventory_update = client.patch(
         f"/api/admin/inventory/strings/{string_id}",
         headers=headers(admin_token),
@@ -501,6 +533,74 @@ def test_admin_can_persist_official_performance_and_inventory_history():
     assert movement_history.json()["total"] >= 1
     assert movement_history.json()["items"][0]["movement_type"] == "RESTOCK"
     assert movement_history.json()["items"][0]["reference_id"] == "PO-2026-04-12"
+    assert (
+        movement_history.json()["items"][0]["quantity"] == 10 - previous_available_stock
+    )
+
+
+def test_admin_string_editor_updates_all_sections_atomically():
+    customer_token = register_customer(phone_number="+60127776667")
+    admin_token = login_admin()
+    string_id = first_string_id(customer_token)
+
+    detail_before = client.get(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=headers(admin_token),
+    )
+    assert detail_before.status_code == 200
+    before = detail_before.json()
+
+    update_response = client.put(
+        f"/api/admin/inventory/strings/{string_id}/editor",
+        headers=headers(admin_token),
+        json={
+            "catalog": {
+                "brand": before["brand"],
+                "model_name": before["model_name"],
+                "is_hybrid": before["is_hybrid"],
+                "gauge_main_mm": before["gauge_main_mm"],
+                "gauge_cross_mm": before["gauge_cross_mm"],
+                "short_description": "Saved through the atomic editor.",
+            },
+            "inventory": {
+                "current_stock": before["current_stock"] + 4,
+                "reserved_stock": before["reserved_stock"],
+                "selling_price": 56,
+                "pricing_mode": "fixed_price",
+                "movement_type": "RESTOCK",
+                "admin_note": "Atomic editor restock.",
+            },
+            "official_performance": {
+                "source_type": "manual",
+                "source_name": "Atomic editor source",
+                "control": 8.8,
+                "status": "manually_curated",
+            },
+        },
+    )
+
+    assert update_response.status_code == 200
+    updated = update_response.json()
+    assert updated["short_description"] == "Saved through the atomic editor."
+    assert updated["current_stock"] == before["current_stock"] + 4
+    assert updated["available_stock"] == before["available_stock"] + 4
+    assert updated["selling_price"] == 56
+    assert updated["official_performance_status"] == "manually_curated"
+
+    official_response = client.get(
+        f"/api/admin/strings/{string_id}/official-performance",
+        headers=headers(admin_token),
+    )
+    assert official_response.status_code == 200
+    assert official_response.json()["source_name"] == "Atomic editor source"
+    assert official_response.json()["control"] == 8.8
+
+    movement_history = client.get(
+        f"/api/admin/inventory/strings/{string_id}/movements",
+        headers=headers(admin_token),
+    )
+    assert movement_history.status_code == 200
+    assert movement_history.json()["items"][0]["quantity"] == 4
 
 
 def test_admin_can_persist_catalog_editor_fields_and_string_image():
@@ -607,6 +707,7 @@ def test_admin_delete_string_image_does_not_follow_parent_path_segments():
 def test_admin_business_hours_settings_and_slots_flow():
     customer_token = register_customer(phone_number="+60125554444")
     admin_token = login_admin()
+    slot_date = next_weekday(0)
 
     hours_response = client.get(
         "/api/admin/business-hours",
@@ -617,7 +718,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert hours_response.json()["special_closed_dates"] == ["2026-04-14"]
 
     slots_before_booking = client.get(
-        "/api/slots?date=2026-04-06",
+        f"/api/slots?date={slot_date.isoformat()}",
         headers=headers(customer_token),
     )
     assert slots_before_booking.status_code == 200
@@ -632,13 +733,13 @@ def test_admin_business_hours_settings_and_slots_flow():
             "racket_brand": "Yonex",
             "racket_model": "Nanoflare 1000",
             "requested_tension": 25,
-            "drop_off_datetime": "2026-04-06T11:00:00",
+            "drop_off_datetime": f"{slot_date.isoformat()}T11:00:00",
         },
     )
     assert booking_response.status_code == 200
 
     slots_after_booking = client.get(
-        "/api/admin/slots?date=2026-04-06",
+        f"/api/admin/slots?date={slot_date.isoformat()}",
         headers=headers(admin_token),
     )
     assert slots_after_booking.status_code == 200
@@ -648,7 +749,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert updated_slot["available_spots"] == updated_slot["capacity"] - 1
 
     updated_hours_payload = hours_response.json()
-    updated_hours_payload["special_closed_dates"] = ["2026-04-06"]
+    updated_hours_payload["special_closed_dates"] = [slot_date.isoformat()]
     update_hours_response = client.put(
         "/api/admin/business-hours",
         headers=headers(admin_token),
@@ -660,7 +761,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert update_hours_response.status_code == 200
 
     closed_slots_response = client.get(
-        "/api/admin/slots?date=2026-04-06",
+        f"/api/admin/slots?date={slot_date.isoformat()}",
         headers=headers(admin_token),
     )
     assert closed_slots_response.status_code == 200
@@ -705,9 +806,141 @@ def test_admin_business_hours_settings_and_slots_flow():
     ]
 
 
+def test_booking_slot_id_rejects_past_closed_off_grid_and_full_slots():
+    customer_token = register_customer(phone_number="+60125554445")
+    admin_token = login_admin()
+    string_id = first_string_id(customer_token)
+    slot_date = next_weekday(0)
+    slot_response = client.get(
+        f"/api/slots?date={slot_date.isoformat()}",
+        headers=headers(customer_token),
+    )
+    assert slot_response.status_code == 200
+    selected_slot = next(
+        item for item in slot_response.json()["items"] if item["time"] == "11:00"
+    )
+
+    payload = {
+        "string_id": string_id,
+        "racket_brand": "Yonex",
+        "racket_model": "Astrox 88D",
+        "requested_tension": 25,
+        "slot_id": selected_slot["id"],
+    }
+    created_responses = [
+        client.post("/api/bookings", headers=headers(customer_token), json=payload)
+        for _ in range(selected_slot["capacity"])
+    ]
+    assert all(response.status_code == 200 for response in created_responses)
+    assert all(
+        response.json()["slot_id"] == selected_slot["id"]
+        for response in created_responses
+    )
+
+    full_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json=payload,
+    )
+    assert full_response.status_code == 409
+    assert full_response.json()["error"]["message"] == ("Drop-off slot is fully booked")
+
+    past_date = date.today() - timedelta(days=1)
+    past_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={**payload, "slot_id": f"slot-{past_date.isoformat()}-11:00"},
+    )
+    assert past_response.status_code == 400
+    assert past_response.json()["error"]["message"] == (
+        "Drop-off slot must be in the future"
+    )
+
+    off_grid_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={**payload, "slot_id": f"slot-{slot_date.isoformat()}-11:15"},
+    )
+    assert off_grid_response.status_code == 400
+    assert off_grid_response.json()["error"]["message"] == (
+        "Drop-off slot is not offered by the store"
+    )
+
+    hours_response = client.get(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+    )
+    hours_payload = hours_response.json()
+    close_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={
+            "days": hours_payload["days"],
+            "special_closed_dates": [slot_date.isoformat()],
+        },
+    )
+    assert close_response.status_code == 200
+    closed_response = client.post(
+        "/api/bookings",
+        headers=headers(customer_token),
+        json={**payload, "slot_id": f"slot-{slot_date.isoformat()}-12:00"},
+    )
+    assert closed_response.status_code == 400
+    assert closed_response.json()["error"]["message"] == (
+        "Drop-off slot is not offered by the store"
+    )
+
+
+def test_business_hours_reject_invalid_schedule_shapes():
+    admin_token = login_admin()
+    hours_response = client.get(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+    )
+    assert hours_response.status_code == 200
+    valid_days = hours_response.json()["days"]
+
+    invalid_time_days = [dict(day) for day in valid_days]
+    invalid_time_days[0]["open_time"] = "25:00"
+    invalid_time_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={"days": invalid_time_days, "special_closed_dates": []},
+    )
+    assert invalid_time_response.status_code == 422
+
+    partial_break_days = [dict(day) for day in valid_days]
+    partial_break_days[0]["break_end"] = None
+    partial_break_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={"days": partial_break_days, "special_closed_dates": []},
+    )
+    assert partial_break_response.status_code == 422
+
+    missing_day_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={"days": valid_days[:-1], "special_closed_dates": []},
+    )
+    assert missing_day_response.status_code == 422
+
+    duplicated_close_date = next_weekday(5).isoformat()
+    duplicate_close_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={
+            "days": valid_days,
+            "special_closed_dates": [duplicated_close_date, duplicated_close_date],
+        },
+    )
+    assert duplicate_close_response.status_code == 422
+
+
 def test_admin_check_in_and_service_queue_flow():
     customer_token = register_customer(phone_number="+60126661111")
     admin_token = login_admin()
+    slot_date = next_weekday(1)
 
     first_booking_response = client.post(
         "/api/bookings",
@@ -717,7 +950,7 @@ def test_admin_check_in_and_service_queue_flow():
             "racket_brand": "Victor",
             "racket_model": "Auraspeed",
             "requested_tension": 24,
-            "drop_off_datetime": "2026-04-07T11:00:00",
+            "drop_off_datetime": f"{slot_date.isoformat()}T11:00:00",
         },
     )
     second_booking_response = client.post(
@@ -728,7 +961,7 @@ def test_admin_check_in_and_service_queue_flow():
             "racket_brand": "Li-Ning",
             "racket_model": "BladeX",
             "requested_tension": 25,
-            "drop_off_datetime": "2026-04-07T12:00:00",
+            "drop_off_datetime": f"{slot_date.isoformat()}T12:00:00",
         },
     )
     assert first_booking_response.status_code == 200
@@ -783,6 +1016,8 @@ def test_admin_check_in_and_service_queue_flow():
 def test_admin_analytics_summary_and_popular_strings():
     customer_token = register_customer(phone_number="+60127773333")
     admin_token = login_admin()
+    first_slot_date = next_weekday(2)
+    second_slot_date = next_weekday(3)
 
     strings_response = client.get("/api/strings", headers=headers(customer_token))
     assert strings_response.status_code == 200
@@ -796,7 +1031,7 @@ def test_admin_analytics_summary_and_popular_strings():
             "racket_brand": "Yonex",
             "racket_model": "Astrox 77",
             "requested_tension": 25,
-            "drop_off_datetime": "2026-04-08T11:00:00",
+            "drop_off_datetime": f"{first_slot_date.isoformat()}T11:00:00",
         },
     )
     second_booking_response = client.post(
@@ -807,7 +1042,7 @@ def test_admin_analytics_summary_and_popular_strings():
             "racket_brand": "Yonex",
             "racket_model": "Arcsaber 11",
             "requested_tension": 24,
-            "drop_off_datetime": "2026-04-08T12:00:00",
+            "drop_off_datetime": f"{first_slot_date.isoformat()}T12:00:00",
         },
     )
     third_booking_response = client.post(
@@ -818,7 +1053,7 @@ def test_admin_analytics_summary_and_popular_strings():
             "racket_brand": "Victor",
             "racket_model": "Thruster",
             "requested_tension": 26,
-            "drop_off_datetime": "2026-04-09T10:00:00",
+            "drop_off_datetime": f"{second_slot_date.isoformat()}T11:00:00",
         },
     )
     assert first_booking_response.status_code == 200
@@ -1057,6 +1292,7 @@ def test_player_and_admin_can_add_booking_update_photos():
         phone_number="+60125550123",
     )
     string_id = first_string_id(customer_token)
+    slot_date = next_weekday(6)
     booking_response = client.post(
         "/api/bookings",
         headers=headers(customer_token),
@@ -1065,7 +1301,7 @@ def test_player_and_admin_can_add_booking_update_photos():
             "racket_brand": "Yonex",
             "racket_model": "Astrox 77",
             "requested_tension": 25,
-            "drop_off_datetime": "2026-04-12T10:00:00",
+            "drop_off_datetime": f"{slot_date.isoformat()}T10:00:00",
             "notes": "Photo upload test booking.",
         },
     )

@@ -29,6 +29,7 @@ export interface BackendForgotPasswordRequestResponse
 export type BackendBudgetTier = 'below_30' | 'between_30_50' | 'above_50';
 
 export interface BackendProfile {
+  username: string;
   skill_level: string | null;
   playing_style: string | null;
   budget_tier: BackendBudgetTier | null;
@@ -214,6 +215,12 @@ export interface BackendInventoryUpdatePayload {
   reference_id?: string | null;
 }
 
+export interface BackendStringEditorUpdatePayload {
+  catalog?: BackendStringWritePayload;
+  inventory?: BackendInventoryUpdatePayload;
+  official_performance?: BackendOfficialPerformancePayload;
+}
+
 export interface BackendStoreBusinessHoursDay {
   day:
     | 'Monday'
@@ -289,6 +296,7 @@ export interface BackendBooking {
   racket_brand: string | null;
   racket_model: string | null;
   requested_tension: number | null;
+  slot_id: string | null;
   drop_off_datetime: string | null;
   expected_completion_datetime: string | null;
   collection_datetime: string | null;
@@ -457,6 +465,9 @@ export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
+  matrix_version?: string | null;
+  feature_source_version?: string | null;
+  feature_source_generated_at?: string | null;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -471,6 +482,9 @@ export interface BackendRecommendationRationale {
     nlp_confidence?: number | null;
     nlp_influence?: number | null;
     fusion_confidence?: number | null;
+    source_version?: string | null;
+    source_generated_at?: string | null;
+    source_ref?: string | null;
     review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
@@ -503,6 +517,7 @@ export interface BackendRecommendationRationale {
 }
 
 export interface BackendProfilePayload {
+  username?: string;
   skill_level?: string;
   playing_style?: string;
   budget_tier?: BackendBudgetTier;

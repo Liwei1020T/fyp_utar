@@ -1,10 +1,8 @@
 import React from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
@@ -99,7 +97,7 @@ export default function BookingSummaryScreen() {
         racket_brand: bookingDraft.racketBrand,
         racket_model: bookingDraft.racketModel,
         requested_tension: bookingDraft.requestedTension,
-        drop_off_datetime: `${bookingDraft.dropOffDate}T${bookingDraft.dropOffTime}:00`,
+        slot_id: bookingDraft.slotId,
         notes: bookingDraft.notes || undefined,
       });
 

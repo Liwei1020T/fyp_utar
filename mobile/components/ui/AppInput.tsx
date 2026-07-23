@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform, TextInput, type TextInputProps, View } from 'react-native';
-import { HeroText } from './heroui';
-import { cn } from './heroui';
+import { HeroText , cn } from './heroui';
 import { appChromeColors } from './theme';
 
 interface AppInputProps extends TextInputProps {

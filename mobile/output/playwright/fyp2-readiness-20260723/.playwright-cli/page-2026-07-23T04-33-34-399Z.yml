@@ -1,0 +1,143 @@
+- generic [ref=f2e157]:
+  - generic [ref=f2e158]:
+    - generic [ref=f2e163]:
+      - generic [ref=f2e166]:
+        - generic [ref=f2e167]:
+          - generic [ref=f2e168]: Admin overview
+          - generic [ref=f2e169]: StringSense counter operations.
+        - button "Log out" [ref=f2e1476] [cursor=pointer]
+      - generic [ref=f2e178]:
+        - generic [ref=f2e179]:
+          - generic [ref=f2e181]:
+            - generic [ref=f2e182]: Today
+            - generic [ref=f2e183]: Operational snapshot
+          - generic [ref=f2e185]:
+            - generic [ref=f2e189]:
+              - generic [ref=f2e193]: Today bookings
+              - generic [ref=f2e194]: "0"
+            - generic [ref=f2e198]:
+              - generic [ref=f2e203]: Awaiting drop-off
+              - generic [ref=f2e204]: "1"
+            - generic [ref=f2e208]:
+              - generic [ref=f2e213]: In progress
+              - generic [ref=f2e214]: "5"
+            - generic [ref=f2e218]:
+              - generic [ref=f2e224]: Ready pickup
+              - generic [ref=f2e225]: "3"
+        - generic [ref=f2e226]:
+          - generic [ref=f2e227]:
+            - generic [ref=f2e228]:
+              - generic [ref=f2e229]: Primary actions
+              - generic [ref=f2e230]: Start with the counter flow
+              - generic [ref=f2e231]: Keep the work queue, counter flow, and store setup close at hand.
+            - generic [ref=f2e232] [cursor=pointer]: 1 awaiting
+          - generic [ref=f2e235]:
+            - button "Check-in Confirm player racket drop-off at the counter." [ref=f2e1477] [cursor=pointer]:
+              - generic [ref=f2e245]:
+                - generic [ref=f2e246]: Check-in
+                - generic [ref=f2e247]: Confirm player racket drop-off at the counter.
+            - button "Bookings Update service status and monitor the queue." [ref=f2e1478] [cursor=pointer]:
+              - generic [ref=f2e258]:
+                - generic [ref=f2e259]: Bookings
+                - generic [ref=f2e260]: Update service status and monitor the queue.
+            - button "Inventory Review string stock and low-stock items." [ref=f2e1479] [cursor=pointer]:
+              - generic [ref=f2e279]:
+                - generic [ref=f2e280]: Inventory
+                - generic [ref=f2e281]: Review string stock and low-stock items.
+            - button "Business hours Adjust slots and store availability windows." [ref=f2e1480] [cursor=pointer]:
+              - generic [ref=f2e293]:
+                - generic [ref=f2e294]: Business hours
+                - generic [ref=f2e295]: Adjust slots and store availability windows.
+            - button "Store settings Edit store profile, notes, and policies." [ref=f2e1481] [cursor=pointer]:
+              - generic [ref=f2e307]:
+                - generic [ref=f2e308]: Store settings
+                - generic [ref=f2e309]: Edit store profile, notes, and policies.
+        - generic [ref=f2e312]:
+          - generic [ref=f2e314]:
+            - generic [ref=f2e315]: Highlights
+            - generic [ref=f2e316]: What needs attention?
+          - generic [ref=f2e318]:
+            - generic [ref=f2e319]: 1 booking waiting for racket drop-off.
+            - generic [ref=f2e327]: 5 jobs currently on the stringing bench.
+            - generic [ref=f2e335]: 0 string SKUs flagged for stock review.
+            - button "Recommendation runs Review saved recommendation histories, profile snapshots, and score breakdowns." [ref=f2e1482] [cursor=pointer]:
+              - generic [ref=f2e362]:
+                - generic [ref=f2e363]: Recommendation runs
+                - generic [ref=f2e364]: Review saved recommendation histories, profile snapshots, and score breakdowns.
+    - generic [ref=f2e438]:
+      - generic [ref=f2e442]:
+        - generic [ref=f2e443]: Inventory
+        - generic [ref=f2e444]: Manage stock, pricing, and shop readiness.
+      - generic [ref=f2e448]:
+        - generic [ref=f2e450]:
+          - generic [ref=f2e451]: 33 items · 0 low stock · 1 price pending
+          - generic [ref=f2e452]:
+            - textbox [ref=f2e1483]:
+              - /placeholder: Search string or brand
+            - button [ref=f2e1484] [cursor=pointer]:
+              - generic [ref=f2e460]: Filter
+            - button [ref=f2e1485] [cursor=pointer]:
+              - generic [ref=f2e465]: Attention first
+          - generic [ref=f2e467]:
+            - button [ref=f2e1486] [cursor=pointer]:
+              - generic [ref=f2e469]: All
+            - button [ref=f2e1487] [cursor=pointer]:
+              - generic [ref=f2e471]: In Stock
+            - button [ref=f2e1488] [cursor=pointer]:
+              - generic [ref=f2e473]: Low Stock
+            - button [ref=f2e1489] [cursor=pointer]:
+              - generic [ref=f2e475]: Out of Stock
+            - button [ref=f2e1490] [cursor=pointer]:
+              - generic [ref=f2e477]: Price Missing
+          - generic [ref=f2e478]:
+            - generic [ref=f2e479]: Needs attention
+            - generic [ref=f2e480]: 1 item
+          - generic [ref=f2e709]:
+            - generic [ref=f2e711]:
+              - generic [ref=f2e712]: "Y"
+              - generic [ref=f2e713]: No photo
+            - generic [ref=f2e714]:
+              - generic [ref=f2e715]:
+                - generic [ref=f2e716]:
+                  - generic [ref=f2e717]: BG66 FORCE
+                  - generic [ref=f2e718]: Yonex
+                - generic [ref=f2e719] [cursor=pointer]: In Stock
+              - generic [ref=f2e721]: 0.65 mm · Repulsion
+              - generic [ref=f2e722]:
+                - generic [ref=f2e723] [cursor=pointer]: Stock 8
+                - generic [ref=f2e725] [cursor=pointer]: Price pending
+                - generic [ref=f2e727] [cursor=pointer]: Hidden from catalog
+              - generic [ref=f2e729]:
+                - button [ref=f2e1491] [cursor=pointer]:
+                  - generic [ref=f2e731]: Edit stock
+                - button [ref=f2e1492] [cursor=pointer]:
+                  - generic [ref=f2e733]: Add price
+          - generic [ref=f2e818]:
+            - generic [ref=f2e819]: All inventory
+            - generic [ref=f2e820]: 1 shown
+        - generic [ref=f2e1082]:
+          - generic [ref=f2e1084]:
+            - generic [ref=f2e1085]: "Y"
+            - generic [ref=f2e1086]: No photo
+          - generic [ref=f2e1087]:
+            - generic [ref=f2e1088]:
+              - generic [ref=f2e1089]:
+                - generic [ref=f2e1090]: BG66 FORCE
+                - generic [ref=f2e1091]: Yonex
+              - generic [ref=f2e1092] [cursor=pointer]: In Stock
+            - generic [ref=f2e1094]: 0.65 mm · Repulsion
+            - generic [ref=f2e1095]:
+              - generic [ref=f2e1096] [cursor=pointer]: Stock 8
+              - generic [ref=f2e1098] [cursor=pointer]: Price pending
+              - generic [ref=f2e1100] [cursor=pointer]: Hidden from catalog
+            - generic [ref=f2e1102]:
+              - button [ref=f2e1493] [cursor=pointer]:
+                - generic [ref=f2e1104]: Edit stock
+              - button [ref=f2e1494] [cursor=pointer]:
+                - generic [ref=f2e1106]: Edit details
+              - button [ref=f2e1495] [cursor=pointer]:
+                - generic [ref=f2e1108]: Notes
+  - tablist [ref=f2e368]:
+    - tab "Overview" [active] [selected] [ref=f2e370] [cursor=pointer]
+    - tab "Bookings" [ref=f2e388] [cursor=pointer]
+    - tab "Inventory" [ref=f2e400] [cursor=pointer]

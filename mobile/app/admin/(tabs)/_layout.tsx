@@ -2,8 +2,8 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarChart3, Boxes, CalendarRange, LayoutDashboard, MessageCircleMore } from 'lucide-react-native';
-import { View } from 'react-native';
-import { HeroText, cn } from '../../../components/ui/heroui';
+import { Platform, View } from 'react-native';
+import { cn } from '../../../components/ui/heroui';
 import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
 
 function AdminTabIcon({
@@ -53,11 +53,15 @@ export default function AdminTabsLayout() {
           right: appLayoutMetrics.pagePadding,
           bottom: Math.max(insets.bottom, 10),
           borderRadius: 8,
-          shadowColor: '#14181F',
-          shadowOpacity: 0.08,
-          shadowOffset: { width: 0, height: 10 },
-          shadowRadius: 20,
-          elevation: 10,
+          ...(Platform.OS === 'web'
+            ? { boxShadow: '0 10px 20px rgba(20, 24, 31, 0.08)' }
+            : {
+                shadowColor: '#14181F',
+                shadowOpacity: 0.08,
+                shadowOffset: { width: 0, height: 10 },
+                shadowRadius: 20,
+                elevation: 10,
+              }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {

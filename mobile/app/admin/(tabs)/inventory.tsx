@@ -12,6 +12,7 @@ import {
   getInventoryAttentionState,
   getInventoryPriceLabel,
   getInventorySummary,
+  hasPendingInventoryPrice,
   inventoryAttentionScore,
 } from '../../../lib/inventory';
 import { useStrings } from '../../../store/appStore';
@@ -26,7 +27,7 @@ type InventoryStatusFilter =
 
 type InventorySort = 'attention' | 'brand' | 'stock' | 'price';
 
-const STATUS_FILTERS: Array<{ id: InventoryStatusFilter; label: string }> = [
+const STATUS_FILTERS: { id: InventoryStatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'in_stock', label: 'In Stock' },
   { id: 'low_stock', label: 'Low Stock' },
@@ -34,7 +35,7 @@ const STATUS_FILTERS: Array<{ id: InventoryStatusFilter; label: string }> = [
   { id: 'price_missing', label: 'Price Missing' },
 ];
 
-const SORT_OPTIONS: Array<{ id: InventorySort; label: string }> = [
+const SORT_OPTIONS: { id: InventorySort; label: string }[] = [
   { id: 'attention', label: 'Attention first' },
   { id: 'brand', label: 'Brand' },
   { id: 'stock', label: 'Stock level' },
@@ -59,7 +60,7 @@ function matchesStatusFilter(item: StringItem, selected: InventoryStatusFilter) 
     return true;
   }
   if (selected === 'price_missing') {
-    return getInventoryAttentionState(item) === 'price_missing';
+    return hasPendingInventoryPrice(item);
   }
   return item.inventory.availabilityStatus === selected;
 }

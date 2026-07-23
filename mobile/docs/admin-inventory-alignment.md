@@ -75,17 +75,16 @@ The admin inventory flow should help the shop team:
 
 ### Backend truthfulness
 
-- Current admin editor now syncs four layers through live backend storage:
-  - catalog master data through `PUT /api/admin/strings/{id}`
-  - catalog image media through `POST/DELETE /api/admin/strings/{id}/image`
-  - performance scores through `PUT /api/admin/strings/{id}/official-performance`
-  - shop inventory through `PATCH /api/admin/inventory/strings/{id}`
+- Current admin editor syncs structured data atomically through live backend storage:
+  - catalog master data, performance scores, and shop inventory share one database transaction through `PUT /api/admin/inventory/strings/{id}/editor`
+  - catalog image media remains a separate file operation through `POST/DELETE /api/admin/strings/{id}/image`; the UI reports partial success if structured data saves but media fails
 - The detail screen now persists:
   - image asset path
   - pricing mode
   - explicit availability status
   - tension min/max guidance
   - main trait and category metadata used by the admin editor
+  - hybrid identity and the existing cross-string gauge when the single-gauge editor changes the main gauge
 
 ## 4. Unified Inventory Card Design
 

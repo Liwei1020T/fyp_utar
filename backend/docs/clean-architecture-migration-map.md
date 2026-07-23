@@ -58,7 +58,7 @@
 - Old: route modules performed direct SQLAlchemy queries
 - New: SQLAlchemy access is isolated in repository adapters under `app/adapters/persistence/sqlalchemy/repositories/`
 
-## Security and AI
+## Security and Recommendation
 
 - Old: `stringsense_backend/core/security.py`
 - New:
@@ -66,7 +66,8 @@
   - `app/adapters/services/security/jwt_token_service.py`
 
 - Old: `stringsense_backend/modules/ai.py`
-- New: `app/adapters/services/ai/recommendation_engine_adapter.py`
+- Active recommendation: `app/domain/recommendation/scoring.py`
+- Standalone compatibility only: `ai_service/` and `app/adapters/services/ai/`
 
 ## Shared / Config
 

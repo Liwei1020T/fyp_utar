@@ -32,15 +32,16 @@ against them.
 ## Mobile App
 
 Mobile lives in [mobile](../mobile). It is an Expo Router React Native app using
-TypeScript, HeroUI Native, Uniwind, Zustand, React Query, React Hook Form, and
-Zod.
+TypeScript, HeroUI Native, Uniwind, Zustand, React Hook Form, and Zod. Zustand
+owns the current live-session hydration boundary; there is no parallel React
+Query cache owner.
 
 ### Mobile Config And Runtime
 
 | Path | Purpose | Notes |
 | --- | --- | --- |
 | [mobile/package.json](../mobile/package.json) | Expo scripts and dependency versions. | Main scripts are `npm run web`, `npm run ios`, `npm run android`; typecheck uses `npx tsc --noEmit`. |
-| [mobile/.nvmrc](../mobile/.nvmrc) | Node version pin. | Pins `20.19.0`; run `nvm use` before installing or running the app. |
+| [mobile/.nvmrc](../mobile/.nvmrc) | Node version pin. | Pins `24.18.0`; run `nvm use` before installing or running the app. |
 | [mobile/app.json](../mobile/app.json) | Expo app metadata. | Update when app name, icons, or Expo config changes. |
 | [mobile/babel.config.js](../mobile/babel.config.js) | Expo/Babel setup. | Keeps worklet and import-meta compatibility stable. |
 | [mobile/metro.config.js](../mobile/metro.config.js) | Metro bundler plus Uniwind integration. | Must continue pointing at `global.css`. |
@@ -53,7 +54,7 @@ Zod.
 
 | Path | Purpose |
 | --- | --- |
-| [mobile/app/_layout.tsx](../mobile/app/_layout.tsx) | Composition root: imports `global.css`, creates `QueryClient`, wraps `GestureHandlerRootView` and `HeroUINativeProvider`, and renders the root stack. |
+| [mobile/app/_layout.tsx](../mobile/app/_layout.tsx) | Composition root: imports `global.css`, restores and validates native SecureStore sessions, wraps `GestureHandlerRootView` and `HeroUINativeProvider`, and renders the root stack. |
 | [mobile/app/index.tsx](../mobile/app/index.tsx) | Initial redirect based on current user role/session. |
 | [mobile/app/auth/_layout.tsx](../mobile/app/auth/_layout.tsx) | Auth stack layout and redirect guard for already-authenticated users. |
 | [mobile/app/auth/welcome.tsx](../mobile/app/auth/welcome.tsx) | Role-aware welcome/entry screen. |
@@ -158,8 +159,10 @@ Zod.
 ## Backend
 
 Backend lives in [backend](../backend). The active runtime is FastAPI under
-`backend/app`; `backend/ai_service` is preserved for reusable AI logic and
-compatibility.
+`backend/app`; its only active recommendation implementation is
+`backend/app/domain/recommendation/scoring.py`. `backend/ai_service` is
+preserved for explicit standalone compatibility checks and is not imported by
+unified startup.
 
 ### Backend Config And Runtime
 
@@ -181,7 +184,7 @@ compatibility.
 | Use cases | [backend/app/use_cases](../backend/app/use_cases) | Business actions; one class per action or closely related action. |
 | Domain | [backend/app/domain](../backend/app/domain) | Pure entities, enums, and policies. No FastAPI or SQLAlchemy dependencies. |
 | Ports | [backend/app/ports](../backend/app/ports) | Repository/service protocols consumed by use cases. |
-| Adapters | [backend/app/adapters](../backend/app/adapters) | SQLAlchemy repositories/models, JWT, password hashing, clock, and AI adapters. |
+| Adapters | [backend/app/adapters](../backend/app/adapters) | SQLAlchemy repositories/models, JWT, password hashing, and clock. Legacy AI adapters are compatibility-only. |
 | DTOs | [backend/app/dto](../backend/app/dto) | Pydantic API request/response models and mapping helpers. |
 | Shared | [backend/app/shared](../backend/app/shared) | App errors, HTTP error payloads, pagination, constants, serialization helpers. |
 
@@ -240,8 +243,10 @@ When adding behavior, follow the clean-architecture direction:
 | [backend/ai_service/services/rag.py](../backend/ai_service/services/rag.py) | Lightweight RAG-style matching helper. |
 | [backend/ai_service/core/config.py](../backend/ai_service/core/config.py) | AI service-specific settings. |
 
-Active public API calls use AI through `backend/app/adapters/services/ai/*`, not
-through a separate internal HTTP service by default.
+Active recommendation API calls use
+`backend/app/domain/recommendation/scoring.py`; neither
+`backend/app/adapters/services/ai/*` nor `backend/ai_service/*` is loaded by the
+unified runtime.
 
 ### Backend Tests
 
@@ -263,29 +268,27 @@ canonical offline notebook workflow, not a public runtime service.
 | Path | Purpose |
 | --- | --- |
 | [ml/nlp-workbench-latest/README.md](../ml/nlp-workbench-latest/README.md) | Canonical notebook inputs, outputs, and run instructions. |
-| [ml/nlp-workbench-latest/requirements.txt](../ml/nlp-workbench-latest/requirements.txt) | Notebook and package dependencies. |
-| [ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb](../ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb) | Main pipeline; run top-to-bottom to generate recommendation artifacts. |
-| [ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb](../ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb) | Labeling/support notebook for ABSA data work. |
+| [ml/nlp-workbench-latest/requirements.in](../ml/nlp-workbench-latest/requirements.in) | Human-maintained direct dependencies for Python 3.13. |
+| [ml/nlp-workbench-latest/requirements.txt](../ml/nlp-workbench-latest/requirements.txt) | Exact generated dependency lock with package hashes. |
+| [ml/nlp-workbench-latest/scripts/run_experiment.py](../ml/nlp-workbench-latest/scripts/run_experiment.py) | Canonical ordered notebook runner, immutable run boundary, and two-run reproducibility check. |
+| [ml/nlp-workbench-latest/src/stringsense_nlp](../ml/nlp-workbench-latest/src/stringsense_nlp) | Tested labeling, leakage, manifest, model, inference, and protected-asset logic. |
+| [ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb](../ml/nlp-workbench-latest/stringsense_complete_absa_pipeline_notebook_latest.ipynb) | Thin complete-pipeline entry point; consumes labeling artifacts from the same run ID. |
+| [ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb](../ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb) | Thin labeling entry point with deterministic review-text group split. |
 | [ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv](../ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv) | Current domain dictionary input. |
 | [ml/nlp-workbench-latest/data/normalization_rules_v8.csv](../ml/nlp-workbench-latest/data/normalization_rules_v8.csv) | Current text/string normalization rules. |
-| [ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv) | Long-form ABSA dataset input. |
-| [ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv) | High-confidence ABSA dataset input. |
+| [ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv) | Historical pre-boundary output; preserved for audit, not used for training. |
+| [ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv) | Historical pre-boundary output; preserved for audit, not used for training. |
 | [ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx](../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx) | Current unified backend recommendation matrix source. |
 
-The latest notebook can also generate CSV compatibility files under
-`ml/nlp-workbench-latest/output/`:
-
-- `ml/nlp-workbench-latest/output/patched_practical_string_feature_matrix.csv`
-- `ml/nlp-workbench-latest/output/rule_based_review_aspect_signals.csv`
-
-The unified backend public runtime default recommendation source is:
+Experiments write only under ignored, create-once
+`ml/nlp-workbench-latest/output/runs/<run-id>/` directories. The unified backend
+public runtime default recommendation source remains:
 
 - `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
 
-These latest-root CSV artifacts support the standalone `AI_*_PATH` compatibility settings and manual import workflows.
-
-Generated notebook outputs should stay out of commits unless the task explicitly
-asks to version a specific artifact.
+No experiment run promotes itself. Replacing the canonical V9 workbook or any
+standalone `AI_*_PATH` compatibility artifact requires a separate comparison and
+explicit human approval.
 
 ## Common Change Recipes
 
@@ -296,9 +299,9 @@ asks to version a specific artifact.
 | Add a backend endpoint | `backend/app/entrypoints/api/routes/*` | Matching use case, DTO, port/repository, tests, `backend/docs/api-contract.md`. |
 | Change business rules | `backend/app/domain/*/policies.py` or `backend/app/use_cases/*` | Route DTOs, tests for policy/use case. |
 | Change database schema | `backend/app/adapters/persistence/sqlalchemy/models/*` | Alembic revision, repositories, `backend/docs/database.md`, tests. |
-| Change recommendation behavior | `backend/app/adapters/services/ai/recommendation_engine_adapter.py` and `backend/ai_service/*` | NLP outputs and recommendation tests. |
+| Change recommendation behavior | `backend/app/domain/recommendation/scoring.py` | Recommendation use-case tests, runtime-boundary test, NLP artifact contract, and Mobile rationale rendering. |
 | Change mobile/backend field names | `backend/app/dto/*`, `mobile/types/backend.ts`, `mobile/services/backendMappers.ts` | API contract docs and backend/mobile validation. |
-| Regenerate NLP artifacts | `ml/nlp-workbench-latest/*.ipynb` | Backend `.env` `RECOMMENDATION_MATRIX_SOURCE_PATH` for unified runtime and `AI_*_PATH` for compatibility. |
+| Regenerate NLP artifacts | `ml/nlp-workbench-latest/scripts/run_experiment.py` | Run twice, inspect manifests/leakage/metrics, then request separate approval before changing backend or compatibility artifacts. |
 
 ## Validation Shortlist
 

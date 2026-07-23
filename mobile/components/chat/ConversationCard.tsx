@@ -4,7 +4,7 @@ import { ChevronRight, MessageSquareText } from 'lucide-react-native';
 import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
-import { formatConversationMode, formatDateTime } from '../../lib/formatters';
+import { formatDateTime } from '../../lib/formatters';
 import type { ChatConversation } from '../../types/domain';
 
 interface ConversationCardProps {

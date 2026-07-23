@@ -66,6 +66,7 @@ export interface StringCatalogRecord {
   brand: string;
   modelName: string;
   localizedName?: string;
+  isHybrid: boolean;
   gaugeMinMm: number | null;
   gaugeMaxMm: number | null;
   material: string;
@@ -137,7 +138,8 @@ export type BookingStatus =
   | 'in_progress'
   | 'ready_for_collection'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'rejected';
 
 export type PaymentStatus = 'unpaid' | 'paid' | 'failed' | 'cancelled';
 
@@ -180,6 +182,8 @@ export interface Booking {
   racketBrand: string;
   racketModel: string;
   requestedTension: number;
+  customerName?: string;
+  customerPhone?: string;
   dropOffDate: string;
   dropOffTime: string;
   expectedCompletionAt?: string;
@@ -208,7 +212,7 @@ export interface RecommendationMatch {
   stringName: string;
   brand: string;
   modelName: string;
-  price: number;
+  price: number | null;
   matchScore: number;
   reasons: string[];
   aspectScores: Record<string, number>;
@@ -241,6 +245,9 @@ export interface RecommendationRationalePayload {
   };
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
+  matrix_version?: string | null;
+  feature_source_version?: string | null;
+  feature_source_generated_at?: string | null;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -255,6 +262,9 @@ export interface RecommendationRationalePayload {
     nlp_confidence?: number | null;
     nlp_influence?: number | null;
     fusion_confidence?: number | null;
+    source_version?: string | null;
+    source_generated_at?: string | null;
+    source_ref?: string | null;
     review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
@@ -472,6 +482,7 @@ export interface BookingDraft {
   racketModel: string;
   requestedTension: number;
   notes: string;
+  slotId: string;
   dropOffDate: string;
   dropOffTime: string;
   photoUri?: string;

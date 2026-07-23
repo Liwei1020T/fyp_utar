@@ -9,6 +9,7 @@ from fastapi import Form
 from fastapi import UploadFile
 
 from app.domain.auth.entities import UserRole
+from app.config.settings import get_settings
 from app.dto.booking import BookingOut
 from app.dto.booking import CreateBookingPayload
 from app.dto.booking import booking_to_dto
@@ -16,7 +17,9 @@ from app.dto.common import page_to_dict
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
+from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_customer
+from app.entrypoints.api.dependencies import get_store_repository
 from app.shared.errors import BadRequestError
 from app.shared.errors import NotFoundError
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
@@ -70,10 +73,15 @@ def create_booking(
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
     catalog_repository=Depends(get_catalog_repository),
+    store_repository=Depends(get_store_repository),
+    clock=Depends(get_clock),
 ) -> BookingOut:
     booking = CreateBookingUseCase(
         booking_repository=booking_repository,
         catalog_repository=catalog_repository,
+        store_repository=store_repository,
+        clock=clock,
+        store_timezone=get_settings().store_timezone,
     ).execute(user_id=current_user.user_id, **payload.model_dump())
     return booking_to_dto(booking, include_user=False, include_history=True)
 

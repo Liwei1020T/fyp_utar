@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
+from typing import TYPE_CHECKING
 
-from app.domain.booking.entities import BookingRecord
+if TYPE_CHECKING:
+    from app.domain.booking.entities import BookingRecord
 
 
 @dataclass(frozen=True)
@@ -49,6 +52,12 @@ class BookingSlot:
     available_spots: int
     label: str
     day_label: str
+
+
+@dataclass(frozen=True)
+class BookedSlot:
+    drop_off_datetime: datetime
+    status: str
 
 
 @dataclass(frozen=True)

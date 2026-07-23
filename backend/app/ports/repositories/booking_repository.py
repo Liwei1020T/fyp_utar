@@ -4,10 +4,13 @@ from datetime import datetime
 from typing import Protocol
 
 from app.domain.booking.entities import BookingRecord
+from app.domain.store.entities import BookedSlot
 from app.shared.pagination import Page
 
 
 class BookingRepository(Protocol):
+    def lock_slot_capacity(self) -> None: ...
+
     def create_booking(
         self,
         *,
@@ -64,7 +67,7 @@ class BookingRepository(Protocol):
         photo_type: str | None = None,
     ) -> BookingRecord: ...
 
-    def list_slot_bookings(self) -> list[BookingRecord]: ...
+    def list_slot_bookings(self) -> list[BookedSlot]: ...
 
     def list_active_queue(self) -> list[BookingRecord]: ...
 

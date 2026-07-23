@@ -1,7 +1,7 @@
 import React from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, Settings2 } from 'lucide-react-native';
+import { ChevronRight, Settings2 } from 'lucide-react-native';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppIconButton } from '../../components/ui/AppIconButton';

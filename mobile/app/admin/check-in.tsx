@@ -30,11 +30,11 @@ import type { Booking } from '../../types/domain';
 
 type ChecklistKey = 'playerPresent' | 'racketReceived' | 'setupConfirmed';
 
-const CHECKLIST_ITEMS: Array<{
+const CHECKLIST_ITEMS: {
   key: ChecklistKey;
   label: string;
   helper: string;
-}> = [
+}[] = [
   {
     key: 'playerPresent',
     label: 'Player present',

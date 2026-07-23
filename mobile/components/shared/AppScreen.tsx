@@ -57,6 +57,7 @@ export function AppScreen({
   };
 
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);
+  const tabBarHeight = React.useContext(BottomTabBarHeightContext) ?? 0;
 
   return (
     <SafeAreaView
@@ -121,7 +122,7 @@ export function AppScreen({
             className="w-full self-center px-4"
             style={{ 
               maxWidth: appLayoutMetrics.contentMaxWidth,
-              marginBottom: (React.useContext(BottomTabBarHeightContext) ?? 0) + 16,
+              marginBottom: tabBarHeight + 16,
             }}
           >
             {footer}

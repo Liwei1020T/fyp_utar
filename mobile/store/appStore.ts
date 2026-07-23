@@ -15,6 +15,10 @@ import {
   MOCK_WALLET_TRANSACTIONS,
 } from '../mocks';
 import { getRoleHome } from '../lib/navigation';
+import {
+  clearBackendAccessToken,
+  persistBackendAccessToken,
+} from '../services/backendSessionStorage';
 import type {
   AppUser,
   AdminProfile,
@@ -214,13 +218,7 @@ interface AppStoreState {
 type PersistedAppState = Pick<
   AppStoreState,
   | 'sessionSource'
-  | 'backendAccessToken'
   | 'currentUserId'
-  | 'livePlayerProfile'
-  | 'liveAdminProfile'
-  | 'liveStrings'
-  | 'liveBookings'
-  | 'liveRecommendationResults'
   | 'businessHours'
   | 'adminSettings'
 >;
@@ -240,26 +238,31 @@ function readPersistedState(): Partial<PersistedAppState> {
   }
 }
 
-function readBackendSessionState(): Partial<PersistedAppState> {
-  return {};
-}
+function clearPersistedSessionIdentity() {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
 
-function syncBackendSessionState(_: AppStoreState) {
-  // Keep backend access tokens in memory only.
+  const stored = normalizePersistedState(readPersistedState());
+  try {
+    localStorage.setItem(
+      APP_STORE_KEY,
+      JSON.stringify({
+        sessionSource: null,
+        currentUserId: null,
+        businessHours: stored.businessHours ?? MOCK_BUSINESS_HOURS,
+        adminSettings: stored.adminSettings ?? MOCK_ADMIN_SETTINGS,
+      } satisfies PersistedAppState),
+    );
+  } catch {
+    // Browser persistence is optional; the backend token still stays memory-only.
+  }
 }
 
 function extractPersistedState(state: AppStoreState): PersistedAppState {
-  const isBackendSession = state.sessionSource === 'backend';
-
   return {
-    sessionSource: isBackendSession ? null : state.sessionSource,
-    backendAccessToken: null,
-    currentUserId: isBackendSession ? null : state.currentUserId,
-    livePlayerProfile: isBackendSession ? null : state.livePlayerProfile,
-    liveAdminProfile: isBackendSession ? null : state.liveAdminProfile,
-    liveStrings: isBackendSession ? [] : state.liveStrings,
-    liveBookings: isBackendSession ? [] : state.liveBookings,
-    liveRecommendationResults: isBackendSession ? [] : state.liveRecommendationResults,
+    sessionSource: state.sessionSource,
+    currentUserId: state.currentUserId,
     businessHours: state.businessHours,
     adminSettings: state.adminSettings,
   };
@@ -272,45 +275,37 @@ function normalizePersistedState(
     return state;
   }
 
-  if (
-    typeof state.backendAccessToken === 'string' &&
-    state.backendAccessToken.trim().length > 0
-  ) {
-    return state;
-  }
+  const mockBusinessHoursIds = new Set(
+    MOCK_BUSINESS_HOURS.map((item) => item.adminId),
+  );
+  const mockAdminSettingsIds = new Set(
+    MOCK_ADMIN_SETTINGS.map((item) => item.adminId),
+  );
 
   return {
-    ...state,
     sessionSource: null,
-    backendAccessToken: null,
     currentUserId: null,
-    livePlayerProfile: null,
-    liveAdminProfile: null,
-    liveStrings: [],
-    liveBookings: [],
-    liveRecommendationResults: [],
+    businessHours: state.businessHours?.filter((item) =>
+      mockBusinessHoursIds.has(item.adminId),
+    ),
+    adminSettings: state.adminSettings?.filter((item) =>
+      mockAdminSettingsIds.has(item.adminId),
+    ),
   };
 }
 
-const persistedState = normalizePersistedState({
-  ...readPersistedState(),
-  ...readBackendSessionState(),
-});
-const requiresBackendSessionBootstrap =
-  persistedState.sessionSource === 'backend' &&
-  typeof persistedState.backendAccessToken === 'string' &&
-  persistedState.backendAccessToken.trim().length > 0;
+const persistedState = normalizePersistedState(readPersistedState());
 
 export const useAppStore = create<AppStoreState>((set, get) => ({
-  hasHydrated: !requiresBackendSessionBootstrap,
+  hasHydrated: false,
   sessionSource: persistedState.sessionSource ?? null,
-  backendAccessToken: persistedState.backendAccessToken ?? null,
+  backendAccessToken: null,
   currentUserId: persistedState.currentUserId ?? null,
-  livePlayerProfile: persistedState.livePlayerProfile ?? null,
-  liveAdminProfile: persistedState.liveAdminProfile ?? null,
-  liveStrings: persistedState.liveStrings ?? [],
-  liveBookings: persistedState.liveBookings ?? [],
-  liveRecommendationResults: persistedState.liveRecommendationResults ?? [],
+  livePlayerProfile: null,
+  liveAdminProfile: null,
+  liveStrings: [],
+  liveBookings: [],
+  liveRecommendationResults: [],
   users: MOCK_USERS,
   strings: MOCK_STRINGS,
   bookings: MOCK_BOOKINGS,
@@ -334,6 +329,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       return null;
     }
 
+    void clearBackendAccessToken();
     set({
       hasHydrated: true,
       currentUserId: user.id,
@@ -354,6 +350,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       return null;
     }
 
+    void clearBackendAccessToken();
     set({
       hasHydrated: true,
       currentUserId: user.id,
@@ -407,6 +404,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       recentGoal: 'Dial in a setup that feels balanced and confidence-building.',
     };
 
+    void clearBackendAccessToken();
     set({
       hasHydrated: true,
       users: [newPlayer, ...state.users],
@@ -437,7 +435,9 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
     return newPlayer.id;
   },
-  setBackendPlayerSession: ({ accessToken, player }) =>
+  setBackendPlayerSession: ({ accessToken, player }) => {
+    clearPersistedSessionIdentity();
+    void persistBackendAccessToken(accessToken);
     set({
       hasHydrated: true,
       sessionSource: 'backend',
@@ -446,8 +446,11 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       livePlayerProfile: player,
       liveAdminProfile: null,
       liveRecommendationResults: [],
-    }),
-  setBackendAdminSession: ({ accessToken, admin }) =>
+    });
+  },
+  setBackendAdminSession: ({ accessToken, admin }) => {
+    clearPersistedSessionIdentity();
+    void persistBackendAccessToken(accessToken);
     set({
       hasHydrated: true,
       sessionSource: 'backend',
@@ -456,7 +459,8 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       liveAdminProfile: admin,
       livePlayerProfile: null,
       liveRecommendationResults: [],
-    }),
+    });
+  },
   setLiveStrings: (liveStrings) => set({ liveStrings }),
   setLiveBookings: (liveBookings) => set({ liveBookings }),
   prependLiveBooking: (booking) =>
@@ -467,6 +471,8 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     set({ liveRecommendationResults }),
   clearLiveRecommendationResults: () => set({ liveRecommendationResults: [] }),
   logout: () => {
+    const restoredMockState = normalizePersistedState(readPersistedState());
+    void clearBackendAccessToken();
     set({
       hasHydrated: true,
       sessionSource: null,
@@ -480,6 +486,10 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       bookingDraft: null,
       compareSelection: [],
       lastPaymentOutcome: null,
+      businessHours:
+        restoredMockState.businessHours ?? MOCK_BUSINESS_HOURS,
+      adminSettings:
+        restoredMockState.adminSettings ?? MOCK_ADMIN_SETTINGS,
     });
   },
   updatePlayerProfile: (playerId, patch) =>
@@ -971,13 +981,15 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
 if (typeof localStorage !== 'undefined') {
   useAppStore.subscribe((state) => {
+    if (state.sessionSource === 'backend') {
+      return;
+    }
+
     try {
       localStorage.setItem(APP_STORE_KEY, JSON.stringify(extractPersistedState(state)));
     } catch {
       // Ignore local persistence failures and keep runtime state usable.
     }
-
-    syncBackendSessionState(state);
   });
 }
 

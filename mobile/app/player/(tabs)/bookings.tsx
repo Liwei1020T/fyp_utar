@@ -2,21 +2,19 @@ import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { FlatList, View, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, ChevronLeft, Info } from 'lucide-react-native';
+import { Search, Info } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
-import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { BookingCard } from '../../../components/booking/BookingCard';
 import { useAppStore, useBookings, useCurrentUser } from '../../../store/appStore';
 import { getAdminById, getStringById } from '../../../services/mockAppService';
-import type { BookingStatus } from '../../../types/domain';
+import type { BookingStatus, PlayerProfile } from '../../../types/domain';
 import { formatBookingOrderCode, formatBookingStatus } from '../../../lib/formatters';
 
-const filters: Array<BookingStatus | 'all'> = [
+const filters: (BookingStatus | 'all')[] = [
   'all',
   'awaiting_dropoff',
   'in_progress',
@@ -29,18 +27,23 @@ function normalizeStoreText(value: unknown) {
 }
 
 export default function BookingsListScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
+
+  if (!user || user.role !== 'player') {
+    return null;
+  }
+
+  return <BookingsListContent user={user} />;
+}
+
+function BookingsListContent({ user }: { user: PlayerProfile }) {
+  const router = useRouter();
   const bookings = useBookings();
   const sessionSource = useAppStore((state) => state.sessionSource);
   const adminSettings = useAppStore((state) => state.adminSettings);
   const bottomContentInset = useBottomContentInset(24);
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
   const [search, setSearch] = useState('');
-
-  if (!user || user.role !== 'player') {
-    return null;
-  }
 
   const filteredBookings = useMemo(
     () =>

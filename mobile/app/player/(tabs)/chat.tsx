@@ -1,12 +1,11 @@
 import React from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bot, ChevronLeft, Sparkles } from 'lucide-react-native';
+import { Bot, Sparkles } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { ConversationCard } from '../../../components/chat/ConversationCard';
 import { useConversations, useCurrentUser } from '../../../store/appStore';

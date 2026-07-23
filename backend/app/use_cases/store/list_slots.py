@@ -5,6 +5,7 @@ from datetime import date
 
 from app.domain.store.entities import BookingSlot
 from app.domain.store.policies import slots_for_date
+from app.domain.store.policies import normalize_datetime
 from app.domain.store.policies import weekday_name
 from app.ports.repositories.booking_repository import BookingRepository
 from app.ports.repositories.store_repository import StoreRepository
@@ -18,6 +19,7 @@ class ListSlotsUseCase:
     store_repository: StoreRepository
     booking_repository: BookingRepository
     clock: Clock
+    store_timezone: str
 
     def execute(
         self,
@@ -30,6 +32,8 @@ class ListSlotsUseCase:
         if hours is None:
             raise NotFoundError("Store business hours not found")
         bookings = self.booking_repository.list_slot_bookings()
+        local_now = normalize_datetime(self.clock.now(), self.store_timezone)
+        assert local_now is not None
 
         if date_value is not None:
             day_config = next(
@@ -41,10 +45,12 @@ class ListSlotsUseCase:
                 day_config=day_config,
                 special_closed_dates=hours.special_closed_dates,
                 bookings=bookings,
+                timezone_name=self.store_timezone,
+                not_before=local_now,
             )
             return Page(items=slot_items, total=len(slot_items), limit=None, offset=0)
 
-        start_date = date_from or self.clock.now().date()
+        start_date = max(date_from or local_now.date(), local_now.date())
         items: list[BookingSlot] = []
         for day_offset in range(days):
             target_date = start_date.fromordinal(start_date.toordinal() + day_offset)
@@ -58,6 +64,8 @@ class ListSlotsUseCase:
                     day_config=day_config,
                     special_closed_dates=hours.special_closed_dates,
                     bookings=bookings,
+                    timezone_name=self.store_timezone,
+                    not_before=local_now,
                 )
             )
         return Page(items=items, total=len(items), limit=None, offset=0)

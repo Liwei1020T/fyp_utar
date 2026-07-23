@@ -46,6 +46,8 @@ function buildSnapshotItems(snapshot: Record<string, unknown>) {
 function buildRationaleSummary(rationale: Record<string, unknown>) {
   const summaryKeys = [
     'algorithm_family',
+    'feature_source_generated_at',
+    'review_count_snapshot',
     'primary_fit_angle',
     'trade_off_summary',
     'collaborative_filtering_used',
@@ -55,7 +57,10 @@ function buildRationaleSummary(rationale: Record<string, unknown>) {
     .filter((key) => key in rationale && rationale[key] != null)
     .map((key) => ({
       label: formatLabel(key),
-      value: formatScalarValue(rationale[key]),
+      value:
+        key === 'feature_source_generated_at' && typeof rationale[key] === 'string'
+          ? formatDateTime(rationale[key])
+          : formatScalarValue(rationale[key]),
     }));
 }
 

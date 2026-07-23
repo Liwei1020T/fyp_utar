@@ -1,0 +1,66 @@
+- generic [ref=f3e1490]:
+  - generic [ref=f3e1493]:
+    - button "Go back" [ref=f3e1494] [cursor=pointer]
+    - generic [ref=f3e1497]:
+      - generic [ref=f3e1498]: Booking ORD-2AD07
+      - generic [ref=f3e1499]: Track booking info and live progress.
+  - generic [ref=f3e1503]:
+    - generic [ref=f3e1507]:
+      - generic [ref=f3e1508]:
+        - generic [ref=f3e1509]:
+          - generic [ref=f3e1510]: Status overview
+          - generic [ref=f3e1511] [cursor=pointer]: Awaiting Dropoff
+        - generic [ref=f3e1513]: Awaiting Dropoff
+      - generic [ref=f3e1514]:
+        - generic [ref=f3e1515]: Drop-off on 24/07/2026 at 12:00
+        - generic [ref=f3e1516]: "Next: Waiting for drop-off check-in"
+    - generic [ref=f3e1520]:
+      - generic [ref=f3e1521]: Booking details
+      - generic [ref=f3e1522]:
+        - generic [ref=f3e1523]:
+          - generic [ref=f3e1524]: Vendor
+          - generic [ref=f3e1525]: StringSence
+        - generic [ref=f3e1527]:
+          - generic [ref=f3e1528]: Shop address
+          - generic [ref=f3e1529]: Utar Kampar
+        - generic [ref=f3e1531]:
+          - generic [ref=f3e1532]: Racket
+          - generic [ref=f3e1533]: Yonex Astrox 88D Pro
+        - generic [ref=f3e1535]:
+          - generic [ref=f3e1536]: String
+          - generic [ref=f3e1537]: Li-Ning N63
+        - generic [ref=f3e1539]:
+          - generic [ref=f3e1540]: Tension
+          - generic [ref=f3e1541]: 22 lbs
+        - generic [ref=f3e1543]:
+          - generic [ref=f3e1544]: Order ID
+          - generic [ref=f3e1545]: ORD-2AD07
+        - generic [ref=f3e1547]:
+          - generic [ref=f3e1548]: Quote status
+          - generic [ref=f3e1549]: Quote confirmed
+        - generic [ref=f3e1551]:
+          - generic [ref=f3e1552]: Expected ready
+          - generic [ref=f3e1553]: "-"
+    - generic [ref=f3e1557]:
+      - generic [ref=f3e1558]:
+        - generic [ref=f3e1559]:
+          - generic [ref=f3e1560]: Progress
+          - generic [ref=f3e1561]: Progress preview
+        - button "View full" [ref=f3e1562] [cursor=pointer]
+      - generic [ref=f3e1565]:
+        - generic [ref=f3e1566]: Booking confirmed
+        - generic [ref=f3e1572]: Drop-off scheduled
+        - generic [ref=f3e1577]: In progress
+        - generic [ref=f3e1582]: Ready for collection
+        - generic [ref=f3e1587]: Completed
+    - generic [ref=f3e1600]:
+      - generic [ref=f3e1601]: Show your order ID at the counter during drop-off.
+      - generic [ref=f3e1602]: The vendor uses the order ID to verify the booking and proceed with drop-off confirmation.
+    - generic [ref=f3e1606]:
+      - generic [ref=f3e1607]:
+        - generic [ref=f3e1608] [cursor=pointer]: Latest update
+        - generic [ref=f3e1610]: 23 Jul 2026, 12:21 pm
+      - generic [ref=f3e1611]: Initial booking submitted through the live backend.
+    - generic [ref=f3e1612]:
+      - button "View tracking" [ref=f3e1613] [cursor=pointer]
+      - generic [ref=f3e1616]: Booking flow covers drop-off, progress updates, and collection tracking.

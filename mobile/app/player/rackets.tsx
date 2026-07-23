@@ -1,11 +1,9 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { AppCard } from '../../components/ui/AppCard';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { RacketPassportCard } from '../../components/rackets/RacketPassportCard';
 import { useCurrentUser, useRackets, useStrings } from '../../store/appStore';

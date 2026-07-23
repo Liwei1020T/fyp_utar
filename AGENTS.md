@@ -21,8 +21,9 @@
 - Backend setup: `cd backend && uv sync --extra dev`
 - Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
 - Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
-- NLP notebook setup: `cd ml/nlp-workbench-latest && python3 -m pip install -r requirements.txt`
-- NLP notebook run: `cd ml/nlp-workbench-latest && jupyter lab`
+- NLP setup: `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`
+- NLP fast validation: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests`
+- NLP reproducibility run: `cd ml/nlp-workbench-latest && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 
 ## Architecture Map
 
@@ -83,6 +84,8 @@
   - Expo Go: run `rtk ifconfig en0`, copy the `inet` Wi-Fi IP, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
   - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone; those point to the phone, not the Mac.
 - NLP:
-  - `cd ml/nlp-workbench-latest && python3 -m pip install -r requirements.txt`
-  - Run the latest notebook top-to-bottom to populate `ml/nlp-workbench-latest/output/`
-  - Unified backend default matrix source uses `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+  - `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`
+  - Run `.venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`; do not reuse run IDs.
+  - Generated files stay under `output/runs/<run-id>/` with `promotion.status=not_promoted`.
+  - Never open `data/archive_latest.zip`; use only the extracted JSON input.
+  - Do not overwrite `data/*_latest.csv` or `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` without a separate approved promotion task.

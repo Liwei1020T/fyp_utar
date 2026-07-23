@@ -4,6 +4,8 @@ from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfoNotFoundError
 
 from pydantic import Field
 from pydantic import field_validator
@@ -37,6 +39,10 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(
         default=60,
         alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
+    store_timezone: str = Field(
+        default="Asia/Kuala_Lumpur",
+        alias="STORE_TIMEZONE",
     )
     password_reset_code_expire_minutes: int = Field(
         default=10,
@@ -84,6 +90,15 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [part.strip() for part in value.split(",") if part.strip()]
         return [str(part).strip() for part in value if str(part).strip()]
+
+    @field_validator("store_timezone")
+    @classmethod
+    def validate_store_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as error:
+            raise ValueError("STORE_TIMEZONE must be a valid IANA timezone") from error
+        return value
 
     @model_validator(mode="after")
     def apply_defaults(self) -> "Settings":

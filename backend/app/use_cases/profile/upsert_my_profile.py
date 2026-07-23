@@ -19,8 +19,13 @@ class UpsertMyProfileUseCase:
         default_factory=Fyp1ContentRecommendationScorer
     )
 
-    def execute(self, profile: PlayerProfile) -> PlayerProfile:
-        saved = self.profile_repository.upsert(profile)
+    def execute(
+        self,
+        profile: PlayerProfile,
+        *,
+        username: str | None = None,
+    ) -> PlayerProfile:
+        saved = self.profile_repository.upsert(profile, username=username)
         if self.recommendation_repository is not None and _is_complete(saved):
             request = RecommendationRequestModel(
                 user_id=saved.user_id,

@@ -9,7 +9,7 @@ import { appChromeColors } from '../../components/ui/theme';
 const roleCards = [
   {
     role: 'player',
-    title: 'Player demo',
+    title: 'Player workspace',
     description: 'Recommendations, bookings, tracking, and profile',
     icon: Sparkles,
     accentClassName: 'bg-primary-50',
@@ -17,7 +17,7 @@ const roleCards = [
   },
   {
     role: 'admin',
-    title: 'Admin demo',
+    title: 'Admin workspace',
     description: 'Bookings, inventory, business hours, and store settings',
     icon: Building2,
     accentClassName: 'bg-[#F5F5F7]',
@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
 
   return (
     <AuthShell
-      eyebrow="FYP demo access"
+      eyebrow="FYP system access"
       title="Log in to StringSense"
       subtitle="Choose a workspace, then continue with a backend-backed login."
       footer={
@@ -141,7 +141,7 @@ export default function WelcomeScreen() {
               fontWeight: '600',
             }}
           >
-            Player and admin backend accounts are pre-configured
+            Player registration is open; admin access is operator-configured
           </HeroText>
         </View>
       </View>

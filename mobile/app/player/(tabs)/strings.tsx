@@ -1,17 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, View, Image } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
   Search, 
   SlidersHorizontal, 
-  ChevronLeft, 
   LayoutGrid, 
   Tags,
   Plus,
   Check
 } from 'lucide-react-native';
-import { HeroText, HeroTextField } from '../../../components/ui/heroui';
-import { AppButton } from '../../../components/ui/AppButton';
+import { HeroText, cn } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
@@ -24,7 +22,6 @@ import { StringProductImage } from '../../../components/shared/StringProductImag
 import { useAppStore, useStrings } from '../../../store/appStore';
 import { formatCurrency, formatLabel } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
-import { cn } from '../../../components/ui/heroui';
 import type { StringItem } from '../../../types/domain';
 
 const sortOptions = [
@@ -52,7 +49,6 @@ export default function StringsCatalogScreen() {
   const strings = useStrings();
   const compareSelection = useAppStore((state) => state.compareSelection);
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
-  const clearCompareSelection = useAppStore((state) => state.clearCompareSelection);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'repulsion' | 'balanced' | 'control' | 'durable'>('all');

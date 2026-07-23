@@ -28,7 +28,7 @@ def upgrade() -> None:
                 ALTER TABLE string_official_performance
                 ALTER COLUMN {column_name}
                 TYPE NUMERIC(4, 2)
-                USING NULLIF(trim({column_name}), '')::numeric
+                USING NULLIF(trim({column_name}::text), '')::numeric
                 """
             )
         )

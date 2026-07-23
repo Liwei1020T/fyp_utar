@@ -323,13 +323,19 @@ function deriveCategory(item: BackendString): StringItem['category'] {
 }
 
 function deriveRecommendedTension(item: BackendString): [number, number] {
+  let derived: [number, number];
   if (item.comfort >= 0.7) {
-    return [22, 27];
+    derived = [22, 27];
+  } else if (item.stability_score >= 0.7 || item.durability >= 0.7) {
+    derived = [24, 29];
+  } else {
+    derived = [23, 28];
   }
-  if (item.stability_score >= 0.7 || item.durability >= 0.7) {
-    return [24, 29];
-  }
-  return [23, 28];
+
+  return [
+    item.tension_min_lbs ?? derived[0],
+    item.tension_max_lbs ?? derived[1],
+  ];
 }
 
 function deriveStrengthLabels(item: BackendString) {
@@ -497,8 +503,8 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const gaugeBounds = deriveGaugeBounds(item, category);
   const ratings = deriveScores(item);
   const mainTrait = deriveMainTrait(item, category, strengths);
-  const tensionMinLbs = recommendedTension[0];
-  const tensionMaxLbs = recommendedTension[1];
+  const tensionMinLbs = item.tension_min_lbs;
+  const tensionMaxLbs = item.tension_max_lbs;
   const gauge = formatGaugeRange(gaugeBounds.min, gaugeBounds.max);
   const priceStatus = derivePriceStatus(item.price_rm);
   const availability = deriveAvailabilityStatus(item.is_active ? 8 : 0);
@@ -508,6 +514,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     brand: item.brand,
     modelName: item.model_name,
     localizedName: item.original_name ?? undefined,
+    isHybrid: item.is_hybrid,
     gaugeMinMm: gaugeBounds.min,
     gaugeMaxMm: gaugeBounds.max,
     material: deriveMaterial(item),
@@ -520,8 +527,8 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
         .join(' and ')} with a ${titleCase(category)} leaning setup.`,
     mainTrait,
     category,
-    tensionMinLbs: item.tension_min_lbs ?? tensionMinLbs,
-    tensionMaxLbs: item.tension_max_lbs ?? tensionMaxLbs,
+    tensionMinLbs,
+    tensionMaxLbs,
     performanceScores: ratings,
     imageUrl,
     isActive: item.is_active,
@@ -556,10 +563,10 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     tensionMinLbs: catalog.tensionMinLbs,
     tensionMaxLbs: catalog.tensionMaxLbs,
     ratings,
-    tensionNote: `Suggested range ${formatTensionRange(
-      tensionMinLbs,
-      tensionMaxLbs,
-    )} based on the current backend profile.`,
+    tensionNote:
+      tensionMinLbs != null || tensionMaxLbs != null
+        ? `Recorded catalog range: ${formatTensionRange(tensionMinLbs, tensionMaxLbs)}.`
+        : 'No catalog tension range is recorded for this string.',
     description: catalog.description,
     imageUrl,
     isActive: catalog.isActive,
@@ -692,8 +699,9 @@ function mapBackendStatus(value: string): BookingStatus {
     case 'picked_up':
       return 'completed';
     case 'cancelled':
-    case 'rejected':
       return 'cancelled';
+    case 'rejected':
+      return 'rejected';
     default:
       return 'awaiting_dropoff';
   }
@@ -758,6 +766,11 @@ export function mapBackendBookingToBooking(
   adminId = 'admin-001',
 ): Booking {
   const status = mapBackendStatus(booking.status);
+  const slotMatch = booking.slot_id?.match(
+    /^slot-(\d{4}-\d{2}-\d{2})-(\d{2}:\d{2})$/,
+  );
+  const slotDate = slotMatch?.[1];
+  const slotTime = slotMatch?.[2];
   const dropOffDateTime = booking.drop_off_datetime
     ? new Date(booking.drop_off_datetime)
     : null;
@@ -770,16 +783,19 @@ export function mapBackendBookingToBooking(
     adminId,
     stringId: booking.string_id,
     status,
-    paymentStatus: 'paid',
+    paymentStatus: 'unpaid',
     racketBrand: booking.racket_brand ?? 'Unknown',
     racketModel: booking.racket_model ?? 'Unknown',
     requestedTension: booking.requested_tension ?? 24,
-    dropOffDate: dropOffDateTime
-      ? formatLocalDateInputValue(dropOffDateTime)
-      : booking.created_at?.slice(0, 10) ?? 'TBD',
-    dropOffTime: dropOffDateTime
-      ? formatLocalTimeValue(dropOffDateTime)
-      : 'TBD',
+    customerName: booking.customer_username ?? undefined,
+    customerPhone: booking.customer_phone_number ?? undefined,
+    dropOffDate:
+      slotDate
+      ?? (dropOffDateTime
+        ? formatLocalDateInputValue(dropOffDateTime)
+        : booking.created_at?.slice(0, 10) ?? 'TBD'),
+    dropOffTime:
+      slotTime ?? (dropOffDateTime ? formatLocalTimeValue(dropOffDateTime) : 'TBD'),
     expectedCompletionAt: booking.expected_completion_datetime ?? undefined,
     collectionAt: booking.collection_datetime ?? undefined,
     createdAt: booking.created_at ?? new Date().toISOString(),
@@ -789,14 +805,14 @@ export function mapBackendBookingToBooking(
     serviceFee: 0,
     stringFee,
     totalAmount: stringFee,
-    amountPaid: stringFee,
+    amountPaid: 0,
     walletUsed: 0,
     bookingToken: booking.id,
     checkInReference:
       booking.check_in_reference ?? `LIVE-${booking.id.slice(0, 8).toUpperCase()}`,
     queuePosition: 0,
     paymentRuleNote:
-      'This FYP1 booking covers drop-off, status updates, and collection tracking only.',
+      'Payment status is not tracked by the live booking API; shown price is the current catalog estimate.',
     timeline: historyToTimeline(
       booking.status_history,
       status,
@@ -810,6 +826,7 @@ export function buildBackendProfilePayload(
   player: Pick<
     PlayerProfile,
     | 'skillLevel'
+    | 'name'
     | 'playingStyle'
     | 'playFrequency'
     | 'preferredTension'
@@ -824,6 +841,7 @@ export function buildBackendProfilePayload(
   const advanced = advancedPreferencesForPayload(player);
 
   return {
+    username: player.name,
     skill_level: mapFrontendSkillLevel(player.skillLevel),
     playing_style: mapFrontendPlayingStyle(player.playingStyle),
     budget_tier: budget.budgetTier,
@@ -906,7 +924,7 @@ export function mapRecommendationResponse(
         item.model_name ??
         item.string_name.replace(`${item.brand} `, ''),
       stringName: item.string_name,
-      price: item.price_rm ?? matched?.price ?? 0,
+      price: item.price_rm ?? matched?.inventory.price ?? null,
       matchScore: Math.round(item.score * 100),
       reasons: item.reasons,
       aspectScores: item.aspect_scores,
@@ -917,8 +935,12 @@ export function mapRecommendationResponse(
       algorithmVersion: response.algorithm_version,
       generatedAt: item.generated_at ?? response.generated_at ?? null,
       suggestedTensionRange: matched
-        ? `${matched.recommendedTension[0]}-${matched.recommendedTension[1]} lbs`
-        : '23-28 lbs',
+        ? formatTensionRange(
+            matched.tensionMinLbs,
+            matched.tensionMaxLbs,
+            'Tension guidance unavailable',
+          )
+        : 'Tension guidance unavailable',
     };
   });
 }

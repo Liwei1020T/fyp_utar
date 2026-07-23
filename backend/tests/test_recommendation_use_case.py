@@ -34,7 +34,12 @@ class FakeProfileRepository:
             return self.profile
         raise AssertionError("profile lookup should not be used for preview requests")
 
-    def upsert(self, profile):  # pragma: no cover - not used here
+    def upsert(  # pragma: no cover - not used here
+        self,
+        profile,
+        *,
+        username=None,
+    ):
         raise NotImplementedError
 
 

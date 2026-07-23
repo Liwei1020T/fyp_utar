@@ -285,6 +285,8 @@ function getNextBookingStep(status: Booking['status'], dropOffDate: string) {
       return 'Next: Review your setup and book your next restring when needed.';
     case 'cancelled':
       return 'Next: Start a new booking when you are ready.';
+    case 'rejected':
+      return 'Next: Review the shop reason, then choose another slot or setup.';
     default:
       return 'Next: Check booking details for the latest service update.';
   }

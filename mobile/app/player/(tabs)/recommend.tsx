@@ -21,6 +21,7 @@ import {
   mapRecommendationResponse,
   deriveAdvancedPreferences,
 } from '../../../services/backendMappers';
+import type { PlayerProfile } from '../../../types/domain';
 
 const priorityLabels = [
   { key: 'power', title: 'Power and rebound' },
@@ -43,8 +44,17 @@ const styleOptions = [
 const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
 
 export default function RecommendationInputScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
+
+  if (!user || user.role !== 'player') {
+    return null;
+  }
+
+  return <RecommendationInputContent user={user} />;
+}
+
+function RecommendationInputContent({ user }: { user: PlayerProfile }) {
+  const router = useRouter();
   const token = useBackendAccessToken();
   const strings = useStrings();
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
@@ -53,10 +63,6 @@ export default function RecommendationInputScreen() {
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-
-  if (!user || user.role !== 'player') {
-    return null;
-  }
 
   const normalizedPlayingStyle =
     user.playingStyle === 'Attacking' || user.playingStyle === 'Balanced'

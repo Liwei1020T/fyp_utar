@@ -136,11 +136,11 @@ export function AdminInventoryCard({
   item: StringItem;
   onPress?: () => void;
   attentionOnly?: boolean;
-  quickActions?: Array<{
+  quickActions?: {
     label: string;
     variant?: 'primary' | 'outline' | 'ghost';
     onPress?: () => void;
-  }>;
+  }[];
 }) {
   const price = getInventoryPriceLabel(item);
   const attentionState = getInventoryAttentionState(item);

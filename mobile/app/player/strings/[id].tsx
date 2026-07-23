@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { Alert, Share, View, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { 
-  ChevronLeft, 
   Scale, 
   Share2, 
   Sparkles, 
-  Star, 
   TrendingUp, 
   Zap, 
   ShieldCheck, 
@@ -26,9 +24,16 @@ import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { StringProductImage } from '../../../components/shared/StringProductImage';
-import { useAppStore, useCurrentUser, useLiveRecommendationResults, useStrings } from '../../../store/appStore';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useCurrentUser,
+  useLiveRecommendationResults,
+  useStrings,
+} from '../../../store/appStore';
 import { getStringById } from '../../../services/mockAppService';
-import { formatCurrency, formatLabel } from '../../../lib/formatters';
+import { formatLabel } from '../../../lib/formatters';
+import { formatTensionRange, getInventoryPriceLabel } from '../../../lib/inventory';
 import { AppRadarChart } from '../../../components/ui/AppRadarChart';
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -81,26 +86,34 @@ function toSentiment(score?: number | null): 'Positive' | 'Mixed' | 'Neutral' {
   return 'Neutral';
 }
 
-function normalizeRatingScore(value: number) {
-  return Math.max(0, Math.min(1, value / 10));
-}
-
-function compactReason(value: string, maxLength = 36) {
-  const normalized = value.trim();
-
-  if (normalized.length <= maxLength) {
-    return normalized;
+function describeTensionFit(
+  minimum: number | null,
+  maximum: number | null,
+  preferred: number | undefined,
+) {
+  if (minimum == null || maximum == null) {
+    return 'No catalog tension range is recorded for this string.';
   }
 
-  return `${normalized.slice(0, maxLength - 3).trim()}...`;
+  const range = formatTensionRange(minimum, maximum);
+  if (preferred == null) {
+    return `The recorded catalog range is ${range}.`;
+  }
+
+  const relation = preferred >= minimum && preferred <= maximum
+    ? 'inside'
+    : 'outside';
+  return `${preferred} lbs is ${relation} the recorded ${range} catalog range.`;
 }
 
 export default function StringDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const strings = useStrings();
+  const token = useBackendAccessToken();
   const selectedString =
-    strings.find((item) => item.id === params.id) ?? getStringById(params.id);
+    strings.find((item) => item.id === params.id) ??
+    (token ? undefined : getStringById(params.id));
   const user = useCurrentUser();
   const playerUser = user?.role === 'player' ? user : null;
   const liveResults = useLiveRecommendationResults();
@@ -137,13 +150,11 @@ export default function StringDetailScreen() {
     { key: 'sound', label: 'Sound', icon: <Volume2 size={16} color="#8B5CF6" />, value: selectedString.ratings.sound },
   ];
   const sortedPerformanceMetrics = [...performanceMetrics].sort((a, b) => b.value - a.value);
-  const topPerformanceLabels = sortedPerformanceMetrics.slice(0, 2).map((metric) => metric.label);
 
   const evidenceSignals = (rationale?.feature_evidence ?? []).reduce<
-    Array<{ label: string; score: number }>
+    { label: string; score: number }[]
   >((acc, entry) => {
-    const score =
-      entry.nlp_review_score ?? entry.effective_score ?? entry.official_score ?? null;
+    const score = entry.nlp_review_score ?? null;
 
     if (score == null) {
       return acc;
@@ -157,13 +168,8 @@ export default function StringDetailScreen() {
     return acc;
   }, []).sort((left, right) => right.score - left.score);
 
-  const fallbackSignals = sortedPerformanceMetrics.map((metric) => ({
-    label: metric.label,
-    score: normalizeRatingScore(metric.value),
-  }));
-  const signalSource = evidenceSignals.length > 0 ? evidenceSignals : fallbackSignals;
-  const sentimentSignals = signalSource.reduce<
-    Array<{ aspect: string; sentiment: 'Positive' | 'Mixed' | 'Neutral' }>
+  const sentimentSignals = evidenceSignals.reduce<
+    { aspect: string; sentiment: 'Positive' | 'Mixed' | 'Neutral' }[]
   >((acc, item) => {
     if (acc.some((entry) => entry.aspect === item.label)) {
       return acc;
@@ -177,39 +183,45 @@ export default function StringDetailScreen() {
     return acc;
   }, []).slice(0, 5);
 
-  const reasonThemes = (rationale?.top_reasons ?? liveResult?.reasons ?? [])
-    .map((item) => compactReason(item))
-    .filter((item) => item.length > 0)
-    .slice(0, 2);
-  const reviewThemes =
-    reasonThemes.length > 0
-      ? reasonThemes
-      : topPerformanceLabels.map((label) => `${label} focus`);
-
-  const highlightedStrength =
-    evidenceSignals[0]?.label ?? topPerformanceLabels[0] ?? 'Balanced response';
+  const reviewThemes = evidenceSignals
+    .slice(0, 2)
+    .map((item) => `${item.label} review signal`);
+  const highlightedStrength = evidenceSignals[0]?.label ?? 'Not established';
   const highlightedTradeOff =
-    evidenceSignals[evidenceSignals.length - 1]?.label ??
-    sortedPerformanceMetrics[sortedPerformanceMetrics.length - 1]?.label ??
-    'Comfort';
+    evidenceSignals.length > 1
+      ? evidenceSignals[evidenceSignals.length - 1]?.label
+      : 'Not established';
   const reviewSummary =
     rationale?.nlp_review_summary ??
-    `${topPerformanceLabels[0] ?? 'Performance'} and ${
-      topPerformanceLabels[1]?.toLowerCase() ?? 'feel'
-    } are the strongest community-supported traits for this string.`;
-  const deepReasoningParagraphs = [
-    rationale?.top_reasons?.[0] ??
-      liveResult?.reasons[0] ??
-      `This setup supports your ${playerUser?.playingStyle ?? 'Balanced'} playing profile.`,
-    reviewSummary,
-    rationale?.trade_off_summary ??
-      liveResult?.tradeOffSummary ??
-      `${highlightedTradeOff} is the main trade-off to monitor depending on your preferred feel.`,
-  ];
+    'No review-derived evidence is available for this item.';
+  const scorerReasons = rationale?.top_reasons ?? liveResult?.reasons ?? [];
+  const savedTradeOff =
+    rationale?.trade_off_summary ?? liveResult?.tradeOffSummary ?? null;
+  const savedReasoningParagraphs = [
+    ...scorerReasons.slice(0, 2),
+    rationale?.nlp_review_summary ?? null,
+    savedTradeOff,
+  ].filter((paragraph): paragraph is string => Boolean(paragraph?.trim()));
+  const deepReasoningParagraphs = savedReasoningParagraphs.length > 0
+    ? savedReasoningParagraphs
+    : ['No saved recommendation rationale is available for this catalog view.'];
+
+  const tensionLabel = formatTensionRange(
+    selectedString.tensionMinLbs,
+    selectedString.tensionMaxLbs,
+    'Tension guidance unavailable',
+  );
+  const preferredTension = playerUser?.preferredTension;
+  const tensionFitCopy = describeTensionFit(
+    selectedString.tensionMinLbs,
+    selectedString.tensionMaxLbs,
+    preferredTension,
+  );
+  const priceLabel = getInventoryPriceLabel(selectedString).label;
 
   const getInsightSentence = () => {
     const top = sortedPerformanceMetrics.slice(0, 2).map((metric) => metric.label.toLowerCase());
-    return `${top[0].charAt(0).toUpperCase() + top[0].slice(1)} and ${top[1]} are the dominant performance traits for this string.`;
+    return `${top[0].charAt(0).toUpperCase() + top[0].slice(1)} and ${top[1]} are the highest catalog performance scores for this string.`;
   };
 
   const handleShare = async () => {
@@ -217,8 +229,8 @@ export default function StringDetailScreen() {
       await Share.share({
         message: [
           `${selectedString.brand} ${selectedString.model}`,
-          `${formatCurrency(selectedString.price)} • ${selectedString.gauge} • ${formatLabel(selectedString.category)}`,
-          `Recommended tension ${selectedString.recommendedTension[0]}-${selectedString.recommendedTension[1]} lbs`,
+          `${priceLabel} • ${selectedString.gauge} • ${formatLabel(selectedString.category)}`,
+          `Catalog tension: ${tensionLabel}`,
           selectedString.description,
         ].join('\n'),
       });
@@ -290,22 +302,15 @@ export default function StringDetailScreen() {
               <View className="rounded-full border border-white/12 bg-primary-600 px-3 py-1.5 flex-row items-center gap-1.5 shadow-soft">
                 <Sparkles size={12} color="white" />
                 <HeroText className="text-[10px] font-bold text-white uppercase tracking-wider">
-                  {(liveResult.matchScore * 100).toFixed(0)}% MATCH
+                  {liveResult.matchScore.toFixed(0)}% MATCH
                 </HeroText>
               </View>
             )}
           </View>
 
-          <View className="mt-4 flex-row items-center gap-2">
-            <View className="flex-row">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <Star key={item} size={14} color="#FBBF24" fill={item <= 4 ? "#FBBF24" : "transparent"} />
-              ))}
-            </View>
-            <HeroText className="text-[13px] font-semibold leading-5 text-white">
-              {selectedString.reviewHighlight}
-            </HeroText>
-          </View>
+          <HeroText className="mt-4 text-[13px] leading-5 text-primary-100" numberOfLines={2}>
+            {selectedString.description}
+          </HeroText>
 
           <View className="mt-6 flex-row flex-wrap gap-2">
             <AppChip
@@ -321,7 +326,7 @@ export default function StringDetailScreen() {
               textClassName="text-white font-semibold text-xs"
             />
             <AppChip
-              label={`${selectedString.recommendedTension[0]}-${selectedString.recommendedTension[1]} lbs`}
+              label={tensionLabel}
               variant="neutral"
               className="border-white/18 bg-white/14"
               textClassName="text-white font-semibold text-xs"
@@ -348,7 +353,7 @@ export default function StringDetailScreen() {
             </View>
             <View className="w-1/2 pl-2">
               <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Tension Fit</HeroText>
-              <HeroText className="text-sm font-semibold text-neutral-900 mt-1">{selectedString.recommendedTension[0]}-{selectedString.recommendedTension[1]} lbs</HeroText>
+              <HeroText className="text-sm font-semibold text-neutral-900 mt-1">{tensionLabel}</HeroText>
             </View>
           </View>
         </AppCard>
@@ -376,7 +381,9 @@ export default function StringDetailScreen() {
         rightAction={
           <View className="bg-primary-100 px-2.5 py-1 rounded-md flex-row items-center gap-1.5">
             <BrainCircuit size={12} color="#1E3A8A" />
-            <HeroText className="text-[10px] font-bold text-primary-900 uppercase">AI REASONING</HeroText>
+            <HeroText className="text-[10px] font-bold text-primary-900 uppercase">
+              {liveResult ? 'SAVED SCORING' : 'CATALOG ONLY'}
+            </HeroText>
           </View>
         }
       >
@@ -387,9 +394,9 @@ export default function StringDetailScreen() {
                 <TrendingUp size={18} color="#059669" />
               </View>
               <View className="flex-1">
-                <HeroText className="text-sm font-bold text-neutral-900">Style Overlap</HeroText>
+                <HeroText className="text-sm font-bold text-neutral-900">Saved scorer reason</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  {deepReasoningParagraphs[0]}
+                  {scorerReasons[0] ?? 'No personalized scorer reason is available for this catalog view.'}
                 </HeroText>
               </View>
             </View>
@@ -401,7 +408,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Priority Alignment</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  Dominant ratings in {topPerformanceLabels.join(' & ')} align with your performance profile.
+                  {scorerReasons[1] ?? 'No separate priority-alignment reason was saved.'}
                 </HeroText>
               </View>
             </View>
@@ -413,7 +420,7 @@ export default function StringDetailScreen() {
               <View className="flex-1">
                 <HeroText className="text-sm font-bold text-neutral-900">Tension Fit</HeroText>
                 <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  Optimal performance at {playerUser?.preferredTension || 27} lbs falls right inside this string&apos;s sweet spot.
+                  {tensionFitCopy}
                 </HeroText>
               </View>
             </View>
@@ -449,41 +456,49 @@ export default function StringDetailScreen() {
       <AppSection eyebrow="Community" title="Review intelligence" variant="compact">
         <AppCard variant="elevated" padding="none" className="overflow-hidden">
           <View className="p-5">
-            <View className="flex-row justify-between mb-6">
-              <View className="flex-1 mr-4">
-                <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Top Praise</HeroText>
-                <HeroText className="text-sm font-bold text-neutral-900">{highlightedStrength}</HeroText>
-              </View>
-              <View className="flex-1">
-                <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Common Trade-off</HeroText>
-                <HeroText className="text-sm font-bold text-neutral-900">{highlightedTradeOff}</HeroText>
-              </View>
-            </View>
-
-            <HeroText className="mb-4 text-xs leading-5 text-neutral-500">
-              {reviewSummary}
-            </HeroText>
-
-            <View className="flex-row flex-wrap gap-2 mb-6">
-              {reviewThemes.map((theme) => (
-                <View key={theme} className="bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100 flex-row items-center gap-1.5">
-                  <CheckCircle2 size={12} color="#10B981" />
-                  <HeroText className="text-[11px] font-bold text-neutral-700 uppercase">{theme}</HeroText>
+            {evidenceSignals.length > 0 ? (
+              <>
+                <View className="flex-row justify-between mb-6">
+                  <View className="flex-1 mr-4">
+                    <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Highest review signal</HeroText>
+                    <HeroText className="text-sm font-bold text-neutral-900">{highlightedStrength}</HeroText>
+                  </View>
+                  <View className="flex-1">
+                    <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Lowest recorded signal</HeroText>
+                    <HeroText className="text-sm font-bold text-neutral-900">{highlightedTradeOff}</HeroText>
+                  </View>
                 </View>
-              ))}
-            </View>
 
-            <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Aspect Sentiment</HeroText>
-            <View className="flex-row flex-wrap gap-2">
-              {sentimentSignals.map((item) => (
-                <View key={item.aspect} className={`${getSentimentBg(item.sentiment)} px-3 py-1.5 rounded-full border border-neutral-100 flex-row items-center gap-1.5`}>
-                  <View className={`h-1.5 w-1.5 rounded-full ${item.sentiment === 'Positive' ? 'bg-green-500' : item.sentiment === 'Mixed' ? 'bg-amber-500' : 'bg-neutral-300'}`} />
-                  <HeroText className={`text-[10px] font-bold ${getSentimentColor(item.sentiment)}`}>
-                    {item.aspect.toUpperCase()}: {item.sentiment.toUpperCase()}
-                  </HeroText>
+                <HeroText className="mb-4 text-xs leading-5 text-neutral-500">
+                  {reviewSummary}
+                </HeroText>
+
+                <View className="flex-row flex-wrap gap-2 mb-6">
+                  {reviewThemes.map((theme) => (
+                    <View key={theme} className="bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100 flex-row items-center gap-1.5">
+                      <CheckCircle2 size={12} color="#10B981" />
+                      <HeroText className="text-[11px] font-bold text-neutral-700 uppercase">{theme}</HeroText>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+
+                <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Review-derived aspect signal</HeroText>
+                <View className="flex-row flex-wrap gap-2">
+                  {sentimentSignals.map((item) => (
+                    <View key={item.aspect} className={`${getSentimentBg(item.sentiment)} px-3 py-1.5 rounded-full border border-neutral-100 flex-row items-center gap-1.5`}>
+                      <View className={`h-1.5 w-1.5 rounded-full ${item.sentiment === 'Positive' ? 'bg-green-500' : item.sentiment === 'Mixed' ? 'bg-amber-500' : 'bg-neutral-300'}`} />
+                      <HeroText className={`text-[10px] font-bold ${getSentimentColor(item.sentiment)}`}>
+                        {item.aspect.toUpperCase()}: {item.sentiment.toUpperCase()}
+                      </HeroText>
+                    </View>
+                  ))}
+                </View>
+              </>
+            ) : (
+              <HeroText className="text-sm leading-6 text-neutral-600">
+                No review-derived evidence is available for this item. Catalog scores are shown separately above.
+              </HeroText>
+            )}
           </View>
         </AppCard>
       </AppSection>

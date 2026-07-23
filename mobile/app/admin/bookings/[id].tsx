@@ -63,6 +63,7 @@ const WORKFLOW_TRANSITIONS: Partial<Record<BookingStatus, BookingStatus[]>> = {
   ready_for_collection: ['completed'],
   completed: [],
   cancelled: [],
+  rejected: [],
 };
 
 const PHOTO_TYPE_OPTIONS: {
@@ -144,6 +145,10 @@ function getStatusHeroCopy(status: BookingStatus) {
       return 'Stringing is complete and ready for pickup handoff.';
     case 'completed':
       return 'Order is finished and handed over to the player.';
+    case 'cancelled':
+      return 'Booking was cancelled before the service journey finished.';
+    case 'rejected':
+      return 'The shop declined this booking; review the recorded reason.';
     default:
       return 'Review this booking and keep the workflow moving.';
   }
@@ -398,7 +403,7 @@ export default function AdminBookingDetailScreen() {
   );
 
   const expectedCompletionDateOptions = useMemo(() => {
-    const options: Array<{ value: string; label: string }> = [];
+    const options: { value: string; label: string }[] = [];
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
@@ -911,10 +916,18 @@ export default function AdminBookingDetailScreen() {
         <AppCard variant="elevated" padding="md">
           <View className="gap-3.5">
             <SummaryRow label="Order ID" value={orderCode} />
-            <SummaryRow label="Player" value={player?.name ?? 'Walk-in player'} />
+            <SummaryRow
+              label="Player"
+              value={booking.customerName ?? player?.name ?? 'Walk-in player'}
+            />
             <SummaryRow
               label="Contact"
-              value={player?.phone ?? player?.email ?? 'No contact provided'}
+              value={
+                booking.customerPhone
+                ?? player?.phone
+                ?? player?.email
+                ?? 'No contact provided'
+              }
             />
             <SummaryRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
             <SummaryRow

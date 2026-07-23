@@ -1,7 +1,7 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { AlertTriangle, CheckCircle2, ChevronLeft, CircleSlash } from 'lucide-react-native';
+import { AlertTriangle, CheckCircle2, CircleSlash } from 'lucide-react-native';
 import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
 import { HeroText } from '../../../../components/ui/heroui';

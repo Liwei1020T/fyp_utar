@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 
+from app.config.settings import get_settings
 from app.dto.common import page_to_dict
 from app.dto.store import StoreSettingsOut
 from app.dto.store import settings_to_dto
@@ -44,5 +45,6 @@ def public_list_slots(
         store_repository=store_repository,
         booking_repository=booking_repository,
         clock=clock,
+        store_timezone=get_settings().store_timezone,
     ).execute(date_value=date_value, date_from=date_from, days=days)
     return page_to_dict(page, lambda item: slot_to_dto(item).model_dump())

@@ -1,0 +1,124 @@
+- generic [ref=f3e1046]:
+  - generic [ref=f3e1049]:
+    - button "Go back" [ref=f3e1050] [cursor=pointer]
+    - generic [ref=f3e1053]:
+      - generic [ref=f3e1054]: New booking
+      - generic [ref=f3e1055]: Configure your restring request.
+  - generic [ref=f3e1060]:
+    - generic [ref=f3e1063]:
+      - generic [ref=f3e1064]:
+        - generic [ref=f3e1065]:
+          - generic [ref=f3e1066]: Selected string
+          - generic [ref=f3e1067]: Li-Ning N63
+          - generic [ref=f3e1068]: Recommended at 22–35 lbs
+        - button "Choose string" [ref=f3e1069] [cursor=pointer]
+      - generic [ref=f3e1072]:
+        - generic [ref=f3e1073] [cursor=pointer]: 0.63 mm
+        - generic [ref=f3e1075] [cursor=pointer]: Repulsion
+        - generic [ref=f3e1077] [cursor=pointer]: RM 48.00
+    - generic [ref=f3e1079]:
+      - generic [ref=f3e1081]:
+        - generic [ref=f3e1082]: Store
+        - generic [ref=f3e1083]: Service desk
+      - generic [ref=f3e1094]:
+        - generic [ref=f3e1095]: Assigned shop
+        - generic [ref=f3e1096]: Drop-off service desk
+    - generic [ref=f3e1097]:
+      - generic [ref=f3e1099]:
+        - generic [ref=f3e1100]: Setup
+        - generic [ref=f3e1101]: Racket and tension
+      - generic [ref=f3e1105]:
+        - generic [ref=f3e1106]:
+          - generic [ref=f3e1107]: Racket brand
+          - textbox "Yonex, Victor, Li-Ning..." [ref=f3e1110]: Yonex
+        - generic [ref=f3e1111]:
+          - generic [ref=f3e1112]: Racket model
+          - textbox "Astrox 88D Pro" [ref=f3e1115]
+        - generic [ref=f3e1116]:
+          - generic [ref=f3e1117]: Requested tension
+          - generic [ref=f3e1119]:
+            - generic [ref=f3e1120]:
+              - button "Decrease requested tension" [ref=f3e1121] [cursor=pointer]
+              - generic [ref=f3e1123]:
+                - generic [ref=f3e1124]: 22 lbs
+                - generic [ref=f3e1125]: Requested tension
+              - button "Increase requested tension" [ref=f3e1126] [cursor=pointer]
+            - generic [ref=f3e1128]:
+              - generic [ref=f3e1129]: Set exact value
+              - textbox "24" [ref=f3e1132]: "22"
+          - generic [ref=f3e1133]: "Recommended range: 22–35 lbs based on your saved profile."
+        - generic [ref=f3e1134]:
+          - generic [ref=f3e1135]: Notes (optional)
+          - textbox "Knots, logo alignment, feel preference, or special request..." [ref=f3e1138]
+    - generic [ref=f3e1139]:
+      - generic [ref=f3e1141]:
+        - generic [ref=f3e1142]: Drop-off
+        - generic [ref=f3e1143]: Date and time
+      - generic [ref=f3e1145]:
+        - generic [ref=f3e1147]:
+          - button "Thu, 23 Jul" [ref=f3e1148] [cursor=pointer]
+          - button "Fri, 24 Jul" [ref=f3e1150] [cursor=pointer]
+          - button "Sat, 25 Jul" [ref=f3e1152] [cursor=pointer]
+          - button "Sun, 26 Jul" [ref=f3e1154] [cursor=pointer]
+          - button "Mon, 27 Jul" [ref=f3e1156] [cursor=pointer]
+          - button "Tue, 28 Jul" [ref=f3e1158] [cursor=pointer]
+          - button "Wed, 29 Jul" [ref=f3e1160] [cursor=pointer]
+          - button "Thu, 30 Jul" [ref=f3e1162] [cursor=pointer]
+          - button "Fri, 31 Jul" [ref=f3e1164] [cursor=pointer]
+          - button "Sat, 1 Aug" [ref=f3e1166] [cursor=pointer]
+          - button "Sun, 2 Aug" [ref=f3e1168] [cursor=pointer]
+          - button "Mon, 3 Aug" [ref=f3e1170] [cursor=pointer]
+          - button "Tue, 4 Aug" [ref=f3e1172] [cursor=pointer]
+          - button "Wed, 5 Aug" [ref=f3e1174] [cursor=pointer]
+        - tablist [ref=f3e1176]:
+          - generic [ref=f3e1177]:
+            - tab "Morning" [ref=f3e1178] [cursor=pointer]
+            - tab "Afternoon" [ref=f3e1180] [cursor=pointer]
+            - tab "Evening" [ref=f3e1182] [cursor=pointer]
+        - generic [ref=f3e1184]:
+          - button "12:30 PM slot" [ref=f3e1185] [cursor=pointer]:
+            - generic [ref=f3e1188]:
+              - generic [ref=f3e1189]: 12:30 PM
+              - generic [ref=f3e1194]: 3 slots left
+          - button "1:00 PM slot" [ref=f3e1198] [cursor=pointer]:
+            - generic [ref=f3e1201]:
+              - generic [ref=f3e1202]: 1:00 PM
+              - generic [ref=f3e1207]: 3 slots left
+          - button "1:30 PM slot" [ref=f3e1208] [cursor=pointer]:
+            - generic [ref=f3e1211]:
+              - generic [ref=f3e1212]: 1:30 PM
+              - generic [ref=f3e1217]: 3 slots left
+          - button "2:00 PM slot" [ref=f3e1218] [cursor=pointer]:
+            - generic [ref=f3e1221]:
+              - generic [ref=f3e1222]: 2:00 PM
+              - generic [ref=f3e1227]: 3 slots left
+          - button "2:30 PM slot" [ref=f3e1228] [cursor=pointer]:
+            - generic [ref=f3e1231]:
+              - generic [ref=f3e1232]: 2:30 PM
+              - generic [ref=f3e1237]: 3 slots left
+          - button "4:00 PM slot" [ref=f3e1238] [cursor=pointer]:
+            - generic [ref=f3e1241]:
+              - generic [ref=f3e1242]: 4:00 PM
+              - generic [ref=f3e1247]: 3 slots left
+          - button "4:30 PM slot" [ref=f3e1248] [cursor=pointer]:
+            - generic [ref=f3e1251]:
+              - generic [ref=f3e1252]: 4:30 PM
+              - generic [ref=f3e1257]: 3 slots left
+        - generic [ref=f3e1258]: Times reflect current shop availability.
+        - generic [ref=f3e1267]: "Selected: Thu, 23 Jul · 12:30 PM"
+    - generic [ref=f3e1268]:
+      - generic [ref=f3e1270]:
+        - generic [ref=f3e1271]: Summary
+        - generic [ref=f3e1272]: Booking summary
+      - generic [ref=f3e1276]:
+        - generic [ref=f3e1277]: Li-Ning N63 · 22 lbs
+        - generic [ref=f3e1278]: Thu, 23 Jul · 12:30 PM
+        - generic [ref=f3e1279]: Assigned shop
+    - generic [ref=f3e1280]:
+      - generic [ref=f3e1282]:
+        - generic [ref=f3e1283]: Photo
+        - generic [ref=f3e1284]: Optional photo
+      - generic [ref=f3e1288]:
+        - generic [ref=f3e1289]: Add a racket photo for admin review.
+        - button "Upload photo" [ref=f3e1291] [cursor=pointer]
+    - button "Continue to summary" [ref=f3e1299] [cursor=pointer]

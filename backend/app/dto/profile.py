@@ -11,6 +11,7 @@ from app.shared.serialization import isoformat_or_none
 class ProfilePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    username: str | None = Field(default=None, min_length=2, max_length=64)
     skill_level: str | None = Field(
         default=None,
         pattern="^(beginner|intermediate|advanced)$",
@@ -43,12 +44,14 @@ class ProfilePayload(BaseModel):
 
 
 class ProfileOut(ProfilePayload):
+    username: str
     created_at: str | None = None
     updated_at: str | None = None
 
 
-def profile_to_dto(profile: PlayerProfile) -> ProfileOut:
+def profile_to_dto(profile: PlayerProfile, *, username: str) -> ProfileOut:
     return ProfileOut(
+        username=username,
         skill_level=profile.skill_level,
         playing_style=profile.playing_style,
         budget_tier=profile.budget_tier,

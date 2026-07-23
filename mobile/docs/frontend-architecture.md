@@ -33,9 +33,9 @@ The player home `Trending Strings` carousel is now backend-backed through admin 
 
 ### State and data
 
-- Zustand for application state, hybrid session state, and mock mutations
-- React Query provider is installed at the app root and the player MVP flow can use live backend requests
-- Local mock datasets in `mocks/` remain available for deferred FYP2 routes and fallback prototype state
+- Zustand for application state, live backend snapshots, hybrid session state, and mock mutations
+- Explicit API hydration through `services/backendApi.ts` and DTO mapping through `services/backendMappers.ts`
+- Local mock datasets in `mocks/` remain available for mock mode and deferred FYP2 routes, never as fallback records inside a backend session
 
 ### Forms and validation
 
@@ -49,9 +49,10 @@ flowchart TD
     A[Expo Router Entry] --> B[app/_layout.tsx]
     B --> C[Providers]
     C --> C1[GestureHandlerRootView]
-    C --> C2[QueryClientProvider]
-    C --> C3[HeroUINativeProvider]
+    C --> C2[HeroUINativeProvider]
     B --> D[Root Stack]
+    U[Native SecureStore] --> V[services/backendSessionStorage.ts]
+    V --> B
 
     D --> E[app/index.tsx]
     E --> F{Authenticated?}
@@ -87,9 +88,9 @@ Responsibilities:
 
 - imports `global.css`
 - wraps the app in `GestureHandlerRootView`
-- creates the global `QueryClient`
 - injects `HeroUINativeProvider`
-- revalidates persisted backend sessions before auth redirects resolve
+- restores native tokens from SecureStore and revalidates them before auth redirects resolve
+- keeps web bearer tokens memory-only, so a full browser refresh returns to login
 - renders an Expo Router `Stack` with hidden native headers
 
 This file is the composition root for the frontend.
@@ -201,7 +202,7 @@ The store owns:
 The store handles all user-visible prototype mutations:
 
 - auth login, quick login, logout, player registration
-- backend player session hydration, refresh-time revalidation, and persistence
+- backend session hydration, native SecureStore persistence, web memory-only handling, and refresh-time revalidation
 - player profile updates
 - booking draft creation and clearing
 - deferred mock-first booking payment flow
@@ -275,7 +276,7 @@ This file exposes synchronous helper functions such as:
 - `getAdminAnalytics`
 - `getConversationsForAdmin`
 
-These helpers read from `MOCK_*` constants and are mostly used for lookup convenience and screen composition.
+These helpers read from `MOCK_*` constants in mock/deferred mode. For live users, admins, strings, and bookings they read only the backend snapshots in Zustand and return missing data as missing instead of crossing into mock records.
 
 ### 7.4 Mock data sources: `mocks/`
 
@@ -298,13 +299,13 @@ The mock layer is split by domain:
 
 ### Architectural note
 
-The system currently mixes:
+The deferred prototype layer still mixes:
 
 - direct reads from Zustand state
 - direct reads from `services/mockAppService.ts`
 - direct imports from mock constants in some screens
 
-That is acceptable for the prototype, but in a production migration the service layer should become the single read boundary and the store should evolve into UI/session state on top of API-backed queries and mutations.
+Live FYP1 paths use an explicit live/mock seam and fail closed. When deferred FYP2 domains become live, their direct mock reads must move behind the same boundary before their routes are enabled.
 
 ## 8. Domain Model
 
@@ -332,11 +333,13 @@ Core shared interfaces are defined in `types/domain.ts`.
 - `catalog`
 - `inventory`
 
-`catalog` holds string master data such as names, gauges, material, description, performance scores, image, and visibility state.
+`catalog` holds string master data such as names, hybrid identity, main/cross gauges, material, description, performance scores, image, and visibility state.
 
 `inventory` holds vendor-specific data such as stock quantity, price, price status, availability status, and shop note.
 
 Legacy top-level string fields remain available so existing player flows do not need a wide refactor yet.
+
+The live admin detail editor commits changed catalog, official-performance, and inventory sections through one backend editor command and one database transaction. Image upload/removal remains a separate file-storage operation and is reported independently if it fails after the structured save.
 
 ### Important enums and unions
 
@@ -700,8 +703,7 @@ This pattern makes the app easy to extend because new screens can remain visuall
 ## 16. Current Architectural Constraints
 
 - Data access is split across store state, mock services, and direct mock imports
-- React Query is initialized but not yet the primary data-fetching mechanism
-- There is no dedicated repository/API client abstraction yet
+- Live request lifecycle and cache invalidation are still manually coordinated by layouts and screens
 - Some business logic lives directly inside screens, especially ranking and feature-specific derivations
 - The test surface is currently very thin; the repo only includes a small HeroUI compatibility smoke component in `tests/heroui-compat.smoke.tsx`
 
@@ -711,8 +713,8 @@ When this frontend moves beyond FYP mock mode, the cleanest migration path is:
 
 1. Replace direct `MOCK_*` reads with API-backed query functions
 2. Keep `types/domain.ts` as the domain contract and add mapping if backend DTOs differ
-3. Move server data ownership to React Query
-4. Narrow Zustand to session state, drafts, transient UI state, and optimistic local workflows
+3. Choose one server-state owner for each newly enabled FYP2 domain before adding a cache library
+4. Continue narrowing Zustand toward session state, snapshots, drafts, and transient local workflows
 5. Keep `components/ui` and `components/shared` as the stable design-system layer
 6. Preserve Expo Router route groups and role guards; they already map well to product boundaries
 

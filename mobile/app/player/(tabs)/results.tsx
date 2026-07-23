@@ -230,10 +230,10 @@ export default function RecommendationResultsScreen() {
                 const nlpEvidenceCount = Object.keys(
                   item.rationalePayload?.nlp_review_scores ?? {},
                 ).length;
-                const fitAngle = item.fitAngle ?? (isTop ? 'Best match' : `Option ${index + 1}`);
+                const fitAngle = item.fitAngle ?? `Rank #${index + 1}`;
                 const tradeOff =
                   item.tradeOffSummary ??
-                  'Balanced against your saved profile, price range, and available review signals.';
+                  'No evidence-backed trade-off was recorded.';
 
                 return (
                   <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md" className="rounded-[30px]">
@@ -278,7 +278,7 @@ export default function RecommendationResultsScreen() {
                         Why this one
                       </HeroText>
                       <HeroText className="mt-2 text-sm leading-5 text-neutral-700">
-                        {item.reasons[0] ?? 'Ranked highly for your saved player profile.'}
+                        {item.reasons[0] ?? 'No scorer reason was returned.'}
                       </HeroText>
                       <View className="mt-3 h-px bg-neutral-200" />
                       <HeroText className="mt-3 text-sm leading-5 text-neutral-600">

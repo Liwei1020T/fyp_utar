@@ -24,6 +24,7 @@ from app.dto.catalog import OfficialPerformancePayload
 from app.dto.catalog import RecommendationMatrixImportReportOut
 from app.dto.catalog import RecommendationMatrixInspectionOut
 from app.dto.catalog import StringOut
+from app.dto.catalog import StringEditorUpdatePayload
 from app.dto.catalog import StringWritePayload
 from app.dto.catalog import inventory_movement_to_dto
 from app.dto.catalog import inventory_string_to_dto
@@ -88,6 +89,7 @@ from app.use_cases.catalog.update_official_performance import (
     UpdateOfficialPerformanceUseCase,
 )
 from app.use_cases.catalog.update_string import UpdateStringUseCase
+from app.use_cases.catalog.update_string_editor import UpdateStringEditorUseCase
 from app.use_cases.recommendation.list_recommendation_logs import (
     ListRecommendationLogsUseCase,
 )
@@ -160,6 +162,40 @@ async def save_string_image_upload(photo: UploadFile) -> str:
     )
 
 
+def inventory_update_values(payload: InventoryUpdatePayload) -> dict[str, object]:
+    values: dict[str, object] = {}
+    numeric_fields = (
+        "price_rm",
+        "stock_level",
+        "current_stock",
+        "reserved_stock",
+        "reorder_level",
+        "reorder_quantity",
+        "cost_price",
+        "selling_price",
+    )
+    optional_fields = (
+        "pricing_mode",
+        "availability_status",
+        "movement_type",
+        "reference_type",
+        "reference_id",
+    )
+    for field in numeric_fields:
+        if field in payload.model_fields_set:
+            values[field] = getattr(payload, field)
+    for field in optional_fields:
+        if field in payload.model_fields_set:
+            values[field] = getattr(payload, field)
+    if "is_active" in payload.model_fields_set:
+        values["is_active"] = bool(payload.is_active)
+    if "admin_note" in payload.model_fields_set:
+        values["admin_note"] = (
+            payload.admin_note.strip() if payload.admin_note else None
+        )
+    return values
+
+
 @router.get("/strings", response_model=dict)
 def admin_list_strings(
     search: str | None = Query(default=None, max_length=100),
@@ -228,7 +264,7 @@ def admin_update_string(
     )
     catalog_values = payload.model_dump(
         exclude_none=True,
-        exclude={"price_rm"},
+        exclude={"brand", "price_rm"},
     )
     item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
@@ -347,44 +383,52 @@ def admin_update_inventory_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> AdminInventoryStringOut:
-    values: dict[str, object] = {}
-    if "price_rm" in payload.model_fields_set:
-        values["price_rm"] = payload.price_rm
-    if "stock_level" in payload.model_fields_set:
-        stock_level = payload.stock_level or 0
-        values["stock_level"] = stock_level
-        values["is_active"] = stock_level > 0
-    if "current_stock" in payload.model_fields_set:
-        values["current_stock"] = payload.current_stock or 0
-    if "reserved_stock" in payload.model_fields_set:
-        values["reserved_stock"] = payload.reserved_stock or 0
-    if "reorder_level" in payload.model_fields_set:
-        values["reorder_level"] = payload.reorder_level or 0
-    if "reorder_quantity" in payload.model_fields_set:
-        values["reorder_quantity"] = payload.reorder_quantity or 0
-    if "cost_price" in payload.model_fields_set:
-        values["cost_price"] = payload.cost_price
-    if "selling_price" in payload.model_fields_set:
-        values["selling_price"] = payload.selling_price
-    if "pricing_mode" in payload.model_fields_set:
-        values["pricing_mode"] = payload.pricing_mode
-    if "availability_status" in payload.model_fields_set:
-        values["availability_status"] = payload.availability_status
-    if "is_active" in payload.model_fields_set:
-        values["is_active"] = bool(payload.is_active)
-    if "admin_note" in payload.model_fields_set:
-        values["admin_note"] = (
-            payload.admin_note.strip() if payload.admin_note else None
-        )
-    if "movement_type" in payload.model_fields_set:
-        values["movement_type"] = payload.movement_type
-    if "reference_type" in payload.model_fields_set:
-        values["reference_type"] = payload.reference_type
-    if "reference_id" in payload.model_fields_set:
-        values["reference_id"] = payload.reference_id
     item = UpdateInventoryStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
-        values=values,
+        values=inventory_update_values(payload),
+    )
+    return inventory_string_to_dto(item)
+
+
+@router.put(
+    "/inventory/strings/{string_id}/editor",
+    response_model=AdminInventoryStringOut,
+)
+def admin_update_string_editor(
+    string_id: str,
+    payload: StringEditorUpdatePayload,
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> AdminInventoryStringOut:
+    catalog_values: dict[str, object] = {}
+    if payload.catalog is not None:
+        PrepareStringValuesUseCase(
+            approved_strings_path=get_settings().approved_strings_path
+        ).execute(
+            brand=payload.catalog.brand,
+            model_name=payload.catalog.model_name,
+            overrides={},
+        )
+        catalog_values = payload.catalog.model_dump(
+            exclude_none=True,
+            exclude={"brand", "price_rm"},
+        )
+
+    inventory_values = (
+        inventory_update_values(payload.inventory)
+        if payload.inventory is not None
+        else {}
+    )
+    official_performance_values = (
+        payload.official_performance.model_dump(exclude_none=True)
+        if payload.official_performance is not None
+        else {}
+    )
+    item = UpdateStringEditorUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        catalog_values=catalog_values,
+        inventory_values=inventory_values,
+        official_performance_values=official_performance_values,
     )
     return inventory_string_to_dto(item)
 
@@ -691,6 +735,7 @@ def admin_list_slots(
         store_repository=store_repository,
         booking_repository=booking_repository,
         clock=clock,
+        store_timezone=get_settings().store_timezone,
     ).execute(date_value=date_value, date_from=date_from, days=days)
     return page_to_dict(page, lambda item: slot_to_dto(item).model_dump())
 

@@ -43,6 +43,8 @@ const getNextStep = (status: BookingStatus, date?: string, time?: string): strin
       return `Completed on ${date || 'scheduled date'}`;
     case 'cancelled':
       return 'This booking was cancelled';
+    case 'rejected':
+      return 'This booking was declined by the shop';
     case 'pending_payment':
       return 'Next: Complete payment to finish';
     default:
@@ -96,6 +98,14 @@ const getStatusStripTone = (status: BookingStatus) => {
         iconColor: appChromeColors.primary,
         Icon: CircleDashed,
       };
+    case 'cancelled':
+    case 'rejected':
+      return {
+        container: 'bg-danger-50 border-danger-100',
+        text: 'text-danger-700',
+        iconColor: '#B42318',
+        Icon: CircleDashed,
+      };
     case 'confirmed':
     case 'in_progress':
     default:
@@ -114,7 +124,7 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
   const StatusIcon = stripTone.Icon;
   const stringSpec = `${stringLabel} • ${booking.requestedTension} lbs`;
   const racketName = `${booking.racketBrand} ${booking.racketModel}`;
-  const bookingDateLabel = booking.dropOffDate || formatDateLabel(booking.dropOffDate);
+  const bookingDateLabel = formatDateLabel(booking.dropOffDate);
   const priceLabel = getBookingPriceLabel(booking);
   const content = (
     <AppCard variant="elevated" padding="sm">

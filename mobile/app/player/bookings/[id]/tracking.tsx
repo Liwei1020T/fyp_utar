@@ -18,6 +18,8 @@ const NEXT_STEP_LABELS: Partial<Record<BookingStatus, string>> = {
   in_progress: 'Ready for collection',
   ready_for_collection: 'Completed',
   completed: 'Service closed',
+  cancelled: 'Booking closed',
+  rejected: 'Review rejection reason',
 };
 
 function formatTrackingDateTime(value: string) {

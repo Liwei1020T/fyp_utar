@@ -1,63 +1,99 @@
-# NLP Workbench Latest — Canonical Root
+# NLP Workbench Latest — Canonical Experiment Root
 
-This is the approved canonical NLP root for the unified StringSence workspace.
-It is an offline notebook, dataset, and artifact workflow, not a public runtime
-service or an installable Python package.
+This is the approved offline NLP workspace for StringSence. The notebooks are
+thin, inspectable entry points over the tested code in `src/stringsense_nlp/`;
+they are not a public service and do not replace the backend scorer.
 
-## Included files
+## Immutable boundary
 
-- `data/archive_latest.zip`
-- `data/archive_latest/` extracted source data
-- `data/domain_dictionary_optimized_v8.csv`
-- `data/normalization_rules_v8.csv`
-- `data/nlp_absa_long_dataset_latest.csv`
-- `data/nlp_absa_high_confidence_latest.csv`
-- `data/latest_practical_string_feature_matrix_v8_v6dict.csv`
-- `data/latest_tfidf_string_feature_matrix.csv`
-- `output/latest_practical_string_feature_matrix_v8_v6dict.csv`
-- `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
-- `stringsense_complete_absa_pipeline_notebook_latest.ipynb`
-- `stringsense_absa_labeling_notebook_latest.ipynb`
-- `requirements.txt`
+- Read only `data/archive_latest/badminton_strings_data.json` as the raw review
+  source. Never open, extract, hash, or rewrite `data/archive_latest.zip`.
+- Treat the V8 dictionary and normalization rules as read-only inputs.
+- Preserve every `data/*_latest.csv` as historical evidence. The two ABSA
+  `*_latest.csv` files predate the leakage-safe split and are not training inputs.
+- Never overwrite the backend's current canonical artifact at
+  `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` from a notebook.
+- Create experiment artifacts only under `output/runs/<run-id>/`. That directory
+  is ignored by Git and every stage is create-once.
 
-## Runtime handoff
+Each run records SHA-256 fingerprints for readable inputs and protected assets.
+The ZIP is verified with metadata only so the pipeline never reads its content.
 
-The unified backend uses the V9 workbook as its public recommendation source:
+## Environment
+
+The workbench pins Python 3.13 in `.python-version`. Bootstrap the isolated
+environment from the exact, hash-locked dependency set:
+
+```bash
+cd ml/nlp-workbench-latest
+./scripts/bootstrap.sh
+```
+
+`requirements.in` contains direct dependencies. `requirements.txt` is the
+generated lock. Only regenerate it as an intentional dependency change:
+
+```bash
+UV_CACHE_DIR=/private/tmp/stringsense-nlp-uv-cache \
+  uv pip compile requirements.in --python 3.13 --generate-hashes \
+  --output-file requirements.txt
+```
+
+The bootstrap uses `uv` to select Python and `pip --require-hashes` to install.
+That combination avoids the external-volume AppleDouble metadata issue while
+retaining exact package and artifact verification.
+
+## Validate and run
+
+Run the fast gate first:
+
+```bash
+.venv/bin/python -m pytest -q tests
+../../backend/.venv/bin/ruff check src scripts tests --exclude '._*' --exclude '**/._*'
+../../backend/.venv/bin/ruff format --check src scripts tests --exclude '._*' --exclude '**/._*'
+```
+
+Then execute both canonical notebooks twice with the same experiment base ID:
+
+```bash
+.venv/bin/python scripts/run_experiment.py \
+  --run-id <experiment-id> \
+  --repeat 2
+```
+
+The runner executes labeling before the pipeline, uses the `stringsense-nlp`
+kernel, rejects existing stage directories, checks every leakage gate, verifies
+protected assets, and fails unless metrics and all CSV hashes match across both
+runs. Jupyter may report that its short-lived local kernel uses TCP; the runner
+does not expose an application port and immediately closes each kernel.
+
+For interactive inspection, export one unused `STRINGSENSE_NLP_RUN_ID`, open
+Jupyter Lab, and run the labeling notebook before the complete pipeline notebook.
+Do not reuse a run ID.
+
+## Run layout and promotion
+
+```text
+output/runs/<run-id>/
+├── labeling/
+│   ├── manifest.json
+│   ├── nlp_absa_long_dataset.csv
+│   └── nlp_absa_high_confidence.csv
+├── pipeline/
+│   ├── manifest.json
+│   ├── run_summary.json
+│   ├── model artifacts
+│   └── versioned matrices and evidence CSVs
+├── run_manifest.json
+└── execution_report.json
+```
+
+Every run manifest ends with `promotion.status = "not_promoted"`. Comparing and
+promoting an experiment artifact to the backend V9 workbook is a separate task
+that requires explicit human approval. The backend continues to use:
 
 ```text
 output/latest_practical_string_feature_matrix_v9_v8dict.xlsx
 ```
-
-The standalone `ai_service` compatibility loader uses the latest CSV export:
-
-```text
-output/latest_practical_string_feature_matrix_v8_v6dict.csv
-```
-
-The notebook can also generate optional compatibility files under `output/`,
-including `rule_based_review_aspect_signals.csv`.
-
-## Run the notebooks
-
-From this directory:
-
-```bash
-python3 -m pip install -r requirements.txt
-jupyter lab
-```
-
-Run either latest notebook from top to bottom. The notebooks use local relative
-paths and write generated artifacts to this directory's `output/` folder.
-
-When launched from the repository root, the notebooks automatically resolve
-`ml/nlp-workbench-latest` as their working directory when
-`data/archive_latest.zip` is not present in the current directory.
-
-## Data boundary
-
-The archive and extracted source data are read-only inputs. Do not overwrite
-the original source data or process later modeling stages without a separate
-task decision. Generated outputs should remain versioned and clearly named.
 
 ## Dataset summary
 
@@ -81,3 +117,6 @@ task decision. Generated outputs should remain versioned and clearly named.
   }
 }
 ```
+
+The leakage-safe split groups by SHA-256 of normalized review text. All aspects
+and duplicate normalized texts inherit one deterministic 80/10/10 partition.

@@ -14,7 +14,6 @@ import {
   Undo2,
 } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppButton } from '../../../components/ui/AppButton';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
@@ -76,7 +75,9 @@ export default function AdminDashboardScreen() {
 
   const today = formatLocalDateInputValue(new Date());
   const adminBookings = bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled');
-  const todayBookings = adminBookings.filter((item) => formatLocalDateInputValue(item.createdAt) === today);
+  const todayBookings = adminBookings.filter(
+    (item) => item.dropOffDate === today,
+  );
   const awaitingDropOffCount = adminBookings.filter((item) => item.status === 'awaiting_dropoff').length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyForCollectionCount = adminBookings.filter(

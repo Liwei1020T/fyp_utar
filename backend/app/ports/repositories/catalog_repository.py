@@ -55,6 +55,15 @@ class CatalogRepository(Protocol):
         self, string_id: str, values: dict[str, object]
     ) -> StringItem: ...
 
+    def update_editor(
+        self,
+        string_id: str,
+        *,
+        catalog_values: dict[str, object],
+        inventory_values: dict[str, object],
+        official_performance_values: dict[str, object],
+    ) -> StringItem: ...
+
     def get_official_performance(
         self,
         string_id: str,
