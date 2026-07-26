@@ -76,6 +76,7 @@ class SqlAlchemyBookingRepository:
         notes: str | None,
         status: str,
         changed_by_user_id: str | None,
+        service_method: str = "counter_dropoff",
     ) -> BookingRecord:
         booking = Booking(
             user_id=user_id,
@@ -87,6 +88,7 @@ class SqlAlchemyBookingRepository:
             drop_off_datetime=drop_off_datetime,
             expected_completion_datetime=expected_completion_datetime,
             notes=notes,
+            service_method=service_method,
             status=status,
         )
         self.db.add(booking)

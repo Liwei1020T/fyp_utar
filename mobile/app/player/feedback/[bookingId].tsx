@@ -44,6 +44,16 @@ const SENTIMENT_OPTIONS: {
   { id: 'would_book_again', label: 'Would book again' },
 ];
 
+const DETAIL_RATINGS = [
+  ['recommendationRelevance', 'Recommendation relevance'],
+  ['stringSatisfaction', 'String satisfaction'],
+  ['tensionSatisfaction', 'Tension satisfaction'],
+  ['comfort', 'Comfort'],
+  ['control', 'Control'],
+  ['repulsion', 'Repulsion'],
+  ['durability', 'Durability'],
+] as const;
+
 export default function FeedbackScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ bookingId?: string }>();
@@ -56,6 +66,14 @@ export default function FeedbackScreen() {
   const [existingFeedback, setExistingFeedback] =
     useState<BookingFeedback | null>(null);
   const [rating, setRating] = useState(5);
+  const [detailRatings, setDetailRatings] = useState(
+    Object.fromEntries(DETAIL_RATINGS.map(([key]) => [key, 5])) as Record<
+      (typeof DETAIL_RATINGS)[number][0],
+      number
+    >,
+  );
+  const [wouldUseAgain, setWouldUseAgain] = useState(true);
+  const [comment, setComment] = useState('');
   const [stringFeedback, setStringFeedback] = useState('');
   const [serviceFeedback, setServiceFeedback] = useState('');
   const [sentimentTags, setSentimentTags] = useState<FeedbackSentimentTag[]>([]);
@@ -153,6 +171,7 @@ export default function FeedbackScreen() {
   };
 
   const hasFeedbackContent =
+    Boolean(comment.trim()) ||
     Boolean(stringFeedback.trim()) ||
     Boolean(serviceFeedback.trim()) ||
     sentimentTags.length > 0;
@@ -180,6 +199,15 @@ export default function FeedbackScreen() {
         booking.id,
         {
           rating,
+          recommendation_relevance: detailRatings.recommendationRelevance,
+          string_satisfaction: detailRatings.stringSatisfaction,
+          tension_satisfaction: detailRatings.tensionSatisfaction,
+          comfort: detailRatings.comfort,
+          control: detailRatings.control,
+          repulsion: detailRatings.repulsion,
+          durability: detailRatings.durability,
+          would_use_again: wouldUseAgain,
+          comment: comment.trim() || null,
           string_feedback: stringFeedback.trim() || null,
           service_feedback: serviceFeedback.trim() || null,
           sentiment_tags: sentimentTags,
@@ -331,6 +359,42 @@ export default function FeedbackScreen() {
             </HeroText>
           ) : null}
         </AppCard>
+        <AppSection eyebrow="Detailed scores" title="Recorded experience">
+          <AppCard variant="elevated" padding="md">
+            {DETAIL_RATINGS.map(([key, label]) => (
+              <View
+                key={key}
+                className="flex-row items-center justify-between py-2"
+              >
+                <HeroText className="text-sm text-neutral-600">{label}</HeroText>
+                <HeroText className="text-sm font-bold text-neutral-950">
+                  {existingFeedback[key] ?? '—'}/5
+                </HeroText>
+              </View>
+            ))}
+            <View className="flex-row items-center justify-between py-2">
+              <HeroText className="text-sm text-neutral-600">
+                Would use again
+              </HeroText>
+              <HeroText className="text-sm font-bold text-neutral-950">
+                {existingFeedback.wouldUseAgain == null
+                  ? '—'
+                  : existingFeedback.wouldUseAgain
+                    ? 'Yes'
+                    : 'No'}
+              </HeroText>
+            </View>
+          </AppCard>
+        </AppSection>
+        {existingFeedback.comment ? (
+          <AppSection eyebrow="Comment" title="Player note">
+            <AppCard variant="elevated" padding="md">
+              <HeroText className="text-sm leading-6 text-neutral-700">
+                {existingFeedback.comment}
+              </HeroText>
+            </AppCard>
+          </AppSection>
+        ) : null}
         {existingFeedback.stringFeedback ? (
           <AppSection eyebrow="String" title="Setup feedback">
             <AppCard variant="elevated" padding="md">
@@ -419,6 +483,80 @@ export default function FeedbackScreen() {
             Overall rating: {rating}/5
           </HeroText>
         </AppCard>
+      </AppSection>
+
+      <AppSection eyebrow="Detailed ratings" title="Rate each part">
+        <View className="gap-3">
+          {DETAIL_RATINGS.map(([key, label]) => (
+            <AppCard key={key} variant="elevated" padding="md">
+              <HeroText className="mb-3 text-sm font-semibold text-neutral-900">
+                {label}: {detailRatings[key]}/5
+              </HeroText>
+              <View
+                className="flex-row gap-2"
+                accessibilityRole="radiogroup"
+                accessibilityLabel={label}
+              >
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <Pressable
+                    key={value}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${label} ${value} out of 5`}
+                    accessibilityState={{
+                      checked: detailRatings[key] === value,
+                    }}
+                    className={`h-10 flex-1 items-center justify-center rounded-xl ${
+                      detailRatings[key] === value
+                        ? 'bg-primary-600'
+                        : 'bg-neutral-100'
+                    }`}
+                    onPress={() =>
+                      setDetailRatings((current) => ({
+                        ...current,
+                        [key]: value,
+                      }))
+                    }
+                  >
+                    <HeroText
+                      className={`text-sm font-bold ${
+                        detailRatings[key] === value
+                          ? 'text-white'
+                          : 'text-neutral-600'
+                      }`}
+                    >
+                      {value}
+                    </HeroText>
+                  </Pressable>
+                ))}
+              </View>
+            </AppCard>
+          ))}
+        </View>
+      </AppSection>
+
+      <AppSection eyebrow="Reuse" title="Would you use this setup again?">
+        <View className="flex-row gap-3">
+          {[true, false].map((value) => (
+            <View key={String(value)} className="flex-1">
+              <AppButton
+                label={value ? 'Yes' : 'No'}
+                variant={wouldUseAgain === value ? 'primary' : 'outline'}
+                onPress={() => setWouldUseAgain(value)}
+              />
+            </View>
+          ))}
+        </View>
+      </AppSection>
+
+      <AppSection eyebrow="Comment" title="Anything else?">
+        <AppInput
+          value={comment}
+          onChangeText={setComment}
+          maxLength={2000}
+          multiline
+          inputClassName="min-h-24"
+          placeholder="Add your overall comment..."
+        />
       </AppSection>
 
       <AppSection eyebrow="String feedback" title="How did the setup feel?">

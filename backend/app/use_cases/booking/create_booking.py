@@ -41,6 +41,7 @@ class CreateBookingUseCase:
         slot_id: str | None,
         drop_off_datetime: datetime | None,
         notes: str | None,
+        service_method: str = "counter_dropoff",
     ) -> BookingRecord:
         string_item = self.catalog_repository.get_by_id(
             string_id, include_inactive=False
@@ -71,6 +72,7 @@ class CreateBookingUseCase:
             drop_off_datetime=resolved_drop_off,
             expected_completion_datetime=None,
             notes=notes,
+            service_method=service_method,
             status=BookingStatus.AWAITING_DROPOFF.value,
             changed_by_user_id=user_id,
         )

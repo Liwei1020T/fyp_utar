@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -7,9 +7,11 @@ import {
   CalendarRange,
   Clock3,
   CreditCard,
+  BellRing,
   LogOut,
   ListTodo,
   ScanSearch,
+  MessageSquareText,
   Settings2,
   Store,
   TimerReset,
@@ -24,9 +26,30 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { appChromeColors } from '../../../components/ui/theme';
 import { formatLocalDateInputValue } from '../../../lib/formatters';
-import { useAppStore, useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useBookings,
+  useCurrentUser,
+  useStrings,
+} from '../../../store/appStore';
+import { backendApi } from '../../../services/backendApi';
 
 const PRIMARY_ACTIONS = [
+  {
+    title: 'Feedback',
+    subtitle: 'Review satisfaction scores and low-rating cases.',
+    route: '/admin/feedback',
+    icon: MessageSquareText,
+    variant: 'outline' as const,
+  },
+  {
+    title: 'Notifications',
+    subtitle: 'Inspect devices, delivery logs, and resend failures.',
+    route: '/admin/notifications',
+    icon: BellRing,
+    variant: 'outline' as const,
+  },
   {
     title: 'Check-in',
     subtitle: 'Confirm player racket drop-off at the counter.',
@@ -81,9 +104,30 @@ const PRIMARY_ACTIONS = [
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const user = useCurrentUser();
+  const token = useBackendAccessToken();
   const bookings = useBookings();
   const strings = useStrings();
   const logout = useAppStore((state) => state.logout);
+  const settings = useAppStore((state) => {
+    const byUser = state.adminSettings.find((item) => item.adminId === user?.id);
+    return byUser ?? state.adminSettings.find((item) => item.adminId === 'main');
+  });
+  const storeName = settings?.storeName.trim();
+  const [feedbackBookingIds, setFeedbackBookingIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    if (!token || user?.role !== 'admin') return;
+    void backendApi
+      .adminListFeedback(token)
+      .then((response) =>
+        setFeedbackBookingIds(
+          new Set(response.items.map((item) => item.booking_id)),
+        ),
+      )
+      .catch(() => setFeedbackBookingIds(new Set()));
+  }, [token, user?.role]);
 
   if (!user || user.role !== 'admin') {
     return null;
@@ -100,13 +144,19 @@ export default function AdminDashboardScreen() {
     (item) => item.status === 'ready_for_collection',
   ).length;
   const lowStockCount = strings.filter((item) => item.availability === 'low_stock').length;
+  const pendingFeedbackCount = adminBookings.filter(
+    (item) =>
+      item.status === 'completed' && !feedbackBookingIds.has(item.id),
+  ).length;
 
   return (
     <AppScreen
       tone="admin"
       headerVariant="primary"
       title="Admin overview"
-      subtitle={`${user.businessName} counter operations.`}
+      subtitle={
+        storeName ? `${storeName} counter operations.` : 'Store counter operations.'
+      }
       headerRight={
         <AppIconButton
           icon={<LogOut size={20} color={appChromeColors.danger} />}
@@ -125,6 +175,12 @@ export default function AdminDashboardScreen() {
               title="Today bookings"
               value={String(todayBookings.length)}
               icon={<CalendarRange size={20} color={appChromeColors.primary} />}
+            />
+            <MetricStatCard
+              title="Pending feedback"
+              value={String(pendingFeedbackCount)}
+              icon={<MessageSquareText size={20} color={appChromeColors.warning} />}
+              accentClassName="bg-warning-50"
             />
             <MetricStatCard
               title="Awaiting drop-off"

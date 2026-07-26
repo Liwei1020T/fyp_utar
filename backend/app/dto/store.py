@@ -108,7 +108,7 @@ class BookingSlotOut(BaseModel):
 
 
 class CheckInLookupOut(BaseModel):
-    matched_by: Literal["booking_id", "check_in_reference"]
+    matched_by: Literal["booking_id", "check_in_reference", "qr_token"]
     booking: dict[str, object]
 
 
@@ -124,6 +124,13 @@ class CheckInPayload(BaseModel):
         if bool(self.booking_id) == bool(self.reference):
             raise ValueError("Provide exactly one of booking_id or reference")
         return self
+
+
+class SecureCheckInPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    token: str = Field(min_length=16, max_length=255)
+    note: str | None = Field(default=None, max_length=500)
 
 
 class ServiceQueueItemOut(BaseModel):
@@ -153,6 +160,8 @@ class StoreSettingsPayload(BaseModel):
     store_policy_text: str = Field(min_length=1, max_length=2000)
     address: str = Field(min_length=1, max_length=500)
     trending_string_ids: list[str] = Field(default_factory=list, max_length=5)
+    default_service_price: float = Field(default=0, ge=0, le=1000)
+    notification_settings: dict[str, object] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_trending_string_ids(self) -> "StoreSettingsPayload":
@@ -185,6 +194,11 @@ class AnalyticsSummaryOut(BaseModel):
     low_stock_count: int
     unread_chats: int
     today_revenue: float
+    repeat_customer_count: int
+    pending_feedback_count: int
+    average_feedback_score: float | None
+    average_completion_hours: float | None
+    tension_distribution: dict[str, int]
     busy_slots: list[str]
     popular_string_ids: list[str]
     workload_mix: list[AnalyticsWorkloadEntryOut]
@@ -219,6 +233,8 @@ def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
         store_policy_text=settings.store_policy_text,
         address=settings.address,
         trending_string_ids=settings.trending_string_ids,
+        default_service_price=settings.default_service_price,
+        notification_settings=settings.notification_settings,
         updated_at=settings.updated_at,
     )
 
@@ -238,6 +254,11 @@ def analytics_summary_to_dto(summary: AnalyticsSummary) -> AnalyticsSummaryOut:
         low_stock_count=summary.low_stock_count,
         unread_chats=summary.unread_chats,
         today_revenue=summary.today_revenue,
+        repeat_customer_count=summary.repeat_customer_count,
+        pending_feedback_count=summary.pending_feedback_count,
+        average_feedback_score=summary.average_feedback_score,
+        average_completion_hours=summary.average_completion_hours,
+        tension_distribution=summary.tension_distribution,
         busy_slots=summary.busy_slots,
         popular_string_ids=summary.popular_string_ids,
         workload_mix=[

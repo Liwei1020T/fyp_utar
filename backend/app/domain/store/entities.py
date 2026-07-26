@@ -39,6 +39,8 @@ class StoreSettingsRecord:
     store_policy_text: str
     address: str
     trending_string_ids: list[str]
+    default_service_price: float
+    notification_settings: dict[str, object]
     updated_at: str | None
 
 
@@ -102,6 +104,11 @@ class AnalyticsSummary:
     low_stock_count: int
     unread_chats: int
     today_revenue: float
+    repeat_customer_count: int
+    pending_feedback_count: int
+    average_feedback_score: float | None
+    average_completion_hours: float | None
+    tension_distribution: dict[str, int]
     busy_slots: list[str]
     popular_string_ids: list[str]
     workload_mix: list[AnalyticsWorkloadEntry]

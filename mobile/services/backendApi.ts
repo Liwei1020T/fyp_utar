@@ -1,9 +1,13 @@
 import type {
   BackendAdminInventoryString,
+  BackendAdminDeviceToken,
+  BackendAdminFeedback,
+  BackendAdminNotification,
   BackendAnalyticsSummary,
   BackendAuthResponse,
   BackendCheckInLookupResponse,
   BackendCheckInRequest,
+  BackendCheckInToken,
   BackendBooking,
   BackendBookingConversation,
   BackendBookingPaymentQuote,
@@ -18,6 +22,8 @@ import type {
   BackendNotification,
   BackendNotificationPreferences,
   BackendNotificationPreferencesPayload,
+  BackendPrivacySettings,
+  BackendDeviceToken,
   BackendOfficialPerformance,
   BackendOfficialPerformancePayload,
   BackendPage,
@@ -297,11 +303,43 @@ export const backendApi = {
   fetchCurrentUser(token: string) {
     return requestJson<BackendAuthResponse['user']>('/auth/me', { token });
   },
+  changePassword(
+    token: string,
+    payload: { current_password: string; new_password: string },
+  ) {
+    return requestJson<BackendMessageResponse>('/auth/change-password', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  requestAccountDeletion(token: string, reason?: string) {
+    return requestJson<{
+      id: string;
+      status: string;
+      reason: string | null;
+      requested_at: string;
+    }>('/auth/delete-account-request', {
+      method: 'POST',
+      body: { reason: reason?.trim() || null },
+      token,
+    });
+  },
   fetchProfile(token: string) {
     return requestJson<BackendProfile | null>('/profile', { token });
   },
   saveProfile(token: string, payload: BackendProfilePayload) {
     return requestJson<BackendProfile>('/profile', {
+      method: 'PUT',
+      body: payload,
+      token,
+    });
+  },
+  fetchPrivacySettings(token: string) {
+    return requestJson<BackendPrivacySettings>('/profile/privacy', { token });
+  },
+  updatePrivacySettings(token: string, payload: BackendPrivacySettings) {
+    return requestJson<BackendPrivacySettings>('/profile/privacy', {
       method: 'PUT',
       body: payload,
       token,
@@ -345,6 +383,21 @@ export const backendApi = {
         token,
       },
     );
+  },
+  registerPushToken(
+    token: string,
+    payload: {
+      token: string;
+      platform: 'ios' | 'android' | 'web';
+      device_name?: string;
+      enabled?: boolean;
+    },
+  ) {
+    return requestJson<BackendDeviceToken>('/devices/push-token', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
   },
   listPayments(token: string) {
     return requestJson<BackendPayment[]>('/payments', { token });
@@ -408,6 +461,19 @@ export const backendApi = {
   },
   fetchBooking(token: string, bookingId: string) {
     return requestJson<BackendBooking>(`/bookings/${bookingId}`, { token });
+  },
+  cancelBooking(token: string, bookingId: string, reason: string) {
+    return requestJson<BackendBooking>(`/bookings/${bookingId}/cancel`, {
+      method: 'POST',
+      body: { reason },
+      token,
+    });
+  },
+  createCheckInToken(token: string, bookingId: string) {
+    return requestJson<BackendCheckInToken>(
+      `/bookings/${bookingId}/check-in-token`,
+      { method: 'POST', token },
+    );
   },
   listPlayerConversations(token: string) {
     return requestJson<BackendBookingConversation[]>('/conversations', {
@@ -691,6 +757,24 @@ export const backendApi = {
       token,
     });
   },
+  adminLookupSecureCheckIn(token: string, qrToken: string) {
+    return requestJson<BackendCheckInLookupResponse>('/admin/check-in/lookup', {
+      method: 'POST',
+      body: { token: qrToken },
+      token,
+    });
+  },
+  adminConfirmSecureCheckIn(
+    token: string,
+    qrToken: string,
+    note?: string,
+  ) {
+    return requestJson<BackendBooking>('/admin/check-in/confirm', {
+      method: 'POST',
+      body: { token: qrToken, note: note?.trim() || null },
+      token,
+    });
+  },
   adminFetchServiceQueue(token: string) {
     return requestJson<BackendServiceQueue>('/admin/service-queue', {
       token,
@@ -726,6 +810,88 @@ export const backendApi = {
     return requestJson<BackendPopularString[]>(
       `/admin/analytics/popular-strings?${searchParams.toString()}`,
       { token },
+    );
+  },
+  adminListFeedback(
+    token: string,
+    params?: {
+      string_id?: string;
+      rating?: number;
+      date_from?: string;
+      date_to?: string;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.string_id) searchParams.set('string_id', params.string_id);
+    if (params?.rating != null) searchParams.set('rating', String(params.rating));
+    if (params?.date_from) searchParams.set('date_from', params.date_from);
+    if (params?.date_to) searchParams.set('date_to', params.date_to);
+    const suffix = searchParams.size ? `?${searchParams.toString()}` : '';
+    return requestJson<BackendPage<BackendAdminFeedback>>(
+      `/admin/feedback${suffix}`,
+      { token },
+    );
+  },
+  async adminExportFeedback(
+    token: string,
+    params?: {
+      string_id?: string;
+      rating?: number;
+      date_from?: string;
+      date_to?: string;
+    },
+  ) {
+    const searchParams = new URLSearchParams();
+    if (params?.string_id) searchParams.set('string_id', params.string_id);
+    if (params?.rating != null) searchParams.set('rating', String(params.rating));
+    if (params?.date_from) searchParams.set('date_from', params.date_from);
+    if (params?.date_to) searchParams.set('date_to', params.date_to);
+    const suffix = searchParams.size ? `?${searchParams.toString()}` : '';
+    const response = await fetch(
+      `${API_BASE_URL}/admin/feedback/export${suffix}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (!response.ok) {
+      throw new BackendApiError('Failed to export feedback.', response.status);
+    }
+    return response.text();
+  },
+  adminListNotifications(token: string, status?: string) {
+    const suffix = status
+      ? `?${new URLSearchParams({ status }).toString()}`
+      : '';
+    return requestJson<BackendAdminNotification[]>(
+      `/admin/notifications${suffix}`,
+      { token },
+    );
+  },
+  adminListDeviceTokens(token: string) {
+    return requestJson<BackendAdminDeviceToken[]>('/admin/device-tokens', {
+      token,
+    });
+  },
+  adminSendNotification(
+    token: string,
+    payload: {
+      user_id: string;
+      category: BackendAdminNotification['category'];
+      title: string;
+      body: string;
+      route?: string | null;
+    },
+  ) {
+    return requestJson<BackendAdminNotification>('/admin/notifications', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  adminResendNotification(token: string, notificationId: string) {
+    return requestJson<BackendAdminNotification>(
+      `/admin/notifications/${notificationId}/resend`,
+      { method: 'POST', token },
     );
   },
   adminListRecommendationRuns(
@@ -856,6 +1022,7 @@ export const backendApi = {
       slot_id?: string;
       drop_off_datetime?: string;
       notes?: string;
+      service_method?: 'counter_dropoff' | 'pickup_request';
     },
   ) {
     return requestJson<BackendBooking>('/bookings', {
@@ -901,6 +1068,12 @@ export const backendApi = {
     return requestJson<BackendRacket>(`/rackets/${racketId}`, {
       method: 'PATCH',
       body: payload,
+      token,
+    });
+  },
+  deleteRacket(token: string, racketId: string) {
+    return requestJson<BackendMessageResponse>(`/rackets/${racketId}`, {
+      method: 'DELETE',
       token,
     });
   },

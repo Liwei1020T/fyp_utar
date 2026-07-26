@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -60,6 +60,7 @@ export default function RacketPassportDetailScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [editFields, setEditFields] = useState<RacketEditFields | null>(null);
 
@@ -241,6 +242,45 @@ export default function RacketPassportDetailScreen() {
     }
   };
 
+  const deleteRacket = () => {
+    if (!token) {
+      return;
+    }
+    Alert.alert(
+      'Delete racket passport?',
+      'Completed booking history stays on the booking records.',
+      [
+        { text: 'Keep passport', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            setIsDeleting(true);
+            setSaveError(null);
+            void backendApi
+              .deleteRacket(token, racket.id)
+              .then(() => {
+                setLiveRackets(
+                  useAppStore
+                    .getState()
+                    .liveRackets.filter((item) => item.id !== racket.id),
+                );
+                router.replace('/player/rackets');
+              })
+              .catch((error: unknown) => {
+                setSaveError(
+                  error instanceof BackendApiError
+                    ? error.message
+                    : 'Failed to delete this racket passport.',
+                );
+              })
+              .finally(() => setIsDeleting(false));
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <AppScreen
       headerVariant="secondary"
@@ -290,13 +330,21 @@ export default function RacketPassportDetailScreen() {
           }
         />
         {token ? (
-          <AppButton
-            label={isEditing ? 'Close editor' : 'Edit passport'}
-            variant="outline"
-            onPress={() =>
-              isEditing ? setIsEditing(false) : beginEditing()
-            }
-          />
+          <>
+            <AppButton
+              label={isEditing ? 'Close editor' : 'Edit passport'}
+              variant="outline"
+              onPress={() =>
+                isEditing ? setIsEditing(false) : beginEditing()
+              }
+            />
+            <AppButton
+              label="Delete passport"
+              variant="outline"
+              isLoading={isDeleting}
+              onPress={deleteRacket}
+            />
+          </>
         ) : (
           <AppCard variant="subtle" padding="sm">
             <HeroText className="text-sm leading-6 text-neutral-600">
@@ -304,6 +352,11 @@ export default function RacketPassportDetailScreen() {
             </HeroText>
           </AppCard>
         )}
+        {!isEditing && saveError ? (
+          <HeroText className="text-sm font-medium text-red-600">
+            {saveError}
+          </HeroText>
+        ) : null}
       </View>
 
       {isEditing && editFields ? (

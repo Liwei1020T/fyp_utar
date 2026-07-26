@@ -462,6 +462,25 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
 
       <View className="mb-12 mt-8">
         <AppButton
+          label="Reset preference sliders"
+          variant="outline"
+          className="mb-3"
+          onPress={() => {
+            setPriorities({
+              power: 5,
+              control: 5,
+              durability: 5,
+              comfort: 5,
+              sound: 5,
+            });
+            setAdvancedPreferences({
+              elasticity: 5,
+              tensionRetention: 5,
+              stringMovement: 5,
+            });
+          }}
+        />
+        <AppButton
           label="Save player profile"
           size="lg"
           onPress={handleSubmit(onSubmit)}

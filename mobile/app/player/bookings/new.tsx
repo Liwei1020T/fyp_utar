@@ -111,6 +111,9 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     name: string;
     type: string;
   } | null>(null);
+  const [serviceMethod, setServiceMethod] = useState<
+    'counter_dropoff' | 'pickup_request'
+  >('counter_dropoff');
   const sourceSlots = liveSlots;
   const slots = sourceSlots.filter((item) => item.adminId === adminId && item.date === selectedDate);
   const availableSlots = useMemo(
@@ -297,6 +300,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
       racketModel: data.racketModel,
       requestedTension: data.requestedTension,
       notes: data.notes ?? '',
+      serviceMethod,
       slotId: selectedSlot.id,
       dropOffDate: selectedSlot.date,
       dropOffTime: selectedSlot.time,
@@ -684,6 +688,35 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
             )}
           />
         </AppCard>
+      </AppSection>
+
+      <AppSection
+        eyebrow="Handover"
+        title="Pickup or counter drop-off"
+        variant="compact"
+      >
+        <View className="flex-row gap-3">
+          {[
+            ['counter_dropoff', 'Counter drop-off'],
+            ['pickup_request', 'Request pickup'],
+          ].map(([id, label]) => (
+            <View key={id} className="flex-1">
+              <AppButton
+                label={label}
+                variant={serviceMethod === id ? 'primary' : 'outline'}
+                onPress={() =>
+                  setServiceMethod(
+                    id as 'counter_dropoff' | 'pickup_request',
+                  )
+                }
+              />
+            </View>
+          ))}
+        </View>
+        <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
+          Pickup is a request for the selected slot; the shop confirms logistics
+          through booking updates.
+        </HeroText>
       </AppSection>
 
       <AppSection eyebrow="Drop-off" title="Date and time" variant="compact">

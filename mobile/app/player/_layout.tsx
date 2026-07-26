@@ -132,6 +132,8 @@ export default function PlayerLayout() {
             bookingNotes: storeSettings.booking_notes,
             storePolicyText: storeSettings.store_policy_text,
             trendingStringIds: storeSettings.trending_string_ids ?? [],
+            defaultServicePrice: storeSettings.default_service_price,
+            notificationSettings: storeSettings.notification_settings,
           });
         } else if (storeSettingsResult.status === 'rejected') {
           console.warn('Failed to hydrate live store settings', storeSettingsResult.reason);

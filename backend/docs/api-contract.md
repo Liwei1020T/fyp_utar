@@ -143,11 +143,32 @@ Example profile request:
 - `PATCH /api/notifications/read`
 - `GET /api/notifications/preferences`
 - `PUT /api/notifications/preferences`
+- `POST /api/devices/push-token`
+- `GET /api/admin/device-tokens`
+- `GET /api/admin/notifications`
+- `POST /api/admin/notifications`
+- `POST /api/admin/notifications/{notification_id}/resend`
 
 Preferences are stored per authenticated user and contain boolean `booking`,
-`payment`, `service`, `chat`, and `recommendation` fields. The feed derives
-owned booking, service, conversation, payment, and recommendation events, then
-applies those preferences. Read event IDs are persisted per user.
+`payment`, `service`, `chat`, `recommendation`, and `system` fields. The feed
+derives owned operational events and includes persisted admin deliveries before
+applying those preferences. Read event IDs are persisted per user.
+
+Device registration stores only the authenticated user's Expo token. Admin
+delivery always creates an in-app notification record; remote Expo delivery is
+attempted only when `EXPO_PUSH_ENABLED=true`.
+
+### Account Security and Privacy
+
+- `POST /api/auth/change-password`
+- `POST /api/auth/delete-account-request`
+- `GET /api/profile/privacy`
+- `PUT /api/profile/privacy`
+
+Password changes verify the current password. Account deletion is an auditable
+request, not an immediate destructive delete. Privacy settings store analytics,
+personalization, and marketing consent independently from the recommendation
+profile.
 
 ### Booking Support Conversations
 
@@ -174,14 +195,20 @@ booking update history with a dedicated conversation channel.
 - `POST /api/rackets`
 - `GET /api/rackets/{racket_id}`
 - `PATCH /api/rackets/{racket_id}`
+- `DELETE /api/rackets/{racket_id}`
+- `GET /api/rackets/{racket_id}/history`
 - `GET /api/bookings/{booking_id}/feedback`
 - `POST /api/bookings/{booking_id}/feedback`
+- `GET /api/admin/feedback`
+- `GET /api/admin/feedback/export`
 
 Rackets are owned physical records with stable IDs. A booking may reference an
 owned racket and keeps the racket brand/model snapshot used at booking time.
 Racket detail history includes only completed bookings for that racket.
 Structured feedback is allowed once per owned completed booking, with a
-1-to-5 rating and whitelisted sentiment tags.
+1-to-5 overall rating plus optional relevance, string, tension, comfort,
+control, repulsion, and durability ratings. Admins can filter the persisted
+records and export the same fields as CSV.
 
 ### Payments and Wallet
 
@@ -229,6 +256,8 @@ any active payment so checkout never trusts a stale catalog snapshot.
 - `GET /api/admin/slots`
 - `GET /api/admin/check-in/lookup`
 - `POST /api/admin/check-in`
+- `POST /api/admin/check-in/lookup`
+- `POST /api/admin/check-in/confirm`
 - `GET /api/admin/service-queue`
 - `GET /api/admin/store-settings`
 - `PUT /api/admin/store-settings`
@@ -329,8 +358,21 @@ Store-ops responses add:
 - business hours day configs in snake_case (`is_open`, `open_time`, `slot_duration_minutes`, `max_bookings_per_slot`)
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
-- single-store settings payloads for support/policy copy plus `trending_string_ids` for player home merchandising; player clients read this through `GET /api/store-settings`
-- analytics summary and popular string aggregates for the admin dashboard
+- single-store settings payloads for support/policy copy,
+  `default_service_price`, notification templates, and `trending_string_ids`;
+  player clients read this through `GET /api/store-settings`
+- analytics summary with repeat customers, feedback completion, average service
+  time, tension distribution, and popular string aggregates
+
+Booking creation accepts `service_method` as `counter_dropoff` or
+`pickup_request`. Players may cancel through
+`POST /api/bookings/{booking_id}/cancel` while the domain transition policy
+still permits cancellation.
+
+`POST /api/bookings/{booking_id}/check-in-token` creates a ten-minute,
+single-use QR token. Only its SHA-256 digest is persisted. The secure admin
+lookup/confirm endpoints accept that raw token; the older ID/reference
+check-in endpoints remain available for manual counter fallback.
 
 ### Recommendations
 

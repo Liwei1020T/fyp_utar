@@ -23,6 +23,7 @@ from app.dto.racket_feedback import SentimentTag
 from app.dto.racket_feedback import UpdateRacketPayload
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
+from app.dto.auth import MessageResponse
 from app.shared.errors import ConflictError
 from app.shared.errors import NotFoundError
 from app.shared.serialization import number_to_float
@@ -48,12 +49,21 @@ def _racket_to_dto(racket: Racket) -> RacketOut:
     )
 
 
-def _feedback_to_dto(feedback: BookingFeedback) -> FeedbackOut:
+def feedback_to_dto(feedback: BookingFeedback) -> FeedbackOut:
     return FeedbackOut(
         id=feedback.id,
         booking_id=feedback.booking_id,
         user_id=feedback.user_id,
         rating=feedback.rating,
+        recommendation_relevance=feedback.recommendation_relevance,
+        string_satisfaction=feedback.string_satisfaction,
+        tension_satisfaction=feedback.tension_satisfaction,
+        comfort=feedback.comfort,
+        control=feedback.control,
+        repulsion=feedback.repulsion,
+        durability=feedback.durability,
+        would_use_again=feedback.would_use_again,
+        comment=feedback.comment,
         string_feedback=feedback.string_feedback,
         service_feedback=feedback.service_feedback,
         sentiment_tags=cast(list[SentimentTag], feedback.sentiment_tags),
@@ -147,7 +157,7 @@ def get_racket(
             serviced_at=(
                 booking.collection_datetime or booking.updated_at or booking.created_at
             ).isoformat(),
-            feedback=_feedback_to_dto(feedback) if feedback is not None else None,
+            feedback=feedback_to_dto(feedback) if feedback is not None else None,
         )
         for booking, feedback in rows
     ]
@@ -155,6 +165,18 @@ def get_racket(
         **_racket_to_dto(racket).model_dump(),
         service_history=service_history,
     )
+
+
+@router.get(
+    "/rackets/{racket_id}/history",
+    response_model=list[RacketServiceHistoryOut],
+)
+def get_racket_history(
+    racket_id: str,
+    current_user: CurrentUser = Depends(get_current_customer),
+    db: Session = Depends(get_db),
+) -> list[RacketServiceHistoryOut]:
+    return get_racket(racket_id, current_user, db).service_history
 
 
 @router.patch("/rackets/{racket_id}", response_model=RacketOut)
@@ -170,6 +192,18 @@ def update_racket(
     db.commit()
     db.refresh(racket)
     return _racket_to_dto(racket)
+
+
+@router.delete("/rackets/{racket_id}", response_model=MessageResponse)
+def delete_racket(
+    racket_id: str,
+    current_user: CurrentUser = Depends(get_current_customer),
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    racket = _get_owned_racket(db, racket_id, current_user.user_id)
+    db.delete(racket)
+    db.commit()
+    return MessageResponse(message="Racket deleted")
 
 
 @router.post("/bookings/{booking_id}/feedback", response_model=FeedbackOut)
@@ -201,7 +235,7 @@ def create_feedback(
     db.add(feedback)
     db.commit()
     db.refresh(feedback)
-    return _feedback_to_dto(feedback)
+    return feedback_to_dto(feedback)
 
 
 @router.get("/bookings/{booking_id}/feedback", response_model=FeedbackOut | None)
@@ -216,4 +250,4 @@ def get_feedback(
     ).scalar_one_or_none()
     if feedback is None:
         return None
-    return _feedback_to_dto(feedback)
+    return feedback_to_dto(feedback)

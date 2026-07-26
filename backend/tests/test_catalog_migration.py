@@ -307,7 +307,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260723_0024"
+        assert version_row["version_num"] == "20260726_0025"
 
         repaired_row = (
             connection.execute(
@@ -382,4 +382,4 @@ def test_latest_migrations_adopt_auto_created_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-    assert version == "20260723_0024"
+    assert version == "20260726_0025"

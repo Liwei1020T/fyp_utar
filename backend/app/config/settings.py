@@ -57,6 +57,11 @@ class Settings(BaseSettings):
         alias="PASSWORD_RESET_DEV_PREVIEW_ENABLED",
     )
     auto_create_schema: bool | None = Field(default=None, alias="AUTO_CREATE_SCHEMA")
+    expo_push_enabled: bool = Field(default=False, alias="EXPO_PUSH_ENABLED")
+    expo_push_endpoint: str = Field(
+        default="https://exp.host/--/api/v2/push/send",
+        alias="EXPO_PUSH_ENDPOINT",
+    )
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://127.0.0.1:3000",

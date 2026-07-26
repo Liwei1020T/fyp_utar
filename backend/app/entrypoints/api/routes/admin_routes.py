@@ -1,19 +1,36 @@
 from __future__ import annotations
 
+import csv
+import io
+import json
 from datetime import date
+from datetime import datetime
+from datetime import time
+from datetime import timezone
 from typing import Literal
 from typing import cast
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
 from fastapi import Form
 from fastapi import Query
+from fastapi import Response
 from fastapi import UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.models import CheckInToken
+from app.adapters.persistence.sqlalchemy.models import DeviceToken
+from app.adapters.persistence.sqlalchemy.models import NotificationDelivery
 from app.adapters.persistence.sqlalchemy.models import Payment
+from app.adapters.persistence.sqlalchemy.models import User
+from app.adapters.persistence.sqlalchemy.models import Booking
+from app.adapters.persistence.sqlalchemy.models import BookingFeedback
+from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
+from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
@@ -37,6 +54,13 @@ from app.dto.catalog import recommendation_matrix_import_report_to_dto
 from app.dto.catalog import recommendation_matrix_inspection_to_dto
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
+from app.dto.notifications import AdminDeviceTokenOut
+from app.dto.notifications import AdminNotificationOut
+from app.dto.notifications import DevicePlatform
+from app.dto.notifications import NotificationCategory
+from app.dto.notifications import SendNotificationPayload
+from app.dto.racket_feedback import AdminFeedbackOut
+from app.entrypoints.api.routes.racket_feedback_routes import feedback_to_dto
 from app.dto.recommendation import recommendation_log_to_dict
 from app.dto.recommendation import recommendation_run_to_dict
 from app.dto.store import AnalyticsSummaryOut
@@ -46,6 +70,7 @@ from app.dto.store import PopularStringOut
 from app.dto.store import ServiceQueueItemOut
 from app.dto.store import ServiceQueueLaneOut
 from app.dto.store import ServiceQueueOut
+from app.dto.store import SecureCheckInPayload
 from app.dto.store import StoreBusinessHoursOut
 from app.dto.store import StoreBusinessHoursPayload
 from app.dto.store import StoreSettingsOut
@@ -63,6 +88,8 @@ from app.entrypoints.api.dependencies import get_current_admin
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_store_repository
 from app.shared.errors import BadRequestError
+from app.shared.errors import NotFoundError
+from app.domain.booking.policies import booking_order_code
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
 from app.shared.upload_storage import delete_booking_update_photo
 from app.shared.upload_storage import delete_string_catalog_image
@@ -107,6 +134,8 @@ from app.use_cases.store.confirm_checkin import ConfirmCheckInUseCase
 from app.use_cases.store.get_business_hours import GetBusinessHoursUseCase
 from app.use_cases.store.get_queue import GetQueueUseCase
 from app.use_cases.store.get_store_analytics import AnalyticsPayment
+from app.use_cases.store.get_store_analytics import AnalyticsFeedback
+from app.domain.store.policies import hash_check_in_token
 from app.use_cases.store.get_store_analytics import GetStoreAnalyticsUseCase
 from app.use_cases.store.get_store_settings import GetStoreSettingsUseCase
 from app.use_cases.store.list_slots import ListSlotsUseCase
@@ -118,6 +147,151 @@ from app.use_cases.store.update_store_settings import UpdateStoreSettingsUseCase
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 BookingPhotoType = Literal["racket", "service_progress", "other"]
+
+
+def _token_preview(token: str) -> str:
+    return f"{token[:8]}…{token[-6:]}"
+
+
+def _feedback_query(
+    *,
+    string_id: str | None,
+    rating: int | None,
+    date_from: date | None,
+    date_to: date | None,
+):
+    query = (
+        select(BookingFeedback, Booking, User, StringCatalogItem)
+        .join(Booking, Booking.id == BookingFeedback.booking_id)
+        .join(User, User.id == BookingFeedback.user_id)
+        .join(StringCatalogItem, StringCatalogItem.catalog_id == Booking.string_id)
+    )
+    if string_id:
+        query = query.where(Booking.string_id == string_id)
+    if rating is not None:
+        query = query.where(BookingFeedback.rating == rating)
+    if date_from is not None:
+        query = query.where(
+            BookingFeedback.created_at
+            >= datetime.combine(date_from, time.min, tzinfo=timezone.utc)
+        )
+    if date_to is not None:
+        query = query.where(
+            BookingFeedback.created_at
+            <= datetime.combine(date_to, time.max, tzinfo=timezone.utc)
+        )
+    return query.order_by(BookingFeedback.created_at.desc())
+
+
+def _admin_feedback_dto(
+    feedback: BookingFeedback,
+    booking: Booking,
+    user: User,
+    string_item: StringCatalogItem,
+) -> AdminFeedbackOut:
+    return AdminFeedbackOut(
+        **feedback_to_dto(feedback).model_dump(),
+        order_code=booking_order_code(booking.id),
+        string_id=booking.string_id,
+        string_name=string_item.display_name,
+        customer_username=user.username,
+        customer_phone_number=user.phone_number,
+    )
+
+
+def _notification_dto(
+    notification: NotificationDelivery,
+    user: User,
+    device_token: DeviceToken | None,
+) -> AdminNotificationOut:
+    return AdminNotificationOut(
+        id=notification.id,
+        user_id=notification.user_id,
+        customer_username=user.username,
+        customer_phone_number=user.phone_number,
+        token_preview=_token_preview(device_token.token) if device_token else None,
+        category=cast(NotificationCategory, notification.category),
+        title=notification.title,
+        body=notification.body,
+        route=notification.route,
+        status=notification.status,
+        provider_message=notification.provider_message,
+        attempts=notification.attempts,
+        created_at=notification.created_at,
+        last_attempt_at=notification.last_attempt_at,
+    )
+
+
+def _attempt_notification_delivery(
+    db: Session,
+    notification: NotificationDelivery,
+) -> None:
+    device_token = (
+        db.get(DeviceToken, notification.device_token_id)
+        if notification.device_token_id
+        else db.scalar(
+            select(DeviceToken)
+            .where(
+                DeviceToken.user_id == notification.user_id,
+                DeviceToken.enabled.is_(True),
+            )
+            .order_by(DeviceToken.last_seen_at.desc())
+            .limit(1)
+        )
+    )
+    notification.attempts += 1
+    notification.last_attempt_at = datetime.now(timezone.utc)
+    if device_token is None or not device_token.enabled:
+        notification.status = "failed"
+        notification.provider_message = "No active device token"
+        return
+    notification.device_token_id = device_token.id
+
+    store_settings = db.get(StoreSettings, "main")
+    category_settings = (
+        dict(store_settings.notification_settings or {}).get(notification.category, {})
+        if store_settings
+        else {}
+    )
+    if isinstance(category_settings, dict) and not category_settings.get(
+        "enabled", True
+    ):
+        notification.status = "disabled"
+        notification.provider_message = "Notification category is disabled"
+        return
+
+    settings = get_settings()
+    if not settings.expo_push_enabled:
+        notification.status = "disabled"
+        notification.provider_message = "Expo push delivery is disabled"
+        return
+
+    body = json.dumps(
+        {
+            "to": device_token.token,
+            "title": notification.title,
+            "body": notification.body,
+            "data": {"route": notification.route} if notification.route else {},
+        }
+    ).encode("utf-8")
+    request = urllib_request.Request(
+        settings.expo_push_endpoint,
+        data=body,
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib_request.urlopen(request, timeout=5) as response:
+            provider_response = json.loads(response.read().decode("utf-8"))
+        ticket = provider_response.get("data", {})
+        notification.status = "sent" if ticket.get("status") == "ok" else "failed"
+        notification.provider_message = ticket.get("message") or ticket.get("id")
+    except (OSError, ValueError, urllib_error.URLError) as exc:
+        notification.status = "failed"
+        notification.provider_message = str(exc)[:500]
 
 
 async def read_upload_bytes_limited(
@@ -784,6 +958,85 @@ def admin_check_in_booking(
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
+def _active_check_in_token(
+    db: Session,
+    *,
+    raw_token: str,
+    now,
+    lock: bool,
+) -> CheckInToken:
+    query = select(CheckInToken).where(
+        CheckInToken.token_hash == hash_check_in_token(raw_token),
+        CheckInToken.used_at.is_(None),
+        CheckInToken.revoked_at.is_(None),
+        CheckInToken.expires_at > now,
+    )
+    if lock:
+        query = query.with_for_update()
+    token = db.scalar(query)
+    if token is None:
+        raise BadRequestError("QR token is invalid, expired, or already used")
+    return token
+
+
+@router.post("/check-in/lookup", response_model=CheckInLookupOut)
+def admin_lookup_secure_check_in(
+    payload: SecureCheckInPayload,
+    _: CurrentUser = Depends(get_current_admin),
+    booking_repository=Depends(get_booking_repository),
+    clock=Depends(get_clock),
+    db: Session = Depends(get_db),
+) -> CheckInLookupOut:
+    token = _active_check_in_token(
+        db,
+        raw_token=payload.token,
+        now=clock.now(),
+        lock=False,
+    )
+    booking = GetBookingUseCase(booking_repository=booking_repository).execute(
+        token.booking_id
+    )
+    return CheckInLookupOut(
+        matched_by="qr_token",
+        booking=booking_to_dto(
+            booking,
+            include_user=True,
+            include_history=True,
+        ).model_dump(),
+    )
+
+
+@router.post("/check-in/confirm", response_model=BookingOut)
+def admin_confirm_secure_check_in(
+    payload: SecureCheckInPayload,
+    current_user: CurrentUser = Depends(get_current_admin),
+    booking_repository=Depends(get_booking_repository),
+    clock=Depends(get_clock),
+    db: Session = Depends(get_db),
+) -> BookingOut:
+    now = clock.now()
+    token = _active_check_in_token(
+        db,
+        raw_token=payload.token,
+        now=now,
+        lock=True,
+    )
+    booking = ConfirmCheckInUseCase(
+        booking_repository=booking_repository,
+        lookup_check_in_use_case=LookupCheckInUseCase(
+            booking_repository=booking_repository
+        ),
+    ).execute(
+        booking_id=token.booking_id,
+        reference=None,
+        admin_user_id=current_user.user_id,
+        note=payload.note,
+    )
+    token.used_at = now
+    db.commit()
+    return booking_to_dto(booking, include_user=True, include_history=True)
+
+
 @router.get("/service-queue", response_model=ServiceQueueOut)
 def admin_service_queue(
     _: CurrentUser = Depends(get_current_admin),
@@ -811,6 +1064,162 @@ def admin_service_queue(
             for lane in queue.lanes
         ],
     )
+
+
+@router.get("/feedback", response_model=dict)
+def admin_feedback(
+    string_id: str | None = Query(default=None, max_length=120),
+    rating: int | None = Query(default=None, ge=1, le=5),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    rows = db.execute(
+        _feedback_query(
+            string_id=string_id,
+            rating=rating,
+            date_from=date_from,
+            date_to=date_to,
+        )
+    ).all()
+    items = [
+        _admin_feedback_dto(feedback, booking, user, string_item).model_dump()
+        for feedback, booking, user, string_item in rows[offset : offset + limit]
+    ]
+    return {"items": items, "total": len(rows), "limit": limit, "offset": offset}
+
+
+@router.get("/feedback/export")
+def admin_export_feedback(
+    string_id: str | None = Query(default=None, max_length=120),
+    rating: int | None = Query(default=None, ge=1, le=5),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> Response:
+    rows = db.execute(
+        _feedback_query(
+            string_id=string_id,
+            rating=rating,
+            date_from=date_from,
+            date_to=date_to,
+        )
+    ).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    columns = list(AdminFeedbackOut.model_fields)
+    writer.writerow(columns)
+    for feedback, booking, user, string_item in rows:
+        item = _admin_feedback_dto(feedback, booking, user, string_item)
+        writer.writerow(
+            [
+                json.dumps(value) if isinstance(value, list) else value
+                for value in item.model_dump().values()
+            ]
+        )
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=feedback.csv"},
+    )
+
+
+@router.get("/device-tokens", response_model=list[AdminDeviceTokenOut])
+def admin_device_tokens(
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> list[AdminDeviceTokenOut]:
+    rows = db.execute(
+        select(DeviceToken, User)
+        .join(User, User.id == DeviceToken.user_id)
+        .order_by(DeviceToken.last_seen_at.desc())
+    ).all()
+    return [
+        AdminDeviceTokenOut(
+            id=token.id,
+            user_id=token.user_id,
+            token_preview=_token_preview(token.token),
+            platform=cast(DevicePlatform, token.platform),
+            device_name=token.device_name,
+            enabled=token.enabled,
+            last_seen_at=token.last_seen_at,
+            customer_username=user.username,
+            customer_phone_number=user.phone_number,
+        )
+        for token, user in rows
+    ]
+
+
+@router.get("/notifications", response_model=list[AdminNotificationOut])
+def admin_notifications(
+    status: str | None = Query(default=None, max_length=20),
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> list[AdminNotificationOut]:
+    query = (
+        select(NotificationDelivery, User, DeviceToken)
+        .join(User, User.id == NotificationDelivery.user_id)
+        .outerjoin(DeviceToken, DeviceToken.id == NotificationDelivery.device_token_id)
+    )
+    if status:
+        query = query.where(NotificationDelivery.status == status)
+    rows = db.execute(query.order_by(NotificationDelivery.created_at.desc())).all()
+    return [
+        _notification_dto(notification, user, device_token)
+        for notification, user, device_token in rows
+    ]
+
+
+@router.post("/notifications", response_model=AdminNotificationOut)
+def admin_send_notification(
+    payload: SendNotificationPayload,
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> AdminNotificationOut:
+    user = db.get(User, payload.user_id)
+    if user is None:
+        raise NotFoundError("User not found")
+    notification = NotificationDelivery(**payload.model_dump())
+    db.add(notification)
+    db.flush()
+    _attempt_notification_delivery(db, notification)
+    db.commit()
+    db.refresh(notification)
+    device_token = (
+        db.get(DeviceToken, notification.device_token_id)
+        if notification.device_token_id
+        else None
+    )
+    return _notification_dto(notification, user, device_token)
+
+
+@router.post(
+    "/notifications/{notification_id}/resend",
+    response_model=AdminNotificationOut,
+)
+def admin_resend_notification(
+    notification_id: str,
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> AdminNotificationOut:
+    notification = db.get(NotificationDelivery, notification_id)
+    if notification is None:
+        raise NotFoundError("Notification not found")
+    user = db.get(User, notification.user_id)
+    assert user is not None
+    _attempt_notification_delivery(db, notification)
+    db.commit()
+    db.refresh(notification)
+    device_token = (
+        db.get(DeviceToken, notification.device_token_id)
+        if notification.device_token_id
+        else None
+    )
+    return _notification_dto(notification, user, device_token)
 
 
 @router.get("/store-settings", response_model=StoreSettingsOut)
@@ -855,6 +1264,13 @@ def admin_analytics_summary(
                 updated_at=payment.updated_at,
             )
             for payment in db.execute(select(Payment)).scalars()
+        ],
+        feedback=[
+            AnalyticsFeedback(
+                booking_id=item.booking_id,
+                rating=item.rating,
+            )
+            for item in db.scalars(select(BookingFeedback))
         ],
         store_timezone=get_settings().store_timezone,
     )

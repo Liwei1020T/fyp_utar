@@ -56,10 +56,21 @@ export default function StringsCatalogScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('all');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedPrice, setSelectedPrice] = useState<
+    'all' | 'below_30' | '30_50' | 'above_50'
+  >('all');
+  const [selectedGauge, setSelectedGauge] = useState<string | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<
+    'power' | 'control' | 'durability' | 'comfort' | 'sound' | null
+  >(null);
 
   const brands = useMemo(() => {
     return Array.from(new Set(strings.map(s => s.brand))).sort();
   }, [strings]);
+  const gauges = useMemo(
+    () => Array.from(new Set(strings.map((item) => item.gauge))).sort(),
+    [strings],
+  );
 
   const filteredStrings = useMemo(() => {
     const next = strings.filter((item) => {
@@ -68,8 +79,23 @@ export default function StringsCatalogScreen() {
         item.brand.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' ? true : item.category === selectedCategory;
       const matchesBrand = !selectedBrand || item.brand === selectedBrand;
+      const matchesGauge = !selectedGauge || item.gauge === selectedGauge;
+      const matchesPrice =
+        selectedPrice === 'all' ||
+        (selectedPrice === 'below_30' && item.price > 0 && item.price < 30) ||
+        (selectedPrice === '30_50' && item.price >= 30 && item.price <= 50) ||
+        (selectedPrice === 'above_50' && item.price > 50);
+      const matchesFeature =
+        !selectedFeature || item.ratings[selectedFeature] >= 8;
       
-      return matchesSearch && matchesCategory && matchesBrand;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesBrand &&
+        matchesGauge &&
+        matchesPrice &&
+        matchesFeature
+      );
     });
 
     if (displayMode === 'all') {
@@ -80,7 +106,17 @@ export default function StringsCatalogScreen() {
     }
 
     return next;
-  }, [searchQuery, selectedCategory, sortBy, strings, displayMode, selectedBrand]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    sortBy,
+    strings,
+    displayMode,
+    selectedBrand,
+    selectedGauge,
+    selectedPrice,
+    selectedFeature,
+  ]);
 
   const groupedByBrand = useMemo(() => {
     if (displayMode !== 'brand') return [];
@@ -146,6 +182,70 @@ export default function StringsCatalogScreen() {
 
           <View className="h-px bg-neutral-100 my-4" />
 
+          <AppSection eyebrow="Price" title="Price range" variant="compact" className="mt-0">
+            <View className="flex-row flex-wrap gap-2">
+              {[
+                ['all', 'All prices'],
+                ['below_30', 'Below RM30'],
+                ['30_50', 'RM30–RM50'],
+                ['above_50', 'Above RM50'],
+              ].map(([id, label]) => (
+                <AppChip
+                  key={id}
+                  label={label}
+                  size="sm"
+                  variant={selectedPrice === id ? 'primary' : 'neutral'}
+                  onPress={() => setSelectedPrice(id as typeof selectedPrice)}
+                />
+              ))}
+            </View>
+          </AppSection>
+
+          <View className="h-px bg-neutral-100 my-4" />
+
+          <AppSection eyebrow="Specification" title="Gauge" variant="compact" className="mt-0">
+            <View className="flex-row flex-wrap gap-2">
+              {['all', ...gauges].map((gauge) => (
+                <AppChip
+                  key={gauge}
+                  label={gauge === 'all' ? 'All gauges' : gauge}
+                  size="sm"
+                  variant={
+                    (gauge === 'all' && !selectedGauge) ||
+                    selectedGauge === gauge
+                      ? 'secondary'
+                      : 'neutral'
+                  }
+                  onPress={() => setSelectedGauge(gauge === 'all' ? null : gauge)}
+                />
+              ))}
+            </View>
+          </AppSection>
+
+          <View className="h-px bg-neutral-100 my-4" />
+
+          <AppSection eyebrow="Strength" title="Feature score 8+" variant="compact" className="mt-0">
+            <View className="flex-row flex-wrap gap-2">
+              {(['power', 'control', 'durability', 'comfort', 'sound'] as const).map(
+                (feature) => (
+                  <AppChip
+                    key={feature}
+                    label={formatLabel(feature)}
+                    size="sm"
+                    variant={selectedFeature === feature ? 'info' : 'neutral'}
+                    onPress={() =>
+                      setSelectedFeature((current) =>
+                        current === feature ? null : feature,
+                      )
+                    }
+                  />
+                ),
+              )}
+            </View>
+          </AppSection>
+
+          <View className="h-px bg-neutral-100 my-4" />
+
           {displayMode === 'all' && (
             <AppSection eyebrow="Sort" title="Sort by" variant="compact" className="mt-0">
               <View className="flex-row gap-2">
@@ -162,25 +262,23 @@ export default function StringsCatalogScreen() {
             </AppSection>
           )}
 
-          {displayMode === 'brand' && (
-            <AppSection eyebrow="Manufacturers" title="Brand" variant="compact" className="mt-0">
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={['all', ...brands]}
-                keyExtractor={(item) => item}
-                ItemSeparatorComponent={() => <View className="w-2" />}
-                renderItem={({ item }) => (
-                  <AppChip
-                    label={item === 'all' ? 'All Brands' : item}
-                    size="sm"
-                    variant={(item === 'all' && !selectedBrand) || selectedBrand === item ? 'secondary' : 'neutral'}
-                    onPress={() => setSelectedBrand(item === 'all' ? null : item)}
-                  />
-                )}
-              />
-            </AppSection>
-          )}
+          <AppSection eyebrow="Manufacturers" title="Brand" variant="compact" className="mt-0">
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={['all', ...brands]}
+              keyExtractor={(item) => item}
+              ItemSeparatorComponent={() => <View className="w-2" />}
+              renderItem={({ item }) => (
+                <AppChip
+                  label={item === 'all' ? 'All Brands' : item}
+                  size="sm"
+                  variant={(item === 'all' && !selectedBrand) || selectedBrand === item ? 'secondary' : 'neutral'}
+                  onPress={() => setSelectedBrand(item === 'all' ? null : item)}
+                />
+              )}
+            />
+          </AppSection>
         </View>
       )}
     </View>

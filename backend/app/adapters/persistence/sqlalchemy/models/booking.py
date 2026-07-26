@@ -64,6 +64,9 @@ class Booking(Base):
         nullable=True,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    service_method: Mapped[str] = mapped_column(
+        SAString(30), default="counter_dropoff", server_default="counter_dropoff"
+    )
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     completion_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(

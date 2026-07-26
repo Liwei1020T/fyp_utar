@@ -6,6 +6,7 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
+import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText } from '../../../components/ui/heroui';
 import { useBackendAccessToken, useCurrentUser, useStrings } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
@@ -178,6 +179,58 @@ export default function AdminAnalyticsScreen() {
             value={formatCurrency(analytics.today_revenue)}
             icon={<BarChart3 size={20} color="#2F64B6" />}
           />
+          <MetricStatCard
+            title="Repeat customers"
+            value={String(analytics.repeat_customer_count)}
+            icon={<BarChart3 size={20} color="#2F64B6" />}
+          />
+          <MetricStatCard
+            title="Feedback score"
+            value={
+              analytics.average_feedback_score == null
+                ? '—'
+                : `${analytics.average_feedback_score}/5`
+            }
+            icon={<Gauge size={20} color="#6550B8" />}
+          />
+          <MetricStatCard
+            title="Pending feedback"
+            value={String(analytics.pending_feedback_count)}
+            icon={<Clock3 size={20} color="#C98A2E" />}
+          />
+          <MetricStatCard
+            title="Avg completion"
+            value={
+              analytics.average_completion_hours == null
+                ? '—'
+                : `${analytics.average_completion_hours}h`
+            }
+            icon={<Clock3 size={20} color="#22766D" />}
+          />
+        </View>
+      </AppSection>
+
+      <AppSection eyebrow="Tension" title="Requested tension distribution">
+        <View className="gap-3">
+          {Object.entries(analytics.tension_distribution).map(
+            ([tension, count]) => (
+              <AppCard key={tension} variant="elevated" padding="sm">
+                <View className="flex-row items-center justify-between">
+                  <HeroText className="text-sm font-semibold text-neutral-900">
+                    {tension}
+                  </HeroText>
+                  <AppChip label={String(count)} variant="primary" />
+                </View>
+              </AppCard>
+            ),
+          )}
+          {!Object.keys(analytics.tension_distribution).length ? (
+            <AppCard variant="subtle" padding="sm">
+              <HeroText className="text-sm text-neutral-600">
+                Tension data will appear after bookings record requested tension.
+              </HeroText>
+            </AppCard>
+          ) : null}
         </View>
       </AppSection>
 

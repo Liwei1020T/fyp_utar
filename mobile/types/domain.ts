@@ -39,14 +39,6 @@ export interface PlayerProfile extends UserIdentity {
 
 export interface AdminProfile extends UserIdentity {
   role: 'admin';
-  businessName: string;
-  city: string;
-  branchCode: string;
-  averageTurnaroundHours: number;
-  queueCapacity: number;
-  rating: number;
-  specialties: string[];
-  escalationEmail: string;
 }
 
 export type AppUser = PlayerProfile | AdminProfile;
@@ -195,6 +187,7 @@ export interface Booking {
   collectionAt?: string;
   createdAt: string;
   notes?: string;
+  serviceMethod: 'counter_dropoff' | 'pickup_request';
   cancellationReason?: string;
   completionSummary?: string;
   serviceFee: number;
@@ -377,6 +370,15 @@ export interface BookingFeedback {
   bookingId: string;
   userId: string;
   rating: number;
+  recommendationRelevance?: number;
+  stringSatisfaction?: number;
+  tensionSatisfaction?: number;
+  comfort?: number;
+  control?: number;
+  repulsion?: number;
+  durability?: number;
+  wouldUseAgain?: boolean;
+  comment?: string;
   stringFeedback?: string;
   serviceFeedback?: string;
   sentimentTags: FeedbackSentimentTag[];
@@ -453,6 +455,11 @@ export interface AdminAnalyticsSummary {
   lowStockCount: number;
   unreadChats: number;
   todayRevenue: number;
+  repeatCustomerCount: number;
+  pendingFeedbackCount: number;
+  averageFeedbackScore?: number;
+  averageCompletionHours?: number;
+  tensionDistribution: Record<string, number>;
   busySlots: string[];
   popularStringIds: string[];
   workloadMix: Array<{ label: string; value: number }>;
@@ -485,6 +492,7 @@ export interface NotificationPreferences {
   service: boolean;
   chat: boolean;
   recommendation: boolean;
+  system: boolean;
 }
 
 export interface AdminSettings {
@@ -497,6 +505,11 @@ export interface AdminSettings {
   storePolicyText: string;
   address: string;
   trendingStringIds: string[];
+  defaultServicePrice: number;
+  notificationSettings: Record<
+    string,
+    { enabled?: boolean; title?: string; body?: string }
+  >;
 }
 
 export interface BookingDraft {
@@ -507,6 +520,7 @@ export interface BookingDraft {
   racketModel: string;
   requestedTension: number;
   notes: string;
+  serviceMethod: 'counter_dropoff' | 'pickup_request';
   slotId: string;
   dropOffDate: string;
   dropOffTime: string;

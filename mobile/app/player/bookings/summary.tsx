@@ -77,7 +77,7 @@ export default function BookingSummaryScreen() {
         hasPrice: false,
       };
   const stringFee = stringPriceMeta.hasPrice ? stringPrice ?? 0 : null;
-  const serviceFee = 0;
+  const serviceFee = currentStoreSettings?.defaultServicePrice ?? 0;
   const totalPayable = stringFee != null ? stringFee + serviceFee : null;
 
   const handleProceed = async () => {
@@ -98,6 +98,7 @@ export default function BookingSummaryScreen() {
         requested_tension: bookingDraft.requestedTension,
         slot_id: bookingDraft.slotId,
         notes: bookingDraft.notes || undefined,
+        service_method: bookingDraft.serviceMethod,
       });
 
       if (bookingDraft.photoUri) {
@@ -177,6 +178,13 @@ export default function BookingSummaryScreen() {
       <AppSection eyebrow="Details" title="Drop-off and setup">
         <AppDetailList
           items={[
+            {
+              label: 'Service method',
+              value:
+                bookingDraft.serviceMethod === 'pickup_request'
+                  ? 'Pickup requested'
+                  : 'Counter drop-off',
+            },
             {
               label: 'String',
               value: stringLabel,

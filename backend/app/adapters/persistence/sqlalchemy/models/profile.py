@@ -57,6 +57,7 @@ class Profile(Base):
         JSON,
         default=dict,
     )
+    privacy_settings: Mapped[dict[str, bool]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

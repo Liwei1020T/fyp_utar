@@ -122,6 +122,14 @@ DEFAULT_STORE_SETTINGS = {
     ),
     "address": "Not configured",
     "trending_string_ids": [],
+    "default_service_price": 0,
+    "notification_settings": {
+        "booking": {"enabled": True},
+        "payment": {"enabled": True},
+        "service": {"enabled": True},
+        "chat": {"enabled": True},
+        "system": {"enabled": True},
+    },
 }
 
 

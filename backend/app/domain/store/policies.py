@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import hashlib
 import re
 from datetime import date
 from datetime import datetime
@@ -29,6 +30,10 @@ def parse_hhmm(value: str) -> time:
 
 def booking_check_in_reference(booking_id: str) -> str:
     return f"CHK-{booking_id[:8].upper()}"
+
+
+def hash_check_in_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def weekday_name(target_date: date) -> str:

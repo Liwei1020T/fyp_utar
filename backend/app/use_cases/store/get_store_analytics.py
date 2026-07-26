@@ -25,6 +25,12 @@ class AnalyticsPayment:
     updated_at: datetime
 
 
+@dataclass(frozen=True)
+class AnalyticsFeedback:
+    booking_id: str
+    rating: int
+
+
 @dataclass
 class GetStoreAnalyticsUseCase:
     booking_repository: BookingRepository
@@ -35,6 +41,7 @@ class GetStoreAnalyticsUseCase:
         self,
         *,
         payments: list[AnalyticsPayment],
+        feedback: list[AnalyticsFeedback],
         store_timezone: str,
     ) -> AnalyticsSummary:
         bookings = self.booking_repository.list_all_for_analytics()
@@ -59,6 +66,9 @@ class GetStoreAnalyticsUseCase:
         today_revenue = 0.0
         slot_counter: Counter[str] = Counter()
         string_counter: Counter[str] = Counter()
+        customer_completed_counter: Counter[str] = Counter()
+        tension_counter: Counter[str] = Counter()
+        completion_hours: list[float] = []
 
         for payment in payments:
             if payment.status == "pending":
@@ -100,6 +110,19 @@ class GetStoreAnalyticsUseCase:
                     slot_counter[
                         slot_busy_label(drop_off.date(), drop_off.strftime("%H:%M"))
                     ] += 1
+                if booking.requested_tension is not None:
+                    tension_counter[f"{booking.requested_tension:g} lbs"] += 1
+
+            if booking.status == BookingStatus.COMPLETED.value:
+                customer_completed_counter[booking.user_id] += 1
+                completed_at = normalize_datetime(
+                    booking.collection_datetime or booking.updated_at,
+                    store_timezone,
+                )
+                if created_at is not None and completed_at is not None:
+                    completion_hours.append(
+                        max(0, (completed_at - created_at).total_seconds() / 3600)
+                    )
 
         low_stock_count = sum(
             1 for item in strings if inventory_availability(item) == "low_stock"
@@ -107,6 +130,12 @@ class GetStoreAnalyticsUseCase:
         popular_string_ids = [
             string_id for string_id, _ in string_counter.most_common(3)
         ]
+        feedback_booking_ids = {item.booking_id for item in feedback}
+        completed_booking_ids = {
+            booking.id
+            for booking in bookings
+            if booking.status == BookingStatus.COMPLETED.value
+        }
         return AnalyticsSummary(
             weekly_bookings=weekly_bookings,
             pending_payment_count=pending_payment_count,
@@ -117,6 +146,21 @@ class GetStoreAnalyticsUseCase:
             low_stock_count=low_stock_count,
             unread_chats=0,
             today_revenue=round(today_revenue, 2),
+            repeat_customer_count=sum(
+                1 for count in customer_completed_counter.values() if count >= 2
+            ),
+            pending_feedback_count=len(completed_booking_ids - feedback_booking_ids),
+            average_feedback_score=(
+                round(sum(item.rating for item in feedback) / len(feedback), 2)
+                if feedback
+                else None
+            ),
+            average_completion_hours=(
+                round(sum(completion_hours) / len(completion_hours), 1)
+                if completion_hours
+                else None
+            ),
+            tension_distribution=dict(tension_counter.most_common()),
             busy_slots=[label for label, _ in slot_counter.most_common(3)],
             popular_string_ids=popular_string_ids,
             workload_mix=[

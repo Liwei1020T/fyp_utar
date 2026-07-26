@@ -45,6 +45,7 @@ import {
   type BackendBookingPhotoType,
 } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
+import type { BackendAdminFeedback } from '../../../types/backend';
 
 const WORKFLOW_STATUSES = [
   'awaiting_dropoff',
@@ -344,6 +345,7 @@ export default function AdminBookingDetailScreen() {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
   const [previewUpdate, setPreviewUpdate] = useState<BookingUpdate | null>(null);
+  const [feedback, setFeedback] = useState<BackendAdminFeedback | null>(null);
 
   useEffect(() => {
     if (booking) {
@@ -394,6 +396,26 @@ export default function AdminBookingDetailScreen() {
       cancelled = true;
     };
   }, [params.id, setLiveBookings, strings, token, user?.id, user?.role]);
+
+  useEffect(() => {
+    if (!token || user?.role !== 'admin' || !params.id) return;
+    let cancelled = false;
+    void backendApi
+      .adminListFeedback(token)
+      .then((response) => {
+        if (!cancelled) {
+          setFeedback(
+            response.items.find((item) => item.booking_id === params.id) ?? null,
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setFeedback(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id, token, user?.role]);
 
   const sortedUpdates = useMemo(
     () => [...(booking?.updates ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
@@ -750,6 +772,32 @@ export default function AdminBookingDetailScreen() {
       </AppSection>
 
       <AppSection
+        eyebrow="Feedback"
+        title={feedback ? `Player satisfaction ${feedback.rating}/5` : 'Feedback status'}
+        variant="compact"
+      >
+        <AppCard variant={feedback ? 'highlighted' : 'subtle'} padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-700">
+            {feedback
+              ? feedback.comment ??
+                feedback.string_feedback ??
+                feedback.service_feedback ??
+                'Structured ratings submitted without a written comment.'
+              : booking.status === 'completed'
+                ? 'Feedback is still pending for this completed booking.'
+                : 'Feedback becomes available after completion.'}
+          </HeroText>
+          {feedback ? (
+            <HeroText className="mt-2 text-xs text-neutral-500">
+              String {feedback.string_satisfaction ?? '—'}/5 • Tension{' '}
+              {feedback.tension_satisfaction ?? '—'}/5 • Control{' '}
+              {feedback.control ?? '—'}/5
+            </HeroText>
+          ) : null}
+        </AppCard>
+      </AppSection>
+
+      <AppSection
         eyebrow="Workflow"
         title="Service actions"
         subtitle="Move the booking through the shop workflow."
@@ -924,6 +972,14 @@ export default function AdminBookingDetailScreen() {
               }
             />
             <SummaryRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
+            <SummaryRow
+              label="Service method"
+              value={
+                booking.serviceMethod === 'pickup_request'
+                  ? 'Pickup requested'
+                  : 'Counter drop-off'
+              }
+            />
             <SummaryRow
               label="String"
               value={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'String to confirm'}

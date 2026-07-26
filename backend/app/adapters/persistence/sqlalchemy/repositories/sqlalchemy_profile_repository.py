@@ -63,7 +63,7 @@ class SqlAlchemyProfileRepository:
         return to_profile(record)
 
     def get_notification_preferences(self, user_id: str) -> dict[str, bool]:
-        record = self._get_or_create_notification_profile(user_id)
+        record = self._get_or_create_profile(user_id)
         return dict(record.notification_preferences or {})
 
     def update_notification_preferences(
@@ -71,12 +71,26 @@ class SqlAlchemyProfileRepository:
         user_id: str,
         preferences: dict[str, bool],
     ) -> dict[str, bool]:
-        record = self._get_or_create_notification_profile(user_id)
+        record = self._get_or_create_profile(user_id)
         record.notification_preferences = dict(preferences)
         self.db.commit()
         return dict(record.notification_preferences)
 
-    def _get_or_create_notification_profile(self, user_id: str) -> Profile:
+    def get_privacy_settings(self, user_id: str) -> dict[str, bool]:
+        record = self._get_or_create_profile(user_id)
+        return dict(record.privacy_settings or {})
+
+    def update_privacy_settings(
+        self,
+        user_id: str,
+        settings: dict[str, bool],
+    ) -> dict[str, bool]:
+        record = self._get_or_create_profile(user_id)
+        record.privacy_settings = dict(settings)
+        self.db.commit()
+        return dict(record.privacy_settings)
+
+    def _get_or_create_profile(self, user_id: str) -> Profile:
         record = self.db.execute(
             select(Profile).where(Profile.user_id == user_id)
         ).scalar_one_or_none()

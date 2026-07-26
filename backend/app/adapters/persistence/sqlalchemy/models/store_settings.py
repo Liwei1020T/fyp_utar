@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import DateTime
 from sqlalchemy import JSON
+from sqlalchemy import Numeric
 from sqlalchemy import String as SAString
 from sqlalchemy import Text
 from sqlalchemy import func
@@ -25,6 +26,10 @@ class StoreSettings(Base):
     store_policy_text: Mapped[str] = mapped_column(Text)
     address: Mapped[str] = mapped_column(Text)
     trending_string_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    default_service_price: Mapped[float] = mapped_column(
+        Numeric(10, 2), default=0, server_default="0"
+    )
+    notification_settings: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

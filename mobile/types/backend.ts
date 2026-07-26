@@ -27,6 +27,7 @@ export interface BackendNotificationPreferences {
   service: boolean;
   chat: boolean;
   recommendation: boolean;
+  system: boolean;
 }
 
 export interface BackendNotificationPreferencesPayload {
@@ -35,6 +36,23 @@ export interface BackendNotificationPreferencesPayload {
   service?: boolean;
   chat?: boolean;
   recommendation?: boolean;
+  system?: boolean;
+}
+
+export interface BackendPrivacySettings {
+  analytics_consent: boolean;
+  personalization_consent: boolean;
+  marketing_consent: boolean;
+}
+
+export interface BackendDeviceToken {
+  id: string;
+  user_id: string;
+  token_preview: string;
+  platform: 'ios' | 'android' | 'web';
+  device_name: string | null;
+  enabled: boolean;
+  last_seen_at: string;
 }
 
 export type BackendNotificationCategory =
@@ -346,6 +364,7 @@ export interface BackendBooking {
   expected_completion_datetime: string | null;
   collection_datetime: string | null;
   notes: string | null;
+  service_method: 'counter_dropoff' | 'pickup_request';
   cancellation_reason: string | null;
   completion_summary: string | null;
   status: string;
@@ -433,6 +452,15 @@ export type BackendFeedbackSentimentTag =
 
 export interface BackendCreateFeedbackPayload {
   rating: number;
+  recommendation_relevance?: number | null;
+  string_satisfaction?: number | null;
+  tension_satisfaction?: number | null;
+  comfort?: number | null;
+  control?: number | null;
+  repulsion?: number | null;
+  durability?: number | null;
+  would_use_again?: boolean | null;
+  comment?: string | null;
   string_feedback?: string | null;
   service_feedback?: string | null;
   sentiment_tags?: BackendFeedbackSentimentTag[];
@@ -443,6 +471,15 @@ export interface BackendFeedback {
   booking_id: string;
   user_id: string;
   rating: number;
+  recommendation_relevance: number | null;
+  string_satisfaction: number | null;
+  tension_satisfaction: number | null;
+  comfort: number | null;
+  control: number | null;
+  repulsion: number | null;
+  durability: number | null;
+  would_use_again: boolean | null;
+  comment: string | null;
   string_feedback: string | null;
   service_feedback: string | null;
   sentiment_tags: BackendFeedbackSentimentTag[];
@@ -464,8 +501,14 @@ export interface BackendRacketDetail extends BackendRacket {
 }
 
 export interface BackendCheckInLookupResponse {
-  matched_by: 'booking_id' | 'check_in_reference';
+  matched_by: 'booking_id' | 'check_in_reference' | 'qr_token';
   booking: BackendBooking;
+}
+
+export interface BackendCheckInToken {
+  token: string;
+  expires_at: string;
+  status: 'active' | 'used' | 'expired' | 'revoked';
 }
 
 export interface BackendCheckInRequest {
@@ -543,6 +586,11 @@ export interface BackendStoreSettings {
   store_policy_text: string;
   address: string;
   trending_string_ids: string[];
+  default_service_price: number;
+  notification_settings: Record<
+    string,
+    { enabled?: boolean; title?: string; body?: string }
+  >;
   updated_at: string | null;
 }
 
@@ -555,6 +603,11 @@ export interface BackendStoreSettingsPayload {
   store_policy_text: string;
   address: string;
   trending_string_ids: string[];
+  default_service_price: number;
+  notification_settings: Record<
+    string,
+    { enabled?: boolean; title?: string; body?: string }
+  >;
 }
 
 export interface BackendAnalyticsWorkloadEntry {
@@ -572,9 +625,44 @@ export interface BackendAnalyticsSummary {
   low_stock_count: number;
   unread_chats: number;
   today_revenue: number;
+  repeat_customer_count: number;
+  pending_feedback_count: number;
+  average_feedback_score: number | null;
+  average_completion_hours: number | null;
+  tension_distribution: Record<string, number>;
   busy_slots: string[];
   popular_string_ids: string[];
   workload_mix: BackendAnalyticsWorkloadEntry[];
+}
+
+export interface BackendAdminFeedback extends BackendFeedback {
+  order_code: string;
+  string_id: string;
+  string_name: string;
+  customer_username: string;
+  customer_phone_number: string;
+}
+
+export interface BackendAdminNotification {
+  id: string;
+  user_id: string;
+  customer_username: string;
+  customer_phone_number: string;
+  token_preview: string | null;
+  category: BackendNotificationCategory;
+  title: string;
+  body: string;
+  route: string | null;
+  status: string;
+  provider_message: string | null;
+  attempts: number;
+  created_at: string;
+  last_attempt_at: string | null;
+}
+
+export interface BackendAdminDeviceToken extends BackendDeviceToken {
+  customer_username: string;
+  customer_phone_number: string;
 }
 
 export interface BackendPopularString {

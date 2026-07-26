@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime
+from datetime import timezone
+from typing import cast
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
@@ -10,15 +14,21 @@ from app.adapters.persistence.sqlalchemy.models.booking import Booking
 from app.adapters.persistence.sqlalchemy.models.booking import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models.booking import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models.commerce import Payment
+from app.adapters.persistence.sqlalchemy.models.notification import DeviceToken
+from app.adapters.persistence.sqlalchemy.models.notification import NotificationDelivery
 from app.adapters.persistence.sqlalchemy.models.notification import NotificationRead
 from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationRun,
 )
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.dto.notifications import DevicePlatform
+from app.dto.notifications import DeviceTokenOut
 from app.dto.notifications import MarkNotificationsReadOut
 from app.dto.notifications import MarkNotificationsReadPayload
+from app.dto.notifications import NotificationCategory
 from app.dto.notifications import NotificationOut
 from app.dto.notifications import NotificationPreferencesPayload
+from app.dto.notifications import PushTokenPayload
 from app.dto.notifications import notification_preferences_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
@@ -27,6 +37,7 @@ from app.shared.errors import NotFoundError
 
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
+devices_router = APIRouter(prefix="/devices", tags=["devices"])
 
 MAX_NOTIFICATION_EVENTS = 200
 
@@ -88,6 +99,12 @@ def _derived_notification_events(
         select(RecommendationRun)
         .where(RecommendationRun.user_id == user_id)
         .order_by(RecommendationRun.generated_at.desc())
+        .limit(MAX_NOTIFICATION_EVENTS)
+    ).all()
+    persisted_notifications = db.scalars(
+        select(NotificationDelivery)
+        .where(NotificationDelivery.user_id == user_id)
+        .order_by(NotificationDelivery.created_at.desc())
         .limit(MAX_NOTIFICATION_EVENTS)
     ).all()
 
@@ -155,6 +172,18 @@ def _derived_notification_events(
             route="/player/results",
         )
         for run in recommendation_runs
+    )
+    events.extend(
+        NotificationOut(
+            id=f"push:{notification.id}",
+            user_id=user_id,
+            category=cast(NotificationCategory, notification.category),
+            title=notification.title,
+            body=notification.body,
+            created_at=notification.created_at,
+            route=notification.route or "/player/notifications",
+        )
+        for notification in persisted_notifications
     )
 
     if enabled_categories is not None:
@@ -290,3 +319,44 @@ def update_notification_preferences(
         payload.model_dump(),
     )
     return notification_preferences_to_dto(values)
+
+
+def _token_preview(token: str) -> str:
+    return f"{token[:8]}…{token[-6:]}"
+
+
+@devices_router.post("/push-token", response_model=DeviceTokenOut)
+def register_push_token(
+    payload: PushTokenPayload,
+    current_user: CurrentUser = Depends(get_current_customer),
+    db: Session = Depends(get_db),
+) -> DeviceTokenOut:
+    record = db.scalar(select(DeviceToken).where(DeviceToken.token == payload.token))
+    now = datetime.now(timezone.utc)
+    if record is None:
+        record = DeviceToken(
+            user_id=current_user.user_id,
+            token=payload.token,
+            platform=payload.platform,
+            device_name=payload.device_name,
+            enabled=payload.enabled,
+            last_seen_at=now,
+        )
+        db.add(record)
+    else:
+        record.user_id = current_user.user_id
+        record.platform = payload.platform
+        record.device_name = payload.device_name
+        record.enabled = payload.enabled
+        record.last_seen_at = now
+    db.commit()
+    db.refresh(record)
+    return DeviceTokenOut(
+        id=record.id,
+        user_id=record.user_id,
+        token_preview=_token_preview(record.token),
+        platform=cast(DevicePlatform, record.platform),
+        device_name=record.device_name,
+        enabled=record.enabled,
+        last_seen_at=record.last_seen_at,
+    )

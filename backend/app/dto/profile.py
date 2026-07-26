@@ -49,6 +49,14 @@ class ProfileOut(ProfilePayload):
     updated_at: str | None = None
 
 
+class PrivacySettingsPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    analytics_consent: bool = True
+    personalization_consent: bool = True
+    marketing_consent: bool = False
+
+
 def profile_to_dto(profile: PlayerProfile, *, username: str) -> ProfileOut:
     return ProfileOut(
         username=username,

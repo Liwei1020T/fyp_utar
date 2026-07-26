@@ -25,6 +25,7 @@ class BookingRepository(Protocol):
         notes: str | None,
         status: str,
         changed_by_user_id: str | None,
+        service_method: str = "counter_dropoff",
     ) -> BookingRecord: ...
 
     def get_owned_racket_identity(

@@ -265,6 +265,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         expected_completion_datetime=booking.expected_completion_datetime,
         collection_datetime=booking.collection_datetime,
         notes=booking.notes,
+        service_method=booking.service_method,
         cancellation_reason=booking.cancellation_reason,
         completion_summary=booking.completion_summary,
         status=booking.status,
@@ -335,6 +336,8 @@ def to_store_settings(settings: StoreSettings) -> StoreSettingsRecord:
         store_policy_text=settings.store_policy_text,
         address=settings.address,
         trending_string_ids=list(settings.trending_string_ids or []),
+        default_service_price=float(settings.default_service_price),
+        notification_settings=dict(settings.notification_settings or {}),
         updated_at=settings.updated_at.isoformat() if settings.updated_at else None,
     )
 

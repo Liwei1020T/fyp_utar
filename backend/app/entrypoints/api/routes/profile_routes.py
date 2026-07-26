@@ -6,6 +6,7 @@ from fastapi import Depends
 from app.domain.profile.entities import PlayerProfile
 from app.dto.profile import ProfileOut
 from app.dto.profile import ProfilePayload
+from app.dto.profile import PrivacySettingsPayload
 from app.dto.profile import profile_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
@@ -17,6 +18,12 @@ from app.use_cases.profile.upsert_my_profile import UpsertMyProfileUseCase
 
 
 router = APIRouter(prefix="/profile", tags=["profile"])
+
+DEFAULT_PRIVACY_SETTINGS = {
+    "analytics_consent": True,
+    "personalization_consent": True,
+    "marketing_consent": False,
+}
 
 
 @router.get("", response_model=ProfileOut | None)
@@ -59,3 +66,25 @@ def upsert_profile(
     user = user_repository.get_by_id(current_user.user_id)
     assert user is not None
     return profile_to_dto(profile, username=user.username)
+
+
+@router.get("/privacy", response_model=PrivacySettingsPayload)
+def get_privacy_settings(
+    current_user: CurrentUser = Depends(get_current_customer),
+    profile_repository=Depends(get_profile_repository),
+) -> PrivacySettingsPayload:
+    values = profile_repository.get_privacy_settings(current_user.user_id)
+    return PrivacySettingsPayload(**{**DEFAULT_PRIVACY_SETTINGS, **values})
+
+
+@router.put("/privacy", response_model=PrivacySettingsPayload)
+def update_privacy_settings(
+    payload: PrivacySettingsPayload,
+    current_user: CurrentUser = Depends(get_current_customer),
+    profile_repository=Depends(get_profile_repository),
+) -> PrivacySettingsPayload:
+    values = profile_repository.update_privacy_settings(
+        current_user.user_id,
+        payload.model_dump(),
+    )
+    return PrivacySettingsPayload(**values)

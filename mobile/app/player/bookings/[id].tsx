@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -252,6 +252,8 @@ export default function PlayerBookingDetailScreen() {
   const [isRequestingSupport, setIsRequestingSupport] = useState(false);
   const [supportError, setSupportError] = useState<string | null>(null);
   const [hasFeedback, setHasFeedback] = useState<boolean | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
   const booking = bookings.find((item) => item.id === params.id);
   const showPhotoUploadWarning = params.photoUpload === 'failed';
   const activePayment = payments.find(
@@ -365,6 +367,58 @@ export default function PlayerBookingDetailScreen() {
       </AppScreen>
     );
   }
+
+  const canCancel = booking.status === 'awaiting_dropoff';
+  const cancelBooking = () => {
+    if (!token || !canCancel) {
+      return;
+    }
+    Alert.alert(
+      'Cancel booking?',
+      'Cancellation is available only before the racket is checked in.',
+      [
+        { text: 'Keep booking', style: 'cancel' },
+        {
+          text: 'Cancel booking',
+          style: 'destructive',
+          onPress: () => {
+            setIsCancelling(true);
+            setCancelError(null);
+            void backendApi
+              .cancelBooking(
+                token,
+                booking.id,
+                'Cancelled by player before drop-off.',
+              )
+              .then((response) => {
+                const priceByStringId = new Map(
+                  strings.map((item) => [item.id, item.price]),
+                );
+                const mapped = mapBackendBookingToBooking(
+                  response,
+                  priceByStringId,
+                );
+                setLiveBookings(
+                  useAppStore
+                    .getState()
+                    .liveBookings.map((item) =>
+                      item.id === mapped.id ? mapped : item,
+                    ),
+                );
+              })
+              .catch((error: unknown) => {
+                setCancelError(
+                  error instanceof BackendApiError
+                    ? error.message
+                    : 'Failed to cancel this booking.',
+                );
+              })
+              .finally(() => setIsCancelling(false));
+          },
+        },
+      ],
+    );
+  };
 
   const stringItem = strings.find((item) => item.id === booking.stringId);
   const currentStoreSettings = adminSettings.find(
@@ -489,6 +543,14 @@ export default function PlayerBookingDetailScreen() {
               </View>
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
+              <DetailRow
+                label="Service method"
+                value={
+                  booking.serviceMethod === 'pickup_request'
+                    ? 'Pickup requested'
+                    : 'Counter drop-off'
+                }
+              />
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow
                 label="String"
@@ -647,6 +709,21 @@ export default function PlayerBookingDetailScreen() {
               className="mb-3"
               onPress={() => router.push(`/player/feedback/${booking.id}`)}
             />
+          ) : null}
+          {canCancel ? (
+            <AppButton
+              label="Cancel booking"
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              isLoading={isCancelling}
+              onPress={cancelBooking}
+            />
+          ) : null}
+          {cancelError ? (
+            <HeroText className="mb-3 text-sm font-medium text-red-600">
+              {cancelError}
+            </HeroText>
           ) : null}
           <AppButton
             label="View tracking"

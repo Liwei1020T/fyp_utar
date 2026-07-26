@@ -2,6 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
+  CameraView,
+  type BarcodeScanningResult,
+  useCameraPermissions,
+} from 'expo-camera';
+import {
   CalendarClock,
   Check,
   CircleCheck,
@@ -94,6 +99,7 @@ export default function AdminCheckInScreen() {
   const bookings = useBookings();
   const strings = useStrings();
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const todaysAwaitingDropOffBookings = useMemo(() => {
     if (!user || user.role !== 'admin') {
@@ -128,6 +134,9 @@ export default function AdminCheckInScreen() {
   const [notes, setNotes] = useState('');
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
   const [checklist, setChecklist] = useState<Record<ChecklistKey, boolean>>({
     playerPresent: false,
     racketReceived: false,
@@ -157,6 +166,68 @@ export default function AdminCheckInScreen() {
     }
   };
 
+  const mapLookupBooking = (response: Awaited<ReturnType<
+    typeof backendApi.adminLookupSecureCheckIn
+  >>) => {
+    const priceByStringId = new Map(
+      strings.map((item) => [item.id, item.price]),
+    );
+    const mapped = mapBackendBookingToBooking(
+      response.booking,
+      priceByStringId,
+      user.id,
+    );
+    const currentBookings = useAppStore.getState().liveBookings;
+    setLiveBookings(
+      currentBookings.some((item) => item.id === mapped.id)
+        ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
+        : [mapped, ...currentBookings],
+    );
+    setSelectedBooking(mapped);
+    return mapped;
+  };
+
+  const handleBarcodeScanned = async ({ data }: BarcodeScanningResult) => {
+    if (hasScanned || !token) {
+      return;
+    }
+    setHasScanned(true);
+    setLookupError(null);
+    if (!data.startsWith('SSQR.')) {
+      setLookupError('This is not a StringSense check-in QR.');
+      return;
+    }
+    setIsLookingUp(true);
+    try {
+      const response = await backendApi.adminLookupSecureCheckIn(token, data);
+      mapLookupBooking(response);
+      setQrToken(data);
+      setScannerOpen(false);
+    } catch (error) {
+      setLookupError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'The QR code could not be validated.',
+      );
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const openScanner = async () => {
+    const permission = cameraPermission?.granted
+      ? cameraPermission
+      : await requestCameraPermission();
+    if (!permission.granted) {
+      setLookupError('Camera permission is required to scan booking QR codes.');
+      return;
+    }
+    setQrToken(null);
+    setHasScanned(false);
+    setScannerOpen(true);
+    setLookupError(null);
+  };
+
   const runLookup = async (input = orderId) => {
     const normalized = input.trim();
     setLookupError(null);
@@ -177,15 +248,8 @@ export default function AdminCheckInScreen() {
     setIsLookingUp(true);
     try {
       const response = await backendApi.adminLookupCheckIn(token, normalized);
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(response.booking, priceByStringId, user.id);
-      const currentBookings = useAppStore.getState().liveBookings;
-      setLiveBookings(
-        currentBookings.some((item) => item.id === mapped.id)
-          ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-          : [mapped, ...currentBookings],
-      );
-      setSelectedBooking(mapped);
+      mapLookupBooking(response);
+      setQrToken(null);
     } catch (error) {
       setMatch(null);
       setLookupError(
@@ -225,10 +289,12 @@ export default function AdminCheckInScreen() {
 
     setIsConfirming(true);
     try {
-      const updated = await backendApi.adminCheckIn(token, {
-        booking_id: match.id,
-        note: notes.trim() || null,
-      });
+      const updated = qrToken
+        ? await backendApi.adminConfirmSecureCheckIn(token, qrToken, notes)
+        : await backendApi.adminCheckIn(token, {
+            booking_id: match.id,
+            note: notes.trim() || null,
+          });
       const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
       const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
       const currentBookings = useAppStore.getState().liveBookings;
@@ -266,7 +332,7 @@ export default function AdminCheckInScreen() {
       headerVariant="flow"
       compactHeader
       title="Check-in"
-      subtitle="Confirm player drop-off by order ID"
+      subtitle="Scan a secure QR or find a booking by order ID"
       showBackButton
       onBackPress={() => router.back()}
       contentContainerClassName="pt-3"
@@ -297,12 +363,45 @@ export default function AdminCheckInScreen() {
 
             <View className="gap-3" style={{ gap: 12 }}>
               <AppButton
+                label="Scan booking QR"
+                variant="outline"
+                onPress={() => void openScanner()}
+              />
+              <AppButton
                 label="Find booking"
                 trailingIcon={<Search size={16} color="#FFFFFF" />}
                 onPress={() => void runLookup()}
                 isLoading={isLookingUp}
               />
             </View>
+
+            {scannerOpen ? (
+              <View className="overflow-hidden rounded-[24px]">
+                <CameraView
+                  style={{ height: 320 }}
+                  barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                  onBarcodeScanned={
+                    hasScanned ? undefined : handleBarcodeScanned
+                  }
+                />
+                <View className="gap-2 bg-neutral-950 p-3">
+                  <HeroText className="text-center text-sm text-white">
+                    Align the player&apos;s StringSense QR inside the camera.
+                  </HeroText>
+                  <AppButton
+                    label={hasScanned ? 'Scan again' : 'Close camera'}
+                    variant="outline"
+                    onPress={() => {
+                      if (hasScanned) {
+                        setHasScanned(false);
+                      } else {
+                        setScannerOpen(false);
+                      }
+                    }}
+                  />
+                </View>
+              </View>
+            ) : null}
 
             <View className="flex-row flex-wrap gap-2">
               <AppChip

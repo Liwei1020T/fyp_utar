@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import CheckConstraint
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
+from sqlalchemy import Boolean
 from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy import String as SAString
@@ -54,6 +55,18 @@ class BookingFeedback(Base):
             "rating >= 1 AND rating <= 5",
             name="ck_booking_feedback_rating",
         ),
+        CheckConstraint(
+            """
+            (recommendation_relevance IS NULL OR recommendation_relevance BETWEEN 1 AND 5)
+            AND (string_satisfaction IS NULL OR string_satisfaction BETWEEN 1 AND 5)
+            AND (tension_satisfaction IS NULL OR tension_satisfaction BETWEEN 1 AND 5)
+            AND (comfort IS NULL OR comfort BETWEEN 1 AND 5)
+            AND (control IS NULL OR control BETWEEN 1 AND 5)
+            AND (repulsion IS NULL OR repulsion BETWEEN 1 AND 5)
+            AND (durability IS NULL OR durability BETWEEN 1 AND 5)
+            """,
+            name="ck_booking_feedback_detail_ratings",
+        ),
     )
 
     id: Mapped[str] = mapped_column(
@@ -71,6 +84,15 @@ class BookingFeedback(Base):
         index=True,
     )
     rating: Mapped[int] = mapped_column(Integer)
+    recommendation_relevance: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    string_satisfaction: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tension_satisfaction: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    comfort: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    control: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    repulsion: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    durability: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    would_use_again: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     string_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     service_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     sentiment_tags: Mapped[list[str]] = mapped_column(JSON, default=list)

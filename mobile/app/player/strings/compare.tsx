@@ -41,9 +41,9 @@ export default function CompareStringsScreen() {
     );
   }
 
-  // Focus on the first two for the main comparison as per design request
   const stringA = strings[0];
   const stringB = strings[1];
+  const stringC = strings[2];
 
   const getMatchScore = (stringId: string) => {
     const match = liveResults.find((r) => r.stringId === stringId);
@@ -52,15 +52,19 @@ export default function CompareStringsScreen() {
 
   const scoreA = getMatchScore(stringA.id);
   const scoreB = getMatchScore(stringB.id);
-
-  const winner =
-    scoreA !== null && scoreB !== null && scoreA !== scoreB
-      ? scoreA > scoreB
-        ? 'a'
-        : 'b'
+  const scoreC = stringC ? getMatchScore(stringC.id) : null;
+  const scoredStrings = strings.flatMap((item) => {
+    const score = getMatchScore(item.id);
+    return score === null ? [] : [{ item, score }];
+  });
+  const winnerEntry =
+    scoredStrings.length === strings.length
+      ? scoredStrings.reduce((best, current) =>
+          current.score > best.score ? current : best,
+        )
       : null;
-  const winnerString = winner === 'a' ? stringA : winner === 'b' ? stringB : null;
-  const winnerScore = winner === 'a' ? scoreA : winner === 'b' ? scoreB : null;
+  const winnerString = winnerEntry?.item ?? null;
+  const winnerScore = winnerEntry?.score ?? null;
 
   const resolvePriceLabel = (item: StringItem) => {
     const label = getInventoryPriceLabel(item);
@@ -145,39 +149,38 @@ export default function CompareStringsScreen() {
         <SummaryCard 
           item={stringA} 
           score={scoreA} 
-          isBest={winner === 'a'}
-          label={winner === 'a' ? 'Best Match' : 'Option A'}
+          isBest={winnerString?.id === stringA.id}
+          label={winnerString?.id === stringA.id ? 'Best Match' : 'Option A'}
         />
         <SummaryCard 
           item={stringB} 
           score={scoreB} 
-          isBest={winner === 'b'}
-          label={winner === 'b' ? 'Best Match' : 'Option B'}
+          isBest={winnerString?.id === stringB.id}
+          label={winnerString?.id === stringB.id ? 'Best Match' : 'Option B'}
         />
+        {stringC ? (
+          <SummaryCard
+            item={stringC}
+            score={scoreC}
+            isBest={winnerString?.id === stringC.id}
+            label={winnerString?.id === stringC.id ? 'Best Match' : 'Option C'}
+          />
+        ) : null}
       </View>
 
       {/* 2. Performance Section */}
       <AppSection eyebrow="Performance" title="Metric comparison" variant="compact">
         <AppCard variant="elevated" padding="none" className="overflow-hidden">
-          <AppCompareRadarChart 
-            dataA={stringA.ratings} 
-            dataB={stringB.ratings} 
-            labelA={stringA.model} 
-            labelB={stringB.model} 
-          />
+          {!stringC ? (
+            <AppCompareRadarChart
+              dataA={stringA.ratings}
+              dataB={stringB.ratings}
+              labelA={stringA.model}
+              labelB={stringB.model}
+            />
+          ) : null}
           
           <View className="bg-neutral-50 px-5 py-4 border-t border-neutral-100">
-            <View className="flex-row items-center gap-2 mb-4">
-              <View className="flex-row items-center gap-1.5">
-                <View className="w-2 h-2 rounded-full bg-primary-500" />
-                <HeroText className="text-[10px] font-bold text-neutral-600">{stringA.model}</HeroText>
-              </View>
-            <View className="flex-row items-center gap-1.5 ml-4">
-                <View className="w-2 h-2 rounded-full bg-secondary-400" />
-                <HeroText className="text-[10px] font-bold text-neutral-600">{stringB.model}</HeroText>
-              </View>
-            </View>
-
             <View className="gap-2">
               {[
                 { label: 'Power', key: 'power' as const },
@@ -185,20 +188,43 @@ export default function CompareStringsScreen() {
                 { label: 'Durability', key: 'durability' as const },
                 { label: 'Comfort', key: 'comfort' as const },
                 { label: 'Sound', key: 'sound' as const },
-              ].map((metric) => (
-                <View key={metric.key} className="flex-row items-center justify-between">
-                  <HeroText className="text-xs font-medium text-neutral-500">{metric.label}</HeroText>
-                  <View className="flex-row items-center gap-4">
-                    <HeroText className={`text-xs font-bold ${stringA.ratings[metric.key] >= stringB.ratings[metric.key] ? 'text-primary-600' : 'text-neutral-400'}`}>
-                      {stringA.ratings[metric.key]}
+              ].map((metric) => {
+                const best = Math.max(
+                  ...strings.map((item) => item.ratings[metric.key]),
+                );
+                return (
+                  <View key={metric.key}>
+                    <HeroText className="mb-1 text-xs font-medium text-neutral-500">
+                      {metric.label}
                     </HeroText>
-                    <HeroText className="text-[10px] text-neutral-300">vs</HeroText>
-                    <HeroText className={`text-xs font-bold ${stringB.ratings[metric.key] > stringA.ratings[metric.key] ? 'text-primary-600' : 'text-neutral-400'}`}>
-                      {stringB.ratings[metric.key]}
-                    </HeroText>
+                    <View className="flex-row gap-2">
+                      {strings.map((item) => (
+                        <View
+                          key={item.id}
+                          className={`flex-1 rounded-xl px-2 py-2 ${
+                            item.ratings[metric.key] === best
+                              ? 'bg-primary-100'
+                              : 'bg-white'
+                          }`}
+                        >
+                          <HeroText className="text-[10px] text-neutral-500" numberOfLines={1}>
+                            {item.model}
+                          </HeroText>
+                          <HeroText
+                            className={`text-sm font-bold ${
+                              item.ratings[metric.key] === best
+                                ? 'text-primary-700'
+                                : 'text-neutral-500'
+                            }`}
+                          >
+                            {item.ratings[metric.key]}
+                          </HeroText>
+                        </View>
+                      ))}
+                    </View>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
 
             <View className="mt-4 pt-4 border-t border-neutral-100 flex-row items-start gap-2">
@@ -216,33 +242,31 @@ export default function CompareStringsScreen() {
         <AppCard variant="subtle" padding="lg">
           <View className="gap-6">
             {[
-              { label: 'Gauge', valA: stringA.gauge, valB: stringB.gauge },
-              { label: 'Material', valA: stringA.material, valB: stringB.material },
+              { label: 'Gauge', value: (item: StringItem) => item.gauge },
+              { label: 'Material', value: (item: StringItem) => item.material },
               {
                 label: 'Catalog Tension',
-                valA: formatTensionRange(
-                  stringA.tensionMinLbs,
-                  stringA.tensionMaxLbs,
-                  'Not recorded',
-                ),
-                valB: formatTensionRange(
-                  stringB.tensionMinLbs,
-                  stringB.tensionMaxLbs,
-                  'Not recorded',
-                ),
+                value: (item: StringItem) =>
+                  formatTensionRange(
+                    item.tensionMinLbs,
+                    item.tensionMaxLbs,
+                    'Not recorded',
+                  ),
               },
-              { label: 'Price', valA: resolvePriceLabel(stringA), valB: resolvePriceLabel(stringB) },
+              { label: 'Price', value: resolvePriceLabel },
             ].map((spec) => (
               <View key={spec.label}>
-                <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-center mb-2">{spec.label}</HeroText>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1 items-center">
-                    <HeroText className="text-sm font-bold text-neutral-900">{spec.valA}</HeroText>
-                  </View>
-                  <View className="w-px h-4 bg-neutral-200" />
-                  <View className="flex-1 items-center">
-                    <HeroText className="text-sm font-bold text-neutral-900">{spec.valB}</HeroText>
-                  </View>
+                <HeroText className="mb-2 text-center text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                  {spec.label}
+                </HeroText>
+                <View className="flex-row gap-2">
+                  {strings.map((item) => (
+                    <View key={item.id} className="flex-1 items-center">
+                      <HeroText className="text-center text-xs font-bold text-neutral-900">
+                        {spec.value(item)}
+                      </HeroText>
+                    </View>
+                  ))}
                 </View>
               </View>
             ))}
@@ -287,23 +311,16 @@ export default function CompareStringsScreen() {
             : undefined}
         />
         
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <AppButton 
-              label={`Details: ${stringA.model}`} 
-              variant="outline" 
-              size="md" 
-              onPress={() => router.push(`/player/strings/${stringA.id}`)} 
+        <View className="gap-3">
+          {strings.map((item) => (
+            <AppButton
+              key={item.id}
+              label={`Details: ${item.model}`}
+              variant="outline"
+              size="md"
+              onPress={() => router.push(`/player/strings/${item.id}`)}
             />
-          </View>
-          <View className="flex-1">
-            <AppButton 
-              label={`Details: ${stringB.model}`} 
-              variant="outline" 
-              size="md" 
-              onPress={() => router.push(`/player/strings/${stringB.id}`)} 
-            />
-          </View>
+          ))}
         </View>
 
         <View className="flex-row items-center justify-center gap-6 mt-2">

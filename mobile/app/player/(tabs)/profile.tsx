@@ -73,9 +73,9 @@ export default function PlayerProfileScreen() {
     },
     {
       title: 'App settings',
-      subtitle: 'Manage your persisted notification preferences.',
+      subtitle: 'Manage account, password, privacy, notifications, and deletion requests.',
       icon: <Settings2 size={18} color="#2F64B6" />,
-      route: '/player/notifications/preferences',
+      route: '/player/settings',
     },
     {
       title: 'Racket passport',

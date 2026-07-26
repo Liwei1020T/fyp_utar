@@ -30,8 +30,9 @@ The active migration sequence is:
 - [20260723_0022_rackets_feedback.py](../migrations/versions/20260723_0022_rackets_feedback.py)
 - [20260723_0023_booking_conversations.py](../migrations/versions/20260723_0023_booking_conversations.py)
 - [20260723_0024_booking_update_channel.py](../migrations/versions/20260723_0024_booking_update_channel.py)
+- [20260726_0025_player_admin_operations.py](../migrations/versions/20260726_0025_player_admin_operations.py)
 
-Revisions 0019–0024 can adopt the complete tables produced by
+Revisions 0019–0025 can adopt the complete tables produced by
 `AUTO_CREATE_SCHEMA` while still adding missing columns to older tables. This
 keeps local development databases upgradeable without stamping over real
 schema gaps; arbitrary partially created tables remain unsupported.
@@ -67,6 +68,7 @@ Stores the canonical recommendation and profile fields:
 - `pref_tension_retention`
 - `pref_value_for_money`
 - `notification_preferences`
+- `privacy_settings`
 
 ### Catalog Normalization
 
@@ -225,6 +227,7 @@ database lock.
 Current lifecycle values are `awaiting_dropoff`, `in_progress`, `ready_for_collection`, `completed`, `cancelled`, and `rejected`.
 An optional owned `racket_id` links a durable physical racket while
 `racket_brand` and `racket_model` retain the booking-time snapshot.
+`service_method` records counter drop-off or a requested pickup handover.
 
 ### `booking_status_history`
 
@@ -253,6 +256,24 @@ brand/model, optional frame metadata, preferred use, and notes.
 
 Stores one structured feedback row per completed booking. The unique booking
 constraint and ownership checks prevent duplicate or cross-user submissions.
+Optional 1-to-5 detail fields store recommendation relevance, string and
+tension satisfaction, comfort, control, repulsion, and durability.
+
+### `check_in_tokens`
+
+Stores expiring one-time booking check-in digests. Raw QR values are never
+persisted; used and revoked timestamps prevent replay.
+
+### `device_tokens` and `notifications`
+
+`device_tokens` owns Expo device registrations per user. `notifications`
+stores each admin-composed in-app delivery and its latest optional Expo push
+attempt status.
+
+### `account_deletion_requests`
+
+Stores auditable player deletion requests for later administrator resolution;
+requesting deletion does not erase runtime data immediately.
 
 ### `notification_reads`
 

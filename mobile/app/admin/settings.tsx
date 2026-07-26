@@ -19,6 +19,14 @@ function normalizeStorePolicyText(value: string) {
   return value;
 }
 
+const NOTIFICATION_CATEGORIES = [
+  'booking',
+  'payment',
+  'service',
+  'chat',
+  'system',
+] as const;
+
 export default function AdminSettingsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -39,6 +47,15 @@ export default function AdminSettingsScreen() {
   const [trendingStringIds, setTrendingStringIds] = useState<string[]>(
     settings?.trendingStringIds ?? []
   );
+  const [defaultServicePrice, setDefaultServicePrice] = useState(
+    String(settings?.defaultServicePrice ?? 0),
+  );
+  const [notificationSettings, setNotificationSettings] = useState(
+    settings?.notificationSettings ?? {},
+  );
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [trendingSearch, setTrendingSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
@@ -56,6 +73,8 @@ export default function AdminSettingsScreen() {
     setPolicyText(normalizeStorePolicyText(settings.storePolicyText));
     setPaymentNotes(settings.paymentNotes);
     setTrendingStringIds(settings.trendingStringIds ?? []);
+    setDefaultServicePrice(String(settings.defaultServicePrice ?? 0));
+    setNotificationSettings(settings.notificationSettings ?? {});
   }, [settings]);
 
   const toggleTrendingString = (stringId: string) => {
@@ -121,6 +140,8 @@ export default function AdminSettingsScreen() {
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeStorePolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? [],
+          defaultServicePrice: response.default_service_price,
+          notificationSettings: response.notification_settings,
         });
         updateAdminSettings('main', {
           storeName: response.store_name,
@@ -131,6 +152,8 @@ export default function AdminSettingsScreen() {
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeStorePolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? [],
+          defaultServicePrice: response.default_service_price,
+          notificationSettings: response.notification_settings,
         });
       } catch (loadError) {
         if (!cancelled) {
@@ -172,6 +195,8 @@ export default function AdminSettingsScreen() {
         store_policy_text: policyText,
         address,
         trending_string_ids: trendingStringIds,
+        default_service_price: Number(defaultServicePrice) || 0,
+        notification_settings: notificationSettings,
       });
       updateAdminSettings(user.id, {
         storeName: response.store_name,
@@ -182,6 +207,8 @@ export default function AdminSettingsScreen() {
         bookingNotes: response.booking_notes,
         storePolicyText: normalizeStorePolicyText(response.store_policy_text),
         trendingStringIds: response.trending_string_ids ?? trendingStringIds,
+        defaultServicePrice: response.default_service_price,
+        notificationSettings: response.notification_settings,
       });
       updateAdminSettings('main', {
         storeName: response.store_name,
@@ -192,6 +219,8 @@ export default function AdminSettingsScreen() {
         bookingNotes: response.booking_notes,
         storePolicyText: normalizeStorePolicyText(response.store_policy_text),
         trendingStringIds: response.trending_string_ids ?? trendingStringIds,
+        defaultServicePrice: response.default_service_price,
+        notificationSettings: response.notification_settings,
       });
       showSaveSuccess();
     } catch (saveError) {
@@ -209,6 +238,29 @@ export default function AdminSettingsScreen() {
   if (!user || user.role !== 'admin') {
     return null;
   }
+
+  const changePassword = async () => {
+    if (!token || !currentPassword || !newPassword) return;
+    setIsChangingPassword(true);
+    setError(null);
+    try {
+      const response = await backendApi.changePassword(token, {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setSaveSuccessMessage(response.message);
+    } catch (passwordError) {
+      setError(
+        passwordError instanceof BackendApiError
+          ? passwordError.message
+          : 'Failed to update admin password.',
+      );
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   return (
     <AppScreen
@@ -229,6 +281,90 @@ export default function AdminSettingsScreen() {
         <AppInput label="Support text" value={supportText} onChangeText={setSupportText} multiline inputClassName="min-h-24" />
         <AppInput label="Booking notes" value={bookingNotes} onChangeText={setBookingNotes} multiline inputClassName="min-h-24" />
         <AppInput label="Store policy text" value={policyText} onChangeText={setPolicyText} multiline inputClassName="min-h-24" />
+      </AppSection>
+
+      <AppSection eyebrow="Pricing" title="Default service price">
+        <AppInput
+          label="Service fee (RM)"
+          value={defaultServicePrice}
+          onChangeText={setDefaultServicePrice}
+          keyboardType="decimal-pad"
+        />
+      </AppSection>
+
+      <AppSection
+        eyebrow="Notifications"
+        title="Templates and category switches"
+      >
+        <View className="gap-3">
+          {NOTIFICATION_CATEGORIES.map((category) => {
+            const config = notificationSettings[category] ?? {};
+            const enabled = config.enabled ?? true;
+            return (
+              <AppCard key={category} variant="elevated" padding="md">
+                <View className="mb-3 flex-row items-center justify-between">
+                  <HeroText className="text-sm font-bold capitalize text-neutral-900">
+                    {category}
+                  </HeroText>
+                  <AppChip
+                    label={enabled ? 'Enabled' : 'Disabled'}
+                    variant={enabled ? 'success' : 'neutral'}
+                    onPress={() =>
+                      setNotificationSettings((current) => ({
+                        ...current,
+                        [category]: { ...config, enabled: !enabled },
+                      }))
+                    }
+                  />
+                </View>
+                <AppInput
+                  label="Default title"
+                  value={config.title ?? ''}
+                  onChangeText={(title) =>
+                    setNotificationSettings((current) => ({
+                      ...current,
+                      [category]: { ...config, title },
+                    }))
+                  }
+                />
+                <AppInput
+                  label="Default body"
+                  value={config.body ?? ''}
+                  onChangeText={(body) =>
+                    setNotificationSettings((current) => ({
+                      ...current,
+                      [category]: { ...config, body },
+                    }))
+                  }
+                  multiline
+                  inputClassName="min-h-20"
+                />
+              </AppCard>
+            );
+          })}
+        </View>
+      </AppSection>
+
+      <AppSection eyebrow="Admin account" title="Update password">
+        <AppInput
+          label="Current password"
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          secureTextEntry
+        />
+        <AppInput
+          label="New password"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry
+        />
+        <AppButton
+          label="Update admin password"
+          variant="outline"
+          isLoading={isChangingPassword}
+          isDisabled={!currentPassword || newPassword.length < 8}
+          onPress={() => void changePassword()}
+        />
       </AppSection>
 
       <AppSection

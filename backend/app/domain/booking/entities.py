@@ -46,6 +46,7 @@ class BookingRecord:
     expected_completion_datetime: datetime | None
     collection_datetime: datetime | None
     notes: str | None
+    service_method: str
     cancellation_reason: str | None
     completion_summary: str | None
     status: str

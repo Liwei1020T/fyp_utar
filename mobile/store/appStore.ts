@@ -246,10 +246,10 @@ export const useAppStore = create<AppStoreState>((set) => ({
         };
       }
 
-      if (state.compareSelection.length >= 2) {
+      if (state.compareSelection.length >= 3) {
         if (typeof window !== 'undefined') {
           alert(
-            'Comparison limit reached. You can only compare up to 2 strings at once.',
+            'Comparison limit reached. You can only compare up to 3 strings at once.',
           );
         }
         return {};
@@ -295,6 +295,8 @@ export const useAppStore = create<AppStoreState>((set) => ({
               storePolicyText: '',
               address: '',
               trendingStringIds: [],
+              defaultServicePrice: 0,
+              notificationSettings: {},
               ...patch,
             },
             ...state.adminSettings,

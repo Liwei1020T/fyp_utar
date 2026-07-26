@@ -6,9 +6,16 @@ from fastapi import Depends
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import ValidationError
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.models import AccountDeletionRequest
+from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
+from app.dto.auth import AccountDeletionRequestOut
+from app.dto.auth import AccountDeletionRequestPayload
 from app.dto.auth import AuthResponse
+from app.dto.auth import ChangePasswordRequest
 from app.dto.auth import ForgotPasswordRequest
 from app.dto.auth import ForgotPasswordRequestResponse
 from app.dto.auth import ForgotPasswordResetRequest
@@ -30,6 +37,8 @@ from app.use_cases.auth.login import LoginUseCase
 from app.use_cases.auth.register import RegisterUserUseCase
 from app.use_cases.auth.request_password_reset import RequestPasswordResetUseCase
 from app.use_cases.auth.reset_password import ResetPasswordUseCase
+from app.shared.errors import ConflictError
+from app.shared.errors import UnauthorizedError
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -171,3 +180,62 @@ def me(
         current_user.user_id
     )
     return user_to_dto(user)
+
+
+@router.post("/change-password", response_model=MessageResponse)
+def change_password(
+    payload: dict = Body(...),
+    current_user: CurrentUser = Depends(get_current_user),
+    user_repository=Depends(get_user_repository),
+    password_hasher: PasswordHasher = Depends(get_password_hasher),
+) -> MessageResponse:
+    request = _validate_payload(
+        ChangePasswordRequest,
+        payload,
+        password_hasher=password_hasher,
+    )
+    user = user_repository.get_by_id(current_user.user_id)
+    assert user is not None
+    if not password_hasher.verify_password(
+        request.current_password, user.password_hash
+    ):
+        raise UnauthorizedError("Current password is incorrect")
+    if password_hasher.verify_password(request.new_password, user.password_hash):
+        raise ConflictError("New password must be different")
+    user_repository.update_password(
+        current_user.user_id,
+        password_hasher.hash_password(request.new_password),
+    )
+    return MessageResponse(message="Password updated")
+
+
+@router.post(
+    "/delete-account-request",
+    response_model=AccountDeletionRequestOut,
+)
+def request_account_deletion(
+    payload: AccountDeletionRequestPayload,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AccountDeletionRequestOut:
+    existing = db.scalar(
+        select(AccountDeletionRequest).where(
+            AccountDeletionRequest.user_id == current_user.user_id,
+            AccountDeletionRequest.status == "pending",
+        )
+    )
+    if existing is not None:
+        raise ConflictError("An account deletion request is already pending")
+    request = AccountDeletionRequest(
+        user_id=current_user.user_id,
+        reason=payload.reason,
+    )
+    db.add(request)
+    db.commit()
+    db.refresh(request)
+    return AccountDeletionRequestOut(
+        id=request.id,
+        status=request.status,
+        reason=request.reason,
+        requested_at=request.requested_at.isoformat(),
+    )

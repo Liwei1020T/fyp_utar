@@ -27,6 +27,7 @@ export default function AdminLayout() {
   const setLiveConversations = useAppStore((state) => state.setLiveConversations);
   const setLivePayments = useAppStore((state) => state.setLivePayments);
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
+  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
 
   useEffect(() => {
     if (!hasHydrated || !token || user?.role !== 'admin') {
@@ -43,12 +44,14 @@ export default function AdminLayout() {
           bookingsResult,
           paymentsResult,
           conversationsResult,
+          storeSettingsResult,
         ] = await Promise.allSettled([
           backendApi.fetchCurrentUser(token),
           backendApi.adminListInventoryStrings(token),
           backendApi.adminListBookings(token),
           backendApi.adminListPayments(token),
           backendApi.adminListConversations(token),
+          backendApi.adminFetchStoreSettings(token),
         ]);
 
         if (cancelled) {
@@ -117,6 +120,28 @@ export default function AdminLayout() {
             conversationsResult.reason,
           );
         }
+
+        if (storeSettingsResult.status === 'fulfilled') {
+          updateAdminSettings(admin.id, {
+            storeName: storeSettingsResult.value.store_name,
+            storeContact: storeSettingsResult.value.store_contact,
+            address: storeSettingsResult.value.address,
+            supportText: storeSettingsResult.value.support_text,
+            paymentNotes: storeSettingsResult.value.payment_notes,
+            bookingNotes: storeSettingsResult.value.booking_notes,
+            storePolicyText: storeSettingsResult.value.store_policy_text,
+            trendingStringIds: storeSettingsResult.value.trending_string_ids ?? [],
+            defaultServicePrice:
+              storeSettingsResult.value.default_service_price,
+            notificationSettings:
+              storeSettingsResult.value.notification_settings,
+          });
+        } else {
+          console.warn(
+            'Failed to hydrate live store settings',
+            storeSettingsResult.reason,
+          );
+        }
       } catch (error) {
         if (isBackendAuthError(error)) {
           logout();
@@ -140,6 +165,7 @@ export default function AdminLayout() {
     setLivePayments,
     setLiveStrings,
     token,
+    updateAdminSettings,
     user?.role,
   ]);
 

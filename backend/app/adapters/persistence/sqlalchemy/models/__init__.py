@@ -8,6 +8,9 @@ from app.adapters.persistence.sqlalchemy.models.booking_conversation import (
 )
 from app.adapters.persistence.sqlalchemy.models.commerce import Payment
 from app.adapters.persistence.sqlalchemy.models.commerce import WalletTransaction
+from app.adapters.persistence.sqlalchemy.models.notification import CheckInToken
+from app.adapters.persistence.sqlalchemy.models.notification import DeviceToken
+from app.adapters.persistence.sqlalchemy.models.notification import NotificationDelivery
 from app.adapters.persistence.sqlalchemy.models.notification import NotificationRead
 from app.adapters.persistence.sqlalchemy.models.password_reset_code import (
     PasswordResetCode,
@@ -59,16 +62,21 @@ from app.adapters.persistence.sqlalchemy.models.string_catalog_item import (
 from app.adapters.persistence.sqlalchemy.models.string_catalog_item import (
     UserPreferenceMatrix,
 )
+from app.adapters.persistence.sqlalchemy.models.user import AccountDeletionRequest
 from app.adapters.persistence.sqlalchemy.models.user import User
 
 __all__ = [
+    "AccountDeletionRequest",
     "Brand",
     "Booking",
     "BookingConversation",
     "BookingFeedback",
     "BookingStatusHistory",
     "BookingUpdate",
+    "CheckInToken",
+    "DeviceToken",
     "InventoryMovement",
+    "NotificationDelivery",
     "NotificationRead",
     "PasswordResetCode",
     "Payment",

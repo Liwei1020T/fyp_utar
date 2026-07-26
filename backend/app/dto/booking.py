@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal
+from typing import cast
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -37,6 +38,7 @@ class CreateBookingPayload(BaseModel):
     )
     drop_off_datetime: datetime | None = None
     notes: str | None = None
+    service_method: Literal["counter_dropoff", "pickup_request"] = "counter_dropoff"
 
     @model_validator(mode="after")
     def validate_single_slot_input(self) -> "CreateBookingPayload":
@@ -62,6 +64,18 @@ class UpdateBookingStatusPayload(BaseModel):
         } and not (self.note and self.note.strip()):
             raise ValueError("note is required when cancelling or rejecting a booking")
         return self
+
+
+class CancelBookingPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class CheckInTokenOut(BaseModel):
+    token: str
+    expires_at: str
+    status: Literal["active", "used", "expired", "revoked"]
 
 
 class BookingStatusHistoryOut(BaseModel):
@@ -104,6 +118,7 @@ class BookingOut(BaseModel):
     expected_completion_datetime: str | None = None
     collection_datetime: str | None = None
     notes: str | None = None
+    service_method: Literal["counter_dropoff", "pickup_request"]
     cancellation_reason: str | None = None
     completion_summary: str | None = None
     status: str
@@ -176,6 +191,10 @@ def booking_to_dto(
         ),
         collection_datetime=isoformat_or_none(booking.collection_datetime),
         notes=booking.notes,
+        service_method=cast(
+            Literal["counter_dropoff", "pickup_request"],
+            booking.service_method,
+        ),
         cancellation_reason=booking.cancellation_reason,
         completion_summary=booking.completion_summary,
         status=booking.status,

@@ -85,10 +85,11 @@ Query cache owner.
 | [mobile/app/player/profile/edit.tsx](../mobile/app/player/profile/edit.tsx) | Editable recommendation/player profile form. |
 | [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/%5Bid%5D.tsx) | Player booking-support detail backed by persisted conversation state and messages. |
 | [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | Compatibility redirect to live booking support. |
-| [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Live backend-compatible counter check-in reference screen. |
+| [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Expiring server-issued QR check-in token screen. |
 | [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/%5BbookingId%5D.tsx) | Creates or displays the structured feedback record for one completed owned booking. |
 | [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Owned backend event feed with persisted read IDs. |
-| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Backend-persisted notification preferences. |
+| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Backend preferences plus explicit physical-device Expo token registration. |
+| [mobile/app/player/settings.tsx](../mobile/app/player/settings.tsx) | Account, password, privacy, deletion request, version, and logout controls. |
 | [mobile/app/player/rackets.tsx](../mobile/app/player/rackets.tsx) | Owned physical Racket Passport list. |
 | [mobile/app/player/rackets/new.tsx](../mobile/app/player/rackets/new.tsx) | Registers a new owned physical racket passport. |
 | [mobile/app/player/rackets/[id].tsx](../mobile/app/player/rackets/%5Bid%5D.tsx) | Edits a physical racket passport and shows completed linked service history. |
@@ -104,12 +105,14 @@ Query cache owner.
 | [mobile/app/admin/bookings/[id].tsx](../mobile/app/admin/bookings/[id].tsx) | Admin booking detail and status updates. |
 | [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing trending strings. |
 | [mobile/app/admin/business-hours.tsx](../mobile/app/admin/business-hours.tsx) | Store business hours editor. |
-| [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Admin check-in lookup and confirmation. |
+| [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Camera QR scan, secure token confirmation, and manual lookup fallback. |
+| [mobile/app/admin/feedback.tsx](../mobile/app/admin/feedback.tsx) | Structured feedback filter, booking drill-down, and CSV export. |
+| [mobile/app/admin/notifications.tsx](../mobile/app/admin/notifications.tsx) | Device-token visibility, notification composition, delivery status, and resend. |
 | [mobile/app/admin/recommendations/index.tsx](../mobile/app/admin/recommendations/index.tsx) | Admin recommendation run history list backed by the unified backend. |
 | [mobile/app/admin/recommendations/[runId].tsx](../mobile/app/admin/recommendations/%5BrunId%5D.tsx) | Admin recommendation run detail with request/profile snapshots and score breakdown review. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Live booking service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Persisted payment monitor and verification actions. |
-| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Limited FYP1 store settings editor for store name, contact, address, support text, booking notes, booking policy text, and backend-persisted home trending strings. |
+| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, default service fee, notification templates, trending strings, and admin password controls. |
 | [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Admin booking-support reply screen with persisted read, resolve, and close actions. |
 
 ### Mobile State, Services, And Types
@@ -193,15 +196,15 @@ unified startup.
 
 | Path | Purpose |
 | --- | --- |
-| [backend/app/entrypoints/api/routes/auth_routes.py](../backend/app/entrypoints/api/routes/auth_routes.py) | Register, login, password reset, and `/auth/me`. |
-| [backend/app/entrypoints/api/routes/profile_routes.py](../backend/app/entrypoints/api/routes/profile_routes.py) | Current customer profile read/write. |
+| [backend/app/entrypoints/api/routes/auth_routes.py](../backend/app/entrypoints/api/routes/auth_routes.py) | Register, login, password reset/change, deletion request, and `/auth/me`. |
+| [backend/app/entrypoints/api/routes/profile_routes.py](../backend/app/entrypoints/api/routes/profile_routes.py) | Current customer profile and privacy settings. |
 | [backend/app/entrypoints/api/routes/catalog_routes.py](../backend/app/entrypoints/api/routes/catalog_routes.py) | Public string catalog list/detail. |
-| [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail. |
+| [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail, cancellation, and QR token issue. |
 | [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Recommendation preview/profile endpoints. |
-| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, status updates, check-in, queue, settings, analytics, logs. |
+| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, secure check-in, feedback, notifications, queue, settings, analytics, and logs. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
 | [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes/payments, wallet ledger, top-ups, and admin verification. |
-| [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, and preferences. |
+| [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
 | [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-support lifecycle and messages. |
 | [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Owned physical rackets and completed-booking feedback. |
 | [backend/app/entrypoints/api/routes/media_routes.py](../backend/app/entrypoints/api/routes/media_routes.py) | Time-limited signed access to persisted upload media. |
@@ -235,7 +238,7 @@ When adding behavior, follow the clean-architecture direction:
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260723_0024`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260726_0025`. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
 
 ### Backend AI Compatibility Package
@@ -272,6 +275,7 @@ unified runtime.
 | [backend/tests/test_notifications.py](../backend/tests/test_notifications.py) | Notification ownership, preference filtering, and persisted read IDs. |
 | [backend/tests/test_rackets_feedback.py](../backend/tests/test_rackets_feedback.py) | Racket ownership/snapshots and completed-booking feedback rules. |
 | [backend/tests/test_store_analytics.py](../backend/tests/test_store_analytics.py) | Persisted commerce analytics and store-local day boundary. |
+| [backend/tests/test_player_admin_operations.py](../backend/tests/test_player_admin_operations.py) | Secure QR, detailed feedback, device delivery, account security, and privacy flow. |
 | [backend/tests/test_ai_service_api.py](../backend/tests/test_ai_service_api.py) | AI compatibility API coverage. |
 | [backend/tests/test_ai_service_service.py](../backend/tests/test_ai_service_service.py) | AI service/facade coverage. |
 
