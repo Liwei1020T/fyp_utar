@@ -186,6 +186,7 @@ class AnalyticsWorkloadEntryOut(BaseModel):
 
 class AnalyticsSummaryOut(BaseModel):
     weekly_bookings: int
+    today_bookings: int
     pending_payment_count: int
     awaiting_dropoff_count: int
     in_progress_count: int
@@ -246,6 +247,7 @@ def slot_to_dto(slot: BookingSlot) -> BookingSlotOut:
 def analytics_summary_to_dto(summary: AnalyticsSummary) -> AnalyticsSummaryOut:
     return AnalyticsSummaryOut(
         weekly_bookings=summary.weekly_bookings,
+        today_bookings=summary.today_bookings,
         pending_payment_count=summary.pending_payment_count,
         awaiting_dropoff_count=summary.awaiting_dropoff_count,
         in_progress_count=summary.in_progress_count,

@@ -135,7 +135,11 @@ def get_current_user(
         raise UnauthorizedError("Invalid access token")
     if not user.is_active:
         raise UnauthorizedError("Invalid access token")
-    if user.role != payload.role or user.phone_number != payload.phone_number:
+    if (
+        user.role != payload.role
+        or user.phone_number != payload.phone_number
+        or user.auth_version != payload.auth_version
+    ):
         raise UnauthorizedError("Invalid access token")
     return CurrentUser(
         sub=user.id,

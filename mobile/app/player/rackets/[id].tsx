@@ -55,7 +55,8 @@ export default function RacketPassportDetailScreen() {
   const token = useBackendAccessToken();
   const rackets = useRackets();
   const strings = useStrings();
-  const setLiveRackets = useAppStore((state) => state.setLiveRackets);
+  const upsertLiveRacket = useAppStore((state) => state.upsertLiveRacket);
+  const removeLiveRacket = useAppStore((state) => state.removeLiveRacket);
   const [isLoading, setIsLoading] = useState(Boolean(token && racketId));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -76,12 +77,7 @@ export default function RacketPassportDetailScreen() {
       const detail = mapBackendRacketToRacketPassport(
         await backendApi.fetchRacket(token, racketId),
       );
-      setLiveRackets([
-        detail,
-        ...useAppStore
-          .getState()
-          .liveRackets.filter((item) => item.id !== detail.id),
-      ]);
+      upsertLiveRacket(detail);
     } catch (error) {
       setLoadError(
         error instanceof BackendApiError
@@ -91,7 +87,7 @@ export default function RacketPassportDetailScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [racketId, setLiveRackets, token]);
+  }, [racketId, token, upsertLiveRacket]);
 
   useFocusEffect(
     useCallback(() => {
@@ -223,12 +219,7 @@ export default function RacketPassportDetailScreen() {
         lastServicedAt: racket.lastServicedAt,
         stringHistory: racket.stringHistory,
       };
-      setLiveRackets([
-        updated,
-        ...useAppStore
-          .getState()
-          .liveRackets.filter((item) => item.id !== updated.id),
-      ]);
+      upsertLiveRacket(updated);
       setEditFields(editFieldsFor(updated));
       setIsEditing(false);
     } catch (error) {
@@ -260,11 +251,7 @@ export default function RacketPassportDetailScreen() {
             void backendApi
               .deleteRacket(token, racket.id)
               .then(() => {
-                setLiveRackets(
-                  useAppStore
-                    .getState()
-                    .liveRackets.filter((item) => item.id !== racket.id),
-                );
+                removeLiveRacket(racket.id);
                 router.replace('/player/rackets');
               })
               .catch((error: unknown) => {

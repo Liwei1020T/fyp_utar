@@ -8,10 +8,12 @@ from sqlalchemy import select
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
+from app.adapters.persistence.sqlalchemy.models import Profile
 from app.adapters.persistence.sqlalchemy.models import RecommendationLog
 from app.adapters.persistence.sqlalchemy.models import RecommendationRun
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
+from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_booking_repository import (
     SqlAlchemyBookingRepository,
 )
@@ -20,6 +22,9 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_password_reset_
 )
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_log_repository import (
     SqlAlchemyRecommendationLogRepository,
+)
+from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
+    SqlAlchemyRecommendationRepository,
 )
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
@@ -115,6 +120,49 @@ def test_recommendation_rolls_back_cache_when_log_write_fails(monkeypatch) -> No
                 db.scalar(select(func.count()).select_from(model))
                 == counts_before[model]
             )
+
+
+def test_profile_rolls_back_when_preference_vector_write_fails(monkeypatch) -> None:
+    token = _register("+60123330004")
+
+    def fail_preference_write(*args, **kwargs) -> None:
+        raise RuntimeError("forced preference vector failure")
+
+    monkeypatch.setattr(
+        SqlAlchemyRecommendationRepository,
+        "replace_user_preference_vector",
+        fail_preference_write,
+    )
+    with pytest.raises(RuntimeError, match="forced preference vector failure"):
+        client.put(
+            "/api/profile",
+            headers=_headers(token),
+            json={
+                "username": "should-not-persist",
+                "skill_level": "advanced",
+                "playing_style": "attacking",
+                "budget_tier": "between_30_50",
+                "preferred_tension": 27,
+                "game_type": "doubles",
+                "frequency_per_week": 4,
+                "pref_attack": 5,
+                "pref_comfort": 3,
+                "pref_control": 4,
+                "pref_durability": 3,
+                "pref_elasticity": 5,
+                "pref_sound": 4,
+                "pref_string_movement": 3,
+                "pref_tension_retention": 4,
+                "pref_value_for_money": 3,
+            },
+        )
+
+    with SessionLocal() as db:
+        user = db.scalar(select(User).where(User.phone_number == "+60123330004"))
+        assert user is not None
+        assert user.username == "player-0004"
+        assert db.scalar(select(func.count()).select_from(Profile)) == 0
+        assert db.scalar(select(func.count()).select_from(UserPreferenceMatrix)) == 0
 
 
 def test_password_reset_rolls_back_password_when_code_write_fails(monkeypatch) -> None:

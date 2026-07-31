@@ -72,7 +72,7 @@ export default function PaymentScreen() {
   const payments = usePayments();
   const strings = useStrings();
   const wallets = useWallets();
-  const setLivePayments = useAppStore((state) => state.setLivePayments);
+  const upsertLivePayment = useAppStore((state) => state.upsertLivePayment);
   const setLiveWallet = useAppStore((state) => state.setLiveWallet);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('online_banking');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -206,10 +206,7 @@ export default function PaymentScreen() {
         quote?.total_amount,
       );
       const payment = mapBackendPaymentToPayment(response);
-      setLivePayments([
-        payment,
-        ...payments.filter((item) => item.id !== payment.id),
-      ]);
+      upsertLivePayment(payment);
       if (selectedMethod === 'wallet_balance') {
         const refreshedWallet = mapBackendWallet(await backendApi.fetchWallet(token));
         setLiveWallet(refreshedWallet.balance, refreshedWallet.transactions);

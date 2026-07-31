@@ -56,7 +56,7 @@ const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ||
   'http://localhost:3001/api';
 const REQUEST_TIMEOUT_MS = 12000;
-let sessionExpiredHandler: (() => void) | null = null;
+let sessionExpiredHandler: ((expiredToken: string) => void) | null = null;
 
 export class BackendApiError extends Error {
   constructor(
@@ -75,7 +75,7 @@ export function isBackendAuthError(error: unknown): error is BackendApiError {
 }
 
 export function setBackendSessionExpiredHandler(
-  handler: (() => void) | null,
+  handler: ((expiredToken: string) => void) | null,
 ) {
   sessionExpiredHandler = handler;
   return () => {
@@ -158,7 +158,7 @@ async function requestJson<T>(
       | { message?: string; details?: unknown }
       | undefined;
     if (token && response.status === 401) {
-      sessionExpiredHandler?.();
+      sessionExpiredHandler?.(token);
     }
     throw new BackendApiError(
       error?.message ||
@@ -221,7 +221,7 @@ async function requestFormJson<T>(
       | { message?: string; details?: unknown }
       | undefined;
     if (token && response.status === 401) {
-      sessionExpiredHandler?.();
+      sessionExpiredHandler?.(token);
     }
     throw new BackendApiError(
       error?.message ||
@@ -833,17 +833,23 @@ export const backendApi = {
   adminListFeedback(
     token: string,
     params?: {
+      booking_id?: string;
       string_id?: string;
       rating?: number;
       date_from?: string;
       date_to?: string;
+      limit?: number;
+      offset?: number;
     },
   ) {
     const searchParams = new URLSearchParams();
+    if (params?.booking_id) searchParams.set('booking_id', params.booking_id);
     if (params?.string_id) searchParams.set('string_id', params.string_id);
     if (params?.rating != null) searchParams.set('rating', String(params.rating));
     if (params?.date_from) searchParams.set('date_from', params.date_from);
     if (params?.date_to) searchParams.set('date_to', params.date_to);
+    if (params?.limit != null) searchParams.set('limit', String(params.limit));
+    if (params?.offset != null) searchParams.set('offset', String(params.offset));
     const suffix = searchParams.size ? `?${searchParams.toString()}` : '';
     return requestJson<BackendPage<BackendAdminFeedback>>(
       `/admin/feedback${suffix}`,
@@ -853,6 +859,7 @@ export const backendApi = {
   async adminExportFeedback(
     token: string,
     params?: {
+      booking_id?: string;
       string_id?: string;
       rating?: number;
       date_from?: string;
@@ -860,6 +867,7 @@ export const backendApi = {
     },
   ) {
     const searchParams = new URLSearchParams();
+    if (params?.booking_id) searchParams.set('booking_id', params.booking_id);
     if (params?.string_id) searchParams.set('string_id', params.string_id);
     if (params?.rating != null) searchParams.set('rating', String(params.rating));
     if (params?.date_from) searchParams.set('date_from', params.date_from);
@@ -873,7 +881,7 @@ export const backendApi = {
     );
     if (!response.ok) {
       if (response.status === 401) {
-        sessionExpiredHandler?.();
+        sessionExpiredHandler?.(token);
       }
       throw new BackendApiError('Failed to export feedback.', response.status);
     }

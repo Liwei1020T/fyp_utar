@@ -70,7 +70,12 @@ function BackendSessionBootstrap() {
   );
 
   useEffect(
-    () => setBackendSessionExpiredHandler(logout),
+    () =>
+      setBackendSessionExpiredHandler((expiredToken) => {
+        if (useAppStore.getState().backendAccessToken === expiredToken) {
+          logout();
+        }
+      }),
     [logout],
   );
 

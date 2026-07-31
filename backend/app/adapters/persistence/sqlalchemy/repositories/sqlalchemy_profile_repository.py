@@ -24,6 +24,7 @@ class SqlAlchemyProfileRepository:
         profile: PlayerProfile,
         *,
         username: str | None = None,
+        commit: bool = True,
     ) -> PlayerProfile:
         user = self.db.get(User, profile.user_id)
         assert user is not None
@@ -58,7 +59,10 @@ class SqlAlchemyProfileRepository:
         else:
             for field, value in values.items():
                 setattr(record, field, value)
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         self.db.refresh(record)
         return to_profile(record)
 

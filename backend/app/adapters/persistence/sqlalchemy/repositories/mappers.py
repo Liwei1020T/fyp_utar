@@ -77,6 +77,7 @@ def to_user_account(user: User) -> UserAccount:
         username=user.username,
         phone_number=user.phone_number,
         password_hash=user.password_hash,
+        auth_version=user.auth_version,
         role=user.role,
         auth_provider=user.auth_provider,
         external_auth_id=user.external_auth_id,

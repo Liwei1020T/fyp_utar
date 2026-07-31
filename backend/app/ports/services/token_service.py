@@ -12,6 +12,7 @@ class TokenService(Protocol):
         subject: str,
         role: str,
         phone_number: str,
+        auth_version: int,
     ) -> str: ...
 
     def verify_access_token(self, token: str) -> AuthTokenPayload | None: ...

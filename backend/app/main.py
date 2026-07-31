@@ -17,16 +17,10 @@ from sqlalchemy.orm import Session
 from app.adapters.persistence.sqlalchemy.seed import ensure_catalog_seeded
 from app.adapters.persistence.sqlalchemy.seed import ensure_seed_users
 from app.adapters.persistence.sqlalchemy.seed import ensure_store_defaults
-from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
-    recommendation_matrix_source_generated_at,
-)
-from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
-    recommendation_matrix_source_version,
-)
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
-from app.adapters.persistence.sqlalchemy.session import check_database_connection
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
+from app.entrypoints.api.health import health_payload
 from app.entrypoints.api.router import router as api_router
 from app.shared.errors import AppError
 from app.shared.http import error_payload
@@ -113,22 +107,7 @@ async def handle_integrity_error(_: Request, exc: IntegrityError) -> JSONRespons
 
 @app.get("/health")
 def root_health(db: Session = Depends(get_db)) -> dict[str, object]:
-    check_database_connection(db)
-    artifact_path = settings.recommendation_matrix_path
-    if not artifact_path.is_file():
-        raise HTTPException(
-            status_code=503,
-            detail="Canonical recommendation matrix artifact is missing",
-        )
-    generated_at = recommendation_matrix_source_generated_at(artifact_path)
-    return {
-        "status": "ok",
-        "service": "backend",
-        "recommendation_artifact": {
-            "source_version": recommendation_matrix_source_version(artifact_path),
-            "source_generated_at": generated_at.isoformat() if generated_at else None,
-        },
-    }
+    return health_payload(db)
 
 
 app.include_router(api_router, prefix=settings.api_prefix)

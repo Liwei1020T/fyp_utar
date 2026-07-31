@@ -22,7 +22,7 @@ class RequestPasswordResetUseCase:
     is_dev_like: bool
 
     def execute(self, *, phone_number: str) -> str | None:
-        user = self.user_repository.get_by_phone_number(phone_number)
+        user = self.user_repository.get_by_phone_number_for_update(phone_number)
         if user is None:
             return None
 

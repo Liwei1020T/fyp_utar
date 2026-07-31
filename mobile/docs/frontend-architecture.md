@@ -87,6 +87,8 @@ Responsibilities:
 - injects `HeroUINativeProvider`
 - restores native tokens from SecureStore and web tokens from current-tab session storage
 - revalidates every restored token through `/auth/me` before auth redirects resolve
+- scopes 401 handling to the exact bearer token that failed, so a delayed
+  request from an old session cannot clear a newer login
 - renders an Expo Router `Stack` with hidden native headers
 
 This file is the composition root for the frontend.
@@ -197,6 +199,9 @@ The store handles session, successful API snapshots, and transient UI state:
 - booking draft creation and clearing
 - string compare selection
 - successful business-hours, inventory, notification-read, and store-settings snapshots
+- atomic upsert actions for bookings, payments, conversations, and rackets so
+  concurrent successful requests cannot overwrite sibling updates with a
+  captured screen snapshot
 
 Payment, wallet, support-chat, and live booking writes call `backendApi.ts`
 directly. The store receives the successful backend response as a replacement

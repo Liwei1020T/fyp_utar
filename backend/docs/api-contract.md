@@ -100,7 +100,9 @@ Example forgot-password reset request:
 ```
 
 The backend owns code generation, expiry, attempt limits, one-time use, and the
-password update. It does not currently send the code through SMS or WhatsApp.
+password update. Each request replaces the prior unused code for that phone
+number. A successful reset invalidates every bearer token issued before the
+password change. It does not currently send the code through SMS or WhatsApp.
 `PASSWORD_RESET_DEV_PREVIEW_ENABLED` is local-development support only; keep it
 disabled outside an explicitly controlled development session. Production
 self-service reset requires a selected delivery provider and credentials.
@@ -165,10 +167,11 @@ attempted only when `EXPO_PUSH_ENABLED=true`.
 - `GET /api/profile/privacy`
 - `PUT /api/profile/privacy`
 
-Password changes verify the current password. Account deletion is an auditable
-request, not an immediate destructive delete. Privacy settings store analytics,
-personalization, and marketing consent independently from the recommendation
-profile.
+Password changes verify the current password and invalidate every previously
+issued bearer token, including the token used for the change; clients must log
+in again. Account deletion is an auditable request, not an immediate destructive
+delete. Privacy settings store analytics, personalization, and marketing consent
+independently from the recommendation profile.
 
 ### Booking Support Conversations
 
@@ -208,7 +211,8 @@ Racket detail history includes only completed bookings for that racket.
 Structured feedback is allowed once per owned completed booking, with a
 1-to-5 overall rating plus optional relevance, string, tension, comfort,
 control, repulsion, and durability ratings. Admins can filter the persisted
-records and export the same fields as CSV.
+records by `booking_id`, string, rating, or date, page them with `limit` and
+`offset`, and export the same fields as CSV.
 
 ### Payments and Wallet
 
@@ -361,8 +365,9 @@ Store-ops responses add:
 - single-store settings payloads for support/policy copy,
   `default_service_price`, notification templates, and `trending_string_ids`;
   player clients read this through `GET /api/store-settings`
-- analytics summary with repeat customers, feedback completion, average service
-  time, tension distribution, and popular string aggregates
+- analytics summary with store-local `today_bookings`, repeat customers,
+  feedback completion, average service time, tension distribution, and popular
+  string aggregates
 
 Booking creation accepts `service_method` as `counter_dropoff` or
 `pickup_request`. Players may cancel through
@@ -370,7 +375,8 @@ Booking creation accepts `service_method` as `counter_dropoff` or
 still permits cancellation.
 
 `POST /api/bookings/{booking_id}/check-in-token` creates a ten-minute,
-single-use QR token. Only its SHA-256 digest is persisted. The secure admin
+single-use QR token and revokes the booking's prior active token. Only its
+SHA-256 digest is persisted. The secure admin
 lookup/confirm endpoints accept that raw token; the older ID/reference
 check-in endpoints remain available for manual counter fallback.
 

@@ -16,7 +16,6 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
-  useRackets,
 } from '../../../store/appStore';
 
 const racketSchema = z.object({
@@ -37,8 +36,7 @@ export default function NewRacketScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
-  const rackets = useRackets();
-  const setLiveRackets = useAppStore((state) => state.setLiveRackets);
+  const upsertLiveRacket = useAppStore((state) => state.upsertLiveRacket);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     control,
@@ -81,10 +79,7 @@ export default function NewRacketScreen() {
         notes: data.notes || null,
       });
       const created = mapBackendRacketToRacketPassport(response);
-      setLiveRackets([
-        created,
-        ...rackets.filter((item) => item.id !== created.id),
-      ]);
+      upsertLiveRacket(created);
       router.replace(`/player/rackets/${created.id}`);
     } catch (error) {
       setSubmitError(

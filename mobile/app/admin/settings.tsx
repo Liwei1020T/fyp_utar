@@ -33,6 +33,7 @@ export default function AdminSettingsScreen() {
   const token = useBackendAccessToken();
   const strings = useStrings();
   const settings = useAppStore((state) => state.storeSettings);
+  const logout = useAppStore((state) => state.logout);
   const updateStoreSettings = useAppStore((state) => state.updateStoreSettings);
   const [storeName, setStoreName] = useState(settings?.storeName ?? '');
   const [storeContact, setStoreContact] = useState(settings?.storeContact ?? '');
@@ -217,13 +218,12 @@ export default function AdminSettingsScreen() {
     setIsChangingPassword(true);
     setError(null);
     try {
-      const response = await backendApi.changePassword(token, {
+      await backendApi.changePassword(token, {
         current_password: currentPassword,
         new_password: newPassword,
       });
-      setCurrentPassword('');
-      setNewPassword('');
-      setSaveSuccessMessage(response.message);
+      logout();
+      router.replace('/auth/welcome');
     } catch (passwordError) {
       setError(
         passwordError instanceof BackendApiError

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
 from sqlalchemy import String as SAString
 from sqlalchemy import Text
 from sqlalchemy import func
@@ -33,6 +34,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(SAString(64), index=True)
     phone_number: Mapped[str] = mapped_column(SAString(20), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(SAString(255))
+    auth_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     role: Mapped[str] = mapped_column(SAString(20), default="customer")
     auth_provider: Mapped[str] = mapped_column(SAString(40), default="local")
     external_auth_id: Mapped[str | None] = mapped_column(

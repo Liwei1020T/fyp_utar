@@ -261,6 +261,22 @@ def test_feedback_requires_owned_completed_booking_and_is_unique() -> None:
     assert get_response.status_code == 200
     assert get_response.json()["id"] == create_response.json()["id"]
 
+    booking_feedback_response = client.get(
+        "/api/admin/feedback",
+        headers=headers(admin_token),
+        params={"booking_id": booking_id, "limit": 1},
+    )
+    assert booking_feedback_response.status_code == 200
+    assert booking_feedback_response.json()["total"] == 1
+    assert booking_feedback_response.json()["items"][0]["booking_id"] == booking_id
+    other_booking_feedback_response = client.get(
+        "/api/admin/feedback",
+        headers=headers(admin_token),
+        params={"booking_id": str(incomplete_booking["id"]), "limit": 1},
+    )
+    assert other_booking_feedback_response.status_code == 200
+    assert other_booking_feedback_response.json()["items"] == []
+
     detail_response = client.get(
         f"/api/rackets/{racket_id}",
         headers=headers(owner_token),

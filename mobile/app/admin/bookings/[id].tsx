@@ -394,12 +394,13 @@ export default function AdminBookingDetailScreen() {
     if (!token || user?.role !== 'admin' || !params.id) return;
     let cancelled = false;
     void backendApi
-      .adminListFeedback(token)
+      .adminListFeedback(token, {
+        booking_id: params.id,
+        limit: 1,
+      })
       .then((response) => {
         if (!cancelled) {
-          setFeedback(
-            response.items.find((item) => item.booking_id === params.id) ?? null,
-          );
+          setFeedback(response.items[0] ?? null);
         }
       })
       .catch(() => {

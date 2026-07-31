@@ -178,17 +178,18 @@ unified startup.
 | [backend/app/main.py](../backend/app/main.py) | FastAPI bootstrap: lifespan seeding, CORS, exception handlers, `/health`, API router include. | Change only for app-wide behavior. |
 | [backend/app/config/settings.py](../backend/app/config/settings.py) | Pydantic settings from `.env`; resolves DB URL, JWT, CORS, seed admin, approved catalog path. | Add env vars here first. |
 | [backend/app/entrypoints/api/router.py](../backend/app/entrypoints/api/router.py) | API router composition and `/api/health`. | Add route modules here. |
+| [backend/app/entrypoints/api/health.py](../backend/app/entrypoints/api/health.py) | Shared `/health` and `/api/health` database/artifact contract. | Keep both public health aliases behaviorally identical. |
 | [backend/app/entrypoints/api/dependencies.py](../backend/app/entrypoints/api/dependencies.py) | FastAPI DI factory functions, singleton services, bearer auth, role guards. | Wire repositories/services or auth rules here. |
 
 ### Backend Layers
 
 | Layer | Paths | Responsibility |
 | --- | --- | --- |
-| Entrypoints | [backend/app/entrypoints/api/routes](../backend/app/entrypoints/api/routes) | Thin FastAPI handlers grouped by API surface: auth, profile, catalog, booking, recommendation, admin, store, commerce, notifications, conversations, rackets, and feedback. |
+| Entrypoints | [backend/app/entrypoints/api/routes](../backend/app/entrypoints/api/routes) | FastAPI handlers grouped by API surface. Reusable multi-step behavior delegates to use cases; compact single-adapter transactions may remain local. |
 | Use cases | [backend/app/use_cases](../backend/app/use_cases) | Business actions; one class per action or closely related action. |
 | Domain | [backend/app/domain](../backend/app/domain) | Pure entities, enums, and policies. No FastAPI or SQLAlchemy dependencies. |
 | Ports | [backend/app/ports](../backend/app/ports) | Repository/service protocols consumed by use cases. |
-| Adapters | [backend/app/adapters](../backend/app/adapters) | SQLAlchemy repositories/models, JWT, password hashing, and clock. Legacy AI adapters are compatibility-only. |
+| Adapters | [backend/app/adapters](../backend/app/adapters) | SQLAlchemy repositories/models, JWT, password hashing, and clock. |
 | DTOs | [backend/app/dto](../backend/app/dto) | Pydantic API request/response models and mapping helpers. |
 | Shared | [backend/app/shared](../backend/app/shared) | App errors, HTTP error payloads, pagination, constants, serialization helpers. |
 
@@ -224,8 +225,11 @@ unified startup.
 | Booking support | `routes/booking_conversation_routes.py`, `dto/booking_conversation.py`, conversation model | One persisted support state per booking and conversation-channel booking updates. |
 | Rackets and feedback | `routes/racket_feedback_routes.py`, `dto/racket_feedback.py`, racket/feedback models | Owned physical racket passports and one feedback record per completed booking. |
 
-When adding behavior, follow the clean-architecture direction:
-`routes -> use_cases -> domain/ports -> adapters`.
+When adding reusable or multi-repository behavior, follow the dependency
+direction `routes -> use_cases -> domain/ports`, with entrypoints composing
+concrete adapters that implement those ports. Do not add a one-implementation
+port for a compact CRUD flow unless it creates a real testing, provider, or
+reuse seam.
 
 ### Backend Persistence And Migrations
 
@@ -239,7 +243,7 @@ When adding behavior, follow the clean-architecture direction:
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260726_0025`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260731_0026`. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
 
 ### Backend AI Compatibility Package

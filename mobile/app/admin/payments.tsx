@@ -36,6 +36,7 @@ export default function AdminPaymentsScreen() {
   const bookings = useBookings();
   const payments = usePayments();
   const setLivePayments = useAppStore((state) => state.setLivePayments);
+  const upsertLivePayment = useAppStore((state) => state.upsertLivePayment);
   const [updating, setUpdating] = useState<{
     paymentId: string;
     status: PaymentDecision;
@@ -87,11 +88,7 @@ export default function AdminPaymentsScreen() {
         status,
       );
       const updated = mapBackendPaymentToPayment(response);
-      setLivePayments(
-        useAppStore
-          .getState()
-          .livePayments.map((item) => (item.id === updated.id ? updated : item)),
-      );
+      upsertLivePayment(updated);
     } catch (updateError) {
       setError(
         updateError instanceof BackendApiError

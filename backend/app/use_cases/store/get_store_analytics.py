@@ -59,6 +59,7 @@ class GetStoreAnalyticsUseCase:
         today = now.date()
 
         weekly_bookings = 0
+        today_bookings = 0
         awaiting_dropoff_count = 0
         in_progress_count = 0
         ready_for_collection_count = 0
@@ -108,6 +109,8 @@ class GetStoreAnalyticsUseCase:
                     store_timezone,
                 )
                 if drop_off is not None:
+                    if drop_off.date() == today:
+                        today_bookings += 1
                     slot_counter[
                         slot_busy_label(drop_off.date(), drop_off.strftime("%H:%M"))
                     ] += 1
@@ -139,6 +142,7 @@ class GetStoreAnalyticsUseCase:
         }
         return AnalyticsSummary(
             weekly_bookings=weekly_bookings,
+            today_bookings=today_bookings,
             pending_payment_count=pending_payment_count,
             awaiting_dropoff_count=awaiting_dropoff_count,
             in_progress_count=in_progress_count,

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ArrowRight,
   Boxes,
@@ -25,15 +25,13 @@ import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { appChromeColors } from '../../../components/ui/theme';
-import { formatLocalDateInputValue } from '../../../lib/formatters';
 import {
   useAppStore,
   useBackendAccessToken,
-  useBookings,
   useCurrentUser,
-  useStrings,
 } from '../../../store/appStore';
 import { backendApi } from '../../../services/backendApi';
+import type { BackendAnalyticsSummary } from '../../../types/backend';
 
 const PRIMARY_ACTIONS = [
   {
@@ -105,46 +103,47 @@ export default function AdminDashboardScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
-  const bookings = useBookings();
-  const strings = useStrings();
   const logout = useAppStore((state) => state.logout);
   const settings = useAppStore((state) => state.storeSettings);
   const storeName = settings?.storeName.trim();
-  const [feedbackBookingIds, setFeedbackBookingIds] = useState<Set<string>>(
-    new Set(),
+  const [analytics, setAnalytics] = useState<BackendAnalyticsSummary | null>(
+    null,
   );
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!token || user?.role !== 'admin') return;
-    void backendApi
-      .adminListFeedback(token)
-      .then((response) =>
-        setFeedbackBookingIds(
-          new Set(response.items.map((item) => item.booking_id)),
-        ),
-      )
-      .catch(() => setFeedbackBookingIds(new Set()));
-  }, [token, user?.role]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!token || user?.role !== 'admin') return;
+      let cancelled = false;
+      setAnalytics(null);
+      setAnalyticsError(null);
+      void backendApi
+        .adminAnalyticsSummary(token)
+        .then((response) => {
+          if (!cancelled) setAnalytics(response);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setAnalytics(null);
+            setAnalyticsError(
+              'Live operational metrics are temporarily unavailable.',
+            );
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [token, user?.role]),
+  );
 
   if (!user || user.role !== 'admin') {
     return null;
   }
 
-  const today = formatLocalDateInputValue(new Date());
-  const adminBookings = bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled');
-  const todayBookings = adminBookings.filter(
-    (item) => item.dropOffDate === today,
-  );
-  const awaitingDropOffCount = adminBookings.filter((item) => item.status === 'awaiting_dropoff').length;
-  const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
-  const readyForCollectionCount = adminBookings.filter(
-    (item) => item.status === 'ready_for_collection',
-  ).length;
-  const lowStockCount = strings.filter((item) => item.availability === 'low_stock').length;
-  const pendingFeedbackCount = adminBookings.filter(
-    (item) =>
-      item.status === 'completed' && !feedbackBookingIds.has(item.id),
-  ).length;
+  const awaitingDropOffCount = analytics?.awaiting_dropoff_count;
+  const inProgressCount = analytics?.in_progress_count;
+  const readyForCollectionCount = analytics?.ready_for_collection_count;
+  const lowStockCount = analytics?.low_stock_count;
 
   return (
     <AppScreen
@@ -166,34 +165,41 @@ export default function AdminDashboardScreen() {
       }
     >
       <View className="gap-5">
+        {analyticsError ? (
+          <AppCard variant="subtle" padding="sm">
+            <HeroText className="text-sm text-neutral-700">
+              {analyticsError}
+            </HeroText>
+          </AppCard>
+        ) : null}
         <AppSection eyebrow="Today" title="Operational snapshot" variant="compact">
           <View className="flex-row flex-wrap gap-3">
             <MetricStatCard
               title="Today bookings"
-              value={String(todayBookings.length)}
+              value={analytics ? String(analytics.today_bookings) : '—'}
               icon={<CalendarRange size={20} color={appChromeColors.primary} />}
             />
             <MetricStatCard
               title="Pending feedback"
-              value={String(pendingFeedbackCount)}
+              value={analytics ? String(analytics.pending_feedback_count) : '—'}
               icon={<MessageSquareText size={20} color={appChromeColors.warning} />}
               accentClassName="bg-warning-50"
             />
             <MetricStatCard
               title="Awaiting drop-off"
-              value={String(awaitingDropOffCount)}
+              value={analytics ? String(awaitingDropOffCount) : '—'}
               icon={<Undo2 size={20} color={appChromeColors.warning} />}
               accentClassName="bg-warning-50"
             />
             <MetricStatCard
               title="In progress"
-              value={String(inProgressCount)}
+              value={analytics ? String(inProgressCount) : '—'}
               icon={<TimerReset size={20} color={appChromeColors.primary} />}
               accentClassName="bg-primary-50"
             />
             <MetricStatCard
               title="Ready pickup"
-              value={String(readyForCollectionCount)}
+              value={analytics ? String(readyForCollectionCount) : '—'}
               icon={<Store size={20} color={appChromeColors.success} />}
               accentClassName="bg-success-50"
             />
@@ -206,7 +212,7 @@ export default function AdminDashboardScreen() {
           subtitle="Keep the work queue, counter flow, and store setup close at hand."
           rightAction={
             <AppChip
-              label={`${awaitingDropOffCount} awaiting`}
+              label={analytics ? `${awaitingDropOffCount} awaiting` : '— awaiting'}
               variant="warning"
               className="mt-1"
             />
@@ -261,7 +267,9 @@ export default function AdminDashboardScreen() {
               <View className="flex-row items-center gap-3">
                 <Undo2 size={18} color={appChromeColors.warning} />
                 <HeroText className="flex-1 text-sm leading-6 text-slate-600">
-                  {awaitingDropOffCount} booking{awaitingDropOffCount === 1 ? '' : 's'} waiting for racket drop-off.
+                  {analytics
+                    ? `${awaitingDropOffCount} booking${awaitingDropOffCount === 1 ? '' : 's'} waiting for racket drop-off.`
+                    : 'Live booking metrics are unavailable.'}
                 </HeroText>
               </View>
             </AppCard>
@@ -269,7 +277,9 @@ export default function AdminDashboardScreen() {
               <View className="flex-row items-center gap-3">
                 <Clock3 size={18} color={appChromeColors.primary} />
                 <HeroText className="flex-1 text-sm leading-6 text-slate-600">
-                  {inProgressCount} job{inProgressCount === 1 ? '' : 's'} currently on the stringing bench.
+                  {analytics
+                    ? `${inProgressCount} job${inProgressCount === 1 ? '' : 's'} currently on the stringing bench.`
+                    : 'Live service metrics are unavailable.'}
                 </HeroText>
               </View>
             </AppCard>
@@ -277,7 +287,9 @@ export default function AdminDashboardScreen() {
               <View className="flex-row items-center gap-3">
                 <Boxes size={18} color={appChromeColors.warning} />
                 <HeroText className="flex-1 text-sm leading-6 text-slate-600">
-                  {lowStockCount} string SKU{lowStockCount === 1 ? '' : 's'} flagged for stock review.
+                  {analytics
+                    ? `${lowStockCount} string SKU${lowStockCount === 1 ? '' : 's'} flagged for stock review.`
+                    : 'Live inventory metrics are unavailable.'}
                 </HeroText>
               </View>
             </AppCard>

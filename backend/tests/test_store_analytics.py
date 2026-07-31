@@ -7,7 +7,9 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
+from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import Payment
+from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
@@ -40,8 +42,37 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
         user_id = db.execute(
             select(User.id).where(User.phone_number == "+60190000000")
         ).scalar_one()
+        string_id = db.execute(
+            select(StringCatalogItem.catalog_id).limit(1)
+        ).scalar_one()
         db.add_all(
             [
+                Booking(
+                    user_id=user_id,
+                    string_id=string_id,
+                    status="awaiting_dropoff",
+                    drop_off_datetime=datetime(
+                        2026,
+                        7,
+                        23,
+                        16,
+                        15,
+                        tzinfo=timezone.utc,
+                    ),
+                ),
+                Booking(
+                    user_id=user_id,
+                    string_id=string_id,
+                    status="cancelled",
+                    drop_off_datetime=datetime(
+                        2026,
+                        7,
+                        23,
+                        16,
+                        20,
+                        tzinfo=timezone.utc,
+                    ),
+                ),
                 Payment(
                     id="payment-pending-booking",
                     user_id=user_id,
@@ -117,6 +148,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
 
     assert response.status_code == 200
     summary = response.json()
+    assert summary["today_bookings"] == 1
     assert summary["pending_payment_count"] == 2
     assert summary["today_revenue"] == 48.5
     assert summary["workload_mix"][0] == {

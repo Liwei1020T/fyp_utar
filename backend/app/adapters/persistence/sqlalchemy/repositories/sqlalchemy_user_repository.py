@@ -18,9 +18,30 @@ class SqlAlchemyUserRepository:
         ).scalar_one_or_none()
         return to_user_account(user) if user else None
 
+    def get_by_id_for_update(self, user_id: str) -> UserAccount | None:
+        user = self.db.execute(
+            select(User)
+            .where(User.id == user_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        ).scalar_one_or_none()
+        return to_user_account(user) if user else None
+
     def get_by_phone_number(self, phone_number: str) -> UserAccount | None:
         user = self.db.execute(
             select(User).where(User.phone_number == phone_number)
+        ).scalar_one_or_none()
+        return to_user_account(user) if user else None
+
+    def get_by_phone_number_for_update(
+        self,
+        phone_number: str,
+    ) -> UserAccount | None:
+        user = self.db.execute(
+            select(User)
+            .where(User.phone_number == phone_number)
+            .with_for_update()
+            .execution_options(populate_existing=True)
         ).scalar_one_or_none()
         return to_user_account(user) if user else None
 
@@ -52,10 +73,16 @@ class SqlAlchemyUserRepository:
         *,
         commit: bool = True,
     ) -> UserAccount | None:
-        user = self.db.get(User, user_id)
+        user = self.db.execute(
+            select(User)
+            .where(User.id == user_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        ).scalar_one_or_none()
         if user is None:
             return None
         user.password_hash = password_hash
+        user.auth_version += 1
         if commit:
             self.db.commit()
         else:

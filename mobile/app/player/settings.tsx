@@ -60,13 +60,12 @@ export default function PlayerSettingsScreen() {
     setBusyAction('password');
     setMessage(null);
     try {
-      const response = await backendApi.changePassword(token, {
+      await backendApi.changePassword(token, {
         current_password: currentPassword,
         new_password: newPassword,
       });
-      setCurrentPassword('');
-      setNewPassword('');
-      setMessage(response.message);
+      logout();
+      router.replace('/auth/welcome');
     } catch (error) {
       setMessage(
         error instanceof BackendApiError

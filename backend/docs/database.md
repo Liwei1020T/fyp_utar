@@ -31,6 +31,7 @@ The active migration sequence is:
 - [20260723_0023_booking_conversations.py](../migrations/versions/20260723_0023_booking_conversations.py)
 - [20260723_0024_booking_update_channel.py](../migrations/versions/20260723_0024_booking_update_channel.py)
 - [20260726_0025_player_admin_operations.py](../migrations/versions/20260726_0025_player_admin_operations.py)
+- [20260731_0026_auth_and_token_invariants.py](../migrations/versions/20260731_0026_auth_and_token_invariants.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -45,7 +46,14 @@ Alembic.
 - phone-first identity
 - `phone_number` is unique
 - `username` is business-visible profile text
+- `auth_version` invalidates all previously issued JWTs after a password change
 - `auth_provider` and `external_auth_id` keep Firebase-ready seams without making Firebase mandatory
+
+### `password_reset_codes`
+
+Stores hashed, expiring verification codes. A partial unique index permits only
+one unused code per phone number; requesting a replacement locks the user row
+and marks the prior code used before insertion.
 
 ### `profiles`
 
@@ -263,7 +271,8 @@ tension satisfaction, comfort, control, repulsion, and durability.
 ### `check_in_tokens`
 
 Stores expiring one-time booking check-in digests. Raw QR values are never
-persisted; used and revoked timestamps prevent replay.
+persisted; used and revoked timestamps prevent replay. A partial unique index
+permits only one unused, unrevoked token per booking.
 
 ### `device_tokens` and `notifications`
 

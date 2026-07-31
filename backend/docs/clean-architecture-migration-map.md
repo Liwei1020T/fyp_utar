@@ -62,8 +62,12 @@ Current post-migration route modules with no legacy one-file equivalent:
 - Old: `stringsense_backend/db/models.py`
 - New: split model files under `app/adapters/persistence/sqlalchemy/models/`
 
-- Old: route modules performed direct SQLAlchemy queries
-- New: SQLAlchemy access is isolated in repository adapters under `app/adapters/persistence/sqlalchemy/repositories/`
+- Old: route modules mixed reusable domain rules with direct SQLAlchemy queries
+- New: reusable and multi-repository behavior uses ports plus repository
+  adapters under `app/adapters/persistence/sqlalchemy/repositories/`.
+  Compact single-provider CRUD/ledger modules may keep their transaction local
+  to the entrypoint when adding a one-implementation port would only add
+  pass-through boilerplate.
 
 - Multi-repository writes share the explicit transaction boundary in
   `app/ports/transaction_manager.py` and

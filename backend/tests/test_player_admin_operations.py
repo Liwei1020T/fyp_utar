@@ -50,7 +50,21 @@ def test_player_admin_operational_flow() -> None:
         headers=_headers(player_token),
     )
     assert token_response.status_code == 200
-    qr_token = token_response.json()["token"]
+    replaced_qr_token = token_response.json()["token"]
+    replacement_response = client.post(
+        f"/api/bookings/{booking_id}/check-in-token",
+        headers=_headers(player_token),
+    )
+    assert replacement_response.status_code == 200
+    qr_token = replacement_response.json()["token"]
+    assert (
+        client.post(
+            "/api/admin/check-in/lookup",
+            headers=_headers(admin_token),
+            json={"token": replaced_qr_token},
+        ).status_code
+        == 400
+    )
 
     lookup = client.post(
         "/api/admin/check-in/lookup",
@@ -161,9 +175,15 @@ def test_player_admin_operational_flow() -> None:
         json={"current_password": "secret123", "new_password": "changed123"},
     )
     assert password.status_code == 200
+    assert client.get("/api/auth/me", headers=_headers(player_token)).status_code == 401
+    login = client.post(
+        "/api/auth/login",
+        json={"phone_number": "+60124440001", "password": "changed123"},
+    )
+    assert login.status_code == 200
     deletion = client.post(
         "/api/auth/delete-account-request",
-        headers=_headers(player_token),
+        headers=_headers(login.json()["access_token"]),
         json={"reason": "No longer needed"},
     )
     assert deletion.status_code == 200

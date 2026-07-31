@@ -11,7 +11,6 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
-  usePayments,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
@@ -30,8 +29,7 @@ export default function WalletTopUpScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
-  const payments = usePayments();
-  const setLivePayments = useAppStore((state) => state.setLivePayments);
+  const upsertLivePayment = useAppStore((state) => state.upsertLivePayment);
   const setLiveWallet = useAppStore((state) => state.setLiveWallet);
   const [amount, setAmount] = useState('50');
   const [method, setMethod] =
@@ -58,10 +56,7 @@ export default function WalletTopUpScreen() {
         method,
       });
       const payment = mapBackendPaymentToPayment(response);
-      setLivePayments([
-        payment,
-        ...payments.filter((item) => item.id !== payment.id),
-      ]);
+      upsertLivePayment(payment);
       const wallet = mapBackendWallet(await backendApi.fetchWallet(token));
       setLiveWallet(wallet.balance, wallet.transactions);
       router.replace('/player/wallet');

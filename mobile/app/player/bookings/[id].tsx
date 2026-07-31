@@ -247,7 +247,9 @@ export default function PlayerBookingDetailScreen() {
   const token = useBackendAccessToken();
   const storeSettings = useAppStore((state) => state.storeSettings);
   const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
-  const setLiveConversations = useAppStore((state) => state.setLiveConversations);
+  const upsertLiveConversation = useAppStore(
+    (state) => state.upsertLiveConversation,
+  );
   const [isRequestingSupport, setIsRequestingSupport] = useState(false);
   const [supportError, setSupportError] = useState<string | null>(null);
   const [hasFeedback, setHasFeedback] = useState<boolean | null>(null);
@@ -410,11 +412,7 @@ export default function PlayerBookingDetailScreen() {
     try {
       const response = await backendApi.requestBookingSupport(token, booking.id);
       const conversation = mapBackendConversationToConversation(response, booking);
-      const current = useAppStore.getState().liveConversations;
-      setLiveConversations([
-        conversation,
-        ...current.filter((item) => item.id !== conversation.id),
-      ]);
+      upsertLiveConversation(conversation);
       router.push(`/player/chat/${conversation.id}`);
     } catch (error) {
       setSupportError(

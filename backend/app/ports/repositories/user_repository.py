@@ -8,7 +8,14 @@ from app.domain.auth.entities import UserAccount
 class UserRepository(Protocol):
     def get_by_id(self, user_id: str) -> UserAccount | None: ...
 
+    def get_by_id_for_update(self, user_id: str) -> UserAccount | None: ...
+
     def get_by_phone_number(self, phone_number: str) -> UserAccount | None: ...
+
+    def get_by_phone_number_for_update(
+        self,
+        phone_number: str,
+    ) -> UserAccount | None: ...
 
     def create_user(
         self,

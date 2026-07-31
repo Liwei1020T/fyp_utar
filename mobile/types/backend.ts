@@ -617,6 +617,7 @@ export interface BackendAnalyticsWorkloadEntry {
 
 export interface BackendAnalyticsSummary {
   weekly_bookings: number;
+  today_bookings: number;
   pending_payment_count: number;
   awaiting_dropoff_count: number;
   in_progress_count: number;

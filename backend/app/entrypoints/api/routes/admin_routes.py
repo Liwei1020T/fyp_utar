@@ -24,6 +24,9 @@ from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import (
+    merge_with_approved_defaults,
+)
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
 from app.adapters.persistence.sqlalchemy.models import DeviceToken
 from app.adapters.persistence.sqlalchemy.models import NotificationDelivery
@@ -158,8 +161,16 @@ def _token_preview(token: str) -> str:
     return f"{token[:8]}…{token[-6:]}"
 
 
+def _prepare_string_values() -> PrepareStringValuesUseCase:
+    return PrepareStringValuesUseCase(
+        approved_strings_path=get_settings().approved_strings_path,
+        merge_defaults=merge_with_approved_defaults,
+    )
+
+
 def _feedback_query(
     *,
+    booking_id: str | None,
     string_id: str | None,
     rating: int | None,
     date_from: date | None,
@@ -171,6 +182,8 @@ def _feedback_query(
         .join(User, User.id == BookingFeedback.user_id)
         .join(StringCatalogItem, StringCatalogItem.catalog_id == Booking.string_id)
     )
+    if booking_id:
+        query = query.where(BookingFeedback.booking_id == booking_id)
     if string_id:
         query = query.where(Booking.string_id == string_id)
     if rating is not None:
@@ -185,7 +198,10 @@ def _feedback_query(
             BookingFeedback.created_at
             <= datetime.combine(date_to, time.max, tzinfo=timezone.utc)
         )
-    return query.order_by(BookingFeedback.created_at.desc())
+    return query.order_by(
+        BookingFeedback.created_at.desc(),
+        BookingFeedback.id.desc(),
+    )
 
 
 def _admin_feedback_dto(
@@ -418,9 +434,7 @@ def admin_create_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> StringOut:
-    values = PrepareStringValuesUseCase(
-        approved_strings_path=get_settings().approved_strings_path
-    ).execute(
+    values = _prepare_string_values().execute(
         brand=payload.brand,
         model_name=payload.model_name,
         overrides=payload.model_dump(exclude_none=True),
@@ -439,9 +453,7 @@ def admin_update_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> StringOut:
-    PrepareStringValuesUseCase(
-        approved_strings_path=get_settings().approved_strings_path
-    ).execute(
+    _prepare_string_values().execute(
         brand=payload.brand,
         model_name=payload.model_name,
         overrides={},
@@ -586,9 +598,7 @@ def admin_update_string_editor(
 ) -> AdminInventoryStringOut:
     catalog_values: dict[str, object] = {}
     if payload.catalog is not None:
-        PrepareStringValuesUseCase(
-            approved_strings_path=get_settings().approved_strings_path
-        ).execute(
+        _prepare_string_values().execute(
             brand=payload.catalog.brand,
             model_name=payload.catalog.model_name,
             overrides={},
@@ -694,7 +704,8 @@ def admin_import_recommendation_matrix(
     catalog_repository=Depends(get_catalog_repository),
 ) -> RecommendationMatrixImportReportOut:
     report = ImportRecommendationMatrixUseCase(
-        catalog_repository=catalog_repository
+        catalog_repository=catalog_repository,
+        matrix_path=get_settings().recommendation_matrix_path,
     ).execute()
     return recommendation_matrix_import_report_to_dto(report)
 
@@ -1080,6 +1091,7 @@ def admin_service_queue(
 
 @router.get("/feedback", response_model=dict)
 def admin_feedback(
+    booking_id: str | None = Query(default=None, max_length=36),
     string_id: str | None = Query(default=None, max_length=120),
     rating: int | None = Query(default=None, ge=1, le=5),
     date_from: date | None = Query(default=None),
@@ -1089,23 +1101,28 @@ def admin_feedback(
     _: CurrentUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
-    rows = db.execute(
-        _feedback_query(
-            string_id=string_id,
-            rating=rating,
-            date_from=date_from,
-            date_to=date_to,
-        )
-    ).all()
+    query = _feedback_query(
+        booking_id=booking_id,
+        string_id=string_id,
+        rating=rating,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    total = (
+        db.scalar(select(func.count()).select_from(query.order_by(None).subquery()))
+        or 0
+    )
+    rows = db.execute(query.limit(limit).offset(offset)).all()
     items = [
         _admin_feedback_dto(feedback, booking, user, string_item).model_dump()
-        for feedback, booking, user, string_item in rows[offset : offset + limit]
+        for feedback, booking, user, string_item in rows
     ]
-    return {"items": items, "total": len(rows), "limit": limit, "offset": offset}
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 
 @router.get("/feedback/export")
 def admin_export_feedback(
+    booking_id: str | None = Query(default=None, max_length=36),
     string_id: str | None = Query(default=None, max_length=120),
     rating: int | None = Query(default=None, ge=1, le=5),
     date_from: date | None = Query(default=None),
@@ -1115,6 +1132,7 @@ def admin_export_feedback(
 ) -> Response:
     rows = db.execute(
         _feedback_query(
+            booking_id=booking_id,
             string_id=string_id,
             rating=rating,
             date_from=date_from,

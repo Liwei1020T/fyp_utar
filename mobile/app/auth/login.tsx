@@ -127,7 +127,7 @@ export default function LoginScreen() {
         return;
       }
 
-      const profile = await backendApi.fetchProfile(auth.access_token).catch(() => null);
+      const profile = await backendApi.fetchProfile(auth.access_token);
 
       setBackendPlayerSession({
         accessToken: auth.access_token,

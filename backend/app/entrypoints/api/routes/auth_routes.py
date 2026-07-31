@@ -51,6 +51,7 @@ def _build_auth_response(user, token_service) -> AuthResponse:
             subject=user.id,
             role=user.role,
             phone_number=user.phone_number,
+            auth_version=user.auth_version,
         ),
         role=user.role,
         phone_number=user.phone_number,
@@ -197,7 +198,7 @@ def change_password(
         payload,
         password_hasher=password_hasher,
     )
-    user = user_repository.get_by_id(current_user.user_id)
+    user = user_repository.get_by_id_for_update(current_user.user_id)
     assert user is not None
     if not password_hasher.verify_password(
         request.current_password, user.password_hash

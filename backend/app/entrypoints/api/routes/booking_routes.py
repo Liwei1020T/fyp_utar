@@ -172,12 +172,8 @@ def create_check_in_token(
     clock=Depends(get_clock),
     db: Session = Depends(get_db),
 ) -> CheckInTokenOut:
-    booking = get_customer_owned_booking(
-        booking_id=booking_id,
-        current_user=current_user,
-        booking_repository=booking_repository,
-    )
-    if booking.user_id != current_user.user_id:
+    booking = booking_repository.get_by_id_for_update(booking_id)
+    if booking is None or booking.user_id != current_user.user_id:
         raise NotFoundError("Booking not found")
     if booking.status != BookingStatus.AWAITING_DROPOFF.value:
         raise ConflictError("Check-in QR is only available before drop-off")

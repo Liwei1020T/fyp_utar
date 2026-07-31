@@ -96,6 +96,7 @@ class AnalyticsWorkloadEntry:
 @dataclass(frozen=True)
 class AnalyticsSummary:
     weekly_bookings: int
+    today_bookings: int
     pending_payment_count: int
     awaiting_dropoff_count: int
     in_progress_count: int

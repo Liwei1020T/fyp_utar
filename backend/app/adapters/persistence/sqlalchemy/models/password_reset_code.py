@@ -5,8 +5,10 @@ from datetime import datetime
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import Index
 from sqlalchemy import String as SAString
 from sqlalchemy import func
+from sqlalchemy import text
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 
@@ -16,6 +18,15 @@ from app.adapters.persistence.sqlalchemy.models.common import generate_uuid
 
 class PasswordResetCode(Base):
     __tablename__ = "password_reset_codes"
+    __table_args__ = (
+        Index(
+            "uq_password_reset_codes_one_active_phone",
+            "phone_number",
+            unique=True,
+            postgresql_where=text("used_at IS NULL"),
+            sqlite_where=text("used_at IS NULL"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         SAString(36), primary_key=True, default=generate_uuid

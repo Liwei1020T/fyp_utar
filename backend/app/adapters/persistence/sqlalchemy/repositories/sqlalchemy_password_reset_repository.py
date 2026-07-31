@@ -56,6 +56,7 @@ class SqlAlchemyPasswordResetRepository:
                 PasswordResetCode.used_at.is_(None),
             )
             .order_by(PasswordResetCode.created_at.desc())
+            .limit(1)
             .with_for_update()
         ).scalar_one_or_none()
         return to_password_reset_code(record) if record else None

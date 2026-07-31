@@ -1,16 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-
-from app.adapters.persistence.sqlalchemy.catalog_seed import (
-    merge_with_approved_defaults,
-)
 
 
 @dataclass
 class PrepareStringValuesUseCase:
     approved_strings_path: Path
+    merge_defaults: Callable[..., dict[str, object]]
 
     def execute(
         self,
@@ -19,7 +17,7 @@ class PrepareStringValuesUseCase:
         model_name: str,
         overrides: dict[str, object],
     ) -> dict[str, object]:
-        return merge_with_approved_defaults(
+        return self.merge_defaults(
             self.approved_strings_path,
             brand=brand,
             model_name=model_name,

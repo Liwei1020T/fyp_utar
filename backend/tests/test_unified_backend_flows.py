@@ -94,6 +94,16 @@ def enable_password_reset_preview(monkeypatch) -> None:
     monkeypatch.setattr(settings, "password_reset_dev_preview_enabled", True)
 
 
+def test_health_aliases_share_the_same_contract():
+    root_response = client.get("/health")
+    api_response = client.get("/api/health")
+
+    assert root_response.status_code == 200
+    assert api_response.status_code == 200
+    assert api_response.json() == root_response.json()
+    assert "source_version" in root_response.json()["recommendation_artifact"]
+
+
 def test_auth_profile_booking_and_admin_status_flow():
     customer_token = register_customer()
 
@@ -1111,6 +1121,7 @@ def test_admin_analytics_summary_and_popular_strings():
     )
     assert summary_response.status_code == 200
     assert summary_response.json()["weekly_bookings"] == 3
+    assert summary_response.json()["today_bookings"] == 0
     assert summary_response.json()["awaiting_dropoff_count"] == 1
     assert summary_response.json()["in_progress_count"] == 1
     assert summary_response.json()["ready_for_collection_count"] == 0
@@ -1142,7 +1153,7 @@ def test_request_password_reset_is_generic_for_unknown_phone(monkeypatch):
 
 def test_customer_can_reset_password_with_verification_code(monkeypatch):
     enable_password_reset_preview(monkeypatch)
-    register_customer()
+    existing_token = register_customer()
 
     request_code_response = client.post(
         "/api/auth/forgot-password/request-code",
@@ -1162,6 +1173,9 @@ def test_customer_can_reset_password_with_verification_code(monkeypatch):
     )
     assert reset_response.status_code == 200
     assert reset_response.json()["message"] == "Password reset successful"
+    assert (
+        client.get("/api/auth/me", headers=headers(existing_token)).status_code == 401
+    )
 
     old_password_login = client.post(
         "/api/auth/login",
@@ -1180,6 +1194,53 @@ def test_customer_can_reset_password_with_verification_code(monkeypatch):
         },
     )
     assert new_password_login.status_code == 200
+
+
+def test_new_password_reset_code_replaces_the_previous_code(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+    register_customer()
+    generated_codes = iter((111111, 222222))
+    monkeypatch.setattr(
+        "app.use_cases.auth.request_password_reset.secrets.randbelow",
+        lambda _: next(generated_codes),
+    )
+
+    first_response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+    second_response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+    first_code = first_response.json()["dev_code_preview"]
+    second_code = second_response.json()["dev_code_preview"]
+    assert first_code and second_code
+
+    with SessionLocal() as db:
+        active_codes = db.scalars(
+            select(PasswordResetCode).where(PasswordResetCode.used_at.is_(None))
+        ).all()
+    assert len(active_codes) == 1
+
+    replaced_response = client.post(
+        "/api/auth/forgot-password/reset",
+        json={
+            "phone_number": "+60123456789",
+            "verification_code": first_code,
+            "new_password": "newpass456",
+        },
+    )
+    active_response = client.post(
+        "/api/auth/forgot-password/reset",
+        json={
+            "phone_number": "+60123456789",
+            "verification_code": second_code,
+            "new_password": "newpass456",
+        },
+    )
+    assert replaced_response.status_code == 400
+    assert active_response.status_code == 200
 
 
 def test_reset_password_rejects_reused_verification_code(monkeypatch):

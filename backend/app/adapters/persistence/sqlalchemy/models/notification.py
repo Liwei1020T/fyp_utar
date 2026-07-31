@@ -6,10 +6,12 @@ from sqlalchemy import DateTime
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import Index
 from sqlalchemy import String as SAString
 from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy import func
+from sqlalchemy import text
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 
@@ -103,6 +105,15 @@ class NotificationDelivery(Base):
 
 class CheckInToken(Base):
     __tablename__ = "check_in_tokens"
+    __table_args__ = (
+        Index(
+            "uq_check_in_tokens_one_active_booking",
+            "booking_id",
+            unique=True,
+            postgresql_where=text("used_at IS NULL AND revoked_at IS NULL"),
+            sqlite_where=text("used_at IS NULL AND revoked_at IS NULL"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         SAString(36), primary_key=True, default=generate_uuid

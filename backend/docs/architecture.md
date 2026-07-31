@@ -7,8 +7,9 @@ Mobile App
   -> FastAPI Entrypoints (`app/entrypoints`)
       -> Application Use Cases (`app/use_cases`)
           -> Domain + Ports (`app/domain`, `app/ports`)
-              -> SQLAlchemy / JWT Adapters (`app/adapters`)
-                  -> PostgreSQL or SQLite test database
+      -> SQLAlchemy / JWT Adapters (`app/adapters`)
+          -> Domain + Ports
+          -> PostgreSQL or SQLite test database
 ```
 
 - `app/` is now the primary runtime package.
@@ -20,6 +21,8 @@ Mobile App
 Allowed dependency direction:
 
 - `entrypoints -> use_cases`
+- `entrypoints -> adapters` for dependency composition and compact
+  single-adapter transactional modules
 - `use_cases -> domain`
 - `use_cases -> ports`
 - `adapters -> ports`
@@ -37,7 +40,10 @@ Explicitly avoided:
 - `app/main.py`
   - FastAPI app bootstrap, middleware, exception handlers, startup seeding
 - `app/entrypoints/api/routes/`
-  - Thin request/response handlers grouped by API surface
+  - Request/response handlers grouped by API surface; multi-step reusable
+    behavior delegates to use cases, while compact single-adapter CRUD and
+    transactional flows may remain local until a second implementation or
+    reusable policy creates a real seam
 - `app/use_cases/`
   - One file per business action or closely related action
 - `app/domain/`
@@ -47,7 +53,7 @@ Explicitly avoided:
 - `app/adapters/persistence/sqlalchemy/`
   - SQLAlchemy session, split ORM models, repositories, seed helpers
 - `app/adapters/services/`
-  - JWT, password hashing, and clock adapters; legacy AI adapters remain compatibility-only
+  - JWT, password hashing, and clock adapters
 - `app/dto/`
   - API request/response models and mapping helpers
 - `app/config/`
@@ -101,7 +107,7 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
-The current revision chain has one head at `20260723_0024`.
+The current revision chain has one head at `20260731_0026`.
 
 The current commerce endpoint is a compact transactional boundary in
 `commerce_routes.py`. It uses row locks around booking, user-wallet, and
@@ -159,7 +165,10 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 
 - `ai_service/` remains preserved for standalone compatibility, review analysis, and RAG-style helper logic.
 - The active profile recommender now lives in `app/domain/recommendation/scoring.py` and reads normalized catalog/matrix persistence through `app/ports/repositories/recommendation_repository.py`.
-- Legacy AI adapters and `ai_service.service.RecommendationService` are not wired into unified FastAPI dependencies or startup.
+- The former unified-runtime legacy AI adapters were removed.
+  `ai_service.service.RecommendationService` remains isolated inside the
+  explicit standalone compatibility package and is not wired into unified
+  FastAPI dependencies or startup.
 
 ## Validation Contract
 

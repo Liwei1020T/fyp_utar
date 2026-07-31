@@ -17,12 +17,15 @@ import {
 } from '../../store/appStore';
 import type { BackendAdminFeedback } from '../../types/backend';
 
+const PAGE_SIZE = 50;
+
 export default function AdminFeedbackScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const strings = useStrings();
   const [items, setItems] = useState<BackendAdminFeedback[]>([]);
+  const [total, setTotal] = useState(0);
   const [rating, setRating] = useState<number | undefined>();
   const [stringId, setStringId] = useState<string | undefined>();
   const [dateFrom, setDateFrom] = useState('');
@@ -30,7 +33,7 @@ export default function AdminFeedbackScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (offset = 0) => {
     if (!token || user?.role !== 'admin') return;
     setIsLoading(true);
     setMessage(null);
@@ -40,8 +43,13 @@ export default function AdminFeedbackScreen() {
         string_id: stringId,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
+        limit: PAGE_SIZE,
+        offset,
       });
-      setItems(response.items);
+      setItems((current) =>
+        offset === 0 ? response.items : [...current, ...response.items],
+      );
+      setTotal(response.total);
     } catch (error) {
       setMessage(
         error instanceof BackendApiError
@@ -217,6 +225,14 @@ export default function AdminFeedbackScreen() {
               No feedback matches these filters.
             </HeroText>
           </AppCard>
+        ) : null}
+        {items.length < total ? (
+          <AppButton
+            label={`Load more (${items.length}/${total})`}
+            variant="outline"
+            isLoading={isLoading}
+            onPress={() => void load(items.length)}
+          />
         ) : null}
       </View>
     </AppScreen>

@@ -91,6 +91,10 @@ interface AppStoreState {
     transactions: WalletTransaction[],
   ) => void;
   upsertLiveBooking: (booking: Booking) => void;
+  upsertLiveConversation: (conversation: ChatConversation) => void;
+  upsertLiveRacket: (racket: RacketPassport) => void;
+  removeLiveRacket: (racketId: string) => void;
+  upsertLivePayment: (payment: Payment) => void;
   setLiveRecommendationResults: (items: RecommendationMatch[]) => void;
   clearLiveRecommendationResults: () => void;
   logout: () => void;
@@ -212,6 +216,44 @@ export const useAppStore = create<AppStoreState>((set) => ({
           reconciled,
           ...state.liveBookings.filter((item) => item.id !== booking.id),
         ],
+      };
+    }),
+  upsertLiveConversation: (conversation) =>
+    set((state) => ({
+      liveConversations: state.liveConversations.some(
+        (item) => item.id === conversation.id,
+      )
+        ? state.liveConversations.map((item) =>
+            item.id === conversation.id ? conversation : item,
+          )
+        : [conversation, ...state.liveConversations],
+    })),
+  upsertLiveRacket: (racket) =>
+    set((state) => ({
+      liveRackets: [
+        racket,
+        ...state.liveRackets.filter((item) => item.id !== racket.id),
+      ],
+    })),
+  removeLiveRacket: (racketId) =>
+    set((state) => ({
+      liveRackets: state.liveRackets.filter((item) => item.id !== racketId),
+    })),
+  upsertLivePayment: (payment) =>
+    set((state) => {
+      const livePayments = state.livePayments.some(
+        (item) => item.id === payment.id,
+      )
+        ? state.livePayments.map((item) =>
+            item.id === payment.id ? payment : item,
+          )
+        : [payment, ...state.livePayments];
+      return {
+        livePayments,
+        liveBookings: reconcileBookingPayments(
+          state.liveBookings,
+          livePayments,
+        ),
       };
     }),
   setLiveRecommendationResults: (liveRecommendationResults) =>

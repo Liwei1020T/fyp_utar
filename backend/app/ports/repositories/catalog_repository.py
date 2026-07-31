@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Protocol
 
 from app.domain.catalog.entities import InventoryMovementRecord
@@ -88,6 +89,9 @@ class CatalogRepository(Protocol):
         string_id: str,
     ) -> RecommendationMatrixInspectionRecord | None: ...
 
-    def import_recommendation_matrix(self) -> RecommendationMatrixImportReport: ...
+    def import_recommendation_matrix(
+        self,
+        source_path: Path,
+    ) -> RecommendationMatrixImportReport: ...
 
     def list_active_catalog(self) -> list[StringItem]: ...

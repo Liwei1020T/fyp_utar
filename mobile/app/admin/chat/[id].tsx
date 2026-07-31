@@ -47,8 +47,8 @@ export default function AdminChatDetailScreen() {
   const conversations = useConversations();
   const bookings = useBookings();
   const strings = useStrings();
-  const setLiveConversations = useAppStore(
-    (state) => state.setLiveConversations,
+  const upsertLiveConversation = useAppStore(
+    (state) => state.upsertLiveConversation,
   );
   const conversation = conversations.find(
     (item) =>
@@ -71,14 +71,9 @@ export default function AdminChatDetailScreen() {
         bookings.find((booking) => booking.id === response.booking_id),
         user?.id,
       );
-      const current = useAppStore.getState().liveConversations;
-      setLiveConversations(
-        current.some((item) => item.id === mapped.id)
-          ? current.map((item) => (item.id === mapped.id ? mapped : item))
-          : [mapped, ...current],
-      );
+      upsertLiveConversation(mapped);
     },
-    [bookings, setLiveConversations, user?.id],
+    [bookings, upsertLiveConversation, user?.id],
   );
 
   const refreshConversation = useCallback(

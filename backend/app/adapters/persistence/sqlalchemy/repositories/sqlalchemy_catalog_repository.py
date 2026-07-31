@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any
 from typing import cast
 
@@ -29,7 +30,6 @@ from app.adapters.persistence.sqlalchemy.repositories.mappers import (
     to_recommendation_matrix_entry,
 )
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
-from app.config.settings import get_settings
 from app.domain.catalog.entities import InventoryMovementRecord
 from app.domain.catalog.entities import RecommendationMatrixImportReport
 from app.domain.catalog.entities import RecommendationMatrixInspectionRecord
@@ -579,10 +579,13 @@ class SqlAlchemyCatalogRepository:
             ],
         )
 
-    def import_recommendation_matrix(self) -> RecommendationMatrixImportReport:
+    def import_recommendation_matrix(
+        self,
+        source_path: Path,
+    ) -> RecommendationMatrixImportReport:
         report = import_recommendation_matrix_csv(
             self.db,
-            get_settings().recommendation_matrix_path,
+            source_path,
         )
         self.db.commit()
         return report

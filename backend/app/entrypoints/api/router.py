@@ -4,8 +4,8 @@ from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.adapters.persistence.sqlalchemy.session import check_database_connection
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.entrypoints.api.health import health_payload
 from app.entrypoints.api.routes.admin_routes import router as admin_router
 from app.entrypoints.api.routes.auth_routes import router as auth_router
 from app.entrypoints.api.routes.booking_conversation_routes import (
@@ -34,8 +34,7 @@ router = APIRouter()
 
 @router.get("/health")
 def api_health(db: Session = Depends(get_db)) -> dict[str, object]:
-    check_database_connection(db)
-    return {"status": "ok", "service": "backend"}
+    return health_payload(db)
 
 
 router.include_router(auth_router)

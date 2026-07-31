@@ -46,8 +46,8 @@ export default function PlayerChatDetailScreen() {
   const conversations = useConversations();
   const bookings = useBookings();
   const token = useBackendAccessToken();
-  const setLiveConversations = useAppStore(
-    (state) => state.setLiveConversations,
+  const upsertLiveConversation = useAppStore(
+    (state) => state.upsertLiveConversation,
   );
   const conversation = conversations.find(
     (item) => item.id === conversationId && item.playerId === user?.id,
@@ -65,14 +65,9 @@ export default function PlayerChatDetailScreen() {
         response,
         bookings.find((booking) => booking.id === response.booking_id),
       );
-      const current = useAppStore.getState().liveConversations;
-      setLiveConversations(
-        current.some((item) => item.id === mapped.id)
-          ? current.map((item) => (item.id === mapped.id ? mapped : item))
-          : [mapped, ...current],
-      );
+      upsertLiveConversation(mapped);
     },
-    [bookings, setLiveConversations],
+    [bookings, upsertLiveConversation],
   );
 
   const refreshConversation = useCallback(

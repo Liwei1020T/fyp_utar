@@ -39,6 +39,7 @@ class FakeProfileRepository:
         profile,
         *,
         username=None,
+        commit=True,
     ):
         raise NotImplementedError
 
