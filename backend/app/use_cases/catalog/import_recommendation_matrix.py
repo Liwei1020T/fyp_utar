@@ -15,5 +15,7 @@ class ImportRecommendationMatrixUseCase:
     def execute(self) -> RecommendationMatrixImportReport:
         matrix_path = get_settings().recommendation_matrix_path
         if not matrix_path.exists():
-            raise BadRequestError(f"Recommendation matrix CSV not found: {matrix_path}")
+            raise BadRequestError(
+                f"Recommendation matrix artifact not found: {matrix_path}"
+            )
         return self.catalog_repository.import_recommendation_matrix()

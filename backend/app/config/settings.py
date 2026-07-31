@@ -56,7 +56,6 @@ class Settings(BaseSettings):
         default=False,
         alias="PASSWORD_RESET_DEV_PREVIEW_ENABLED",
     )
-    auto_create_schema: bool | None = Field(default=None, alias="AUTO_CREATE_SCHEMA")
     expo_push_enabled: bool = Field(default=False, alias="EXPO_PUSH_ENABLED")
     expo_push_endpoint: str = Field(
         default="https://exp.host/--/api/v2/push/send",
@@ -112,9 +111,6 @@ class Settings(BaseSettings):
                 raise ValueError("JWT_SECRET_KEY must be set in production")
             self.jwt_secret_key = "stringsense-local-dev-secret-key-2026"
 
-        if self.auto_create_schema is None:
-            self.auto_create_schema = self.environment in {"development", "testing"}
-
         return self
 
     @property
@@ -130,10 +126,6 @@ class Settings(BaseSettings):
         if candidate.is_absolute():
             return candidate
         return BACKEND_ROOT / candidate
-
-    @property
-    def recommendation_matrix_version(self) -> str:
-        return self.recommendation_matrix_path.stem
 
     @property
     def upload_root_path(self) -> Path:

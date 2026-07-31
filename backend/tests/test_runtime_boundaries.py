@@ -13,9 +13,6 @@ import app.main  # noqa: F401
 
 blocked = {
     "ai_service.service",
-    "app.adapters.services.ai.rag_adapter",
-    "app.adapters.services.ai.recommendation_engine_adapter",
-    "app.adapters.services.ai.review_analysis_adapter",
 }
 loaded = sorted(blocked.intersection(sys.modules))
 if loaded:

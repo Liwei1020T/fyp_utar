@@ -6,7 +6,6 @@ import {
 } from '../services/backendSessionStorage';
 import type {
   AdminProfile,
-  AdminSettings,
   Booking,
   BookingDraft,
   BusinessHours,
@@ -16,6 +15,7 @@ import type {
   PlayerProfile,
   RacketPassport,
   RecommendationMatch,
+  StoreSettings,
   StringItem,
   WalletBalance,
   WalletTransaction,
@@ -68,7 +68,7 @@ interface AppStoreState {
   liveWalletTransactions: WalletTransaction[];
   liveRecommendationResults: RecommendationMatch[];
   businessHours: BusinessHours[];
-  adminSettings: AdminSettings[];
+  storeSettings: StoreSettings | null;
   compareSelection: string[];
   bookingDraft: BookingDraft | null;
   markHydrated: () => void;
@@ -90,7 +90,7 @@ interface AppStoreState {
     balance: WalletBalance,
     transactions: WalletTransaction[],
   ) => void;
-  prependLiveBooking: (booking: Booking) => void;
+  upsertLiveBooking: (booking: Booking) => void;
   setLiveRecommendationResults: (items: RecommendationMatch[]) => void;
   clearLiveRecommendationResults: () => void;
   logout: () => void;
@@ -104,10 +104,7 @@ interface AppStoreState {
   clearCompareSelection: () => void;
   updateBusinessHours: (adminId: string, nextHours: BusinessHours) => void;
   updateStringItem: (stringId: string, patch: Partial<StringItem>) => void;
-  updateAdminSettings: (
-    adminId: string,
-    patch: Partial<AdminSettings>,
-  ) => void;
+  updateStoreSettings: (patch: Partial<StoreSettings>) => void;
 }
 
 export const useAppStore = create<AppStoreState>((set) => ({
@@ -125,44 +122,62 @@ export const useAppStore = create<AppStoreState>((set) => ({
   liveWalletTransactions: [],
   liveRecommendationResults: [],
   businessHours: [],
-  adminSettings: [],
+  storeSettings: null,
   compareSelection: [],
   bookingDraft: null,
   markHydrated: () => set({ hasHydrated: true }),
   setBackendPlayerSession: ({ accessToken, player }) => {
     void persistBackendAccessToken(accessToken);
-    set({
-      hasHydrated: true,
-      backendAccessToken: accessToken,
-      livePlayerProfile: player,
-      liveAdminProfile: null,
-      liveConversations: [],
-      liveNotifications: [],
-      liveRackets: [],
-      liveRecommendationResults: [],
-      livePayments: [],
-      liveWallets: [],
-      liveWalletTransactions: [],
-      businessHours: [],
-      adminSettings: [],
+    set((state) => {
+      const sameSession =
+        state.backendAccessToken === accessToken &&
+        state.livePlayerProfile?.id === player.id;
+      return {
+        hasHydrated: true,
+        backendAccessToken: accessToken,
+        livePlayerProfile: player,
+        liveAdminProfile: null,
+        ...(sameSession
+          ? {}
+          : {
+              liveConversations: [],
+              liveNotifications: [],
+              liveRackets: [],
+              liveRecommendationResults: [],
+              livePayments: [],
+              liveWallets: [],
+              liveWalletTransactions: [],
+              businessHours: [],
+              storeSettings: null,
+            }),
+      };
     });
   },
   setBackendAdminSession: ({ accessToken, admin }) => {
     void persistBackendAccessToken(accessToken);
-    set({
-      hasHydrated: true,
-      backendAccessToken: accessToken,
-      liveAdminProfile: admin,
-      livePlayerProfile: null,
-      liveConversations: [],
-      liveNotifications: [],
-      liveRackets: [],
-      liveRecommendationResults: [],
-      livePayments: [],
-      liveWallets: [],
-      liveWalletTransactions: [],
-      businessHours: [],
-      adminSettings: [],
+    set((state) => {
+      const sameSession =
+        state.backendAccessToken === accessToken &&
+        state.liveAdminProfile?.id === admin.id;
+      return {
+        hasHydrated: true,
+        backendAccessToken: accessToken,
+        liveAdminProfile: admin,
+        livePlayerProfile: null,
+        ...(sameSession
+          ? {}
+          : {
+              liveConversations: [],
+              liveNotifications: [],
+              liveRackets: [],
+              liveRecommendationResults: [],
+              livePayments: [],
+              liveWallets: [],
+              liveWalletTransactions: [],
+              businessHours: [],
+              storeSettings: null,
+            }),
+      };
     });
   },
   setLiveStrings: (liveStrings) => set({ liveStrings }),
@@ -186,13 +201,19 @@ export const useAppStore = create<AppStoreState>((set) => ({
     })),
   setLiveWallet: (balance, liveWalletTransactions) =>
     set({ liveWallets: [balance], liveWalletTransactions }),
-  prependLiveBooking: (booking) =>
-    set((state) => ({
-      liveBookings: [
-        booking,
-        ...state.liveBookings.filter((item) => item.id !== booking.id),
-      ],
-    })),
+  upsertLiveBooking: (booking) =>
+    set((state) => {
+      const reconciled = reconcileBookingPayments(
+        [booking],
+        state.livePayments,
+      )[0] ?? booking;
+      return {
+        liveBookings: [
+          reconciled,
+          ...state.liveBookings.filter((item) => item.id !== booking.id),
+        ],
+      };
+    }),
   setLiveRecommendationResults: (liveRecommendationResults) =>
     set({ liveRecommendationResults }),
   clearLiveRecommendationResults: () =>
@@ -216,7 +237,7 @@ export const useAppStore = create<AppStoreState>((set) => ({
       bookingDraft: null,
       compareSelection: [],
       businessHours: [],
-      adminSettings: [],
+      storeSettings: null,
     });
   },
   updatePlayerProfile: (playerId, patch) =>
@@ -276,31 +297,22 @@ export const useAppStore = create<AppStoreState>((set) => ({
         item.id === stringId ? { ...item, ...patch } : item,
       ),
     })),
-  updateAdminSettings: (adminId, patch) =>
+  updateStoreSettings: (patch) =>
     set((state) => ({
-      adminSettings: state.adminSettings.some(
-        (item) => item.adminId === adminId,
-      )
-        ? state.adminSettings.map((item) =>
-            item.adminId === adminId ? { ...item, ...patch } : item,
-          )
-        : [
-            {
-              adminId,
-              storeName: '',
-              storeContact: '',
-              supportText: '',
-              paymentNotes: '',
-              bookingNotes: '',
-              storePolicyText: '',
-              address: '',
-              trendingStringIds: [],
-              defaultServicePrice: 0,
-              notificationSettings: {},
-              ...patch,
-            },
-            ...state.adminSettings,
-          ],
+      storeSettings: {
+        storeName: '',
+        storeContact: '',
+        supportText: '',
+        paymentNotes: '',
+        bookingNotes: '',
+        storePolicyText: '',
+        address: '',
+        trendingStringIds: [],
+        defaultServicePrice: 0,
+        notificationSettings: {},
+        ...state.storeSettings,
+        ...patch,
+      },
     })),
 }));
 

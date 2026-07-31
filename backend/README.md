@@ -29,7 +29,6 @@ Key variables:
 - `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix source file (`.csv` or `.xlsx`); relative paths resolve from the backend root
 - `SEED_ADMIN_*`: optional admin seed controls; enabling them requires a valid
   username, 9-to-15-digit phone number, and password
-- `AUTO_CREATE_SCHEMA`: optional dev/test convenience toggle for local schema creation
 
 In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`).
 
@@ -69,7 +68,8 @@ cd backend
 ./.venv/bin/alembic upgrade head
 ```
 
-`AUTO_CREATE_SCHEMA=true` is only a convenience for creating missing tables in local/test setups. It does not repair drift in existing tables, so schema changes still require `./.venv/bin/alembic upgrade head`.
+Alembic is the sole runtime schema owner. ORM `create_all` remains available
+only to isolated test fixtures.
 
 3. Start the unified backend:
 
@@ -190,7 +190,7 @@ More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-cont
 - The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
 - Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
-- The backend imports the recommendation CSV into `string_recommendation_matrix` with `source_layer='nlp_review'` and treats it as the primary item-side matrix layer over the older hybrid-derived fallback rows.
+- The backend imports the canonical recommendation artifact into `string_recommendation_matrix` with `source_layer='nlp_review'`; each import fully replaces that source layer and records a SHA-256 source version.
 
 ## Recommendation Refactor Notes
 

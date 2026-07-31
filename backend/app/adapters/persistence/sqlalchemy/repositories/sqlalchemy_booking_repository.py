@@ -129,6 +129,12 @@ class SqlAlchemyBookingRepository:
         )
         return to_booking_record(booking) if booking else None
 
+    def get_by_id_for_update(self, booking_id: str) -> BookingRecord | None:
+        locked_id = self.db.execute(
+            select(Booking.id).where(Booking.id == booking_id).with_for_update()
+        ).scalar_one_or_none()
+        return self.get_by_id(locked_id) if locked_id else None
+
     def list_by_user(self, user_id: str) -> Page[BookingRecord]:
         items = (
             self.db.execute(
@@ -209,6 +215,7 @@ class SqlAlchemyBookingRepository:
         update_expected_completion_datetime: bool,
         changed_by_user_id: str | None,
         note: str | None,
+        commit: bool = True,
     ) -> BookingRecord:
         booking = self.db.get(Booking, booking_id)
         assert booking is not None
@@ -227,7 +234,10 @@ class SqlAlchemyBookingRepository:
                     note=note,
                 )
             )
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking_id)
         assert refreshed is not None

@@ -98,7 +98,7 @@ export default function AdminCheckInScreen() {
   const token = useBackendAccessToken();
   const bookings = useBookings();
   const strings = useStrings();
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const todaysAwaitingDropOffBookings = useMemo(() => {
@@ -169,20 +169,11 @@ export default function AdminCheckInScreen() {
   const mapLookupBooking = (response: Awaited<ReturnType<
     typeof backendApi.adminLookupSecureCheckIn
   >>) => {
-    const priceByStringId = new Map(
-      strings.map((item) => [item.id, item.price]),
-    );
     const mapped = mapBackendBookingToBooking(
       response.booking,
-      priceByStringId,
       user.id,
     );
-    const currentBookings = useAppStore.getState().liveBookings;
-    setLiveBookings(
-      currentBookings.some((item) => item.id === mapped.id)
-        ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-        : [mapped, ...currentBookings],
-    );
+    upsertLiveBooking(mapped);
     setSelectedBooking(mapped);
     return mapped;
   };
@@ -295,14 +286,8 @@ export default function AdminCheckInScreen() {
             booking_id: match.id,
             note: notes.trim() || null,
           });
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
-      const currentBookings = useAppStore.getState().liveBookings;
-      setLiveBookings(
-        currentBookings.some((item) => item.id === mapped.id)
-          ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-          : [mapped, ...currentBookings],
-      );
+      const mapped = mapBackendBookingToBooking(updated, user.id);
+      upsertLiveBooking(mapped);
       router.push(`/admin/bookings/${mapped.id}`);
     } catch (error) {
       setConfirmError(

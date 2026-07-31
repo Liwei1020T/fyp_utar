@@ -19,6 +19,8 @@ from fastapi import Form
 from fastapi import Query
 from fastapi import Response
 from fastapi import UploadFile
+from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,7 +30,9 @@ from app.adapters.persistence.sqlalchemy.models import NotificationDelivery
 from app.adapters.persistence.sqlalchemy.models import Payment
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.models import Booking
+from app.adapters.persistence.sqlalchemy.models import BookingConversation
 from app.adapters.persistence.sqlalchemy.models import BookingFeedback
+from app.adapters.persistence.sqlalchemy.models import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.session import get_db
@@ -87,6 +91,7 @@ from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_admin
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_store_repository
+from app.entrypoints.api.dependencies import get_transaction_manager
 from app.shared.errors import BadRequestError
 from app.shared.errors import NotFoundError
 from app.domain.booking.policies import booking_order_code
@@ -739,8 +744,12 @@ def admin_update_booking_status(
     payload: UpdateBookingStatusPayload,
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> BookingOut:
-    booking = UpdateBookingStatusUseCase(booking_repository=booking_repository).execute(
+    booking = UpdateBookingStatusUseCase(
+        booking_repository=booking_repository,
+        transaction_manager=transaction_manager,
+    ).execute(
         booking_id=booking_id,
         next_status=payload.status,
         expected_completion_datetime=payload.expected_completion_datetime,
@@ -944,11 +953,13 @@ def admin_check_in_booking(
     payload: CheckInPayload,
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> BookingOut:
     lookup_use_case = LookupCheckInUseCase(booking_repository=booking_repository)
     booking = ConfirmCheckInUseCase(
         booking_repository=booking_repository,
         lookup_check_in_use_case=lookup_use_case,
+        transaction_manager=transaction_manager,
     ).execute(
         booking_id=payload.booking_id,
         reference=payload.reference,
@@ -1013,6 +1024,7 @@ def admin_confirm_secure_check_in(
     booking_repository=Depends(get_booking_repository),
     clock=Depends(get_clock),
     db: Session = Depends(get_db),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> BookingOut:
     now = clock.now()
     token = _active_check_in_token(
@@ -1021,19 +1033,19 @@ def admin_confirm_secure_check_in(
         now=now,
         lock=True,
     )
+    token.used_at = now
     booking = ConfirmCheckInUseCase(
         booking_repository=booking_repository,
         lookup_check_in_use_case=LookupCheckInUseCase(
             booking_repository=booking_repository
         ),
+        transaction_manager=transaction_manager,
     ).execute(
         booking_id=token.booking_id,
         reference=None,
         admin_user_id=current_user.user_id,
         note=payload.note,
     )
-    token.used_at = now
-    db.commit()
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
@@ -1272,6 +1284,22 @@ def admin_analytics_summary(
             )
             for item in db.scalars(select(BookingFeedback))
         ],
+        unread_chats=db.scalar(
+            select(func.count(func.distinct(BookingConversation.booking_id)))
+            .join(
+                BookingUpdate,
+                BookingUpdate.booking_id == BookingConversation.booking_id,
+            )
+            .where(
+                BookingUpdate.channel == "conversation",
+                BookingUpdate.author_role == "customer",
+                or_(
+                    BookingConversation.admin_last_read_at.is_(None),
+                    BookingUpdate.created_at > BookingConversation.admin_last_read_at,
+                ),
+            )
+        )
+        or 0,
         store_timezone=get_settings().store_timezone,
     )
     return analytics_summary_to_dto(summary)

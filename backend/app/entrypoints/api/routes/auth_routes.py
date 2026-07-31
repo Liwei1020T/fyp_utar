@@ -30,6 +30,7 @@ from app.entrypoints.api.dependencies import get_current_user
 from app.entrypoints.api.dependencies import get_password_hasher
 from app.entrypoints.api.dependencies import get_password_reset_repository
 from app.entrypoints.api.dependencies import get_token_service
+from app.entrypoints.api.dependencies import get_transaction_manager
 from app.entrypoints.api.dependencies import get_user_repository
 from app.ports.services.password_hasher import PasswordHasher
 from app.use_cases.auth.get_current_user import GetCurrentUserUseCase
@@ -150,6 +151,7 @@ def reset_forgot_password(
     password_reset_repository=Depends(get_password_reset_repository),
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     clock=Depends(get_clock),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> MessageResponse:
     request = _validate_payload(
         ForgotPasswordResetRequest,
@@ -163,6 +165,7 @@ def reset_forgot_password(
         password_hasher=password_hasher,
         clock=clock,
         max_attempts=settings.password_reset_code_max_attempts,
+        transaction_manager=transaction_manager,
     ).execute(
         phone_number=request.phone_number,
         verification_code=request.verification_code,

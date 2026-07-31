@@ -69,6 +69,12 @@ def first_string_id(token: str) -> str:
     return response.json()["items"][0]["id"]
 
 
+def first_admin_string_id(token: str) -> str:
+    response = client.get("/api/admin/inventory/strings", headers=headers(token))
+    assert response.status_code == 200
+    return response.json()["items"][0]["id"]
+
+
 def booking_update_file_names() -> set[str]:
     upload_dir = get_settings().upload_root_path / "booking-updates"
     if not upload_dir.exists():
@@ -349,7 +355,7 @@ def test_recommendations_logs_and_admin_string_controls():
         "/api/recommendations/logs",
         headers=headers(admin_token),
     )
-    assert removed_duplicate_route.status_code == 404
+    assert removed_duplicate_route.status_code == 403
 
     admin_strings = client.get(
         "/api/admin/strings",
@@ -781,7 +787,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert settings_response.status_code == 200
     assert settings_response.json()["store_name"] == "StringSence"
     assert settings_response.json()["trending_string_ids"] == []
-    featured_string_id = first_string_id(admin_token)
+    featured_string_id = first_admin_string_id(admin_token)
 
     update_settings_response = client.put(
         "/api/admin/store-settings",
@@ -1276,7 +1282,7 @@ def test_admin_reject_requires_note_and_persists_history_note():
         headers=headers(admin_token),
         json={"status": "rejected"},
     )
-    assert missing_note_response.status_code == 422
+    assert missing_note_response.status_code == 409
 
     rejection_response = client.patch(
         f"/api/admin/bookings/{booking_id}/status",

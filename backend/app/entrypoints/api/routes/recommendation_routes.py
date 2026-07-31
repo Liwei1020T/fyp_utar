@@ -15,6 +15,7 @@ from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_profile_repository
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_recommendation_repository
+from app.entrypoints.api.dependencies import get_transaction_manager
 from app.shared.errors import ForbiddenError
 from app.use_cases.recommendation.generate_recommendation import (
     GenerateRecommendationUseCase,
@@ -31,11 +32,13 @@ def preview_recommendations(
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
     recommendation_log_repository=Depends(get_recommendation_log_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> RecommendationResponseDto:
     result = GenerateRecommendationUseCase(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
+        transaction_manager=transaction_manager,
     ).execute_preview(
         user_id=current_user.user_id,
         request=recommendation_request_to_domain(payload),
@@ -50,11 +53,13 @@ def recommend_for_profile(
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
     recommendation_log_repository=Depends(get_recommendation_log_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> RecommendationResponseDto:
     result = GenerateRecommendationUseCase(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
+        transaction_manager=transaction_manager,
     ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
     return recommendation_response_to_dto(result)
 
@@ -66,11 +71,13 @@ def generate_recommendations(
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
     recommendation_log_repository=Depends(get_recommendation_log_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> RecommendationResponseDto:
     result = GenerateRecommendationUseCase(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
+        transaction_manager=transaction_manager,
     ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
     return recommendation_response_to_dto(result)
 
@@ -82,12 +89,14 @@ def get_cached_recommendations(
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
     recommendation_log_repository=Depends(get_recommendation_log_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> RecommendationResponseDto:
     target_user_id = _authorized_target_user_id(current_user, user_id)
     result = GenerateRecommendationUseCase(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
+        transaction_manager=transaction_manager,
     ).execute_cached(user_id=target_user_id)
     return recommendation_response_to_dto(result)
 
@@ -100,12 +109,14 @@ def get_cached_recommendation_detail(
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
     recommendation_log_repository=Depends(get_recommendation_log_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> RecommendationDetailDto:
     target_user_id = _authorized_target_user_id(current_user, user_id)
     result = GenerateRecommendationUseCase(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
+        transaction_manager=transaction_manager,
     ).execute_detail(user_id=target_user_id, catalog_id=catalog_id)
     return recommendation_detail_to_dto(
         algorithm_version=result.algorithm_version,
@@ -117,8 +128,6 @@ def get_cached_recommendation_detail(
 def _authorized_target_user_id(current_user: CurrentUser, user_id: str) -> str:
     if user_id == "me":
         return current_user.user_id
-    if current_user.role == "admin":
-        return user_id
     if user_id != current_user.user_id:
         raise ForbiddenError("Cannot access another user's recommendations")
     return user_id

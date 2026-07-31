@@ -108,10 +108,7 @@ export default function AdminDashboardScreen() {
   const bookings = useBookings();
   const strings = useStrings();
   const logout = useAppStore((state) => state.logout);
-  const settings = useAppStore((state) => {
-    const byUser = state.adminSettings.find((item) => item.adminId === user?.id);
-    return byUser ?? state.adminSettings.find((item) => item.adminId === 'main');
-  });
+  const settings = useAppStore((state) => state.storeSettings);
   const storeName = settings?.storeName.trim();
   const [feedbackBookingIds, setFeedbackBookingIds] = useState<Set<string>>(
     new Set(),

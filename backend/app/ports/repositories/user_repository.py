@@ -21,5 +21,9 @@ class UserRepository(Protocol):
     ) -> UserAccount: ...
 
     def update_password(
-        self, user_id: str, password_hash: str
+        self,
+        user_id: str,
+        password_hash: str,
+        *,
+        commit: bool = True,
     ) -> UserAccount | None: ...

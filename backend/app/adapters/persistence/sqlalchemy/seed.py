@@ -212,8 +212,12 @@ def ensure_catalog_seeded(db: Session) -> None:
             db.add(item)
         db.flush()
 
-    if settings.recommendation_matrix_path.exists():
-        import_recommendation_matrix_csv(db, settings.recommendation_matrix_path)
+    if not settings.recommendation_matrix_path.is_file():
+        raise FileNotFoundError(
+            "Canonical recommendation matrix artifact is missing: "
+            f"{settings.recommendation_matrix_path}"
+        )
+    import_recommendation_matrix_csv(db, settings.recommendation_matrix_path)
 
 
 def ensure_store_defaults(db: Session) -> None:

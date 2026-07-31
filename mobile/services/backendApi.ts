@@ -56,6 +56,7 @@ const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ||
   'http://localhost:3001/api';
 const REQUEST_TIMEOUT_MS = 12000;
+let sessionExpiredHandler: (() => void) | null = null;
 
 export class BackendApiError extends Error {
   constructor(
@@ -69,8 +70,19 @@ export class BackendApiError extends Error {
 export function isBackendAuthError(error: unknown): error is BackendApiError {
   return (
     error instanceof BackendApiError &&
-    (error.statusCode === 401 || error.statusCode === 403)
+    error.statusCode === 401
   );
+}
+
+export function setBackendSessionExpiredHandler(
+  handler: (() => void) | null,
+) {
+  sessionExpiredHandler = handler;
+  return () => {
+    if (sessionExpiredHandler === handler) {
+      sessionExpiredHandler = null;
+    }
+  };
 }
 
 type RequestOptions = {
@@ -145,6 +157,9 @@ async function requestJson<T>(
     const error = json?.error as
       | { message?: string; details?: unknown }
       | undefined;
+    if (token && response.status === 401) {
+      sessionExpiredHandler?.();
+    }
     throw new BackendApiError(
       error?.message ||
         (typeof json?.detail === 'string' ? json.detail : undefined) ||
@@ -205,6 +220,9 @@ async function requestFormJson<T>(
     const error = json?.error as
       | { message?: string; details?: unknown }
       | undefined;
+    if (token && response.status === 401) {
+      sessionExpiredHandler?.();
+    }
     throw new BackendApiError(
       error?.message ||
         (typeof json?.detail === 'string' ? json.detail : undefined) ||
@@ -854,6 +872,9 @@ export const backendApi = {
       },
     );
     if (!response.ok) {
+      if (response.status === 401) {
+        sessionExpiredHandler?.();
+      }
       throw new BackendApiError('Failed to export feedback.', response.status);
     }
     return response.text();

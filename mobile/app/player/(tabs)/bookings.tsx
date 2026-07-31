@@ -45,7 +45,7 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
   const router = useRouter();
   const bookings = useBookings();
   const strings = useStrings();
-  const adminSettings = useAppStore((state) => state.adminSettings);
+  const storeSettings = useAppStore((state) => state.storeSettings);
   const bottomContentInset = useBottomContentInset(24);
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -133,11 +133,8 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
         }
         renderItem={({ item }) => {
           const stringItem = strings.find((entry) => entry.id === item.stringId);
-          const currentStoreSettings = adminSettings.find(
-            (settings) => settings.adminId === 'main',
-          );
           const adminLabel =
-            normalizeStoreText(currentStoreSettings?.storeName) ||
+            normalizeStoreText(storeSettings?.storeName) ||
             'Assigned shop';
 
           return (

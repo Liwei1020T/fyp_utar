@@ -37,6 +37,8 @@ class BookingRepository(Protocol):
 
     def get_by_id(self, booking_id: str) -> BookingRecord | None: ...
 
+    def get_by_id_for_update(self, booking_id: str) -> BookingRecord | None: ...
+
     def get_by_order_code(self, order_code: str) -> BookingRecord | None: ...
 
     def list_by_user(self, user_id: str) -> Page[BookingRecord]: ...
@@ -61,6 +63,7 @@ class BookingRepository(Protocol):
         update_expected_completion_datetime: bool,
         changed_by_user_id: str | None,
         note: str | None,
+        commit: bool = True,
     ) -> BookingRecord: ...
 
     def add_update(

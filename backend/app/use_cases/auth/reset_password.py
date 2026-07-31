@@ -7,6 +7,7 @@ from app.ports.repositories.password_reset_repository import PasswordResetReposi
 from app.ports.repositories.user_repository import UserRepository
 from app.ports.services.clock import Clock
 from app.ports.services.password_hasher import PasswordHasher
+from app.ports.transaction_manager import TransactionManager
 from app.shared.errors import BadRequestError
 
 
@@ -17,6 +18,7 @@ class ResetPasswordUseCase:
     password_hasher: PasswordHasher
     clock: Clock
     max_attempts: int
+    transaction_manager: TransactionManager
 
     def execute(
         self,
@@ -47,10 +49,20 @@ class ResetPasswordUseCase:
             )
             raise BadRequestError("Invalid or expired verification code")
 
-        user = self.user_repository.update_password(
-            reset_code.user_id,
-            self.password_hasher.hash_password(new_password),
-        )
-        if user is None:
-            raise BadRequestError("Invalid or expired verification code")
-        self.password_reset_repository.mark_used(reset_code.id, now)
+        try:
+            user = self.user_repository.update_password(
+                reset_code.user_id,
+                self.password_hasher.hash_password(new_password),
+                commit=False,
+            )
+            if user is None:
+                raise BadRequestError("Invalid or expired verification code")
+            self.password_reset_repository.mark_used(
+                reset_code.id,
+                now,
+                commit=False,
+            )
+            self.transaction_manager.commit()
+        except Exception:
+            self.transaction_manager.rollback()
+            raise

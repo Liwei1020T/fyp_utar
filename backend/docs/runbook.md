@@ -59,9 +59,8 @@ cd backend
 - NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.
 - Admin debug support:
   - `GET /api/admin/strings/{id}/recommendation-matrix` shows effective scores plus raw matrix rows grouped by source layer.
-  - `POST /api/admin/recommendation-matrix/import` safely re-imports the CSV and reports matched, inserted, updated, and unmatched counts.
-- `AUTO_CREATE_SCHEMA=true` is meant for local development and tests; use Alembic migrations explicitly for controlled environments.
-- `AUTO_CREATE_SCHEMA=true` only creates missing tables from the ORM metadata. It does not repair drift inside existing tables, so local environments should still run `./.venv/bin/alembic upgrade head` after pulling schema changes.
+  - `POST /api/admin/recommendation-matrix/import` safely re-imports the configured CSV or XLSX artifact and reports matched, inserted, updated, and unmatched counts.
+- Alembic is the sole runtime schema owner. Run `./.venv/bin/alembic upgrade head` before starting the backend after pulling schema changes.
 - Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is
   configured with a non-empty username/password and a valid 9-to-15-digit
   companion phone number. Seed credentials belong in local process/env state,

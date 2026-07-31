@@ -21,7 +21,6 @@ import {
   useAppStore,
   useBackendAccessToken,
   useBookings,
-  useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
@@ -60,8 +59,7 @@ export default function FeedbackScreen() {
   const bookingId = params.bookingId;
   const token = useBackendAccessToken();
   const bookings = useBookings();
-  const strings = useStrings();
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const [resolvedBooking, setResolvedBooking] = useState<Booking | null>(null);
   const [existingFeedback, setExistingFeedback] =
     useState<BookingFeedback | null>(null);
@@ -100,22 +98,9 @@ export default function FeedbackScreen() {
     setLoadError(null);
     try {
       const response = await backendApi.fetchBooking(token, bookingId);
-      const priceByStringId = new Map(
-        strings.map((item) => [item.id, item.price]),
-      );
-      const mappedBooking = mapBackendBookingToBooking(
-        response,
-        priceByStringId,
-      );
+      const mappedBooking = mapBackendBookingToBooking(response);
       setResolvedBooking(mappedBooking);
-      const liveBookings = useAppStore.getState().liveBookings;
-      setLiveBookings(
-        liveBookings.some((item) => item.id === mappedBooking.id)
-          ? liveBookings.map((item) =>
-              item.id === mappedBooking.id ? mappedBooking : item,
-            )
-          : [mappedBooking, ...liveBookings],
-      );
+      upsertLiveBooking(mappedBooking);
 
       if (mappedBooking.status !== 'completed') {
         setExistingFeedback(null);
@@ -146,7 +131,7 @@ export default function FeedbackScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [bookingId, setLiveBookings, strings, token]);
+  }, [bookingId, token, upsertLiveBooking]);
 
   useFocusEffect(
     useCallback(() => {

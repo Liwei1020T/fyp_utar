@@ -32,10 +32,11 @@ The active migration sequence is:
 - [20260723_0024_booking_update_channel.py](../migrations/versions/20260723_0024_booking_update_channel.py)
 - [20260726_0025_player_admin_operations.py](../migrations/versions/20260726_0025_player_admin_operations.py)
 
-Revisions 0019–0025 can adopt the complete tables produced by
-`AUTO_CREATE_SCHEMA` while still adding missing columns to older tables. This
-keeps local development databases upgradeable without stamping over real
-schema gaps; arbitrary partially created tables remain unsupported.
+Revisions 0019–0025 can adopt complete pre-existing tables while still adding
+missing columns to older databases. This keeps historical local databases
+upgradeable without stamping over real schema gaps; arbitrary partially
+created tables remain unsupported. New runtime schemas are created only by
+Alembic.
 
 ## Active Business Tables
 

@@ -30,6 +30,7 @@ from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_store_repository
+from app.entrypoints.api.dependencies import get_transaction_manager
 from app.shared.errors import BadRequestError
 from app.shared.errors import NotFoundError
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
@@ -140,6 +141,7 @@ def cancel_booking(
     payload: CancelBookingPayload,
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
+    transaction_manager=Depends(get_transaction_manager),
 ) -> BookingOut:
     booking = get_customer_owned_booking(
         booking_id=booking_id,
@@ -148,7 +150,10 @@ def cancel_booking(
     )
     if booking.user_id != current_user.user_id:
         raise NotFoundError("Booking not found")
-    updated = UpdateBookingStatusUseCase(booking_repository=booking_repository).execute(
+    updated = UpdateBookingStatusUseCase(
+        booking_repository=booking_repository,
+        transaction_manager=transaction_manager,
+    ).execute(
         booking_id=booking.id,
         next_status=BookingStatus.CANCELLED.value,
         expected_completion_datetime=None,

@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 from datetime import UTC
 from datetime import datetime
+import hashlib
 import logging
 import re
 import zipfile
@@ -13,7 +14,6 @@ from typing import Any
 from xml.etree import ElementTree
 
 from sqlalchemy import select
-from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import selectinload
 
@@ -131,6 +131,17 @@ MATRIX_RUNTIME_COLUMNS = MATRIX_METADATA_COLUMNS | {
     if column_name
 }
 
+REQUIRED_NLP_FEATURE_KEYS = {
+    "repulsion",
+    "comfort",
+    "control",
+    "durability",
+    "elasticity",
+    "sound",
+    "string_movement",
+    "tension_retention",
+}
+
 
 def ensure_recommendation_feature_definitions(db: Session) -> None:
     for feature in RECOMMENDATION_FEATURE_DEFINITIONS:
@@ -204,15 +215,20 @@ def import_recommendation_matrix_csv(
     db: Session,
     csv_path: Path,
 ) -> RecommendationMatrixImportReport:
+    if not csv_path.is_file():
+        raise FileNotFoundError(
+            f"Recommendation matrix artifact is missing: {csv_path}"
+        )
+
+    rows = _sanitize_matrix_rows(_load_matrix_rows(csv_path))
+    if not rows:
+        raise ValueError("Recommendation matrix artifact contains no data rows")
+
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
     source_version = recommendation_matrix_source_version(csv_path)
-    source_generated_at = datetime.fromtimestamp(
-        csv_path.stat().st_mtime,
-        tz=UTC,
-    )
+    source_generated_at = recommendation_matrix_source_generated_at(csv_path)
 
-    rows = _sanitize_matrix_rows(_load_matrix_rows(csv_path))
     lookup = _build_catalog_lookup(db)
     match_counts: Counter[str] = Counter()
     warnings: list[str] = []
@@ -221,7 +237,7 @@ def import_recommendation_matrix_csv(
     unchanged_entries = 0
     matched_strings = 0
     unmatched_strings = 0
-    matched_catalog_ids: set[str] = set()
+    imported_feature_pairs: set[tuple[str, str]] = set()
 
     for row in rows:
         matched_entry, matched_by, warning = _match_catalog_row(row, lookup)
@@ -233,14 +249,31 @@ def import_recommendation_matrix_csv(
             continue
 
         matched_strings += 1
-        matched_catalog_ids.add(matched_entry.catalog_id)
         match_counts[matched_by] += 1
-        for entry_payload in _build_matrix_entries(
+        entry_payloads = _build_matrix_entries(
             row,
             matched_entry.catalog_id,
             source_version=source_version,
             source_generated_at=source_generated_at,
-        ):
+        )
+        feature_keys = {
+            str(entry_payload["feature_key"]) for entry_payload in entry_payloads
+        }
+        missing_feature_keys = REQUIRED_NLP_FEATURE_KEYS - feature_keys
+        if missing_feature_keys:
+            missing = ", ".join(sorted(missing_feature_keys))
+            raise ValueError(
+                f"Recommendation matrix row for {matched_entry.catalog_id} "
+                f"is missing required features: {missing}"
+            )
+
+        for entry_payload in entry_payloads:
+            imported_feature_pairs.add(
+                (
+                    str(entry_payload["catalog_id"]),
+                    str(entry_payload["feature_key"]),
+                )
+            )
             matrix_row = db.get(
                 StringRecommendationMatrix,
                 (
@@ -281,15 +314,26 @@ def import_recommendation_matrix_csv(
             else:
                 unchanged_entries += 1
 
-    allowed_feature_keys = {spec.feature_key for spec in CSV_FEATURE_SPECS}
-    if matched_catalog_ids:
+    if unmatched_strings:
+        raise ValueError(
+            "Recommendation matrix artifact contains "
+            f"{unmatched_strings} unmatched catalog rows"
+        )
+
+    existing_nlp_rows = (
         db.execute(
-            delete(StringRecommendationMatrix).where(
-                StringRecommendationMatrix.source_layer == NLP_REVIEW_SOURCE_LAYER,
-                StringRecommendationMatrix.catalog_id.in_(matched_catalog_ids),
-                StringRecommendationMatrix.feature_key.not_in(allowed_feature_keys),
+            select(StringRecommendationMatrix).where(
+                StringRecommendationMatrix.source_layer == NLP_REVIEW_SOURCE_LAYER
             )
         )
+        .scalars()
+        .all()
+    )
+    for existing_row in existing_nlp_rows:
+        if (existing_row.catalog_id, existing_row.feature_key) not in (
+            imported_feature_pairs
+        ):
+            db.delete(existing_row)
 
     db.flush()
     return RecommendationMatrixImportReport(
@@ -524,7 +568,7 @@ def _build_matrix_entries(
     catalog_id: str,
     *,
     source_version: str,
-    source_generated_at: datetime,
+    source_generated_at: datetime | None,
 ) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
     for spec in CSV_FEATURE_SPECS:
@@ -651,4 +695,31 @@ def _round_score(value: float | None, *, digits: int) -> float | None:
 
 
 def recommendation_matrix_source_version(source_path: Path) -> str:
-    return source_path.stem
+    digest = hashlib.sha256()
+    with source_path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return f"sha256:{digest.hexdigest()}"
+
+
+def recommendation_matrix_source_generated_at(
+    source_path: Path,
+) -> datetime | None:
+    if source_path.suffix.lower() != ".xlsx":
+        return None
+
+    with zipfile.ZipFile(source_path) as workbook:
+        try:
+            core_xml = workbook.read("docProps/core.xml")
+        except KeyError:
+            return None
+
+    root = ElementTree.fromstring(core_xml)
+    namespace = {
+        "dcterms": "http://purl.org/dc/terms/",
+    }
+    for property_name in ("modified", "created"):
+        value = root.findtext(f"dcterms:{property_name}", namespaces=namespace)
+        if value:
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+    return None

@@ -27,7 +27,7 @@ export default function AdminLayout() {
   const setLiveConversations = useAppStore((state) => state.setLiveConversations);
   const setLivePayments = useAppStore((state) => state.setLivePayments);
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
-  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
+  const updateStoreSettings = useAppStore((state) => state.updateStoreSettings);
 
   useEffect(() => {
     if (!hasHydrated || !token || user?.role !== 'admin') {
@@ -54,7 +54,10 @@ export default function AdminLayout() {
           backendApi.adminFetchStoreSettings(token),
         ]);
 
-        if (cancelled) {
+        if (
+          cancelled ||
+          useAppStore.getState().backendAccessToken !== token
+        ) {
           return;
         }
 
@@ -73,21 +76,20 @@ export default function AdminLayout() {
           admin,
         });
 
-        let liveStrings = useAppStore.getState().liveStrings;
         if (inventoryResult.status === 'fulfilled') {
-          liveStrings = inventoryResult.value.items.map(mapBackendInventoryStringToStringItem);
-          setLiveStrings(liveStrings);
+          setLiveStrings(
+            inventoryResult.value.items.map(
+              mapBackendInventoryStringToStringItem,
+            ),
+          );
         } else {
           console.warn('Failed to hydrate live admin inventory', inventoryResult.reason);
         }
 
         let liveBookings = useAppStore.getState().liveBookings;
         if (bookingsResult.status === 'fulfilled') {
-          const priceByStringId = new Map(
-            liveStrings.map((item) => [item.id, item.price]),
-          );
           liveBookings = bookingsResult.value.items.map((item) =>
-            mapBackendBookingToBooking(item, priceByStringId, admin.id),
+            mapBackendBookingToBooking(item, admin.id),
           );
           setLiveBookings(liveBookings);
         } else {
@@ -122,7 +124,7 @@ export default function AdminLayout() {
         }
 
         if (storeSettingsResult.status === 'fulfilled') {
-          updateAdminSettings(admin.id, {
+          updateStoreSettings({
             storeName: storeSettingsResult.value.store_name,
             storeContact: storeSettingsResult.value.store_contact,
             address: storeSettingsResult.value.address,
@@ -165,7 +167,7 @@ export default function AdminLayout() {
     setLivePayments,
     setLiveStrings,
     token,
-    updateAdminSettings,
+    updateStoreSettings,
     user?.role,
   ]);
 

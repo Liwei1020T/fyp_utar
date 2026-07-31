@@ -56,15 +56,6 @@ class UpdateBookingStatusPayload(BaseModel):
     expected_completion_datetime: datetime | None = None
     note: str | None = Field(default=None, max_length=500)
 
-    @model_validator(mode="after")
-    def validate_terminal_note(self) -> "UpdateBookingStatusPayload":
-        if self.status in {
-            BookingStatus.CANCELLED.value,
-            BookingStatus.REJECTED.value,
-        } and not (self.note and self.note.strip()):
-            raise ValueError("note is required when cancelling or rejecting a booking")
-        return self
-
 
 class CancelBookingPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)

@@ -30,7 +30,6 @@ def test_catalog_normalization_migration_preserves_existing_booking(
 
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("APP_ENV", "testing")
-    monkeypatch.setenv("AUTO_CREATE_SCHEMA", "false")
     get_settings.cache_clear()
 
     config = make_alembic_config(database_url)
@@ -164,7 +163,6 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
 
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("APP_ENV", "testing")
-    monkeypatch.setenv("AUTO_CREATE_SCHEMA", "false")
     get_settings.cache_clear()
 
     config = make_alembic_config(database_url)
@@ -334,7 +332,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
         assert repaired_row["completion_summary"] is None
 
 
-def test_latest_migrations_adopt_auto_created_schema_drift(
+def test_latest_migrations_adopt_preexisting_schema_drift(
     tmp_path,
     monkeypatch,
 ) -> None:
@@ -343,7 +341,6 @@ def test_latest_migrations_adopt_auto_created_schema_drift(
 
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("APP_ENV", "testing")
-    monkeypatch.setenv("AUTO_CREATE_SCHEMA", "false")
     get_settings.cache_clear()
 
     config = make_alembic_config(database_url)

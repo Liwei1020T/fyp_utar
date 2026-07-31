@@ -103,6 +103,11 @@ def test_booking_conversation_lifecycle_and_thread_dto():
         "When will my racket be ready?"
     )
     assert player_message.json()["messages"][0]["author_role"] == "customer"
+    unread_summary = client.get(
+        "/api/admin/analytics/summary",
+        headers=_headers(admin_token),
+    )
+    assert unread_summary.json()["unread_chats"] == 1
 
     player_list = client.get(
         "/api/conversations",
@@ -137,6 +142,11 @@ def test_booking_conversation_lifecycle_and_thread_dto():
     )
     assert player_read.json()["player_last_read_at"] is not None
     assert admin_read.json()["admin_last_read_at"] is not None
+    read_summary = client.get(
+        "/api/admin/analytics/summary",
+        headers=_headers(admin_token),
+    )
+    assert read_summary.json()["unread_chats"] == 0
 
     resolved = client.post(
         f"/api/admin/conversations/{booking_id}/resolve",

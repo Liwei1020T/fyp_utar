@@ -184,7 +184,7 @@ The store owns:
 - business hours
 - live physical racket passports and completed service history
 - live wallets and transactions
-- admin settings
+- single-store settings
 - compare selection
 - booking draft
 
@@ -196,7 +196,7 @@ The store handles session, successful API snapshots, and transient UI state:
 - logout and successful player-profile replacement
 - booking draft creation and clearing
 - string compare selection
-- successful business-hours, inventory, notification-read, and admin-settings snapshots
+- successful business-hours, inventory, notification-read, and store-settings snapshots
 
 Payment, wallet, support-chat, and live booking writes call `backendApi.ts`
 directly. The store receives the successful backend response as a replacement

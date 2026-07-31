@@ -32,11 +32,8 @@ export default function AdminSettingsScreen() {
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const strings = useStrings();
-  const settings = useAppStore((state) => {
-    const byUser = state.adminSettings.find((item) => item.adminId === user?.id);
-    return byUser ?? state.adminSettings.find((item) => item.adminId === 'main');
-  });
-  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
+  const settings = useAppStore((state) => state.storeSettings);
+  const updateStoreSettings = useAppStore((state) => state.updateStoreSettings);
   const [storeName, setStoreName] = useState(settings?.storeName ?? '');
   const [storeContact, setStoreContact] = useState(settings?.storeContact ?? '');
   const [address, setAddress] = useState(settings?.address ?? '');
@@ -131,19 +128,7 @@ export default function AdminSettingsScreen() {
         if (cancelled) {
           return;
         }
-        updateAdminSettings(user.id, {
-          storeName: response.store_name,
-          storeContact: response.store_contact,
-          address: response.address,
-          supportText: response.support_text,
-          paymentNotes: response.payment_notes,
-          bookingNotes: response.booking_notes,
-          storePolicyText: normalizeStorePolicyText(response.store_policy_text),
-          trendingStringIds: response.trending_string_ids ?? [],
-          defaultServicePrice: response.default_service_price,
-          notificationSettings: response.notification_settings,
-        });
-        updateAdminSettings('main', {
+        updateStoreSettings({
           storeName: response.store_name,
           storeContact: response.store_contact,
           address: response.address,
@@ -171,7 +156,7 @@ export default function AdminSettingsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [token, updateAdminSettings, user]);
+  }, [token, updateStoreSettings, user]);
 
   const saveSettings = async () => {
     if (!user || user.role !== 'admin') {
@@ -198,19 +183,7 @@ export default function AdminSettingsScreen() {
         default_service_price: Number(defaultServicePrice) || 0,
         notification_settings: notificationSettings,
       });
-      updateAdminSettings(user.id, {
-        storeName: response.store_name,
-        storeContact: response.store_contact,
-        address: response.address,
-        supportText: response.support_text,
-        paymentNotes: response.payment_notes,
-        bookingNotes: response.booking_notes,
-        storePolicyText: normalizeStorePolicyText(response.store_policy_text),
-        trendingStringIds: response.trending_string_ids ?? trendingStringIds,
-        defaultServicePrice: response.default_service_price,
-        notificationSettings: response.notification_settings,
-      });
-      updateAdminSettings('main', {
+      updateStoreSettings({
         storeName: response.store_name,
         storeContact: response.store_contact,
         address: response.address,

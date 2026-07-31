@@ -65,6 +65,10 @@ Current post-migration route modules with no legacy one-file equivalent:
 - Old: route modules performed direct SQLAlchemy queries
 - New: SQLAlchemy access is isolated in repository adapters under `app/adapters/persistence/sqlalchemy/repositories/`
 
+- Multi-repository writes share the explicit transaction boundary in
+  `app/ports/transaction_manager.py` and
+  `app/adapters/persistence/sqlalchemy/transaction_manager.py`.
+
 ## Security and Recommendation
 
 - Old: `stringsense_backend/core/security.py`
@@ -74,7 +78,7 @@ Current post-migration route modules with no legacy one-file equivalent:
 
 - Old: `stringsense_backend/modules/ai.py`
 - Active recommendation: `app/domain/recommendation/scoring.py`
-- Standalone compatibility only: `ai_service/` and `app/adapters/services/ai/`
+- Standalone compatibility only: `ai_service/`
 
 ## Shared / Config
 

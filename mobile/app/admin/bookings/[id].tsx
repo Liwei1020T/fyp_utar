@@ -325,7 +325,7 @@ export default function AdminBookingDetailScreen() {
   const user = useCurrentUser();
   const bookings = useBookings();
   const strings = useStrings();
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const booking = bookings.find((item) => item.id === params.id);
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
   const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
@@ -377,14 +377,7 @@ export default function AdminBookingDetailScreen() {
         if (cancelled) {
           return;
         }
-        const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-        const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId, user.id);
-        const currentBookings = useAppStore.getState().liveBookings;
-        setLiveBookings(
-          currentBookings.some((item) => item.id === mapped.id)
-            ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-            : [mapped, ...currentBookings],
-        );
+        upsertLiveBooking(mapBackendBookingToBooking(freshBooking, user.id));
       } catch (loadError) {
         console.warn('Failed to refresh live admin booking detail', loadError);
       }
@@ -395,7 +388,7 @@ export default function AdminBookingDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id, setLiveBookings, strings, token, user?.id, user?.role]);
+  }, [params.id, token, upsertLiveBooking, user?.id, user?.role]);
 
   useEffect(() => {
     if (!token || user?.role !== 'admin' || !params.id) return;
@@ -543,11 +536,7 @@ export default function AdminBookingDetailScreen() {
           ? expectedCompletion.value
           : undefined,
       });
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
-      setLiveBookings(
-        bookings.map((item) => (item.id === mapped.id ? mapped : item)),
-      );
+      upsertLiveBooking(mapBackendBookingToBooking(updated, user.id));
     } catch (saveError) {
       const message = saveError instanceof BackendApiError
         ? saveError.message
@@ -651,11 +640,7 @@ export default function AdminBookingDetailScreen() {
         : await backendApi.adminAddBookingUpdate(token, booking.id, {
             comment: updateComment,
           });
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
-      setLiveBookings(
-        bookings.map((item) => (item.id === mapped.id ? mapped : item)),
-      );
+      upsertLiveBooking(mapBackendBookingToBooking(updated, user.id));
       setUpdateComment('');
       setUpdatePhoto(null);
       setUpdatePhotoType('racket');

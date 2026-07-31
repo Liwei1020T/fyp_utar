@@ -20,7 +20,6 @@ import {
   formatBookingStatus,
   formatDateTime,
 } from '../../../lib/formatters';
-import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
@@ -246,8 +245,8 @@ export default function PlayerBookingDetailScreen() {
   const payments = usePayments();
   const strings = useStrings();
   const token = useBackendAccessToken();
-  const adminSettings = useAppStore((state) => state.adminSettings);
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const storeSettings = useAppStore((state) => state.storeSettings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const setLiveConversations = useAppStore((state) => state.setLiveConversations);
   const [isRequestingSupport, setIsRequestingSupport] = useState(false);
   const [supportError, setSupportError] = useState<string | null>(null);
@@ -279,37 +278,7 @@ export default function PlayerBookingDetailScreen() {
         if (cancelled) {
           return;
         }
-        const priceByStringId = new Map<string, number>();
-        strings.forEach((item) => {
-          const priceMeta = getInventoryPriceLabel(item);
-          const priceValue =
-            item.inventory.price ?? (item.price > 0 ? item.price : null);
-
-          if (priceMeta.hasPrice && priceValue != null) {
-            priceByStringId.set(item.id, priceValue);
-          }
-        });
-        const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId);
-        const currentBookings = useAppStore.getState().liveBookings;
-        const existingBooking = currentBookings.find((item) => item.id === mapped.id);
-        const keepQuotePendingState =
-          existingBooking?.paymentStatus === 'unpaid' &&
-          existingBooking.totalAmount <= 0 &&
-          mapped.totalAmount <= 0;
-
-        if (existingBooking && keepQuotePendingState) {
-          mapped.paymentStatus = existingBooking.paymentStatus;
-          mapped.stringFee = existingBooking.stringFee;
-          mapped.totalAmount = existingBooking.totalAmount;
-          mapped.amountPaid = existingBooking.amountPaid;
-          mapped.paymentRuleNote = existingBooking.paymentRuleNote;
-        }
-
-        setLiveBookings(
-          currentBookings.some((item) => item.id === mapped.id)
-            ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-            : [mapped, ...currentBookings],
-        );
+        upsertLiveBooking(mapBackendBookingToBooking(freshBooking));
       } catch (error) {
         console.warn('Failed to refresh live player booking detail', error);
       }
@@ -320,7 +289,7 @@ export default function PlayerBookingDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id, setLiveBookings, strings, token]);
+  }, [params.id, token, upsertLiveBooking]);
 
   useEffect(() => {
     if (!token || booking?.status !== 'completed') {
@@ -391,20 +360,7 @@ export default function PlayerBookingDetailScreen() {
                 'Cancelled by player before drop-off.',
               )
               .then((response) => {
-                const priceByStringId = new Map(
-                  strings.map((item) => [item.id, item.price]),
-                );
-                const mapped = mapBackendBookingToBooking(
-                  response,
-                  priceByStringId,
-                );
-                setLiveBookings(
-                  useAppStore
-                    .getState()
-                    .liveBookings.map((item) =>
-                      item.id === mapped.id ? mapped : item,
-                    ),
-                );
+                upsertLiveBooking(mapBackendBookingToBooking(response));
               })
               .catch((error: unknown) => {
                 setCancelError(
@@ -421,14 +377,11 @@ export default function PlayerBookingDetailScreen() {
   };
 
   const stringItem = strings.find((item) => item.id === booking.stringId);
-  const currentStoreSettings = adminSettings.find(
-    (item) => item.adminId === 'main',
-  );
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
     : 'Custom string selection';
-  const storeName = normalizeStoreText(currentStoreSettings?.storeName);
-  const storeAddress = normalizeStoreText(currentStoreSettings?.address);
+  const storeName = normalizeStoreText(storeSettings?.storeName);
+  const storeAddress = normalizeStoreText(storeSettings?.address);
   const vendorLabel =
     storeName ||
     'Assigned shop';

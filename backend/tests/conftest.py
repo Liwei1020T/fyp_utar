@@ -11,7 +11,6 @@ os.environ.setdefault(
     "DATABASE_URL",
     "sqlite+pysqlite:////tmp/stringsense_unified_test.db",
 )
-os.environ.setdefault("AUTO_CREATE_SCHEMA", "true")
 os.environ.setdefault(
     "JWT_SECRET_KEY",
     "test-secret-key-that-is-long-enough-for-sha256",

@@ -11,6 +11,7 @@ import { useAppStore } from '../store/appStore';
 import {
   backendApi,
   isBackendAuthError,
+  setBackendSessionExpiredHandler,
 } from '../services/backendApi';
 import {
   mapBackendUserToAdminProfile,
@@ -68,6 +69,11 @@ function BackendSessionBootstrap() {
     (state) => state.setBackendAdminSession,
   );
 
+  useEffect(
+    () => setBackendSessionExpiredHandler(logout),
+    [logout],
+  );
+
   useEffect(() => {
     if (hasHydrated) {
       return;
@@ -95,7 +101,7 @@ function BackendSessionBootstrap() {
           return;
         }
 
-        const profile = await backendApi.fetchProfile(token).catch(() => null);
+        const profile = await backendApi.fetchProfile(token);
 
         if (cancelled) {
           return;

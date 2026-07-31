@@ -25,4 +25,10 @@ class PasswordResetRepository(Protocol):
 
     def update_attempts(self, code_id: str, attempt_count: int) -> None: ...
 
-    def mark_used(self, code_id: str, used_at: datetime) -> None: ...
+    def mark_used(
+        self,
+        code_id: str,
+        used_at: datetime,
+        *,
+        commit: bool = True,
+    ) -> None: ...

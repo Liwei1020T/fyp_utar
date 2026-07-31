@@ -56,6 +56,7 @@ class SqlAlchemyPasswordResetRepository:
                 PasswordResetCode.used_at.is_(None),
             )
             .order_by(PasswordResetCode.created_at.desc())
+            .with_for_update()
         ).scalar_one_or_none()
         return to_password_reset_code(record) if record else None
 
@@ -66,9 +67,18 @@ class SqlAlchemyPasswordResetRepository:
         record.attempt_count = attempt_count
         self.db.commit()
 
-    def mark_used(self, code_id: str, used_at: datetime) -> None:
+    def mark_used(
+        self,
+        code_id: str,
+        used_at: datetime,
+        *,
+        commit: bool = True,
+    ) -> None:
         record = self.db.get(PasswordResetCode, code_id)
         if record is None:
             return
         record.used_at = used_at
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()

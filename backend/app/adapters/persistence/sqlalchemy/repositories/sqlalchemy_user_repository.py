@@ -45,11 +45,20 @@ class SqlAlchemyUserRepository:
         self.db.refresh(user)
         return to_user_account(user)
 
-    def update_password(self, user_id: str, password_hash: str) -> UserAccount | None:
+    def update_password(
+        self,
+        user_id: str,
+        password_hash: str,
+        *,
+        commit: bool = True,
+    ) -> UserAccount | None:
         user = self.db.get(User, user_id)
         if user is None:
             return None
         user.password_hash = password_hash
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         self.db.refresh(user)
         return to_user_account(user)

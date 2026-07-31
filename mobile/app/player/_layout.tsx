@@ -37,7 +37,7 @@ export default function PlayerLayout() {
   const setLivePayments = useAppStore((state) => state.setLivePayments);
   const setLiveRackets = useAppStore((state) => state.setLiveRackets);
   const setLiveWallet = useAppStore((state) => state.setLiveWallet);
-  const updateAdminSettings = useAppStore((state) => state.updateAdminSettings);
+  const updateStoreSettings = useAppStore((state) => state.updateStoreSettings);
 
   useEffect(() => {
     if (!hasHydrated || !token || user?.role !== 'player') {
@@ -72,7 +72,10 @@ export default function PlayerLayout() {
           backendApi.listRackets(token),
         ]);
 
-        if (cancelled) {
+        if (
+          cancelled ||
+          useAppStore.getState().backendAccessToken !== token
+        ) {
           return;
         }
 
@@ -85,32 +88,30 @@ export default function PlayerLayout() {
           return;
         }
 
-        const profile =
-          profileResult.status === 'fulfilled' ? profileResult.value : null;
         if (profileResult.status === 'rejected') {
           console.warn('Failed to hydrate live player profile details', profileResult.reason);
+        } else {
+          setBackendPlayerSession({
+            accessToken: token,
+            player: mapBackendUserToPlayerProfile(
+              userResult.value,
+              profileResult.value,
+            ),
+          });
         }
 
-        setBackendPlayerSession({
-          accessToken: token,
-          player: mapBackendUserToPlayerProfile(userResult.value, profile),
-        });
-
-        let liveStrings = useAppStore.getState().liveStrings;
         if (stringsResult.status === 'fulfilled') {
-          liveStrings = stringsResult.value.items.map(mapBackendStringToStringItem);
-          setLiveStrings(liveStrings);
+          setLiveStrings(
+            stringsResult.value.items.map(mapBackendStringToStringItem),
+          );
         } else {
           console.warn('Failed to hydrate live player strings', stringsResult.reason);
         }
 
         let liveBookings = useAppStore.getState().liveBookings;
         if (bookingsResult.status === 'fulfilled') {
-          const priceByStringId = new Map(
-            liveStrings.map((item) => [item.id, item.price]),
-          );
           liveBookings = bookingsResult.value.items.map((item) =>
-            mapBackendBookingToBooking(item, priceByStringId),
+            mapBackendBookingToBooking(item),
           );
           setLiveBookings(liveBookings);
         } else {
@@ -123,7 +124,7 @@ export default function PlayerLayout() {
 
         if (storeSettingsResult.status === 'fulfilled' && storeSettingsResult.value) {
           const storeSettings = storeSettingsResult.value;
-          updateAdminSettings('main', {
+          updateStoreSettings({
             storeName: storeSettings.store_name,
             storeContact: storeSettings.store_contact,
             address: storeSettings.address,
@@ -212,7 +213,7 @@ export default function PlayerLayout() {
     setLiveStrings,
     setLiveWallet,
     token,
-    updateAdminSettings,
+    updateStoreSettings,
     user?.role,
   ]);
 

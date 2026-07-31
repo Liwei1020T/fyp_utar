@@ -78,7 +78,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   const rackets = useRackets();
   const token = useBackendAccessToken();
   const setBookingDraft = useAppStore((state) => state.setBookingDraft);
-  const adminSettings = useAppStore((state) => state.adminSettings);
+  const storeSettings = useAppStore((state) => state.storeSettings);
   const playerRackets = rackets.filter((item) => item.playerId === user.id);
   const [selectedRacketId, setSelectedRacketId] = useState<string | null>(
     params.racketId ?? null,
@@ -131,14 +131,11 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   const selectedSlot = slots.find(
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
-  const currentStoreSettings = adminSettings.find(
-    (item) => item.adminId === 'main',
-  );
   const selectedAdminName =
-    currentStoreSettings?.storeName.trim()
+    storeSettings?.storeName.trim()
     || 'Assigned shop';
   const selectedAdminMeta =
-    currentStoreSettings?.address.trim()
+    storeSettings?.address.trim()
     || 'Drop-off service desk';
   const recommendedMin = selectedString?.recommendedTension[0] ?? 24;
   const recommendedMax = selectedString?.recommendedTension[1] ?? 29;

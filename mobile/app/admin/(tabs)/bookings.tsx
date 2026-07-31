@@ -75,6 +75,12 @@ function getQueueMetaLabel(booking: Booking) {
   return 'Queue open';
 }
 
+function getPriceLabel(booking: Booking) {
+  return booking.totalAmount > 0
+    ? formatCurrency(booking.totalAmount)
+    : 'Quote pending';
+}
+
 function compareBookings(a: Booking, b: Booking) {
   const priorityDelta = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
 
@@ -124,7 +130,7 @@ function AdminQueueCard({
             </HeroText>
             <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
               <HeroText className="text-[12px] font-semibold text-neutral-800">
-                {formatCurrency(booking.totalAmount)}
+                {getPriceLabel(booking)}
               </HeroText>
               <HeroText className="text-[11px] font-semibold text-neutral-300">
                 ·

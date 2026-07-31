@@ -12,6 +12,7 @@ from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StringInventoryItem
 from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
+from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
 from app.domain.catalog.recommendation_features import domain_feature_key
@@ -64,7 +65,9 @@ class SqlAlchemyRecommendationRepository:
         user_id: str,
         source_layer: str,
         entries: list[dict[str, float | str | None]],
+        commit: bool = True,
     ) -> list[UserPreferenceVectorEntry]:
+        self._lock_user(user_id)
         self.db.execute(
             delete(UserPreferenceMatrix).where(
                 UserPreferenceMatrix.user_id == user_id,
@@ -83,7 +86,10 @@ class SqlAlchemyRecommendationRepository:
                     preferred_max=entry.get("preferred_max"),
                 )
             )
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         return self.list_user_preference_vector(
             user_id=user_id,
             source_layer=source_layer,
@@ -114,7 +120,9 @@ class SqlAlchemyRecommendationRepository:
         user_id: str,
         algorithm_version: str,
         results: list[dict[str, object]],
+        commit: bool = True,
     ) -> list[CachedRecommendationRecord]:
+        self._lock_user(user_id)
         self.db.execute(
             delete(RecommendationScoreCache).where(
                 RecommendationScoreCache.user_id == user_id,
@@ -154,7 +162,10 @@ class SqlAlchemyRecommendationRepository:
                     ),
                 )
             )
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         return self.get_cached_results(
             user_id=user_id,
             algorithm_version=algorithm_version,
@@ -221,6 +232,11 @@ class SqlAlchemyRecommendationRepository:
         if row is None:
             return None
         return _to_cached_record(row)
+
+    def _lock_user(self, user_id: str) -> None:
+        self.db.execute(
+            select(User.id).where(User.id == user_id).with_for_update()
+        ).scalar_one()
 
 
 def _to_preference_entry(item: UserPreferenceMatrix) -> UserPreferenceVectorEntry:

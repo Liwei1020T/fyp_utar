@@ -73,7 +73,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Admin core journey:
   auth -> operations dashboard -> counter check-in/bookings/inventory/recommendation runs -> booking, inventory, or recommendation detail -> operational updates
 - Shared state mutation hotspots:
-  `updateBusinessHours`, `updateStringItem`, `updateAdminSettings`, and the live-data snapshot setters
+  `updateBusinessHours`, `updateStringItem`, `updateStoreSettings`, and the live-data snapshot setters
 
 ## Structure Rules
 

@@ -119,7 +119,7 @@ Query cache owner.
 
 | Path | Purpose | Open When |
 | --- | --- | --- |
-| [mobile/store/appStore.ts](../mobile/store/appStore.ts) | Zustand source of truth for authenticated session state, API response snapshots, booking drafts, compare selection, admin settings, and selector hooks. | UI state is stale, a successful API response needs caching, or session behavior changes. |
+| [mobile/store/appStore.ts](../mobile/store/appStore.ts) | Zustand source of truth for authenticated session state, API response snapshots, booking drafts, compare selection, single-store settings, and selector hooks. | UI state is stale, a successful API response needs caching, or session behavior changes. |
 | [mobile/services/backendApi.ts](../mobile/services/backendApi.ts) | Fetch wrapper and typed backend endpoint methods; uses `EXPO_PUBLIC_API_BASE_URL` with a 12s timeout. | Adding or changing live backend calls. |
 | [mobile/services/backendMappers.ts](../mobile/services/backendMappers.ts) | Converts backend snake_case DTOs into mobile domain models and builds backend payloads from mobile state. | Backend contract changes or mobile/backend field names diverge. |
 | [mobile/types/domain.ts](../mobile/types/domain.ts) | Canonical mobile domain types: users, strings, bookings, recommendations, payments, chat, notifications, rackets, business hours, wallet, settings. | Any screen/domain shape changes. |
@@ -235,6 +235,7 @@ When adding behavior, follow the clean-architecture direction:
 | [backend/app/adapters/persistence/sqlalchemy/base.py](../backend/app/adapters/persistence/sqlalchemy/base.py) | Declarative base. |
 | [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, conversations, notifications, rackets/feedback, commerce, business hours, settings, recommendation logs/runs, and password reset codes. |
 | [backend/app/adapters/persistence/sqlalchemy/repositories](../backend/app/adapters/persistence/sqlalchemy/repositories) | Concrete repository implementations and ORM-domain mappers. |
+| [backend/app/adapters/persistence/sqlalchemy/transaction_manager.py](../backend/app/adapters/persistence/sqlalchemy/transaction_manager.py) | Shared SQLAlchemy commit/rollback boundary for multi-repository use cases. |
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
@@ -257,9 +258,8 @@ When adding behavior, follow the clean-architecture direction:
 | [backend/ai_service/core/config.py](../backend/ai_service/core/config.py) | AI service-specific settings. |
 
 Active recommendation API calls use
-`backend/app/domain/recommendation/scoring.py`; neither
-`backend/app/adapters/services/ai/*` nor `backend/ai_service/*` is loaded by the
-unified runtime.
+`backend/app/domain/recommendation/scoring.py`; `backend/ai_service/*` is not
+loaded by the unified runtime.
 
 ### Backend Tests
 
@@ -275,6 +275,7 @@ unified runtime.
 | [backend/tests/test_notifications.py](../backend/tests/test_notifications.py) | Notification ownership, preference filtering, and persisted read IDs. |
 | [backend/tests/test_rackets_feedback.py](../backend/tests/test_rackets_feedback.py) | Racket ownership/snapshots and completed-booking feedback rules. |
 | [backend/tests/test_store_analytics.py](../backend/tests/test_store_analytics.py) | Persisted commerce analytics and store-local day boundary. |
+| [backend/tests/test_transaction_atomicity.py](../backend/tests/test_transaction_atomicity.py) | Failure-injection coverage for recommendation, password-reset, and secure check-in transaction rollback. |
 | [backend/tests/test_player_admin_operations.py](../backend/tests/test_player_admin_operations.py) | Secure QR, detailed feedback, device delivery, account security, and privacy flow. |
 | [backend/tests/test_ai_service_api.py](../backend/tests/test_ai_service_api.py) | AI compatibility API coverage. |
 | [backend/tests/test_ai_service_service.py](../backend/tests/test_ai_service_service.py) | AI service/facade coverage. |

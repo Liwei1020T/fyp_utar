@@ -31,6 +31,9 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_user_repository
     SqlAlchemyUserRepository,
 )
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.adapters.persistence.sqlalchemy.transaction_manager import (
+    SqlAlchemyTransactionManager,
+)
 from app.adapters.services.security.jwt_token_service import JwtTokenService
 from app.adapters.services.security.pbkdf2_password_hasher import (
     Pbkdf2PasswordHasher,
@@ -99,6 +102,12 @@ def get_store_repository(db: Session = Depends(get_db)) -> SqlAlchemyStoreReposi
     return SqlAlchemyStoreRepository(db)
 
 
+def get_transaction_manager(
+    db: Session = Depends(get_db),
+) -> SqlAlchemyTransactionManager:
+    return SqlAlchemyTransactionManager(db)
+
+
 def get_recommendation_log_repository(
     db: Session = Depends(get_db),
 ) -> SqlAlchemyRecommendationLogRepository:
@@ -144,7 +153,7 @@ def require_roles(user: CurrentUser, *roles: UserRole) -> CurrentUser:
 
 
 def get_current_customer(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-    return require_roles(user, UserRole.CUSTOMER, UserRole.ADMIN)
+    return require_roles(user, UserRole.CUSTOMER)
 
 
 def get_current_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:

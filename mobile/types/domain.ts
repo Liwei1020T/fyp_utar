@@ -495,8 +495,7 @@ export interface NotificationPreferences {
   system: boolean;
 }
 
-export interface AdminSettings {
-  adminId: string;
+export interface StoreSettings {
   storeName: string;
   storeContact: string;
   supportText: string;

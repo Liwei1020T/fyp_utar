@@ -367,8 +367,12 @@ class SqlAlchemyCatalogRepository:
         item: StringCatalogItem,
         values: Mapping[str, object],
     ) -> None:
-        inventory = item.inventory_item
-        assert inventory is not None
+        inventory = self.db.execute(
+            select(StringInventoryItem)
+            .where(StringInventoryItem.catalog_id == item.catalog_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        ).scalar_one()
         previous_available_stock = inventory.available_stock
 
         if "price_rm" in values:

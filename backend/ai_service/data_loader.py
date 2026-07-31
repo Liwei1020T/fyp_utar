@@ -15,9 +15,6 @@ DEFAULT_MATRIX_PATH = (
     "../ml/nlp-workbench-latest/output/"
     "latest_practical_string_feature_matrix_v8_v6dict.csv"
 )
-DEFAULT_REVIEW_SIGNALS_PATH = (
-    "../ml/nlp-workbench-latest/output/rule_based_review_aspect_signals.csv"
-)
 DEFAULT_JSONL_FALLBACK_PATH = (
     BACKEND_ROOT / "data/raw/badminton_strings_recommender.jsonl"
 )
@@ -50,11 +47,11 @@ def get_matrix_path() -> Path:
     return _resolve_backend_path(os.getenv("AI_MATRIX_CSV_PATH"), DEFAULT_MATRIX_PATH)
 
 
-def get_review_signals_path() -> Path:
-    return _resolve_backend_path(
-        os.getenv("AI_REVIEW_ASPECT_CSV_PATH"),
-        DEFAULT_REVIEW_SIGNALS_PATH,
-    )
+def get_review_signals_path() -> Path | None:
+    configured_path = os.getenv("AI_REVIEW_ASPECT_CSV_PATH")
+    if not configured_path:
+        return None
+    return _resolve_backend_path(configured_path, configured_path)
 
 
 def get_fallback_jsonl_path() -> Path:
@@ -91,8 +88,12 @@ def load_string_matrix() -> list[StringRecord]:
 @lru_cache(maxsize=1)
 def load_review_signals() -> list[dict[str, str]]:
     review_path = get_review_signals_path()
-    if not review_path.exists():
+    if review_path is None:
         return []
+    if not review_path.is_file():
+        raise FileNotFoundError(
+            f"Configured review aspect signal artifact is missing: {review_path}"
+        )
 
     with review_path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)

@@ -16,6 +16,7 @@ class RecommendationRepository(Protocol):
         user_id: str,
         source_layer: str,
         entries: list[dict[str, float | str | None]],
+        commit: bool = True,
     ) -> list[UserPreferenceVectorEntry]: ...
 
     def list_user_preference_vector(
@@ -31,6 +32,7 @@ class RecommendationRepository(Protocol):
         user_id: str,
         algorithm_version: str,
         results: list[dict[str, object]],
+        commit: bool = True,
     ) -> list[CachedRecommendationRecord]: ...
 
     def get_cached_results(

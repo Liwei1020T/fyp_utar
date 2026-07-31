@@ -770,7 +770,6 @@ function mapBackendBookingUpdateToBookingUpdate(
 
 export function mapBackendBookingToBooking(
   booking: BackendBooking,
-  priceByStringId: Map<string, number>,
   adminId = 'main',
 ): Booking {
   const status = mapBackendStatus(booking.status);
@@ -782,7 +781,6 @@ export function mapBackendBookingToBooking(
   const dropOffDateTime = booking.drop_off_datetime
     ? new Date(booking.drop_off_datetime)
     : null;
-  const stringFee = priceByStringId.get(booking.string_id) ?? 0;
 
   return {
     id: booking.id,
@@ -813,15 +811,15 @@ export function mapBackendBookingToBooking(
     cancellationReason: booking.cancellation_reason ?? undefined,
     completionSummary: booking.completion_summary ?? undefined,
     serviceFee: 0,
-    stringFee,
-    totalAmount: stringFee,
+    stringFee: 0,
+    totalAmount: 0,
     amountPaid: 0,
     walletUsed: 0,
     bookingToken: booking.id,
     checkInReference: booking.check_in_reference,
     queuePosition: 0,
     paymentRuleNote:
-      'Payment status and totals are reconciled from the live payment ledger.',
+      'Payment status and totals come from the server payment quote and ledger.',
     timeline: historyToTimeline(
       booking.status_history,
       status,

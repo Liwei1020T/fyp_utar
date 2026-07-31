@@ -42,6 +42,7 @@ class GetStoreAnalyticsUseCase:
         *,
         payments: list[AnalyticsPayment],
         feedback: list[AnalyticsFeedback],
+        unread_chats: int,
         store_timezone: str,
     ) -> AnalyticsSummary:
         bookings = self.booking_repository.list_all_for_analytics()
@@ -144,7 +145,7 @@ class GetStoreAnalyticsUseCase:
             ready_for_collection_count=ready_for_collection_count,
             completed_today=completed_today,
             low_stock_count=low_stock_count,
-            unread_chats=0,
+            unread_chats=unread_chats,
             today_revenue=round(today_revenue, 2),
             repeat_customer_count=sum(
                 1 for count in customer_completed_counter.values() if count >= 2

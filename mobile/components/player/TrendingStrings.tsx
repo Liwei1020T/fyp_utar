@@ -7,7 +7,6 @@ import { formatCurrency } from '../../lib/formatters';
 import {
   useAppStore,
   useCurrentUser,
-  usePreferredAdminId,
   useStrings,
 } from '../../store/appStore';
 
@@ -22,12 +21,9 @@ export function TrendingStrings() {
   const router = useRouter();
   const user = useCurrentUser();
   const strings = useStrings();
-  const preferredAdminId = usePreferredAdminId();
   const hasHydrated = useAppStore((state) => state.hasHydrated);
-  const adminSettings = useAppStore((state) => state.adminSettings);
-  const configuredTrendingIds = preferredAdminId
-    ? adminSettings.find((item) => item.adminId === preferredAdminId)?.trendingStringIds ?? []
-    : [];
+  const storeSettings = useAppStore((state) => state.storeSettings);
+  const configuredTrendingIds = storeSettings?.trendingStringIds ?? [];
   const configuredTrending = configuredTrendingIds
     .map((id) => strings.find((item) => item.id === id))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));

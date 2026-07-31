@@ -11,6 +11,12 @@ from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatri
 from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
     import_recommendation_matrix_csv,
 )
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    recommendation_matrix_source_generated_at,
+)
+from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
+    recommendation_matrix_source_version,
+)
 from app.adapters.persistence.sqlalchemy.seed import ensure_catalog_seeded
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import BACKEND_ROOT
@@ -176,7 +182,8 @@ def test_matrix_import_refreshes_stale_source_generated_at() -> None:
         BACKEND_ROOT
         / "../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx"
     )
-    expected_generated_at = datetime.fromtimestamp(matrix_path.stat().st_mtime, tz=UTC)
+    expected_generated_at = recommendation_matrix_source_generated_at(matrix_path)
+    assert expected_generated_at is not None
 
     with SessionLocal() as db:
         row = db.get(
@@ -197,3 +204,54 @@ def test_matrix_import_refreshes_stale_source_generated_at() -> None:
         if actual_generated_at.tzinfo is None:
             actual_generated_at = actual_generated_at.replace(tzinfo=UTC)
         assert abs((actual_generated_at - expected_generated_at).total_seconds()) < 1e-6
+
+
+def test_matrix_import_fully_replaces_stale_nlp_rows(tmp_path) -> None:
+    matrix_path = tmp_path / "next-practical-matrix.csv"
+    matrix_path.write_text(
+        "\n".join(
+            [
+                (
+                    "string_name,brand,attack,comfort,control,durability,"
+                    "elasticity,sound,string_movement,tension_retention,"
+                    "beginner_fit_score"
+                ),
+                "BG80,Yonex,0.8,0.6,0.7,0.5,0.8,0.9,0.4,0.6,0.7",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with SessionLocal() as db:
+        stale = db.get(
+            StringRecommendationMatrix,
+            ("yonex-bg80", "attacking_fit", "nlp_review"),
+        )
+        assert stale is not None
+
+        report = import_recommendation_matrix_csv(db, matrix_path)
+        db.commit()
+
+        assert report.matched_strings == 1
+        assert (
+            db.get(
+                StringRecommendationMatrix,
+                ("yonex-bg80", "attacking_fit", "nlp_review"),
+            )
+            is None
+        )
+        repulsion = db.get(
+            StringRecommendationMatrix,
+            ("yonex-bg80", "repulsion", "nlp_review"),
+        )
+        assert repulsion is not None
+        assert repulsion.source_version == recommendation_matrix_source_version(
+            matrix_path
+        )
+        assert repulsion.source_generated_at is None
+
+
+def test_matrix_import_rejects_missing_artifact(tmp_path) -> None:
+    with SessionLocal() as db:
+        with pytest.raises(FileNotFoundError, match="artifact is missing"):
+            import_recommendation_matrix_csv(db, tmp_path / "missing.xlsx")

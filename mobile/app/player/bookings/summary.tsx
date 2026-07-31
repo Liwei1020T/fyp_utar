@@ -27,9 +27,9 @@ export default function BookingSummaryScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookingDraft = useAppStore((state) => state.bookingDraft);
-  const adminSettings = useAppStore((state) => state.adminSettings);
+  const storeSettings = useAppStore((state) => state.storeSettings);
   const clearBookingDraft = useAppStore((state) => state.clearBookingDraft);
-  const prependLiveBooking = useAppStore((state) => state.prependLiveBooking);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const token = useBackendAccessToken();
   const strings = useStrings();
   const rackets = useRackets();
@@ -59,11 +59,8 @@ export default function BookingSummaryScreen() {
   const selectedRacket = bookingDraft.racketId
     ? rackets.find((item) => item.id === bookingDraft.racketId)
     : undefined;
-  const currentStoreSettings = adminSettings.find(
-    (item) => item.adminId === 'main',
-  );
   const vendorLabel =
-    normalizeStoreText(currentStoreSettings?.storeName) ||
+    normalizeStoreText(storeSettings?.storeName) ||
     'Assigned shop';
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
@@ -77,7 +74,7 @@ export default function BookingSummaryScreen() {
         hasPrice: false,
       };
   const stringFee = stringPriceMeta.hasPrice ? stringPrice ?? 0 : null;
-  const serviceFee = currentStoreSettings?.defaultServicePrice ?? 0;
+  const serviceFee = storeSettings?.defaultServicePrice ?? 0;
   const totalPayable = stringFee != null ? stringFee + serviceFee : null;
 
   const handleProceed = async () => {
@@ -115,22 +112,9 @@ export default function BookingSummaryScreen() {
         }
       }
 
-      const priceByStringId = new Map<string, number>();
-      if (stringFee != null) {
-        priceByStringId.set(bookingDraft.stringId, stringFee);
-      }
+      const mappedBooking = mapBackendBookingToBooking(booking);
 
-      const mappedBooking = mapBackendBookingToBooking(booking, priceByStringId);
-      if (stringFee == null) {
-        mappedBooking.paymentStatus = 'unpaid';
-        mappedBooking.stringFee = 0;
-        mappedBooking.totalAmount = 0;
-        mappedBooking.amountPaid = 0;
-        mappedBooking.paymentRuleNote =
-          'Final string quote is pending. Payment unlocks after shop confirms the amount.';
-      }
-
-      prependLiveBooking(mappedBooking);
+      upsertLiveBooking(mappedBooking);
       clearBookingDraft();
       router.replace(
         `/player/bookings/${booking.id}${photoUploadFailed ? '?photoUpload=failed' : ''}`,
