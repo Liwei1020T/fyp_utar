@@ -8,3 +8,4 @@ nbformat
 nbclient
 ipykernel
 pytest
+ruff==0.15.8
