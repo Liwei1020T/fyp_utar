@@ -21,6 +21,7 @@ from app.adapters.persistence.sqlalchemy.models import RecommendationFeatureDefi
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
 from app.domain.catalog.entities import RecommendationMatrixImportReport
+from app.domain.catalog.errors import RecommendationMatrixArtifactError
 from app.domain.catalog.recommendation_features import (
     LEGACY_TO_CANONICAL_FEATURE_KEY,
 )
@@ -222,7 +223,9 @@ def import_recommendation_matrix_csv(
 
     rows = _sanitize_matrix_rows(_load_matrix_rows(csv_path))
     if not rows:
-        raise ValueError("Recommendation matrix artifact contains no data rows")
+        raise RecommendationMatrixArtifactError(
+            "Recommendation matrix artifact contains no data rows"
+        )
 
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
@@ -262,7 +265,7 @@ def import_recommendation_matrix_csv(
         missing_feature_keys = REQUIRED_NLP_FEATURE_KEYS - feature_keys
         if missing_feature_keys:
             missing = ", ".join(sorted(missing_feature_keys))
-            raise ValueError(
+            raise RecommendationMatrixArtifactError(
                 f"Recommendation matrix row for {matched_entry.catalog_id} "
                 f"is missing required features: {missing}"
             )
@@ -315,7 +318,7 @@ def import_recommendation_matrix_csv(
                 unchanged_entries += 1
 
     if unmatched_strings:
-        raise ValueError(
+        raise RecommendationMatrixArtifactError(
             "Recommendation matrix artifact contains "
             f"{unmatched_strings} unmatched catalog rows"
         )
@@ -351,12 +354,29 @@ def import_recommendation_matrix_csv(
 
 
 def _load_matrix_rows(source_path: Path) -> list[dict[str, str]]:
-    suffix = source_path.suffix.lower()
-    if suffix == ".csv":
-        return _load_csv_rows(source_path)
-    if suffix == ".xlsx":
-        return _load_xlsx_rows(source_path)
-    raise ValueError(f"Unsupported recommendation matrix source: {source_path}")
+    try:
+        suffix = source_path.suffix.lower()
+        if suffix == ".csv":
+            return _load_csv_rows(source_path)
+        if suffix == ".xlsx":
+            return _load_xlsx_rows(source_path)
+        raise RecommendationMatrixArtifactError(
+            f"Unsupported recommendation matrix source: {source_path}"
+        )
+    except RecommendationMatrixArtifactError:
+        raise
+    except (
+        csv.Error,
+        ElementTree.ParseError,
+        IndexError,
+        KeyError,
+        UnicodeError,
+        ValueError,
+        zipfile.BadZipFile,
+    ) as error:
+        raise RecommendationMatrixArtifactError(
+            f"Recommendation matrix artifact is invalid: {source_path}"
+        ) from error
 
 
 def _load_csv_rows(source_path: Path) -> list[dict[str, str]]:
@@ -428,7 +448,9 @@ def _first_sheet_name(workbook: zipfile.ZipFile) -> str:
         if name.startswith("xl/worksheets/sheet") and name.endswith(".xml")
     )
     if not candidates:
-        raise ValueError("No worksheets found in recommendation matrix workbook")
+        raise RecommendationMatrixArtifactError(
+            "No worksheets found in recommendation matrix workbook"
+        )
     return candidates[0]
 
 
@@ -654,14 +676,24 @@ def _parse_float(value: str | None) -> float | None:
     stripped = value.strip()
     if not stripped:
         return None
-    return float(stripped)
+    try:
+        return float(stripped)
+    except (OverflowError, ValueError) as error:
+        raise RecommendationMatrixArtifactError(
+            f"Recommendation matrix contains an invalid numeric value: {stripped}"
+        ) from error
 
 
 def _parse_int(value: str | None) -> int | None:
     parsed = _parse_float(value)
     if parsed is None:
         return None
-    return int(parsed)
+    try:
+        return int(parsed)
+    except (OverflowError, ValueError) as error:
+        raise RecommendationMatrixArtifactError(
+            f"Recommendation matrix contains an invalid integer value: {value}"
+        ) from error
 
 
 def _to_float(value: Any) -> float | None:
@@ -708,18 +740,32 @@ def recommendation_matrix_source_generated_at(
     if source_path.suffix.lower() != ".xlsx":
         return None
 
-    with zipfile.ZipFile(source_path) as workbook:
-        try:
-            core_xml = workbook.read("docProps/core.xml")
-        except KeyError:
-            return None
+    try:
+        with zipfile.ZipFile(source_path) as workbook:
+            try:
+                core_xml = workbook.read("docProps/core.xml")
+            except KeyError:
+                return None
+        root = ElementTree.fromstring(core_xml)
+    except RecommendationMatrixArtifactError:
+        raise
+    except (ElementTree.ParseError, UnicodeError, zipfile.BadZipFile) as error:
+        raise RecommendationMatrixArtifactError(
+            f"Recommendation matrix workbook metadata is invalid: {source_path}"
+        ) from error
 
-    root = ElementTree.fromstring(core_xml)
     namespace = {
         "dcterms": "http://purl.org/dc/terms/",
     }
     for property_name in ("modified", "created"):
         value = root.findtext(f"dcterms:{property_name}", namespaces=namespace)
         if value:
-            return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+            try:
+                return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(
+                    UTC
+                )
+            except ValueError as error:
+                raise RecommendationMatrixArtifactError(
+                    "Recommendation matrix workbook has invalid metadata timestamps"
+                ) from error
     return None

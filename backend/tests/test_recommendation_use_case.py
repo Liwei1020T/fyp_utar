@@ -39,7 +39,6 @@ class FakeProfileRepository:
         profile,
         *,
         username=None,
-        commit=True,
     ):
         raise NotImplementedError
 
@@ -101,7 +100,6 @@ class FakeRecommendationRepository:
         user_id: str,
         source_layer: str,
         entries: list[dict[str, float | str | None]],
-        commit: bool = True,
     ):
         assert user_id == "user-1"
         assert source_layer == PREFERENCE_SOURCE_LAYER
@@ -122,7 +120,6 @@ class FakeRecommendationRepository:
         user_id: str,
         algorithm_version: str,
         results: list[dict[str, object]],
-        commit: bool = True,
     ) -> list[CachedRecommendationRecord]:
         assert user_id == "user-1"
         assert algorithm_version == ALGORITHM_VERSION
@@ -179,7 +176,6 @@ class FakeRecommendationLogRepository:
         request_payload: dict[str, object],
         response_payload: dict[str, object],
         algorithm_version: str,
-        commit: bool = True,
     ) -> None:
         self.last_log = {
             "user_id": user_id,
@@ -198,7 +194,6 @@ class FakeRecommendationLogRepository:
         algorithm_version: str,
         matrix_version: str | None,
         feature_source_version: str | None,
-        commit: bool = True,
     ) -> None:
         self.last_run = {
             "user_id": user_id,
@@ -232,18 +227,6 @@ class FakeRecommendationLogRepository:
 
     def get_run(self, run_id: str):
         raise NotImplementedError
-
-
-class FakeTransactionManager:
-    def __init__(self) -> None:
-        self.commit_count = 0
-        self.rollback_count = 0
-
-    def commit(self) -> None:
-        self.commit_count += 1
-
-    def rollback(self) -> None:
-        self.rollback_count += 1
 
 
 def test_fyp1_scorer_uses_required_formula_and_explainability() -> None:
@@ -289,7 +272,6 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
         profile_repository=FakeProfileRepository(),
         recommendation_repository=repository,
         recommendation_log_repository=logs,
-        transaction_manager=FakeTransactionManager(),
     )
 
     result = use_case.execute_preview(user_id="user-1", request=_attacking_request())
@@ -358,7 +340,6 @@ def test_execute_profile_persists_true_profile_snapshot() -> None:
         profile_repository=FakeProfileRepository(profile),
         recommendation_repository=repository,
         recommendation_log_repository=logs,
-        transaction_manager=FakeTransactionManager(),
     )
 
     result = use_case.execute_profile(user_id="user-1", top_n=3)
@@ -380,7 +361,6 @@ def test_cached_recommendation_detail_returns_rationale() -> None:
         profile_repository=FakeProfileRepository(),
         recommendation_repository=repository,
         recommendation_log_repository=logs,
-        transaction_manager=FakeTransactionManager(),
     )
     use_case._execute(user_id="user-1", request=_attacking_request(), persist=True)
 
@@ -688,7 +668,6 @@ def _score_custom_candidates(
         profile_repository=FakeProfileRepository(),
         recommendation_repository=FakeRecommendationRepository(candidates),
         recommendation_log_repository=FakeRecommendationLogRepository(),
-        transaction_manager=FakeTransactionManager(),
     ).execute_preview(user_id="user-1", request=request)
 
 

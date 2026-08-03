@@ -3,7 +3,6 @@ from __future__ import annotations
 from logging.config import fileConfig
 
 from alembic import context
-from alembic.script.base import Script
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -20,22 +19,6 @@ config.set_main_option("sqlalchemy.url", get_settings().sqlalchemy_database_url)
 target_metadata = Base.metadata
 
 ALEMBIC_IGNORED_TABLES = {"string_catalog_items_legacy"}
-
-
-_original_list_py_dir = Script._list_py_dir
-
-
-@classmethod
-def _filtered_list_py_dir(cls, scriptdir, path):
-    paths = _original_list_py_dir(scriptdir, path)
-    return [
-        candidate
-        for candidate in paths
-        if not candidate.name.startswith("._") and not candidate.name.startswith(".__")
-    ]
-
-
-Script._list_py_dir = _filtered_list_py_dir
 
 
 def include_object(object_, name, type_, reflected, compare_to) -> bool:

@@ -35,7 +35,6 @@ class SqlAlchemyRecommendationLogRepository:
         request_payload: dict[str, Any],
         response_payload: dict[str, Any],
         algorithm_version: str,
-        commit: bool = True,
     ) -> None:
         self.db.add(
             RecommendationLog(
@@ -47,10 +46,7 @@ class SqlAlchemyRecommendationLogRepository:
                 algorithm_version=algorithm_version,
             )
         )
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
 
     def create_run(
         self,
@@ -62,7 +58,6 @@ class SqlAlchemyRecommendationLogRepository:
         algorithm_version: str,
         matrix_version: str | None,
         feature_source_version: str | None,
-        commit: bool = True,
     ) -> None:
         run = RecommendationRun(
             user_id=user_id,
@@ -92,10 +87,7 @@ class SqlAlchemyRecommendationLogRepository:
                     rationale=rationale,
                 )
             )
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
 
     def list_logs(
         self,

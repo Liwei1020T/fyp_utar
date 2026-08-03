@@ -322,7 +322,7 @@ class SqlAlchemyCatalogRepository:
             for entry in matrix_values
         ]
         self.db.add(item)
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(item.catalog_id, include_inactive=True)  # type: ignore[return-value]
 
     def update(self, string_id: str, values: dict[str, object]) -> StringItem:
@@ -335,7 +335,7 @@ class SqlAlchemyCatalogRepository:
         inventory_values = self._mapping(values.get("inventory") or {})
         if inventory_values:
             self._apply_inventory_values(item, inventory_values)
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     def deactivate(self, string_id: str) -> StringItem:
@@ -344,14 +344,14 @@ class SqlAlchemyCatalogRepository:
         item.is_active = False
         if item.inventory_item is not None:
             item.inventory_item.is_active = False
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     def update_inventory(self, string_id: str, values: dict[str, object]) -> StringItem:
         item = self.db.get(StringCatalogItem, string_id)
         assert item is not None
         self._apply_inventory_values(item, values)
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     @staticmethod
@@ -462,7 +462,7 @@ class SqlAlchemyCatalogRepository:
         item = self.db.get(StringOfficialPerformance, string_id)
         assert item is not None
         self._apply_official_performance_values(item, values)
-        self.db.commit()
+        self.db.flush()
         refreshed = self.db.get(StringOfficialPerformance, string_id)
         assert refreshed is not None
         return to_official_performance(refreshed)  # type: ignore[return-value]
@@ -489,21 +489,17 @@ class SqlAlchemyCatalogRepository:
     ) -> StringItem:
         item = self.db.get(StringCatalogItem, string_id)
         assert item is not None
-        try:
-            self._apply_catalog_values(item, catalog_values)
-            if inventory_values:
-                self._apply_inventory_values(item, inventory_values)
-            if official_performance_values:
-                official = item.official_performance
-                assert official is not None
-                self._apply_official_performance_values(
-                    official,
-                    official_performance_values,
-                )
-            self.db.commit()
-        except Exception:
-            self.db.rollback()
-            raise
+        self._apply_catalog_values(item, catalog_values)
+        if inventory_values:
+            self._apply_inventory_values(item, inventory_values)
+        if official_performance_values:
+            official = item.official_performance
+            assert official is not None
+            self._apply_official_performance_values(
+                official,
+                official_performance_values,
+            )
+        self.db.flush()
         return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     def list_inventory_movements(
@@ -587,7 +583,7 @@ class SqlAlchemyCatalogRepository:
             self.db,
             source_path,
         )
-        self.db.commit()
+        self.db.flush()
         return report
 
     def list_active_catalog(self) -> list[StringItem]:

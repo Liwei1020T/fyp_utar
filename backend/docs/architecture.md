@@ -22,7 +22,7 @@ Allowed dependency direction:
 
 - `entrypoints -> use_cases`
 - `entrypoints -> adapters` for dependency composition and compact
-  single-adapter transactional modules
+  single-adapter persistence modules
 - `use_cases -> domain`
 - `use_cases -> ports`
 - `adapters -> ports`
@@ -41,9 +41,8 @@ Explicitly avoided:
   - FastAPI app bootstrap, middleware, exception handlers, startup seeding
 - `app/entrypoints/api/routes/`
   - Request/response handlers grouped by API surface; multi-step reusable
-    behavior delegates to use cases, while compact single-adapter CRUD and
-    transactional flows may remain local until a second implementation or
-    reusable policy creates a real seam
+    behavior delegates to use cases. Admin engagement and analytics have
+    separate route modules so their SQL and provider helpers stay local.
 - `app/use_cases/`
   - One file per business action or closely related action
 - `app/domain/`
@@ -109,6 +108,28 @@ The old monolithic ORM module was split into per-domain model files:
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
 The current revision chain has one head at `20260731_0026`.
 
+## Transaction Contract
+
+- `get_db()` owns the request transaction: every FastAPI `get_db` dependency is
+  function-scoped, so commit/rollback and transaction effects finish before
+  `http.response.start`; the session closes in all cases.
+- `app/shared/transaction_effects.py` journals filesystem changes against that
+  session: newly written upload files are removed on rollback or commit
+  failure, while replaced/removed old files run only after a successful commit.
+- Repositories remain commit-free. Route-local persistence calls `flush()` when
+  generated IDs or constraint checks are needed; notification send/resend is
+  the sole current exception, explicitly committing `pending` before provider
+  I/O.
+- Multi-repository use cases compose writes without a transaction-manager port.
+  Failure-injection tests prove profile, recommendation, reset, and check-in
+  writes roll back together.
+- Expected invalid reset-code attempts return an error result to the route so
+  the security attempt counter is committed before the route returns HTTP 400.
+
+Fresh store defaults are deliberately non-operational: every business-hours
+day starts closed and store contact/address/pricing remain unconfigured until
+an administrator saves real values.
+
 The current commerce endpoint is a compact transactional boundary in
 `commerce_routes.py`. It uses row locks around booking, user-wallet, and
 payment transitions. Split it into provider-specific use cases only when an
@@ -126,11 +147,23 @@ external gateway/webhook is selected.
 ## Catalog Boundary
 
 - Master catalog truth lives in `strings`
+- The approved catalog JSON is bootstrap-only: it is read when `strings` is
+  empty, while later startups use persisted catalog rows.
 - Community counts/tags live in `string_catalog_metrics` and `string_catalog_tags`
 - Official/manual performance lives in `string_official_performance`
 - Store pricing and stock live in `inventory_items`
 - Recommendation features live in `string_recommendation_matrix`
 - The primary derived item-side matrix layer is the V9 NLP/review workbook imported as `source_layer='nlp_review'`
+- The workbook is an optional startup import. If it is absent, persisted catalog
+  and official-performance data remain usable and health reports
+  `catalog_fallback`; an imported matrix remains available from the database
+  even when the source workbook is later offline. Health reports `imported` only
+  when the configured source digest matches the persisted `source_version`, and
+  reports `stale` for a mismatch.
+- A malformed startup artifact is isolated in a savepoint: its partial writes
+  roll back, the persisted matrix remains active, and startup logs the rejection.
+- Manual artifact parsing/validation failures return HTTP 400; database and
+  filesystem failures are not converted into artifact errors.
 - Older `hybrid_derived` rows remain compatibility data, not master catalog truth
 - The active scorer uses official performance plus NLP/review matrix values for PreferenceMatch; structured catalog data is reserved for RuleFit, filtering, and display
 
@@ -170,12 +203,30 @@ The main weakness was runtime usage. Before this refactor, the public recommende
   explicit standalone compatibility package and is not wired into unified
   FastAPI dependencies or startup.
 
+## Authentication Abuse Boundary
+
+Login, reset-code request, and reset submission use a small sliding-window
+limiter keyed by the server-observed client address plus normalized phone
+number. The limiter is process-local for the current single-process FYP
+deployment; a multi-worker deployment must enforce the equivalent policy at a
+shared gateway or distributed store.
+
+## Notification Delivery Boundary
+
+Admin Expo notification requests use an explicit two-phase boundary: the route
+commits `pending` before provider I/O, then the provider runs with no original
+request transaction active. The outcome is committed, refreshed, and read in a
+separate short SQLAlchemy session, and enabled send/resend responses return the
+truthful final `sent`/`failed` state. A queue is intentionally out of scope for
+the current single-process FYP deployment.
+
 ## Validation Contract
 
 Primary validation commands:
 
 ```bash
 cd backend
+./scripts/alembic heads
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
 ./.venv/bin/mypy app ai_service tests

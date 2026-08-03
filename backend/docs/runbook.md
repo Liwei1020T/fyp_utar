@@ -13,7 +13,7 @@ Then prepare the backend environment:
 ```bash
 cd backend
 uv sync --extra dev
-./.venv/bin/alembic upgrade head
+./scripts/alembic upgrade head
 ```
 
 ## 2. Start the Unified Backend
@@ -49,7 +49,7 @@ cd backend
 - Recommendation generation uses `0.60 * PreferenceMatch + 0.15 * RuleFit + 0.15 * BudgetFit + 0.10 * ConfidenceScore`.
 - Complete profile saves and `POST /api/recommendations/generate` persist raw 1-to-10 scores plus normalized weights in `user_preference_matrix` with `source_layer='profile'`.
 - Generated profile recommendations are cached in `recommendation_score_cache` and can be inspected through `GET /api/recommendations/{user_id}` and `GET /api/recommendations/{user_id}/{catalog_id}`.
-- Startup seeding imports the V9 workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` and keeps it separate from official performance data.
+- Startup seeding imports the V9 workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` whenever the workbook exists. A missing workbook does not prevent startup: persisted matrix rows remain usable, health reports `stale` when their `source_version` no longer matches the configured artifact, and reports `catalog_fallback` when none have been imported.
 - Re-import compares artifact provenance, including `source_generated_at`, so a stale timestamp is repaired even when feature values are unchanged.
 - Import first sanitizes the workbook to the live runtime whitelist: matching metadata plus `repulsion` (from source `attack`), `comfort`, `control`, `durability`, `elasticity`, `sound`, `string_movement`, and `tension_retention`.
 - `BudgetFit` follows the saved `budget_tier` directly; missing price falls back to a neutral budget score.
@@ -60,7 +60,11 @@ cd backend
 - Admin debug support:
   - `GET /api/admin/strings/{id}/recommendation-matrix` shows effective scores plus raw matrix rows grouped by source layer.
   - `POST /api/admin/recommendation-matrix/import` safely re-imports the configured CSV or XLSX artifact and reports matched, inserted, updated, and unmatched counts.
-- Alembic is the sole runtime schema owner. Run `./.venv/bin/alembic upgrade head` before starting the backend after pulling schema changes.
+- Admin Expo notification delivery commits `pending` before provider I/O, then
+  persists and returns the final provider outcome (`sent` or `failed`) from a
+  separate session. A provider failure is recorded as `failed`; it is not
+  retried by a queue.
+- Alembic is the sole runtime schema owner. Run `./scripts/alembic upgrade head` before starting the backend after pulling schema changes.
 - Privileged seed users stay disabled unless `SEED_ADMIN_ENABLED=true` is
   configured with a non-empty username/password and a valid 9-to-15-digit
   companion phone number. Seed credentials belong in local process/env state,

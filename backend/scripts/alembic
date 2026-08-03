@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+find "$script_dir/../migrations/versions" -maxdepth 1 -name '._*.py' -delete
+exec "$script_dir/../.venv/bin/alembic" "$@"

@@ -13,5 +13,4 @@ class ProfileRepository(Protocol):
         profile: PlayerProfile,
         *,
         username: str | None = None,
-        commit: bool = True,
     ) -> PlayerProfile: ...

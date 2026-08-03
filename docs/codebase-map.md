@@ -120,7 +120,8 @@ Query cache owner.
 | Path | Purpose | Open When |
 | --- | --- | --- |
 | [mobile/store/appStore.ts](../mobile/store/appStore.ts) | Zustand source of truth for authenticated session state, API response snapshots, booking drafts, compare selection, single-store settings, and selector hooks. | UI state is stale, a successful API response needs caching, or session behavior changes. |
-| [mobile/services/backendApi.ts](../mobile/services/backendApi.ts) | Fetch wrapper and typed backend endpoint methods; uses `EXPO_PUBLIC_API_BASE_URL` with a 12s timeout. | Adding or changing live backend calls. |
+| [mobile/services/backendClient.ts](../mobile/services/backendClient.ts) | Shared fetch, timeout, error parsing, form/text response, and token-specific 401 behavior. | Changing transport behavior. |
+| [mobile/services/backendApi.ts](../mobile/services/backendApi.ts) | Typed endpoint facade using `EXPO_PUBLIC_API_BASE_URL`. | Adding or changing live backend calls. |
 | [mobile/services/backendMappers.ts](../mobile/services/backendMappers.ts) | Converts backend snake_case DTOs into mobile domain models and builds backend payloads from mobile state. | Backend contract changes or mobile/backend field names diverge. |
 | [mobile/types/domain.ts](../mobile/types/domain.ts) | Canonical mobile domain types: users, strings, bookings, recommendations, payments, chat, notifications, rackets, business hours, wallet, settings. | Any screen/domain shape changes. |
 | [mobile/types/backend.ts](../mobile/types/backend.ts) | Backend API response/payload TypeScript interfaces. | Backend API contract changes. |
@@ -185,7 +186,7 @@ unified startup.
 
 | Layer | Paths | Responsibility |
 | --- | --- | --- |
-| Entrypoints | [backend/app/entrypoints/api/routes](../backend/app/entrypoints/api/routes) | FastAPI handlers grouped by API surface. Reusable multi-step behavior delegates to use cases; compact single-adapter transactions may remain local. |
+| Entrypoints | [backend/app/entrypoints/api/routes](../backend/app/entrypoints/api/routes) | FastAPI handlers grouped by API surface. Reusable multi-step behavior delegates to use cases; request transaction ownership stays in `get_db`. |
 | Use cases | [backend/app/use_cases](../backend/app/use_cases) | Business actions; one class per action or closely related action. |
 | Domain | [backend/app/domain](../backend/app/domain) | Pure entities, enums, and policies. No FastAPI or SQLAlchemy dependencies. |
 | Ports | [backend/app/ports](../backend/app/ports) | Repository/service protocols consumed by use cases. |
@@ -202,7 +203,9 @@ unified startup.
 | [backend/app/entrypoints/api/routes/catalog_routes.py](../backend/app/entrypoints/api/routes/catalog_routes.py) | Public string catalog list/detail. |
 | [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail, cancellation, and QR token issue. |
 | [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Recommendation preview/profile endpoints. |
-| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, secure check-in, feedback, notifications, queue, settings, analytics, and logs. |
+| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, secure check-in, queue, settings, and recommendation logs. |
+| [backend/app/entrypoints/api/routes/admin_engagement_routes.py](../backend/app/entrypoints/api/routes/admin_engagement_routes.py) | Admin feedback export, device tokens, notification delivery, and resend. |
+| [backend/app/entrypoints/api/routes/admin_analytics_routes.py](../backend/app/entrypoints/api/routes/admin_analytics_routes.py) | Admin analytics summary and popular-string reporting. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
 | [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes/payments, wallet ledger, top-ups, and admin verification. |
 | [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
@@ -235,15 +238,15 @@ reuse seam.
 
 | Path | Purpose |
 | --- | --- |
-| [backend/app/adapters/persistence/sqlalchemy/session.py](../backend/app/adapters/persistence/sqlalchemy/session.py) | SQLAlchemy engine/session lifecycle, schema helpers, DB health checks. |
+| [backend/app/adapters/persistence/sqlalchemy/session.py](../backend/app/adapters/persistence/sqlalchemy/session.py) | SQLAlchemy engine/session lifecycle, request commit/rollback boundary, schema helpers, and DB health checks. |
 | [backend/app/adapters/persistence/sqlalchemy/base.py](../backend/app/adapters/persistence/sqlalchemy/base.py) | Declarative base. |
 | [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, conversations, notifications, rackets/feedback, commerce, business hours, settings, recommendation logs/runs, and password reset codes. |
 | [backend/app/adapters/persistence/sqlalchemy/repositories](../backend/app/adapters/persistence/sqlalchemy/repositories) | Concrete repository implementations and ORM-domain mappers. |
-| [backend/app/adapters/persistence/sqlalchemy/transaction_manager.py](../backend/app/adapters/persistence/sqlalchemy/transaction_manager.py) | Shared SQLAlchemy commit/rollback boundary for multi-repository use cases. |
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
 | [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260731_0026`. |
+| [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
 
 ### Backend AI Compatibility Package

@@ -104,6 +104,7 @@ def test_catalog_editor_rolls_back_every_section_after_validation_failure() -> N
                 },
             )
 
+        db.rollback()
         persisted = repository.get_by_id(
             string_item.id,
             include_inactive=True,

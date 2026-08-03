@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+from xml.etree import ElementTree
+from zipfile import BadZipFile
+
 from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -31,77 +36,29 @@ from app.domain.auth.entities import UserRole
 from app.shared.errors import ConflictError
 
 
+logger = logging.getLogger(__name__)
+
+
 DEFAULT_BUSINESS_HOURS_DAYS = [
     {
-        "day": "Monday",
-        "is_open": True,
-        "open_time": "11:00",
-        "close_time": "20:00",
-        "break_start": "15:00",
-        "break_end": "16:00",
+        "day": day,
+        "is_open": False,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "break_start": None,
+        "break_end": None,
         "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 3,
-    },
-    {
-        "day": "Tuesday",
-        "is_open": True,
-        "open_time": "11:00",
-        "close_time": "20:00",
-        "break_start": "15:00",
-        "break_end": "16:00",
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 3,
-    },
-    {
-        "day": "Wednesday",
-        "is_open": True,
-        "open_time": "11:00",
-        "close_time": "20:00",
-        "break_start": "15:00",
-        "break_end": "16:00",
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 3,
-    },
-    {
-        "day": "Thursday",
-        "is_open": True,
-        "open_time": "11:00",
-        "close_time": "21:00",
-        "break_start": "15:00",
-        "break_end": "16:00",
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 3,
-    },
-    {
-        "day": "Friday",
-        "is_open": True,
-        "open_time": "11:00",
-        "close_time": "21:00",
-        "break_start": "15:00",
-        "break_end": "16:00",
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 4,
-    },
-    {
-        "day": "Saturday",
-        "is_open": True,
-        "open_time": "10:00",
-        "close_time": "21:00",
-        "break_start": "14:00",
-        "break_end": "15:00",
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 4,
-    },
-    {
-        "day": "Sunday",
-        "is_open": True,
-        "open_time": "10:00",
-        "close_time": "18:00",
-        "break_start": "13:30",
-        "break_end": "14:30",
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 3,
-    },
+        "max_bookings_per_slot": 1,
+    }
+    for day in (
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    )
 ]
 
 DEFAULT_SPECIAL_CLOSED_DATES: list[str] = []
@@ -179,15 +136,15 @@ def ensure_seed_user(
 
 def ensure_catalog_seeded(db: Session) -> None:
     settings = get_settings()
-    seed_rows = seed_catalog_rows(settings.approved_strings_path)
-    for brand in seed_rows["brands"]:
-        db.merge(Brand(**brand))
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
     db.flush()
 
     count = db.execute(select(func.count()).select_from(StringCatalogItem)).scalar_one()
     if count == 0:
+        seed_rows = seed_catalog_rows(settings.approved_strings_path)
+        for brand in seed_rows["brands"]:
+            db.merge(Brand(**brand))
         for payload in seed_rows["items"]:
             item = StringCatalogItem(**payload["catalog"])
             item.metrics = StringCatalogMetric(
@@ -212,12 +169,23 @@ def ensure_catalog_seeded(db: Session) -> None:
             db.add(item)
         db.flush()
 
-    if not settings.recommendation_matrix_path.is_file():
-        raise FileNotFoundError(
-            "Canonical recommendation matrix artifact is missing: "
-            f"{settings.recommendation_matrix_path}"
+    if settings.recommendation_matrix_path.is_file():
+        _import_startup_recommendation_matrix(
+            db,
+            settings.recommendation_matrix_path,
         )
-    import_recommendation_matrix_csv(db, settings.recommendation_matrix_path)
+
+
+def _import_startup_recommendation_matrix(db: Session, source_path: Path) -> None:
+    try:
+        with db.begin_nested():
+            import_recommendation_matrix_csv(db, source_path)
+    except (BadZipFile, ElementTree.ParseError, OSError, ValueError) as error:
+        logger.warning(
+            "Recommendation matrix startup import skipped for %s: %s",
+            source_path,
+            error,
+        )
 
 
 def ensure_store_defaults(db: Session) -> None:

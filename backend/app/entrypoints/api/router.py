@@ -6,6 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.entrypoints.api.health import health_payload
+from app.entrypoints.api.routes.admin_analytics_routes import (
+    router as admin_analytics_router,
+)
+from app.entrypoints.api.routes.admin_engagement_routes import (
+    router as admin_engagement_router,
+)
 from app.entrypoints.api.routes.admin_routes import router as admin_router
 from app.entrypoints.api.routes.auth_routes import router as auth_router
 from app.entrypoints.api.routes.booking_conversation_routes import (
@@ -33,7 +39,7 @@ router = APIRouter()
 
 
 @router.get("/health")
-def api_health(db: Session = Depends(get_db)) -> dict[str, object]:
+def api_health(db: Session = Depends(get_db, scope="function")) -> dict[str, object]:
     return health_payload(db)
 
 
@@ -49,4 +55,6 @@ router.include_router(racket_feedback_router)
 router.include_router(commerce_router)
 router.include_router(recommendation_router)
 router.include_router(admin_router)
+router.include_router(admin_engagement_router)
+router.include_router(admin_analytics_router)
 router.include_router(store_router)

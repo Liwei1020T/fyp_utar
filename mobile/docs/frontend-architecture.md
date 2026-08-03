@@ -34,7 +34,7 @@ The player home `Trending Strings` carousel is now backend-backed through admin 
 ### State and data
 
 - Zustand for authenticated session state, live backend snapshots, and transient UI drafts
-- Explicit API hydration through `services/backendApi.ts` and DTO mapping through `services/backendMappers.ts`
+- Shared transport through `services/backendClient.ts`, typed endpoint calls through `services/backendApi.ts`, and DTO mapping through `services/backendMappers.ts`
 
 ### Forms and validation
 
@@ -66,7 +66,8 @@ flowchart TD
     J --> L[Player Tabs + Detail Screens]
     K --> M[Admin Tabs + Detail Screens]
 
-    R[Unified Python API app/main.py] --> S[services/backendApi.ts]
+    R[Unified Python API app/main.py] --> C4[services/backendClient.ts]
+    C4 --> S[services/backendApi.ts]
     S --> T[services/backendMappers.ts]
     T --> O
     O --> L
@@ -246,7 +247,8 @@ Examples:
 
 ### 7.2 Unified backend bridge
 
-`services/backendApi.ts` and `services/backendMappers.ts` provide:
+`services/backendClient.ts`, `services/backendApi.ts`, and
+`services/backendMappers.ts` provide:
 
 - phone-based player auth against the Python backend
 - player password recovery code request/reset against the Python backend
@@ -261,6 +263,13 @@ Examples:
   and recommendation-audit operations
 
 The mapped backend responses are normalized back into the RN domain model so most screens can keep their existing structure.
+
+The transport module owns the 12-second timeout, JSON/form/text response
+handling, normalized backend errors, and token-specific 401 callback. The app
+expires a session only when the failed token still matches the current token;
+a late response from an older request cannot log out a newer session. Backend
+tests compare the facade's route strings with generated OpenAPI paths, and the
+pure session policy has a Node built-in test.
 
 All writes reach a backend endpoint before the store is updated. A missing
 token or failed request leaves the previous snapshot unchanged and presents an

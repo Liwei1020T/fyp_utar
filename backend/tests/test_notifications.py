@@ -5,13 +5,19 @@ from dataclasses import dataclass
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.models.notification import (
+    NotificationDelivery,
+)
 from app.adapters.persistence.sqlalchemy.models.notification import NotificationRead
 from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationRun,
 )
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
+from app.config.settings import get_settings
 from app.main import app
+from app.entrypoints.api.routes import admin_engagement_routes
 
 
 client = TestClient(app)
@@ -259,3 +265,142 @@ def test_mark_read_persists_and_rejects_foreign_or_unbounded_ids(
         ).status_code
         == 422
     )
+
+
+def test_admin_push_delivery_returns_persisted_outcome_and_resends_once(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    token_response = client.post(
+        "/api/devices/push-token",
+        headers=_headers(notification_activity.owner_token),
+        json={
+            "token": "ExponentPushToken[transaction-test]",
+            "platform": "ios",
+        },
+    )
+    assert token_response.status_code == 200
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "expo_push_enabled", True)
+    monkeypatch.setattr(settings, "expo_push_endpoint", "https://expo.test/send")
+    observed_statuses: list[str] = []
+    provider_calls: list[object] = []
+
+    class FakeResponse:
+        def __init__(self, body: bytes) -> None:
+            self.body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return self.body
+
+    def fake_urlopen(request, timeout: int):
+        assert request.full_url == "https://expo.test/send"
+        assert timeout == 5
+        provider_calls.append(request)
+        with SessionLocal() as db:
+            notification = db.scalar(
+                select(NotificationDelivery).order_by(
+                    NotificationDelivery.created_at.desc()
+                )
+            )
+            assert notification is not None
+            observed_statuses.append(notification.status)
+        if len(provider_calls) == 1:
+            return FakeResponse(b'{"data":{"status":"ok","id":"ticket-1"}}')
+        return FakeResponse(
+            b'{"data":{"status":"error","message":"provider rejected"}}'
+        )
+
+    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fake_urlopen)
+    response = client.post(
+        "/api/admin/notifications",
+        headers=_headers(_admin_token()),
+        json={
+            "user_id": notification_activity.owner_id,
+            "category": "service",
+            "title": "Delivery check",
+            "body": "The provider should run after commit.",
+            "route": "/player/notifications",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "sent"
+    assert response.json()["provider_message"] == "ticket-1"
+    assert observed_statuses == ["pending"]
+    notification_id = response.json()["id"]
+    with SessionLocal() as db:
+        notification = db.get(NotificationDelivery, notification_id)
+        assert notification is not None
+        assert notification.status == "sent"
+        assert notification.attempts == 1
+        assert notification.provider_message == "ticket-1"
+
+    resend_response = client.post(
+        f"/api/admin/notifications/{notification_id}/resend",
+        headers=_headers(_admin_token()),
+    )
+    assert resend_response.status_code == 200
+    assert resend_response.json()["status"] == "failed"
+    assert resend_response.json()["provider_message"] == "provider rejected"
+    assert observed_statuses == ["pending", "pending"]
+    assert len(provider_calls) == 2
+    with SessionLocal() as db:
+        notification = db.get(NotificationDelivery, notification_id)
+        assert notification is not None
+        assert notification.status == "failed"
+        assert notification.attempts == 2
+
+
+def test_admin_push_delivery_skips_provider_when_initial_commit_fails(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    token_response = client.post(
+        "/api/devices/push-token",
+        headers=_headers(notification_activity.owner_token),
+        json={
+            "token": "ExponentPushToken[commit-failure-test]",
+            "platform": "ios",
+        },
+    )
+    assert token_response.status_code == 200
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "expo_push_enabled", True)
+    monkeypatch.setattr(settings, "expo_push_endpoint", "https://expo.test/send")
+    provider_calls: list[object] = []
+
+    def fake_urlopen(*args, **kwargs):
+        provider_calls.append((args, kwargs))
+        raise AssertionError("provider must not run before the initial commit")
+
+    def fail_commit(_: Session) -> None:
+        raise RuntimeError("forced initial notification commit failure")
+
+    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fake_urlopen)
+    admin_token = _admin_token()
+    monkeypatch.setattr(Session, "commit", fail_commit)
+
+    with pytest.raises(
+        RuntimeError, match="forced initial notification commit failure"
+    ):
+        client.post(
+            "/api/admin/notifications",
+            headers=_headers(admin_token),
+            json={
+                "user_id": notification_activity.owner_id,
+                "category": "service",
+                "title": "Commit failure check",
+                "body": "Provider must not run.",
+            },
+        )
+
+    assert provider_calls == []

@@ -242,7 +242,7 @@ def list_notifications(
     limit: int = Query(default=100, ge=1, le=MAX_NOTIFICATION_EVENTS),
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[NotificationOut]:
     preferences = notification_preferences_to_dto(
         profile_repository.get_notification_preferences(current_user.user_id)
@@ -263,7 +263,7 @@ def list_notifications(
 def mark_notifications_read(
     payload: MarkNotificationsReadPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> MarkNotificationsReadOut:
     event_ids = list(dict.fromkeys(payload.event_ids))
     owned_ids = {
@@ -291,7 +291,7 @@ def mark_notifications_read(
         for event_id in event_ids
         if event_id not in already_read
     )
-    db.commit()
+    db.flush()
     return MarkNotificationsReadOut(
         marked_count=len(event_ids),
         marked_read_ids=event_ids,
@@ -329,7 +329,7 @@ def _token_preview(token: str) -> str:
 def register_push_token(
     payload: PushTokenPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> DeviceTokenOut:
     record = db.scalar(select(DeviceToken).where(DeviceToken.token == payload.token))
     now = datetime.now(timezone.utc)
@@ -349,7 +349,7 @@ def register_push_token(
         record.device_name = payload.device_name
         record.enabled = payload.enabled
         record.last_seen_at = now
-    db.commit()
+    db.flush()
     db.refresh(record)
     return DeviceTokenOut(
         id=record.id,

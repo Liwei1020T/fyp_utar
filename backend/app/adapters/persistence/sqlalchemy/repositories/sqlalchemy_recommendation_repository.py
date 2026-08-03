@@ -65,7 +65,6 @@ class SqlAlchemyRecommendationRepository:
         user_id: str,
         source_layer: str,
         entries: list[dict[str, float | str | None]],
-        commit: bool = True,
     ) -> list[UserPreferenceVectorEntry]:
         self._lock_user(user_id)
         self.db.execute(
@@ -86,10 +85,7 @@ class SqlAlchemyRecommendationRepository:
                     preferred_max=entry.get("preferred_max"),
                 )
             )
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
         return self.list_user_preference_vector(
             user_id=user_id,
             source_layer=source_layer,
@@ -120,7 +116,6 @@ class SqlAlchemyRecommendationRepository:
         user_id: str,
         algorithm_version: str,
         results: list[dict[str, object]],
-        commit: bool = True,
     ) -> list[CachedRecommendationRecord]:
         self._lock_user(user_id)
         self.db.execute(
@@ -162,10 +157,7 @@ class SqlAlchemyRecommendationRepository:
                     ),
                 )
             )
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
         return self.get_cached_results(
             user_id=user_id,
             algorithm_version=algorithm_version,

@@ -41,7 +41,7 @@ class SqlAlchemyPasswordResetRepository:
             expires_at=expires_at,
         )
         self.db.add(record)
-        self.db.commit()
+        self.db.flush()
         self.db.refresh(record)
         return to_password_reset_code(record)
 
@@ -66,20 +66,15 @@ class SqlAlchemyPasswordResetRepository:
         if record is None:
             return
         record.attempt_count = attempt_count
-        self.db.commit()
+        self.db.flush()
 
     def mark_used(
         self,
         code_id: str,
         used_at: datetime,
-        *,
-        commit: bool = True,
     ) -> None:
         record = self.db.get(PasswordResetCode, code_id)
         if record is None:
             return
         record.used_at = used_at
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()

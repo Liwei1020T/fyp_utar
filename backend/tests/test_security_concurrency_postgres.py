@@ -110,6 +110,7 @@ def test_concurrent_reset_and_check_in_requests_keep_one_active_token() -> None:
                     dev_preview_enabled=False,
                     is_dev_like=False,
                 ).execute(phone_number=phone_number)
+                db.commit()
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             list(executor.map(lambda _: request_reset_code(), range(2)))
@@ -125,13 +126,15 @@ def test_concurrent_reset_and_check_in_requests_keep_one_active_token() -> None:
         def request_check_in_token() -> str:
             with session_factory() as db:
                 qr_barrier.wait()
-                return create_check_in_token(
+                response = create_check_in_token(
                     booking_id=booking_id,
                     current_user=current_user,
                     booking_repository=SqlAlchemyBookingRepository(db),
                     clock=FixedClock(),
                     db=db,
-                ).token
+                )
+                db.commit()
+                return response.token
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             raw_tokens = list(

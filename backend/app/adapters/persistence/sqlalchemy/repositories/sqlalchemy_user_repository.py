@@ -62,7 +62,7 @@ class SqlAlchemyUserRepository:
             auth_provider=auth_provider,
         )
         self.db.add(user)
-        self.db.commit()
+        self.db.flush()
         self.db.refresh(user)
         return to_user_account(user)
 
@@ -70,8 +70,6 @@ class SqlAlchemyUserRepository:
         self,
         user_id: str,
         password_hash: str,
-        *,
-        commit: bool = True,
     ) -> UserAccount | None:
         user = self.db.execute(
             select(User)
@@ -83,9 +81,6 @@ class SqlAlchemyUserRepository:
             return None
         user.password_hash = password_hash
         user.auth_version += 1
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
         self.db.refresh(user)
         return to_user_account(user)

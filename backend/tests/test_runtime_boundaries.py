@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import ast
+import re
 import subprocess
 import sys
 
 from app.config.settings import BACKEND_ROOT
+from app.main import app
 
 
 def test_use_cases_do_not_import_adapters_or_runtime_config() -> None:
@@ -43,3 +45,26 @@ if loaded:
     )
 
     assert completed.returncode == 0, completed.stderr
+
+
+def test_mobile_api_paths_exist_in_backend_openapi() -> None:
+    # ponytail: source-string route check; generate a typed client if schema-level
+    # request/response compatibility becomes necessary.
+    source = (BACKEND_ROOT.parent / "mobile" / "services" / "backendApi.ts").read_text(
+        encoding="utf-8"
+    )
+    mobile_paths = {
+        _normalize_route(path)
+        for _, path in re.findall(r"([`'\"])(/[a-z][^`'\"\s]*)", source)
+        if not path.startswith("//")
+    }
+    backend_paths = {
+        _normalize_route(path.removeprefix("/api")) for path in app.openapi()["paths"]
+    }
+
+    assert mobile_paths <= backend_paths, sorted(mobile_paths - backend_paths)
+
+
+def _normalize_route(path: str) -> str:
+    path = path.split("?", 1)[0].replace("${suffix}", "")
+    return re.sub(r"\$\{[^}]+\}|\{[^}]+\}", "{parameter}", path)

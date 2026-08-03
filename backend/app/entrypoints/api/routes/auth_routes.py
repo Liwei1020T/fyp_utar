@@ -4,6 +4,8 @@ from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
 from pydantic import BaseModel
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -30,7 +32,6 @@ from app.entrypoints.api.dependencies import get_current_user
 from app.entrypoints.api.dependencies import get_password_hasher
 from app.entrypoints.api.dependencies import get_password_reset_repository
 from app.entrypoints.api.dependencies import get_token_service
-from app.entrypoints.api.dependencies import get_transaction_manager
 from app.entrypoints.api.dependencies import get_user_repository
 from app.ports.services.password_hasher import PasswordHasher
 from app.use_cases.auth.get_current_user import GetCurrentUserUseCase
@@ -40,9 +41,19 @@ from app.use_cases.auth.request_password_reset import RequestPasswordResetUseCas
 from app.use_cases.auth.reset_password import ResetPasswordUseCase
 from app.shared.errors import ConflictError
 from app.shared.errors import UnauthorizedError
+from app.shared.http import error_payload
+from app.shared.rate_limit import SlidingWindowRateLimiter
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+_login_limiter = SlidingWindowRateLimiter(limit=5, window_seconds=60)
+_reset_request_limiter = SlidingWindowRateLimiter(limit=3, window_seconds=600)
+_reset_limiter = SlidingWindowRateLimiter(limit=10, window_seconds=600)
+
+
+def _rate_limit_key(request: Request, phone_number: str) -> str:
+    client_host = request.client.host if request.client else "unknown"
+    return f"{client_host}:{phone_number}"
 
 
 def _build_auth_response(user, token_service) -> AuthResponse:
@@ -96,6 +107,7 @@ def register(
 
 @router.post("/login", response_model=AuthResponse)
 def login(
+    http_request: Request,
     payload: dict = Body(...),
     user_repository=Depends(get_user_repository),
     password_hasher: PasswordHasher = Depends(get_password_hasher),
@@ -106,6 +118,8 @@ def login(
         payload,
         password_hasher=password_hasher,
     )
+    rate_limit_key = _rate_limit_key(http_request, request.phone_number)
+    _login_limiter.check(rate_limit_key)
     user = LoginUseCase(
         user_repository=user_repository,
         password_hasher=password_hasher,
@@ -113,6 +127,7 @@ def login(
         phone_number=request.phone_number,
         password=request.password,
     )
+    _login_limiter.clear(rate_limit_key)
     return _build_auth_response(user, token_service)
 
 
@@ -121,6 +136,7 @@ def login(
     response_model=ForgotPasswordRequestResponse,
 )
 def request_forgot_password_code(
+    http_request: Request,
     payload: dict = Body(...),
     user_repository=Depends(get_user_repository),
     password_reset_repository=Depends(get_password_reset_repository),
@@ -132,6 +148,7 @@ def request_forgot_password_code(
         payload,
         password_hasher=password_hasher,
     )
+    _reset_request_limiter.check(_rate_limit_key(http_request, request.phone_number))
     settings = get_settings()
     code = RequestPasswordResetUseCase(
         user_repository=user_repository,
@@ -147,31 +164,38 @@ def request_forgot_password_code(
 
 @router.post("/forgot-password/reset", response_model=MessageResponse)
 def reset_forgot_password(
+    http_request: Request,
     payload: dict = Body(...),
     user_repository=Depends(get_user_repository),
     password_reset_repository=Depends(get_password_reset_repository),
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     clock=Depends(get_clock),
-    transaction_manager=Depends(get_transaction_manager),
-) -> MessageResponse:
+) -> MessageResponse | JSONResponse:
     request = _validate_payload(
         ForgotPasswordResetRequest,
         payload,
         password_hasher=password_hasher,
     )
+    rate_limit_key = _rate_limit_key(http_request, request.phone_number)
+    _reset_limiter.check(rate_limit_key)
     settings = get_settings()
-    ResetPasswordUseCase(
+    error_message = ResetPasswordUseCase(
         user_repository=user_repository,
         password_reset_repository=password_reset_repository,
         password_hasher=password_hasher,
         clock=clock,
         max_attempts=settings.password_reset_code_max_attempts,
-        transaction_manager=transaction_manager,
     ).execute(
         phone_number=request.phone_number,
         verification_code=request.verification_code,
         new_password=request.new_password,
     )
+    if error_message is not None:
+        return JSONResponse(
+            status_code=400,
+            content=error_payload(code="bad_request", message=error_message),
+        )
+    _reset_limiter.clear(rate_limit_key)
     return MessageResponse(message="Password reset successful")
 
 
@@ -220,7 +244,7 @@ def change_password(
 def request_account_deletion(
     payload: AccountDeletionRequestPayload,
     current_user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> AccountDeletionRequestOut:
     existing = db.scalar(
         select(AccountDeletionRequest).where(
@@ -235,8 +259,7 @@ def request_account_deletion(
         reason=payload.reason,
     )
     db.add(request)
-    db.commit()
-    db.refresh(request)
+    db.flush()
     return AccountDeletionRequestOut(
         id=request.id,
         status=request.status,

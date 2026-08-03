@@ -51,45 +51,19 @@ import type {
   BackendWallet,
 } from '../types/backend';
 import { Platform } from 'react-native';
+import {
+  API_BASE_URL,
+  requestFormJson,
+  requestJson,
+  requestText,
+} from './backendClient';
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ||
-  'http://localhost:3001/api';
-const REQUEST_TIMEOUT_MS = 12000;
-let sessionExpiredHandler: ((expiredToken: string) => void) | null = null;
-
-export class BackendApiError extends Error {
-  constructor(
-    message: string,
-    readonly statusCode?: number,
-  ) {
-    super(message);
-  }
-}
-
-export function isBackendAuthError(error: unknown): error is BackendApiError {
-  return (
-    error instanceof BackendApiError &&
-    error.statusCode === 401
-  );
-}
-
-export function setBackendSessionExpiredHandler(
-  handler: ((expiredToken: string) => void) | null,
-) {
-  sessionExpiredHandler = handler;
-  return () => {
-    if (sessionExpiredHandler === handler) {
-      sessionExpiredHandler = null;
-    }
-  };
-}
-
-type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  body?: unknown;
-  token?: string | null;
-};
+export {
+  BackendApiError,
+  isBackendAuthError,
+  resolveBackendMediaUrl,
+  setBackendSessionExpiredHandler,
+} from './backendClient';
 
 export type BackendUploadFile = {
   uri: string;
@@ -98,141 +72,6 @@ export type BackendUploadFile = {
 };
 
 export type BackendBookingPhotoType = 'racket' | 'service_progress' | 'other';
-
-function apiRootUrl() {
-  return API_BASE_URL.replace(/\/api\/?$/, '');
-}
-
-export function resolveBackendMediaUrl(value?: string | null) {
-  if (!value) {
-    return undefined;
-  }
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
-  return `${apiRootUrl()}${value.startsWith('/') ? value : `/${value}`}`;
-}
-
-async function requestJson<T>(
-  path: string,
-  { method = 'GET', body, token }: RequestOptions = {},
-): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  let response: Response;
-
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method,
-      headers: {
-        Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new BackendApiError(
-        `The backend did not respond within ${REQUEST_TIMEOUT_MS / 1000} seconds. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL is correct.`,
-      );
-    }
-
-    throw new BackendApiError(
-      'Unable to reach the backend. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL points to it.',
-    );
-  }
-
-  clearTimeout(timeoutId);
-
-  const json = (await response.json().catch(() => ({}))) as
-    | Record<string, unknown>
-    | undefined;
-
-  if (!response.ok) {
-    const error = json?.error as
-      | { message?: string; details?: unknown }
-      | undefined;
-    if (token && response.status === 401) {
-      sessionExpiredHandler?.(token);
-    }
-    throw new BackendApiError(
-      error?.message ||
-        (typeof json?.detail === 'string' ? json.detail : undefined) ||
-        'Request failed',
-      response.status,
-    );
-  }
-
-  return json as T;
-}
-
-async function requestFormJson<T>(
-  path: string,
-  {
-    formData,
-    token,
-  }: {
-    formData: FormData;
-    token?: string | null;
-  },
-): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  let response: Response;
-
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-      signal: controller.signal,
-    });
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new BackendApiError(
-        `The backend did not respond within ${REQUEST_TIMEOUT_MS / 1000} seconds. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL is correct.`,
-      );
-    }
-
-    throw new BackendApiError(
-      'Unable to reach the backend. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL points to it.',
-    );
-  }
-
-  clearTimeout(timeoutId);
-
-  const json = (await response.json().catch(() => ({}))) as
-    | Record<string, unknown>
-    | undefined;
-
-  if (!response.ok) {
-    const error = json?.error as
-      | { message?: string; details?: unknown }
-      | undefined;
-    if (token && response.status === 401) {
-      sessionExpiredHandler?.(token);
-    }
-    throw new BackendApiError(
-      error?.message ||
-        (typeof json?.detail === 'string' ? json.detail : undefined) ||
-        'Request failed',
-      response.status,
-    );
-  }
-
-  return json as T;
-}
 
 async function normalizeUploadFile(file: BackendUploadFile) {
   if (Platform.OS !== 'web') {
@@ -288,12 +127,6 @@ export const backendApi = {
     });
   },
   login(payload: { phone_number: string; password: string }) {
-    return requestJson<BackendAuthResponse>('/auth/login', {
-      method: 'POST',
-      body: payload,
-    });
-  },
-  loginPlayer(payload: { phone_number: string; password: string }) {
     return requestJson<BackendAuthResponse>('/auth/login', {
       method: 'POST',
       body: payload,
@@ -873,19 +706,7 @@ export const backendApi = {
     if (params?.date_from) searchParams.set('date_from', params.date_from);
     if (params?.date_to) searchParams.set('date_to', params.date_to);
     const suffix = searchParams.size ? `?${searchParams.toString()}` : '';
-    const response = await fetch(
-      `${API_BASE_URL}/admin/feedback/export${suffix}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
-    if (!response.ok) {
-      if (response.status === 401) {
-        sessionExpiredHandler?.(token);
-      }
-      throw new BackendApiError('Failed to export feedback.', response.status);
-    }
-    return response.text();
+    return requestText(`/admin/feedback/export${suffix}`, { token });
   },
   adminListNotifications(token: string, status?: string) {
     const suffix = status

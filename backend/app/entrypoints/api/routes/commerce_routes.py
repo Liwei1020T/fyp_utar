@@ -115,7 +115,7 @@ def _service_fee(db: Session) -> Decimal:
 @router.get("/payments", response_model=list[PaymentOut])
 def list_my_payments(
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[PaymentOut]:
     payments = db.execute(
         select(Payment)
@@ -132,7 +132,7 @@ def list_my_payments(
 def get_booking_payment_quote(
     booking_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingPaymentQuoteOut:
     booking = db.execute(
         select(Booking).where(Booking.id == booking_id)
@@ -177,7 +177,7 @@ def create_booking_payment(
     booking_id: str,
     payload: BookingPaymentPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> PaymentOut:
     booking = db.execute(
         select(Booking).where(Booking.id == booking_id).with_for_update()
@@ -224,7 +224,6 @@ def create_booking_payment(
         ).scalar_one()
         transactions = _wallet_transactions(db, current_user.user_id)
         if _wallet_balance(transactions) < amount:
-            db.rollback()
             raise BadRequestError("Wallet balance is insufficient")
         payment.status = "paid"
         payment.note = "Paid from persisted wallet balance."
@@ -241,7 +240,7 @@ def create_booking_payment(
             )
         )
 
-    db.commit()
+    db.flush()
     db.refresh(payment)
     return _payment_to_dto(payment)
 
@@ -249,7 +248,7 @@ def create_booking_payment(
 @router.get("/wallet", response_model=WalletOut)
 def get_wallet(
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> WalletOut:
     transactions = _wallet_transactions(db, current_user.user_id)
     pending_top_up = db.execute(
@@ -281,7 +280,7 @@ def get_wallet(
 def request_wallet_top_up(
     payload: WalletTopUpPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> PaymentOut:
     payment_id = generate_uuid()
     payment = Payment(
@@ -295,7 +294,7 @@ def request_wallet_top_up(
         note="Awaiting admin verification before wallet credit.",
     )
     db.add(payment)
-    db.commit()
+    db.flush()
     db.refresh(payment)
     return _payment_to_dto(payment)
 
@@ -303,7 +302,7 @@ def request_wallet_top_up(
 @router.get("/admin/payments", response_model=list[PaymentOut])
 def admin_list_payments(
     _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[PaymentOut]:
     payments = db.execute(select(Payment).order_by(Payment.created_at.desc())).scalars()
     return [_payment_to_dto(payment) for payment in payments]
@@ -314,7 +313,7 @@ def admin_update_payment(
     payment_id: str,
     payload: AdminPaymentStatusPayload,
     _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> PaymentOut:
     payment = db.execute(
         select(Payment).where(Payment.id == payment_id).with_for_update()
@@ -344,6 +343,6 @@ def admin_update_payment(
     else:
         payment.note = f"Payment marked {payload.status} by the shop admin."
 
-    db.commit()
+    db.flush()
     db.refresh(payment)
     return _payment_to_dto(payment)

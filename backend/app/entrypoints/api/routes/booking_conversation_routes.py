@@ -186,7 +186,7 @@ def _request_support(
         conversation.support_requested_at = now
         conversation.updated_at = now
 
-    db.commit()
+    db.flush()
     db.refresh(conversation)
     return _conversation_with_messages(
         db,
@@ -225,7 +225,7 @@ def _send_message(
     if current_user.role == UserRole.ADMIN.value:
         conversation.state = "admin_joined"
     conversation.updated_at = now
-    db.commit()
+    db.flush()
     db.refresh(conversation)
     return _conversation_with_messages(
         db,
@@ -251,7 +251,7 @@ def _mark_read(
         conversation.player_last_read_at = datetime.now(timezone.utc)
     else:
         conversation.admin_last_read_at = datetime.now(timezone.utc)
-    db.commit()
+    db.flush()
     db.refresh(conversation)
     return _conversation_with_messages(
         db,
@@ -275,7 +275,7 @@ def _set_admin_state(
         raise ConflictError("Closed conversations cannot be resolved")
     conversation.state = state
     conversation.updated_at = datetime.now(timezone.utc)
-    db.commit()
+    db.flush()
     db.refresh(conversation)
     return _conversation_with_messages(
         db,
@@ -287,7 +287,7 @@ def _set_admin_state(
 @router.get("/conversations", response_model=list[BookingConversationOut])
 def list_player_conversations(
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[BookingConversationOut]:
     _require_player(current_user)
     return _list_conversations(db, player_id=current_user.user_id)
@@ -300,7 +300,7 @@ def list_player_conversations(
 def request_booking_support(
     booking_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     _require_player(current_user)
     return _request_support(
@@ -317,7 +317,7 @@ def request_booking_support(
 def get_player_conversation(
     conversation_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     _require_player(current_user)
     conversation, player_id = _get_conversation(
@@ -340,7 +340,7 @@ def send_player_conversation_message(
     conversation_id: str,
     payload: SendConversationMessagePayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     _require_player(current_user)
     return _send_message(
@@ -359,7 +359,7 @@ def send_player_conversation_message(
 def mark_player_conversation_read(
     conversation_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     _require_player(current_user)
     return _mark_read(
@@ -376,7 +376,7 @@ def mark_player_conversation_read(
 )
 def list_admin_conversations(
     _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[BookingConversationOut]:
     return _list_conversations(db)
 
@@ -388,7 +388,7 @@ def list_admin_conversations(
 def get_admin_conversation(
     conversation_id: str,
     _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     conversation, player_id = _get_conversation(db, conversation_id)
     return _conversation_with_messages(
@@ -406,7 +406,7 @@ def send_admin_conversation_message(
     conversation_id: str,
     payload: SendConversationMessagePayload,
     current_user: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     return _send_message(
         db,
@@ -424,7 +424,7 @@ def send_admin_conversation_message(
 def mark_admin_conversation_read(
     conversation_id: str,
     current_user: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     return _mark_read(
         db,
@@ -441,7 +441,7 @@ def mark_admin_conversation_read(
 def resolve_admin_conversation(
     conversation_id: str,
     _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     return _set_admin_state(
         db,
@@ -457,7 +457,7 @@ def resolve_admin_conversation(
 def close_admin_conversation(
     conversation_id: str,
     _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingConversationOut:
     return _set_admin_state(
         db,

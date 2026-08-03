@@ -72,6 +72,7 @@ def test_concurrent_booking_creation_never_exceeds_slot_capacity() -> None:
             string_id = SqlAlchemyCatalogRepository(db).list_active_catalog()[0].id
             hours = SqlAlchemyStoreRepository(db).get_business_hours()
             assert hours is not None
+            db.commit()
 
         slot_date = next_weekday(0)
         monday = next(day for day in hours.days if day.day == "Monday")
@@ -101,7 +102,9 @@ def test_concurrent_booking_creation_never_exceeds_slot_capacity() -> None:
                         drop_off_datetime=None,
                         notes="PostgreSQL concurrency verification",
                     )
+                    db.commit()
                 except ConflictError:
+                    db.rollback()
                     return ("conflict", None)
                 return ("created", booking.id)
 

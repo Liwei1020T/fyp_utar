@@ -29,6 +29,4 @@ class PasswordResetRepository(Protocol):
         self,
         code_id: str,
         used_at: datetime,
-        *,
-        commit: bool = True,
     ) -> None: ...

@@ -25,7 +25,7 @@ For browser-only testing on the same Mac, `127.0.0.1` is enough. For Expo Go on 
 cd backend
 cp .env.example .env
 rtk uv sync --extra dev
-rtk ./.venv/bin/alembic upgrade head
+rtk ./scripts/alembic upgrade head
 rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload
 ```
 
@@ -76,11 +76,12 @@ Experiment outputs are never promoted automatically. The unified backend default
 - `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
 - The unified FastAPI app does not import the legacy AI adapters or `ai_service` during startup
 - Standalone `ai_service` compatibility CSV settings use the canonical latest output directory when that package is run explicitly
-- If those generated files do not exist yet, the backend can still fall back to `backend/data/raw/badminton_strings_recommender.jsonl`
+- If the NLP workbook does not exist, startup keeps persisted matrix rows when present and otherwise serves catalog/official-performance recommendations with health status `catalog_fallback`
+- Fresh databases start with all business days closed and store identity, contact, address, and pricing explicitly unconfigured until an admin saves real values
 
 ## Validation
 
-- Mobile: `cd mobile && nvm use && npx tsc --noEmit && npm run lint -- --max-warnings=0`
+- Mobile: `cd mobile && nvm use && npm test && npx tsc --noEmit && npm run lint -- --max-warnings=0`
 - Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
 - NLP: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 

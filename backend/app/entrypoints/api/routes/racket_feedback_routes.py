@@ -103,7 +103,7 @@ def _get_owned_booking(
 @router.get("/rackets", response_model=list[RacketOut])
 def list_rackets(
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[RacketOut]:
     rackets = (
         db.execute(
@@ -121,11 +121,11 @@ def list_rackets(
 def create_racket(
     payload: CreateRacketPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> RacketOut:
     racket = Racket(user_id=current_user.user_id, **payload.model_dump())
     db.add(racket)
-    db.commit()
+    db.flush()
     db.refresh(racket)
     return _racket_to_dto(racket)
 
@@ -134,7 +134,7 @@ def create_racket(
 def get_racket(
     racket_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> RacketDetailOut:
     racket = _get_owned_racket(db, racket_id, current_user.user_id)
     rows = db.execute(
@@ -174,7 +174,7 @@ def get_racket(
 def get_racket_history(
     racket_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[RacketServiceHistoryOut]:
     return get_racket(racket_id, current_user, db).service_history
 
@@ -184,12 +184,12 @@ def update_racket(
     racket_id: str,
     payload: UpdateRacketPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> RacketOut:
     racket = _get_owned_racket(db, racket_id, current_user.user_id)
     for field_name, value in payload.model_dump(exclude_unset=True).items():
         setattr(racket, field_name, value)
-    db.commit()
+    db.flush()
     db.refresh(racket)
     return _racket_to_dto(racket)
 
@@ -198,11 +198,11 @@ def update_racket(
 def delete_racket(
     racket_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> MessageResponse:
     racket = _get_owned_racket(db, racket_id, current_user.user_id)
     db.delete(racket)
-    db.commit()
+    db.flush()
     return MessageResponse(message="Racket deleted")
 
 
@@ -211,7 +211,7 @@ def create_feedback(
     booking_id: str,
     payload: CreateFeedbackPayload,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> FeedbackOut:
     booking = _get_owned_booking(
         db,
@@ -233,7 +233,7 @@ def create_feedback(
         **payload.model_dump(),
     )
     db.add(feedback)
-    db.commit()
+    db.flush()
     db.refresh(feedback)
     return feedback_to_dto(feedback)
 
@@ -242,7 +242,7 @@ def create_feedback(
 def get_feedback(
     booking_id: str,
     current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> FeedbackOut | None:
     booking = _get_owned_booking(db, booking_id, current_user.user_id)
     feedback = db.execute(

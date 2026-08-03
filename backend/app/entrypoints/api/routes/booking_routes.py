@@ -30,9 +30,9 @@ from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_store_repository
-from app.entrypoints.api.dependencies import get_transaction_manager
 from app.shared.errors import BadRequestError
 from app.shared.errors import NotFoundError
+from app.shared.transaction_effects import register_created_file
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
 from app.shared.upload_storage import delete_booking_update_photo
 from app.shared.upload_storage import save_booking_update_photo
@@ -141,7 +141,6 @@ def cancel_booking(
     payload: CancelBookingPayload,
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
-    transaction_manager=Depends(get_transaction_manager),
 ) -> BookingOut:
     booking = get_customer_owned_booking(
         booking_id=booking_id,
@@ -152,7 +151,6 @@ def cancel_booking(
         raise NotFoundError("Booking not found")
     updated = UpdateBookingStatusUseCase(
         booking_repository=booking_repository,
-        transaction_manager=transaction_manager,
     ).execute(
         booking_id=booking.id,
         next_status=BookingStatus.CANCELLED.value,
@@ -170,7 +168,7 @@ def create_check_in_token(
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
     clock=Depends(get_clock),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> CheckInTokenOut:
     booking = booking_repository.get_by_id_for_update(booking_id)
     if booking is None or booking.user_id != current_user.user_id:
@@ -198,7 +196,7 @@ def create_check_in_token(
             expires_at=expires_at,
         )
     )
-    db.commit()
+    db.flush()
     return CheckInTokenOut(
         token=raw_token,
         expires_at=expires_at.isoformat(),
@@ -214,6 +212,7 @@ async def add_booking_update(
     photo_type: BookingPhotoType = Form(default="other"),
     current_user: CurrentUser = Depends(get_current_customer),
     booking_repository=Depends(get_booking_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingOut:
     get_customer_owned_booking(
         booking_id=booking_id,
@@ -232,21 +231,16 @@ async def add_booking_update(
             content_type=photo.content_type,
             original_name=photo.filename,
         )
+        register_created_file(db, photo_path, delete_booking_update_photo)
 
-    try:
-        booking = AddBookingUpdateUseCase(
-            booking_repository=booking_repository
-        ).execute(
-            booking_id=booking_id,
-            author_user_id=current_user.user_id,
-            author_role=current_user.role,
-            comment=comment,
-            photo_path=photo_path,
-            photo_original_name=photo_original_name,
-            photo_content_type=photo_content_type,
-            photo_type=photo_type if photo_path else None,
-        )
-    except Exception:
-        delete_booking_update_photo(photo_path)
-        raise
+    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
+        booking_id=booking_id,
+        author_user_id=current_user.user_id,
+        author_role=current_user.role,
+        comment=comment,
+        photo_path=photo_path,
+        photo_original_name=photo_original_name,
+        photo_content_type=photo_content_type,
+        photo_type=photo_type if photo_path else None,
+    )
     return booking_to_dto(booking, include_user=False, include_history=True)

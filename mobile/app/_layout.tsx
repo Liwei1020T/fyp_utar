@@ -18,6 +18,7 @@ import {
   mapBackendUserToPlayerProfile,
 } from '../services/backendMappers';
 import { loadBackendAccessToken } from '../services/backendSessionStorage';
+import { shouldExpireBackendSession } from '../services/backendSessionPolicy';
 
 class RootErrorBoundary extends Component<
   { children: ReactNode },
@@ -72,7 +73,12 @@ function BackendSessionBootstrap() {
   useEffect(
     () =>
       setBackendSessionExpiredHandler((expiredToken) => {
-        if (useAppStore.getState().backendAccessToken === expiredToken) {
+        if (
+          shouldExpireBackendSession(
+            useAppStore.getState().backendAccessToken,
+            expiredToken,
+          )
+        ) {
           logout();
         }
       }),

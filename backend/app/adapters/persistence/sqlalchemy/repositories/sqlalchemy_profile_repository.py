@@ -24,7 +24,6 @@ class SqlAlchemyProfileRepository:
         profile: PlayerProfile,
         *,
         username: str | None = None,
-        commit: bool = True,
     ) -> PlayerProfile:
         user = self.db.get(User, profile.user_id)
         assert user is not None
@@ -59,10 +58,7 @@ class SqlAlchemyProfileRepository:
         else:
             for field, value in values.items():
                 setattr(record, field, value)
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
         self.db.refresh(record)
         return to_profile(record)
 
@@ -77,7 +73,7 @@ class SqlAlchemyProfileRepository:
     ) -> dict[str, bool]:
         record = self._get_or_create_profile(user_id)
         record.notification_preferences = dict(preferences)
-        self.db.commit()
+        self.db.flush()
         return dict(record.notification_preferences)
 
     def get_privacy_settings(self, user_id: str) -> dict[str, bool]:
@@ -91,7 +87,7 @@ class SqlAlchemyProfileRepository:
     ) -> dict[str, bool]:
         record = self._get_or_create_profile(user_id)
         record.privacy_settings = dict(settings)
-        self.db.commit()
+        self.db.flush()
         return dict(record.privacy_settings)
 
     def _get_or_create_profile(self, user_id: str) -> Profile:
@@ -101,6 +97,6 @@ class SqlAlchemyProfileRepository:
         if record is None:
             record = Profile(user_id=user_id, notification_preferences={})
             self.db.add(record)
-            self.db.commit()
+            self.db.flush()
             self.db.refresh(record)
         return record

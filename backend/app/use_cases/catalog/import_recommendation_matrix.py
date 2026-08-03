@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.domain.catalog.entities import RecommendationMatrixImportReport
+from app.domain.catalog.errors import RecommendationMatrixArtifactError
 from app.ports.repositories.catalog_repository import CatalogRepository
 from app.shared.errors import BadRequestError
 
@@ -18,4 +19,9 @@ class ImportRecommendationMatrixUseCase:
             raise BadRequestError(
                 f"Recommendation matrix artifact not found: {self.matrix_path}"
             )
-        return self.catalog_repository.import_recommendation_matrix(self.matrix_path)
+        try:
+            return self.catalog_repository.import_recommendation_matrix(
+                self.matrix_path
+            )
+        except RecommendationMatrixArtifactError as error:
+            raise BadRequestError(str(error)) from error

@@ -65,7 +65,7 @@ uv sync --extra dev
 
 ```bash
 cd backend
-./.venv/bin/alembic upgrade head
+./scripts/alembic upgrade head
 ```
 
 Alembic is the sole runtime schema owner. ORM `create_all` remains available

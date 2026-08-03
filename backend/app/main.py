@@ -106,7 +106,7 @@ async def handle_integrity_error(_: Request, exc: IntegrityError) -> JSONRespons
 
 
 @app.get("/health")
-def root_health(db: Session = Depends(get_db)) -> dict[str, object]:
+def root_health(db: Session = Depends(get_db, scope="function")) -> dict[str, object]:
     return health_payload(db)
 
 

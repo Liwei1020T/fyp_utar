@@ -9,14 +9,12 @@ from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_repository import RecommendationRepository
-from app.ports.transaction_manager import TransactionManager
 
 
 @dataclass
 class UpsertMyProfileUseCase:
     profile_repository: ProfileRepository
     recommendation_repository: RecommendationRepository
-    transaction_manager: TransactionManager
     scorer: Fyp1ContentRecommendationScorer = field(
         default_factory=Fyp1ContentRecommendationScorer
     )
@@ -27,46 +25,39 @@ class UpsertMyProfileUseCase:
         *,
         username: str | None = None,
     ) -> PlayerProfile:
-        try:
-            saved = self.profile_repository.upsert(
-                profile,
-                username=username,
-                commit=False,
+        saved = self.profile_repository.upsert(
+            profile,
+            username=username,
+        )
+        if _is_complete(saved):
+            request = RecommendationRequestModel(
+                user_id=saved.user_id,
+                skill_level=saved.skill_level or "",
+                playing_style=saved.playing_style or "",
+                budget_tier=saved.budget_tier or "between_30_50",
+                preferred_tension=saved.preferred_tension or 0,
+                game_type=saved.game_type or "",
+                frequency_per_week=saved.frequency_per_week or 0,
+                pref_attack=saved.pref_attack or 0,
+                pref_comfort=saved.pref_comfort or 0,
+                pref_control=saved.pref_control or 0,
+                pref_durability=saved.pref_durability or 0,
+                pref_elasticity=saved.pref_elasticity or 0,
+                pref_sound=saved.pref_sound or 0,
+                pref_string_movement=saved.pref_string_movement or 0,
+                pref_tension_retention=saved.pref_tension_retention or 0,
+                pref_value_for_money=saved.pref_value_for_money or 0,
+                top_n=5,
             )
-            if _is_complete(saved):
-                request = RecommendationRequestModel(
+            self.recommendation_repository.replace_user_preference_vector(
+                user_id=saved.user_id,
+                source_layer=PREFERENCE_SOURCE_LAYER,
+                entries=self.scorer.build_preference_vector(
                     user_id=saved.user_id,
-                    skill_level=saved.skill_level or "",
-                    playing_style=saved.playing_style or "",
-                    budget_tier=saved.budget_tier or "between_30_50",
-                    preferred_tension=saved.preferred_tension or 0,
-                    game_type=saved.game_type or "",
-                    frequency_per_week=saved.frequency_per_week or 0,
-                    pref_attack=saved.pref_attack or 0,
-                    pref_comfort=saved.pref_comfort or 0,
-                    pref_control=saved.pref_control or 0,
-                    pref_durability=saved.pref_durability or 0,
-                    pref_elasticity=saved.pref_elasticity or 0,
-                    pref_sound=saved.pref_sound or 0,
-                    pref_string_movement=saved.pref_string_movement or 0,
-                    pref_tension_retention=saved.pref_tension_retention or 0,
-                    pref_value_for_money=saved.pref_value_for_money or 0,
-                    top_n=5,
-                )
-                self.recommendation_repository.replace_user_preference_vector(
-                    user_id=saved.user_id,
-                    source_layer=PREFERENCE_SOURCE_LAYER,
-                    entries=self.scorer.build_preference_vector(
-                        user_id=saved.user_id,
-                        request=request,
-                    ),
-                    commit=False,
-                )
-            self.transaction_manager.commit()
-            return saved
-        except Exception:
-            self.transaction_manager.rollback()
-            raise
+                    request=request,
+                ),
+            )
+        return saved
 
 
 def _is_complete(profile: PlayerProfile) -> bool:

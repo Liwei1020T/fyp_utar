@@ -25,14 +25,16 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Run Android: `npm run android`
 - Lint: `npm run lint -- --max-warnings=0`
 - Typecheck: `npx tsc --noEmit`
+- Focused tests: `npm test`
   Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `24.18.0`.
 
 ## Validation Reality
 
-- There is no `npm run build` or `npm test` script in this repo today. Do not invent them.
+- There is no `npm run build` script. Focused policy tests use Node's built-in test runner through `npm test`.
 - For UI or flow changes, use the smallest truthful validation available:
   - `npm run lint -- --max-warnings=0`
   - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `24.18.0`
+  - `npm test` for pure session and contract policies
   - `npm run web` for runtime smoke validation
   - targeted manual route checks for touched flows
 - If a check cannot be run, mark it `unverified` and explain why.
@@ -55,8 +57,8 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
   Shared thumbnail cards and preview cards for the admin inventory workbench and detail editor live here.
 - State and mutation boundary: `store/appStore.ts`
   In-memory source of truth for the authenticated session, API response snapshots, admin/store snapshots, compare selection, and booking drafts.
-- API and mapping helpers: `services/backendApi.ts`, `services/backendMappers.ts`
-  Route pages call the unified backend and map live DTOs into the app domain. Missing sessions or failed API requests must fail closed.
+- API and mapping helpers: `services/backendClient.ts`, `services/backendApi.ts`, `services/backendMappers.ts`
+  The client owns fetch, timeout, error, and 401 handling; the API facade owns endpoint calls; mappers translate live DTOs into the app domain. Missing sessions or failed API requests must fail closed.
 - Session storage: `services/backendSessionStorage.ts`
   Native bearer tokens use Expo SecureStore. Web bearer tokens use current-tab session storage so refresh and deep links work without creating a long-lived browser login. Both are revalidated through `/auth/me`.
 - Data contracts: `types/domain.ts`

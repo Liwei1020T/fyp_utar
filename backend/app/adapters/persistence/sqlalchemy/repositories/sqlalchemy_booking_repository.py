@@ -101,7 +101,7 @@ class SqlAlchemyBookingRepository:
                 changed_by_user_id=changed_by_user_id,
             )
         )
-        self.db.commit()
+        self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking.id)
         assert refreshed is not None
@@ -215,7 +215,6 @@ class SqlAlchemyBookingRepository:
         update_expected_completion_datetime: bool,
         changed_by_user_id: str | None,
         note: str | None,
-        commit: bool = True,
     ) -> BookingRecord:
         booking = self.db.get(Booking, booking_id)
         assert booking is not None
@@ -234,10 +233,7 @@ class SqlAlchemyBookingRepository:
                     note=note,
                 )
             )
-        if commit:
-            self.db.commit()
-        else:
-            self.db.flush()
+        self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking_id)
         assert refreshed is not None
@@ -267,7 +263,7 @@ class SqlAlchemyBookingRepository:
                 photo_type=photo_type,
             )
         )
-        self.db.commit()
+        self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking_id)
         assert refreshed is not None

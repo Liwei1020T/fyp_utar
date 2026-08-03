@@ -63,7 +63,6 @@ class BookingRepository(Protocol):
         update_expected_completion_datetime: bool,
         changed_by_user_id: str | None,
         note: str | None,
-        commit: bool = True,
     ) -> BookingRecord: ...
 
     def add_update(

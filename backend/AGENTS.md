@@ -18,7 +18,7 @@
 - Python format check: `./.venv/bin/ruff format --check .`
 - Python typecheck: `./.venv/bin/mypy app ai_service tests`
 - Python tests: `./.venv/bin/pytest -v`
-- Alembic upgrade: `./.venv/bin/alembic upgrade head`
+- Alembic upgrade: `./scripts/alembic upgrade head`
 - Fast loop for touched areas first, then run the relevant full checks before completion.
 - Ruff excludes generated and inactive paths such as `.venv/`, caches, and AppleDouble sidecar files, so repo-wide Python checks should stay green without narrowing the command scope.
 
@@ -81,7 +81,7 @@
   - from workspace root, run `docker compose up -d postgres`
 - Setup:
   - `uv sync --extra dev`
-  - `./.venv/bin/alembic upgrade head`
+  - `./scripts/alembic upgrade head`
 - Environment:
   - copy `.env.example` to `.env`
   - only set `SEED_ADMIN_*` when the matching seed flag is explicitly enabled

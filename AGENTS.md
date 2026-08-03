@@ -19,7 +19,7 @@
 - Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - Mobile Expo Go smoke: start backend with `--host 0.0.0.0`, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
 - Backend setup: `cd backend && uv sync --extra dev`
-- Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
+- Backend migrations: `cd backend && ./scripts/alembic upgrade head`
 - Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
 - NLP setup: `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`
 - NLP fast validation: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests`
@@ -74,7 +74,7 @@
 - Backend:
   - `cd backend && cp .env.example .env`
   - `cd backend && rtk uv sync --extra dev`
-  - `cd backend && rtk ./.venv/bin/alembic upgrade head`
+  - `cd backend && rtk ./scripts/alembic upgrade head`
   - Browser-only local run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
   - Expo Go phone run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload`
 - Mobile:

@@ -17,7 +17,6 @@ from app.ports.repositories.recommendation_log_repository import (
     RecommendationLogRepository,
 )
 from app.ports.repositories.recommendation_repository import RecommendationRepository
-from app.ports.transaction_manager import TransactionManager
 from app.shared.errors import BadRequestError
 from app.shared.errors import NotFoundError
 
@@ -46,7 +45,6 @@ class GenerateRecommendationUseCase:
     profile_repository: ProfileRepository
     recommendation_repository: RecommendationRepository
     recommendation_log_repository: RecommendationLogRepository
-    transaction_manager: TransactionManager
     scorer: Fyp1ContentRecommendationScorer = field(
         default_factory=Fyp1ContentRecommendationScorer
     )
@@ -152,69 +150,60 @@ class GenerateRecommendationUseCase:
         result_models = [item.result for item in scored_results]
         generated_at = None
 
-        try:
-            if persist and user_id:
-                self.recommendation_repository.replace_user_preference_vector(
-                    user_id=user_id,
-                    source_layer=PREFERENCE_SOURCE_LAYER,
-                    entries=scored_results[0].preference_vector_rows
-                    if scored_results
-                    else [],
-                    commit=False,
-                )
-                cached = self.recommendation_repository.replace_score_cache(
-                    user_id=user_id,
-                    algorithm_version=ALGORITHM_VERSION,
-                    results=[item.cache_payload for item in scored_results],
-                    commit=False,
-                )
-                generated_at = cached[0].generated_at if cached else None
-                cached_by_catalog = {item.catalog_id: item for item in cached}
-                result_models = [
-                    self._merge_cached_result(
-                        result=result,
-                        cached=cached_by_catalog.get(result.catalog_id or ""),
-                    )
-                    for result in result_models
-                ]
-
-            response = RecommendationResponseModel(
+        if persist and user_id:
+            self.recommendation_repository.replace_user_preference_vector(
+                user_id=user_id,
+                source_layer=PREFERENCE_SOURCE_LAYER,
+                entries=scored_results[0].preference_vector_rows
+                if scored_results
+                else [],
+            )
+            cached = self.recommendation_repository.replace_score_cache(
+                user_id=user_id,
                 algorithm_version=ALGORITHM_VERSION,
-                results=result_models,
-                generated_at=generated_at,
+                results=[item.cache_payload for item in scored_results],
             )
-            result_payloads = [_result_payload(item) for item in response.results]
-            response_payload = {
-                "algorithm_version": response.algorithm_version,
-                "generated_at": response.generated_at.isoformat()
-                if response.generated_at
-                else None,
-                "results": result_payloads,
-            }
-            self.recommendation_log_repository.create_run(
-                user_id=user_id,
-                request_payload=request.__dict__,
-                profile_payload=profile_snapshot or request.__dict__,
-                result_payloads=result_payloads,
-                algorithm_version=response.algorithm_version,
-                matrix_version=_matrix_version_from_results(result_payloads),
-                feature_source_version=_feature_source_version_from_results(
-                    result_payloads
-                ),
-                commit=False,
-            )
-            self.recommendation_log_repository.create_log(
-                user_id=user_id,
-                request_payload=request.__dict__,
-                response_payload=response_payload,
-                algorithm_version=response.algorithm_version,
-                commit=False,
-            )
-            self.transaction_manager.commit()
-            return response
-        except Exception:
-            self.transaction_manager.rollback()
-            raise
+            generated_at = cached[0].generated_at if cached else None
+            cached_by_catalog = {item.catalog_id: item for item in cached}
+            result_models = [
+                self._merge_cached_result(
+                    result=result,
+                    cached=cached_by_catalog.get(result.catalog_id or ""),
+                )
+                for result in result_models
+            ]
+
+        response = RecommendationResponseModel(
+            algorithm_version=ALGORITHM_VERSION,
+            results=result_models,
+            generated_at=generated_at,
+        )
+        result_payloads = [_result_payload(item) for item in response.results]
+        response_payload = {
+            "algorithm_version": response.algorithm_version,
+            "generated_at": response.generated_at.isoformat()
+            if response.generated_at
+            else None,
+            "results": result_payloads,
+        }
+        self.recommendation_log_repository.create_run(
+            user_id=user_id,
+            request_payload=request.__dict__,
+            profile_payload=profile_snapshot or request.__dict__,
+            result_payloads=result_payloads,
+            algorithm_version=response.algorithm_version,
+            matrix_version=_matrix_version_from_results(result_payloads),
+            feature_source_version=_feature_source_version_from_results(
+                result_payloads
+            ),
+        )
+        self.recommendation_log_repository.create_log(
+            user_id=user_id,
+            request_payload=request.__dict__,
+            response_payload=response_payload,
+            algorithm_version=response.algorithm_version,
+        )
+        return response
 
     def _merge_cached_result(
         self,

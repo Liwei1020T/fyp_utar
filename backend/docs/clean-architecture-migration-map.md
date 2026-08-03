@@ -65,13 +65,13 @@ Current post-migration route modules with no legacy one-file equivalent:
 - Old: route modules mixed reusable domain rules with direct SQLAlchemy queries
 - New: reusable and multi-repository behavior uses ports plus repository
   adapters under `app/adapters/persistence/sqlalchemy/repositories/`.
-  Compact single-provider CRUD/ledger modules may keep their transaction local
-  to the entrypoint when adding a one-implementation port would only add
-  pass-through boilerplate.
+  Compact single-provider CRUD/ledger modules may remain in the entrypoint when
+  adding a one-implementation port would only add pass-through boilerplate.
 
-- Multi-repository writes share the explicit transaction boundary in
-  `app/ports/transaction_manager.py` and
-  `app/adapters/persistence/sqlalchemy/transaction_manager.py`.
+- `app/adapters/persistence/sqlalchemy/session.py:get_db` owns commit/rollback
+  for every request. Repositories and route-local persistence only flush, so
+  multi-repository use cases remain atomic without a pass-through transaction
+  manager abstraction.
 
 ## Security and Recommendation
 
