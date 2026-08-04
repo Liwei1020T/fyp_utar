@@ -1,9 +1,10 @@
 import React from 'react';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
-import { ScrollView, View, ViewProps } from 'react-native';
+import { ScrollView, useWindowDimensions, View, ViewProps } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '../ui/heroui';
 import { appChromeColors, appLayoutMetrics } from '../ui/theme';
+import { AppMotion } from '../ui/AppMotion';
 import { AppHeaderVariant, AppPageHeader } from './AppPageHeader';
 
 type AppScreenTone = 'default' | 'auth' | 'player' | 'admin';
@@ -60,6 +61,13 @@ export function AppScreen({
   const insets = useSafeAreaInsets();
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);
   const tabBarHeight = React.useContext(BottomTabBarHeightContext) ?? 0;
+  const { width } = useWindowDimensions();
+  let pagePadding: number = appLayoutMetrics.pagePadding;
+  if (width >= 1024) {
+    pagePadding = appLayoutMetrics.desktopPagePadding;
+  } else if (width >= 768) {
+    pagePadding = appLayoutMetrics.tabletPagePadding;
+  }
 
   return (
     <SafeAreaView
@@ -68,17 +76,19 @@ export function AppScreen({
       edges={['top', 'left', 'right', 'bottom']}
     >
       <View className="flex-1" style={{ flex: 1 }}>
-        <AppPageHeader
-          title={title}
-          subtitle={subtitle}
-          headerRight={headerRight}
-          variant={headerVariant}
-          compact={compactHeader}
-          showBackButton={showBackButton}
-          onBackPress={onBackPress}
-          backAccessibilityLabel={backAccessibilityLabel}
-          tone={tone}
-        />
+        <AppMotion delay={0}>
+          <AppPageHeader
+            title={title}
+            subtitle={subtitle}
+            headerRight={headerRight}
+            variant={headerVariant}
+            compact={compactHeader}
+            showBackButton={showBackButton}
+            onBackPress={onBackPress}
+            backAccessibilityLabel={backAccessibilityLabel}
+            tone={tone}
+          />
+        </AppMotion>
         {scrollable ? (
           <ScrollView
             className={cn('flex-1', className)}
@@ -93,19 +103,20 @@ export function AppScreen({
             contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomContentInset }}
             {...props}
           >
-            <View
+            <AppMotion
+              delay={40}
               className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
               style={{
                 flex: 1,
                 width: '100%',
                 alignSelf: 'center',
                 maxWidth: appLayoutMetrics.contentMaxWidth,
-                paddingHorizontal: appLayoutMetrics.pagePadding,
-                paddingTop: 16,
+                paddingHorizontal: pagePadding,
+                paddingTop: 12,
               }}
             >
               {children}
-            </View>
+            </AppMotion>
           </ScrollView>
         ) : (
           <View
@@ -118,19 +129,20 @@ export function AppScreen({
             ]}
             {...props}
           >
-            <View
+            <AppMotion
+              delay={40}
               className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
               style={{
                 flex: 1,
                 width: '100%',
                 alignSelf: 'center',
                 maxWidth: appLayoutMetrics.contentMaxWidth,
-                paddingHorizontal: appLayoutMetrics.pagePadding,
-                paddingTop: 16,
+                paddingHorizontal: pagePadding,
+                paddingTop: 12,
               }}
             >
               {children}
-            </View>
+            </AppMotion>
           </View>
         )}
         {footer && (

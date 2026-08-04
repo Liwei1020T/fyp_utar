@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarChart3, Boxes, CalendarRange, LayoutDashboard, MessageCircleMore } from 'lucide-react-native';
 import { Platform, View } from 'react-native';
 import { cn } from '../../../components/ui/heroui';
-import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
+import { appChromeColors } from '../../../components/ui/theme';
 
 function AdminTabIcon({
   icon: Icon,
@@ -20,7 +20,7 @@ function AdminTabIcon({
   return (
     <View
       className={cn(
-        'h-10 w-10 items-center justify-center rounded-lg',
+        'h-9 w-9 items-center justify-center rounded-[10px]',
         focused ? 'bg-secondary-50' : 'bg-transparent'
       )}
     >
@@ -31,7 +31,7 @@ function AdminTabIcon({
 
 export default function AdminTabsLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 68 + Math.max(insets.bottom, 10);
+  const tabBarHeight = 60 + Math.max(insets.bottom, 8);
 
   return (
     <Tabs
@@ -45,29 +45,28 @@ export default function AdminTabsLayout() {
         tabBarInactiveTintColor: appChromeColors.inactive,
         tabBarStyle: {
           backgroundColor: appChromeColors.tabBar,
-          borderWidth: 1,
-          borderColor: appChromeColors.tabBarBorder,
+          borderTopColor: appChromeColors.tabBarBorder,
           height: tabBarHeight,
-          paddingBottom: Math.max(insets.bottom, 10),
-          paddingTop: 10,
-          marginHorizontal: appLayoutMetrics.pagePadding,
-          marginBottom: Math.max(insets.bottom, 10),
-          borderRadius: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 7,
+          marginHorizontal: 0,
+          marginBottom: 0,
+          borderRadius: 0,
           ...(Platform.OS === 'web'
-            ? { boxShadow: '0 10px 20px rgba(20, 24, 31, 0.08)' }
+            ? { boxShadow: '0 -4px 14px rgba(15, 23, 42, 0.05)' }
             : {
                 shadowColor: '#14181F',
-                shadowOpacity: 0.08,
-                shadowOffset: { width: 0, height: 10 },
-                shadowRadius: 20,
-                elevation: 10,
+                shadowOpacity: 0.06,
+                shadowOffset: { width: 0, height: -4 },
+                shadowRadius: 14,
+                elevation: 8,
               }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '700',
-          marginTop: 2,
+          fontWeight: '600',
+          marginTop: 1,
         },
       }}
     >

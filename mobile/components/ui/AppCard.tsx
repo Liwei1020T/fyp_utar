@@ -42,17 +42,17 @@ export function AppCard({
 
   const paddingStyles = {
     none: 'p-0',
-    sm: 'p-3.5',
-    md: 'p-5',
-    lg: 'p-6',
+    sm: 'p-3',
+    md: 'p-4',
+    lg: 'p-5',
   };
 
   const shellStyles = {
-    default: 'bg-white border border-[#DCE6F7] shadow-soft',
-    elevated: 'bg-white border border-[#E8EEF8] shadow-soft',
-    highlighted: 'bg-primary-50 border border-primary-200 shadow-soft',
-    subtle: 'bg-[#F8FBFF] border border-[#E8EEF8] shadow-none',
-    dark: 'bg-app-hero border border-white/10 shadow-soft',
+    default: 'bg-white border border-[#D8E0EA] shadow-none',
+    elevated: 'bg-white border border-[#D8E0EA] shadow-sm',
+    highlighted: 'bg-primary-50 border border-primary-200 shadow-none',
+    subtle: 'bg-[#F3F6FA] border border-[#E7ECF2] shadow-none',
+    dark: 'bg-app-hero border border-white/10 shadow-sm',
   };
 
   const coreStyles = {
@@ -67,7 +67,7 @@ export function AppCard({
     <Surface
       variant={nativeVariantMap[variant]}
       className={cn(
-        'overflow-hidden rounded-[20px]',
+        'overflow-hidden rounded-[14px]',
         shellStyles[variant],
         className
       )}
@@ -78,7 +78,7 @@ export function AppCard({
     >
       <View
         className={cn(
-          'overflow-hidden rounded-[20px]',
+          'overflow-hidden rounded-[14px]',
           coreStyles[variant]
         )}
       >
@@ -105,6 +105,6 @@ export function AppCard({
 const styles = StyleSheet.create({
   pressed: {
     opacity: 0.96,
-    transform: [{ scale: 0.992 }],
+    transform: [{ scale: 0.996 }],
   },
 });

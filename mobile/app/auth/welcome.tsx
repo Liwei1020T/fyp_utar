@@ -31,8 +31,8 @@ export default function WelcomeScreen() {
   return (
     <AuthShell
       eyebrow="Secure workspace access"
-      title="Log in to StringSense"
-      subtitle="Choose a workspace, then continue with a backend-backed login."
+      title="Choose your workspace"
+      subtitle="Open the player experience or the store operations workspace."
       footer={
         <View className="items-center gap-3">
           <Pressable
@@ -60,8 +60,8 @@ export default function WelcomeScreen() {
               opacity: pressed ? 0.94 : 1,
               borderWidth: 1,
               borderColor: appChromeColors.border,
-              borderRadius: 18,
-              padding: 18,
+              borderRadius: 14,
+              padding: 16,
               backgroundColor: appChromeColors.surface,
             })}
           >
@@ -117,43 +117,10 @@ export default function WelcomeScreen() {
         ))}
       </View>
 
-      <View className="mt-5 gap-3" style={{ gap: 12, marginTop: 20 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Continue to login"
-          onPress={() => router.push('/auth/login')}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.92 : 1,
-            minHeight: 52,
-            borderRadius: 14,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            gap: 8,
-            backgroundColor: appChromeColors.primary,
-          })}
-        >
-          <HeroText style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>
-            Continue to login
-          </HeroText>
-          <ArrowRight size={16} color="white" strokeWidth={1.8} />
-        </Pressable>
-        <View className="items-center" style={{ alignItems: 'center' }}>
-          <HeroText
-            style={{
-              borderRadius: 999,
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              overflow: 'hidden',
-              color: appChromeColors.textSecondary,
-              backgroundColor: appChromeColors.surfaceMuted,
-              fontSize: 12,
-              fontWeight: '600',
-            }}
-          >
-            Player registration is open; admin access is operator-configured
-          </HeroText>
-        </View>
+      <View className="mt-4 border-t border-[#D8E0EA] pt-4">
+        <HeroText className="text-center text-[12px] leading-[18px] text-slate-600">
+          Player registration is open. Admin accounts are configured by the store operator.
+        </HeroText>
       </View>
     </AuthShell>
   );

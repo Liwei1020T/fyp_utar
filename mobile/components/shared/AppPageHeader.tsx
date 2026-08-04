@@ -21,28 +21,27 @@ interface AppPageHeaderProps {
 }
 
 const appHeaderMetrics = {
-  primaryMinHeight: 88,
-  secondaryMinHeight: 72,
-  flowMinHeight: 76,
+  primaryMinHeight: 76,
+  secondaryMinHeight: 64,
+  flowMinHeight: 68,
 } as const;
 
-const baseContainerStyles =
-  'w-full self-center overflow-hidden border shadow-soft';
+const baseContainerStyles = 'w-full self-center overflow-hidden border-b';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[20px] border-[#DCE6F7] bg-white',
-  secondary: 'rounded-[18px] border-[#DCE6F7] bg-white',
-  flow: 'rounded-[18px] border-[#DCE6F7] bg-white',
+  primary: 'border-[#D8E0EA] bg-transparent',
+  secondary: 'border-[#D8E0EA] bg-transparent',
+  flow: 'border-[#D8E0EA] bg-transparent',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
-  primary: 'px-5 py-4',
-  secondary: 'px-4 py-3',
-  flow: 'px-4 py-3',
+  primary: 'px-1 py-4',
+  secondary: 'px-1 py-3',
+  flow: 'px-1 py-3',
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[20px] font-bold tracking-normal text-slate-900',
+  primary: 'text-[24px] font-bold tracking-tight text-slate-900',
   secondary: 'text-[17px] font-semibold tracking-normal text-slate-900',
   flow: 'text-[17px] font-semibold tracking-normal text-slate-900',
 };
@@ -75,7 +74,15 @@ export function AppPageHeader({
   }
 
   return (
-    <View className="px-4" style={{ paddingTop: appLayoutMetrics.headerTopSpacing }}>
+    <View
+      className="px-4"
+      style={{
+        paddingTop: appLayoutMetrics.headerTopSpacing,
+        maxWidth: appLayoutMetrics.contentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+      }}
+    >
       <View
         className={cn(baseContainerStyles, variantStyles[variant])}
         style={{
@@ -87,8 +94,8 @@ export function AppPageHeader({
           className={cn(
             'flex-row items-center gap-3',
             contentStyles[variant],
-            compact && variant === 'primary' ? 'px-4 py-3' : undefined,
-            compact && variant !== 'primary' ? 'px-3.5 py-2.5' : undefined
+            compact && variant === 'primary' ? 'px-1 py-3' : undefined,
+            compact && variant !== 'primary' ? 'px-1 py-2.5' : undefined
           )}
         >
           {showBackButton ? (
@@ -126,7 +133,7 @@ export function AppPageHeader({
         </View>
         {variant === 'flow' ? (
           <View
-            className="mx-4 mb-3 h-px"
+            className="mb-2 h-px"
             style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)' }}
           >
             <View

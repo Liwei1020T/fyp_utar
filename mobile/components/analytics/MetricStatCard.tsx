@@ -26,24 +26,26 @@ export function MetricStatCard({
     <View style={{ width: cardWidth, minWidth: 0 }}>
       <AppCard variant="elevated" padding="sm">
         <View
-          className={`h-11 w-11 items-center justify-center rounded-[18px] border border-white/70 ${accentClassName}`}
+          className={`h-10 w-10 items-center justify-center rounded-[10px] ${accentClassName}`}
           style={{
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: 18,
+            borderRadius: 10,
           }}
         >
           {icon}
         </View>
-        <HeroText className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+        <HeroText className="mt-3 text-[12px] font-medium leading-4 tracking-normal text-slate-600">
           {title}
         </HeroText>
         <HeroText
-          className="mt-1.5 text-[26px] font-bold tracking-tight text-slate-900"
-          numberOfLines={1}
-          adjustsFontSizeToFit
+          className={
+            value.length > 7
+              ? 'mt-1 text-[20px] font-bold tracking-tight text-slate-900'
+              : 'mt-1 text-[24px] font-bold tracking-tight text-slate-900'
+          }
         >
           {value}
         </HeroText>

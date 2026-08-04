@@ -3,8 +3,8 @@ import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Home, List, User, Zap } from 'lucide-react-native';
 import { Platform, View } from 'react-native';
-import { HeroText, cn } from '../../../components/ui/heroui';
-import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
+import { cn } from '../../../components/ui/heroui';
+import { appChromeColors } from '../../../components/ui/theme';
 
 function StandardTabIcon({
   icon: Icon,
@@ -20,7 +20,7 @@ function StandardTabIcon({
   return (
     <View
       className={cn(
-        'h-10 w-10 items-center justify-center rounded-lg',
+        'h-9 w-9 items-center justify-center rounded-[10px]',
         focused ? 'bg-primary-50' : 'bg-transparent'
       )}
     >
@@ -31,7 +31,7 @@ function StandardTabIcon({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 68 + Math.max(insets.bottom, 10);
+  const tabBarHeight = 60 + Math.max(insets.bottom, 8);
 
   return (
     <Tabs
@@ -45,30 +45,29 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: appChromeColors.inactive,
         tabBarStyle: {
           backgroundColor: appChromeColors.tabBar,
-          borderWidth: 1,
-          borderColor: appChromeColors.tabBarBorder,
+          borderTopColor: appChromeColors.tabBarBorder,
           borderTopWidth: 1,
           height: tabBarHeight,
-          paddingBottom: Math.max(insets.bottom, 10),
-          paddingTop: 10,
-          marginHorizontal: appLayoutMetrics.pagePadding,
-          marginBottom: Math.max(insets.bottom, 10),
-          borderRadius: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 7,
+          marginHorizontal: 0,
+          marginBottom: 0,
+          borderRadius: 0,
           ...(Platform.OS === 'web'
-            ? { boxShadow: '0 10px 20px rgba(20, 24, 31, 0.08)' }
+            ? { boxShadow: '0 -4px 14px rgba(15, 23, 42, 0.05)' }
             : {
                 shadowColor: '#14181F',
-                shadowOpacity: 0.08,
-                shadowOffset: { width: 0, height: 10 },
-                shadowRadius: 20,
-                elevation: 10,
+                shadowOpacity: 0.06,
+                shadowOffset: { width: 0, height: -4 },
+                shadowRadius: 14,
+                elevation: 8,
               }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          marginTop: 2,
+          fontSize: 11,
+          fontWeight: '600',
+          marginTop: 1,
         },
         tabBarItemStyle: {
           paddingVertical: 2,
@@ -97,28 +96,8 @@ export default function TabsLayout() {
         name="recommend"
         options={{
           title: 'Recommend',
-          tabBarIcon: () => (
-            <View
-              className="-mt-5 h-[60px] w-[60px] items-center justify-center rounded-lg border-[5px] bg-primary-100 p-1 shadow-glow"
-              style={{ borderColor: appChromeColors.page }}
-            >
-              <View className="h-full w-full items-center justify-center rounded-lg bg-primary-600">
-                <Zap size={26} color="white" strokeWidth={1.7} />
-              </View>
-            </View>
-          ),
-          tabBarLabel: ({ color, focused }) => (
-            <HeroText
-              style={{
-                color,
-                fontSize: 10,
-                fontWeight: '800',
-                marginTop: 8,
-                letterSpacing: 0,
-              }}
-            >
-              {focused ? 'AI RECO' : 'RECO'}
-            </HeroText>
+          tabBarIcon: ({ color, size, focused }) => (
+            <StandardTabIcon icon={Zap} color={color} size={size} focused={focused} />
           ),
         }}
       />

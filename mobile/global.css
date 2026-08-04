@@ -6,15 +6,15 @@
 
 @layer theme {
   @variant light {
-    --background: #F6F8FC;
+    --background: #F7F8FA;
     --foreground: #0F172A;
 
-    --app-page: #F6F8FC;
-    --app-page-auth: #F6F8FC;
-    --app-page-admin: #F6F8FC;
+    --app-page: #F7F8FA;
+    --app-page-auth: #F7F8FA;
+    --app-page-admin: #F5F7FA;
     --app-surface: #FFFFFF;
     --app-surface-elevated: #FFFFFF;
-    --app-muted: #F8FBFF;
+    --app-muted: #F3F6FA;
     --app-hero: #163B7A;
     --app-hero-foreground: #FFFFFF;
     --app-hero-muted: #D6E4FF;
@@ -40,7 +40,7 @@
     --field-background: #FFFFFF;
     --field-foreground: var(--foreground);
     --field-placeholder: #94A3B8;
-    --field-border: #DCE6F7;
+    --field-border: #D8E0EA;
 
     --success: #059669;
     --success-foreground: #FFFFFF;
@@ -53,21 +53,21 @@
     --focus: var(--accent);
     --link: var(--accent);
 
-    --surface-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    --surface-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
     --overlay-shadow: 0 14px 32px rgba(37, 99, 235, 0.08);
     --field-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
   }
 
   @variant dark {
-    --background: #F6F8FC;
+    --background: #F7F8FA;
     --foreground: #0F172A;
 
-    --app-page: #F6F8FC;
-    --app-page-auth: #F6F8FC;
-    --app-page-admin: #F6F8FC;
+    --app-page: #F7F8FA;
+    --app-page-auth: #F7F8FA;
+    --app-page-admin: #F5F7FA;
     --app-surface: #FFFFFF;
     --app-surface-elevated: #FFFFFF;
-    --app-muted: #F8FBFF;
+    --app-muted: #F3F6FA;
     --app-hero: #163B7A;
     --app-hero-foreground: #FFFFFF;
     --app-hero-muted: #D6E4FF;
@@ -93,7 +93,7 @@
     --field-background: #FFFFFF;
     --field-foreground: var(--foreground);
     --field-placeholder: #94A3B8;
-    --field-border: #DCE6F7;
+    --field-border: #D8E0EA;
 
     --success: #059669;
     --success-foreground: #FFFFFF;
@@ -106,7 +106,7 @@
     --focus: var(--accent);
     --link: var(--accent);
 
-    --surface-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    --surface-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
     --overlay-shadow: 0 14px 32px rgba(37, 99, 235, 0.08);
     --field-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
   }
