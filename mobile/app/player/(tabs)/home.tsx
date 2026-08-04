@@ -213,64 +213,36 @@ export default function PlayerHomeScreen() {
           </AppCard>
         </AppMotion>
       ) : (
-      <View className="mt-5">
-        <AppCard variant="dark" className="overflow-hidden rounded-[24px]" padding="lg">
-          <View
-            style={{ pointerEvents: 'none' }}
-            className="absolute -right-12 -top-14 h-40 w-40 rounded-full bg-primary-500/25"
-          />
-          <View
-            style={{ pointerEvents: 'none' }}
-            className="absolute -bottom-20 left-10 h-36 w-36 rounded-full bg-accent-400/10"
-          />
-          <View className="flex-row items-start justify-between gap-3">
-            <View className="flex-1">
-              <AppChip
-                label="Smart recommendation"
-                variant="accent"
-                className="self-start opacity-95"
-              />
-              <HeroText className="mt-4 text-[28px] font-bold leading-[33px] tracking-tight text-white">
-                Your next setup, simplified
-              </HeroText>
-              <HeroText className="mt-1.5 text-[13px] leading-[19px] text-secondary-100">
-                Get a string and tension suggestion based on how you play.
-              </HeroText>
+        <View className="mt-5">
+          <AppCard variant="dark" className="overflow-hidden rounded-[20px]" padding="md">
+            <View
+              style={{ pointerEvents: 'none' }}
+              className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-primary-500/25"
+            />
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="min-w-0 flex-1">
+                <HeroText className="text-[22px] font-bold leading-[27px] tracking-tight text-white">
+                  Find your next string
+                </HeroText>
+                <HeroText className="mt-1.5 text-[13px] leading-[18px] text-secondary-100">
+                  Based on your game and {user.preferredTension} lbs preference.
+                </HeroText>
+              </View>
+              <View className="h-10 w-10 items-center justify-center rounded-[14px] bg-white/10">
+                <Sparkles size={18} color="white" strokeWidth={1.9} />
+              </View>
             </View>
-            <View className="mt-0.5 h-10 w-10 items-center justify-center rounded-lg bg-white/10">
-              <Sparkles size={18} color="white" strokeWidth={1.9} />
-            </View>
-          </View>
 
-          <View className="mt-4 flex-row gap-2.5">
-            <View className="flex-1 rounded-xl border border-white/18 bg-white/8 px-3 py-2.5">
-              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
-                Tension
-              </HeroText>
-              <HeroText className="mt-1 text-[17px] font-bold tracking-normal text-white">
-                {user.preferredTension} lbs
-              </HeroText>
-            </View>
-            <View className="flex-1 rounded-xl border border-white/18 bg-white/8 px-3 py-2.5">
-              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
-                Bookings
-              </HeroText>
-              <HeroText className="mt-1 text-[17px] font-bold tracking-normal text-white">
-                {playerBookings.length} logged
-              </HeroText>
-            </View>
-          </View>
-
-          <AppButton
-            label="Get my recommendation"
-            variant="accent"
-            size="md"
-            className="mt-4 w-full"
-            trailingIcon={<ChevronRight size={18} color="#9A6700" strokeWidth={2.5} />}
-            onPress={() => router.push('/player/recommend')}
-          />
-        </AppCard>
-      </View>
+            <AppButton
+              label="Get recommendation"
+              variant="accent"
+              size="sm"
+              className="mt-4 w-full"
+              trailingIcon={<ChevronRight size={16} color="#9A6700" strokeWidth={2.5} />}
+              onPress={() => router.push('/player/recommend')}
+            />
+          </AppCard>
+        </View>
       )}
 
       <AppSection
