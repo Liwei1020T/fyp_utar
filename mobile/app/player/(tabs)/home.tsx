@@ -37,32 +37,24 @@ const quickActions = [
     accessibilityLabel: 'Get recommendation',
     route: '/player/recommend',
     icon: Zap,
-    color: appChromeColors.primary,
-    bgColor: appChromeColors.primarySoft,
   },
   {
     title: 'Book service',
     accessibilityLabel: 'Book service',
     route: '/player/bookings/new',
     icon: CalendarClock,
-    color: appChromeColors.primary,
-    bgColor: appChromeColors.primarySoft,
   },
   {
     title: 'String catalog',
     accessibilityLabel: 'Open string catalog',
     route: '/player/strings',
     icon: Search,
-    color: appChromeColors.primary,
-    bgColor: appChromeColors.primarySoft,
   },
   {
     title: 'Message shop',
     accessibilityLabel: 'Message shop',
     route: '/player/chat',
     icon: MessageSquareText,
-    color: appChromeColors.primary,
-    bgColor: appChromeColors.primarySoft,
   },
 ] as const;
 
@@ -121,48 +113,69 @@ export default function PlayerHomeScreen() {
       }
     >
       <AppSection
-        eyebrow="ESSENTIALS"
-        title="Jump back in"
+        title="Quick actions"
         className="mt-1"
         variant="compact"
         rightAction={
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open all player features"
-            className="min-h-11 justify-center"
+            className="min-h-11 flex-row items-center gap-1 rounded-[14px] border border-primary-100 bg-white px-3"
             onPress={() => router.push('/player/profile')}
           >
             <HeroText className="text-[13px] font-semibold text-primary-700">
               All tools
             </HeroText>
+            <ChevronRight size={14} color={appChromeColors.primary} />
           </Pressable>
         }
       >
-        <View className="flex-row justify-between gap-2">
+        <View className="flex-row flex-wrap gap-3">
           {quickActions.map((action) => {
             const Icon = action.icon;
+            const isFeatured = action.route === '/player/recommend';
 
             return (
-              <Pressable
+              <AppCard
                 key={action.title}
+                variant={isFeatured ? 'dark' : 'elevated'}
+                padding="none"
+                onPress={() => router.push(action.route as never)}
                 accessibilityRole="button"
                 accessibilityLabel={action.accessibilityLabel}
-                onPress={() => router.push(action.route as never)}
-                className="min-h-[88px] flex-1 items-center rounded-[16px] px-1.5 py-2 active:bg-white/70"
+                className={isFeatured ? 'border-[#163B7A]' : 'border-[#D6E4FF]'}
+                contentClassName="min-h-[108px] justify-between p-3.5"
+                style={{ flexBasis: '47%', flexGrow: 1 }}
               >
-                <View
-                  style={{ backgroundColor: action.bgColor }}
-                  className="h-12 w-12 items-center justify-center rounded-[16px]"
-                >
-                  <Icon size={21} color={action.color} strokeWidth={2.15} />
+                <View className="flex-row items-start justify-between gap-3">
+                  <View
+                    style={{
+                      backgroundColor: isFeatured
+                        ? 'rgba(255,255,255,0.12)'
+                        : appChromeColors.primarySoft,
+                    }}
+                    className="h-11 w-11 items-center justify-center rounded-[15px]"
+                  >
+                    <Icon
+                      size={20}
+                      color={isFeatured ? '#F5D67A' : appChromeColors.primary}
+                      strokeWidth={2.1}
+                    />
+                  </View>
+                  <ChevronRight
+                    size={15}
+                    color={isFeatured ? '#D6E4FF' : '#94A3B8'}
+                  />
                 </View>
                 <HeroText
-                  className="mt-2 w-full text-center text-[11px] font-semibold leading-[14px] tracking-normal text-slate-800"
-                  numberOfLines={2}
+                  className={isFeatured
+                    ? 'mt-3 text-[14px] font-semibold leading-[18px] text-white'
+                    : 'mt-3 text-[14px] font-semibold leading-[18px] text-slate-900'}
+                  numberOfLines={1}
                 >
                   {action.title}
                 </HeroText>
-              </Pressable>
+              </AppCard>
             );
           })}
         </View>

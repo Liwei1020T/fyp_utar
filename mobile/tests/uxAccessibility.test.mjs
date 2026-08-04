@@ -120,6 +120,8 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(profileEdit, /showAdvanced/);
   assert.match(home, /activeBooking/);
   assert.match(home, /Open all player features/);
+  assert.match(home, /isFeatured/);
+  assert.doesNotMatch(home, /eyebrow="ESSENTIALS"/);
   assert.doesNotMatch(recommendation, /Saved Priority Weights/);
   assert.match(results, /StringProductImage/);
   assert.match(results, /Why this fits/);
