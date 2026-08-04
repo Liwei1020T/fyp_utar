@@ -48,11 +48,11 @@ export function AppCard({
   };
 
   const shellStyles = {
-    default: 'bg-white border border-[#D8E0EA] shadow-none',
-    elevated: 'bg-white border border-[#D8E0EA] shadow-sm',
+    default: 'bg-white border border-[#DCE3EC] shadow-none',
+    elevated: 'bg-white border border-[#DCE3EC] shadow-soft',
     highlighted: 'bg-primary-50 border border-primary-200 shadow-none',
     subtle: 'bg-[#F3F6FA] border border-[#E7ECF2] shadow-none',
-    dark: 'bg-app-hero border border-white/10 shadow-sm',
+    dark: 'bg-app-hero border border-white/10 shadow-float',
   };
 
   const coreStyles = {
@@ -67,7 +67,7 @@ export function AppCard({
     <Surface
       variant={nativeVariantMap[variant]}
       className={cn(
-        'overflow-hidden rounded-[14px]',
+        'overflow-hidden rounded-[18px]',
         shellStyles[variant],
         className
       )}
@@ -78,7 +78,7 @@ export function AppCard({
     >
       <View
         className={cn(
-          'overflow-hidden rounded-[14px]',
+          'overflow-hidden rounded-[18px]',
           coreStyles[variant]
         )}
       >
@@ -104,7 +104,7 @@ export function AppCard({
 
 const styles = StyleSheet.create({
   pressed: {
-    opacity: 0.96,
-    transform: [{ scale: 0.996 }],
+    opacity: 0.94,
+    transform: [{ scale: 0.99 }],
   },
 });

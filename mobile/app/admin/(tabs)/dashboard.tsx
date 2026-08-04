@@ -13,7 +13,6 @@ import {
   ScanSearch,
   MessageSquareText,
   Settings2,
-  Store,
   TimerReset,
   Undo2,
 } from 'lucide-react-native';
@@ -23,7 +22,6 @@ import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { appChromeColors } from '../../../components/ui/theme';
 import {
   useAppStore,
@@ -169,10 +167,62 @@ export default function AdminDashboardScreen() {
             </HeroText>
           </AppCard>
         ) : null}
+        <AppCard
+          variant="dark"
+          padding="lg"
+          className="overflow-hidden rounded-[24px]"
+          onPress={() => router.push('/admin/service-queue')}
+          accessibilityLabel="Open the service queue"
+          accessibilityHint="Review jobs by service stage"
+        >
+          <View
+            style={{ pointerEvents: 'none' }}
+            className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-primary-500/25"
+          />
+          <View className="flex-row items-start justify-between gap-4">
+            <View className="flex-1">
+              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
+                Counter pulse
+              </HeroText>
+              <HeroText className="mt-3 text-[26px] font-bold leading-[31px] tracking-tight text-white">
+                {analytics ? `${inProgressCount} jobs on the bench` : 'Live service status'}
+              </HeroText>
+              <HeroText className="mt-1.5 text-[13px] leading-[19px] text-secondary-100">
+                Open the queue to move work through each service stage.
+              </HeroText>
+            </View>
+            <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-white/10">
+              <TimerReset size={20} color="#FFFFFF" />
+            </View>
+          </View>
+
+          <View className="mt-5 flex-row gap-2">
+            <View className="flex-1 rounded-[14px] bg-white/10 px-3 py-2.5">
+              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-secondary-100">
+                Awaiting
+              </HeroText>
+              <HeroText className="mt-1 text-[18px] font-bold text-white">
+                {analytics ? awaitingDropOffCount : '—'}
+              </HeroText>
+            </View>
+            <View className="flex-1 rounded-[14px] bg-white/10 px-3 py-2.5">
+              <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-secondary-100">
+                Ready
+              </HeroText>
+              <HeroText className="mt-1 text-[18px] font-bold text-white">
+                {analytics ? readyForCollectionCount : '—'}
+              </HeroText>
+            </View>
+            <View className="flex-1 items-end justify-center px-1">
+              <HeroText className="text-[12px] font-semibold text-white">Open queue</HeroText>
+              <ArrowRight size={18} color="#FFFFFF" />
+            </View>
+          </View>
+        </AppCard>
         <AppSection
-          eyebrow="All features"
-          title="Choose a counter task"
-          subtitle="Every admin tool starts here; daily counter work comes first."
+          eyebrow="ALL TOOLS"
+          title="Run the counter"
+          subtitle="Every operation stays one tap away."
           rightAction={
             <AppChip
               label={analytics ? `${awaitingDropOffCount} awaiting` : '— awaiting'}
@@ -215,7 +265,7 @@ export default function AdminDashboardScreen() {
                   variant={action.title === 'Check-in' ? 'highlighted' : 'elevated'}
                   padding="sm"
                   className="w-[48%]"
-                  contentClassName="min-h-[128px] justify-between"
+                  contentClassName="min-h-[116px] justify-between"
                   onPress={() => router.push(action.route as never)}
                 >
                   <View
@@ -241,40 +291,6 @@ export default function AdminDashboardScreen() {
                 </AppCard>
               );
             })}
-          </View>
-        </AppSection>
-
-        <AppSection eyebrow="Today" title="Operational snapshot" variant="compact">
-          <View className="flex-row flex-wrap gap-3">
-            <MetricStatCard
-              title="Today bookings"
-              value={analytics ? String(analytics.today_bookings) : '—'}
-              icon={<CalendarRange size={20} color={appChromeColors.primary} />}
-            />
-            <MetricStatCard
-              title="Pending feedback"
-              value={analytics ? String(analytics.pending_feedback_count) : '—'}
-              icon={<MessageSquareText size={20} color={appChromeColors.warning} />}
-              accentClassName="bg-warning-50"
-            />
-            <MetricStatCard
-              title="Awaiting drop-off"
-              value={analytics ? String(awaitingDropOffCount) : '—'}
-              icon={<Undo2 size={20} color={appChromeColors.warning} />}
-              accentClassName="bg-warning-50"
-            />
-            <MetricStatCard
-              title="In progress"
-              value={analytics ? String(inProgressCount) : '—'}
-              icon={<TimerReset size={20} color={appChromeColors.primary} />}
-              accentClassName="bg-primary-50"
-            />
-            <MetricStatCard
-              title="Ready pickup"
-              value={analytics ? String(readyForCollectionCount) : '—'}
-              icon={<Store size={20} color={appChromeColors.success} />}
-              accentClassName="bg-success-50"
-            />
           </View>
         </AppSection>
 

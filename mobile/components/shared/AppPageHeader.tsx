@@ -26,12 +26,12 @@ const appHeaderMetrics = {
   flowMinHeight: 68,
 } as const;
 
-const baseContainerStyles = 'w-full self-center overflow-hidden border-b';
+const baseContainerStyles = 'w-full self-center overflow-hidden';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'border-[#D8E0EA] bg-transparent',
-  secondary: 'border-[#D8E0EA] bg-transparent',
-  flow: 'border-[#D8E0EA] bg-transparent',
+  primary: 'bg-transparent',
+  secondary: 'border-b border-[#DCE3EC] bg-transparent',
+  flow: 'border-b border-[#DCE3EC] bg-transparent',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
@@ -41,13 +41,13 @@ const contentStyles: Record<AppHeaderVariant, string> = {
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[24px] font-bold tracking-tight text-slate-900',
+  primary: 'text-[27px] font-bold leading-[32px] tracking-tight text-slate-900',
   secondary: 'text-[17px] font-semibold tracking-normal text-slate-900',
   flow: 'text-[17px] font-semibold tracking-normal text-slate-900',
 };
 
 const subtitleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[14px] leading-[20px] tracking-normal text-slate-600',
+  primary: 'text-[15px] leading-[21px] tracking-normal text-slate-600',
   secondary: 'text-[12px] leading-[18px] tracking-normal text-slate-600',
   flow: 'text-[12px] leading-[18px] tracking-normal text-slate-600',
 };

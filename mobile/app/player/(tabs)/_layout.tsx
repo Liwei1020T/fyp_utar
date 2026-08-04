@@ -3,7 +3,6 @@ import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Home, List, User, Zap } from 'lucide-react-native';
 import { Platform, View } from 'react-native';
-import { cn } from '../../../components/ui/heroui';
 import { appChromeColors } from '../../../components/ui/theme';
 
 function StandardTabIcon({
@@ -18,12 +17,7 @@ function StandardTabIcon({
   focused: boolean;
 }) {
   return (
-    <View
-      className={cn(
-        'h-9 w-9 items-center justify-center rounded-[10px]',
-        focused ? 'bg-primary-50' : 'bg-transparent'
-      )}
-    >
+    <View className="h-8 w-8 items-center justify-center">
       <Icon size={size} color={color} strokeWidth={focused ? 2.1 : 1.9} />
     </View>
   );
@@ -31,7 +25,8 @@ function StandardTabIcon({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 60 + Math.max(insets.bottom, 8);
+  const bottomSpacing = Math.max(insets.bottom, 10);
+  const tabBarHeight = 66 + bottomSpacing;
 
   return (
     <Tabs
@@ -41,36 +36,41 @@ export default function TabsLayout() {
           backgroundColor: appChromeColors.page,
         },
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: appChromeColors.primary,
-        tabBarInactiveTintColor: appChromeColors.inactive,
+        tabBarActiveTintColor: appChromeColors.heroDeep,
+        tabBarInactiveTintColor: '#C7D1E0',
+        tabBarActiveBackgroundColor: appChromeColors.tabBarActive,
         tabBarStyle: {
           backgroundColor: appChromeColors.tabBar,
-          borderTopColor: appChromeColors.tabBarBorder,
-          borderTopWidth: 1,
+          borderTopWidth: 0,
           height: tabBarHeight,
-          paddingBottom: Math.max(insets.bottom, 8),
-          paddingTop: 7,
-          marginHorizontal: 0,
-          marginBottom: 0,
-          borderRadius: 0,
+          paddingBottom: bottomSpacing,
+          paddingTop: 8,
+          paddingHorizontal: 2,
+          marginHorizontal: 12,
+          marginBottom: bottomSpacing,
+          borderRadius: 22,
           ...(Platform.OS === 'web'
-            ? { boxShadow: '0 -4px 14px rgba(15, 23, 42, 0.05)' }
+            ? { boxShadow: '0 14px 32px rgba(9, 29, 62, 0.22)' }
             : {
-                shadowColor: '#14181F',
-                shadowOpacity: 0.06,
-                shadowOffset: { width: 0, height: -4 },
-                shadowRadius: 14,
-                elevation: 8,
+                shadowColor: '#091D3E',
+                shadowOpacity: 0.2,
+                shadowOffset: { width: 0, height: 10 },
+                shadowRadius: 20,
+                elevation: 12,
               }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 1,
+          marginTop: 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 2,
+          minHeight: 48,
+          marginHorizontal: 0,
+          marginVertical: 1,
+          borderRadius: 15,
+          overflow: 'hidden',
         },
       }}
     >
@@ -95,7 +95,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="recommend"
         options={{
-          title: 'Recommend',
+          title: 'Advisor',
+          tabBarAccessibilityLabel: 'Recommendation advisor',
           tabBarIcon: ({ color, size, focused }) => (
             <StandardTabIcon icon={Zap} color={color} size={size} focused={focused} />
           ),

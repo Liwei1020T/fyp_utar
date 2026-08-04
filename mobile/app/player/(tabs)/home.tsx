@@ -109,13 +109,12 @@ export default function PlayerHomeScreen() {
       }
     >
       <AppSection
-        eyebrow="START HERE"
-        title="Quick actions"
-        subtitle="The four fastest ways into StringSense."
+        eyebrow="ESSENTIALS"
+        title="Jump back in"
         className="mt-1"
         variant="compact"
       >
-        <View className="flex-row flex-wrap gap-3">
+        <View className="flex-row justify-between gap-2">
           {quickActions.map((action) => {
             const Icon = action.icon;
 
@@ -125,26 +124,20 @@ export default function PlayerHomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={action.title}
                 onPress={() => router.push(action.route as never)}
-                className="w-[48%] active:opacity-70"
+                className="min-h-[88px] flex-1 items-center rounded-[16px] px-1.5 py-2 active:bg-white/70"
               >
-                <AppCard
-                  padding="sm"
-                  className="border border-[#DCE6F7] bg-white shadow-sm"
-                  contentClassName="min-h-[88px] justify-between"
+                <View
+                  style={{ backgroundColor: action.bgColor }}
+                  className="h-12 w-12 items-center justify-center rounded-[16px]"
                 >
-                  <View
-                    style={{ backgroundColor: action.bgColor }}
-                    className="h-10 w-10 items-center justify-center rounded-lg"
-                  >
-                    <Icon size={20} color={action.color} strokeWidth={2.15} />
-                  </View>
-                  <HeroText
-                    className="text-[13px] font-semibold leading-[17px] tracking-normal text-slate-900"
-                    numberOfLines={2}
-                  >
-                    {action.title}
-                  </HeroText>
-                </AppCard>
+                  <Icon size={21} color={action.color} strokeWidth={2.15} />
+                </View>
+                <HeroText
+                  className="mt-2 w-full text-center text-[10px] font-semibold leading-[13px] tracking-normal text-slate-800"
+                  numberOfLines={2}
+                >
+                  {action.title}
+                </HeroText>
               </Pressable>
             );
           })}
@@ -152,16 +145,24 @@ export default function PlayerHomeScreen() {
       </AppSection>
 
       <View className="mt-5">
-        <AppCard variant="dark" className="overflow-hidden" padding="md">
+        <AppCard variant="dark" className="overflow-hidden rounded-[24px]" padding="lg">
+          <View
+            style={{ pointerEvents: 'none' }}
+            className="absolute -right-12 -top-14 h-40 w-40 rounded-full bg-primary-500/25"
+          />
+          <View
+            style={{ pointerEvents: 'none' }}
+            className="absolute -bottom-20 left-10 h-36 w-36 rounded-full bg-accent-400/10"
+          />
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1">
               <AppChip
-                label="Smart advisor"
+                label="Smart recommendation"
                 variant="accent"
                 className="self-start opacity-95"
               />
-              <HeroText className="mt-3 text-[25px] font-bold leading-[30px] tracking-normal text-white">
-                Find your ideal setup
+              <HeroText className="mt-4 text-[28px] font-bold leading-[33px] tracking-tight text-white">
+                Your next setup, simplified
               </HeroText>
               <HeroText className="mt-1.5 text-[13px] leading-[19px] text-secondary-100">
                 Get a string and tension suggestion based on how you play.
@@ -192,11 +193,11 @@ export default function PlayerHomeScreen() {
           </View>
 
           <AppButton
-            label="Generate setup"
-            variant="primary"
+            label="Get my recommendation"
+            variant="accent"
             size="md"
-            className="mt-4 w-full border-primary-600 bg-primary-600 shadow-[0_12px_24px_rgba(37,99,235,0.22)]"
-            trailingIcon={<ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />}
+            className="mt-4 w-full"
+            trailingIcon={<ChevronRight size={18} color="#9A6700" strokeWidth={2.5} />}
             onPress={() => router.push('/player/recommend')}
           />
         </AppCard>

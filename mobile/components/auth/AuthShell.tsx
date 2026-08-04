@@ -31,13 +31,13 @@ export function AuthShell({
     >
       <View className="w-full self-center" style={{ width: '100%', alignSelf: 'center', maxWidth: 430 }}>
         <View
-          className="mb-8 flex-row items-center justify-between gap-4"
+          className="mb-9 flex-row items-center justify-between gap-4"
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 16,
-            marginBottom: 32,
+            marginBottom: 36,
           }}
         >
           <View
@@ -45,17 +45,17 @@ export function AuthShell({
             style={{ minWidth: 0, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}
           >
             <View
-              className="h-11 w-11 items-center justify-center rounded-lg bg-white shadow-soft"
+              className="h-12 w-12 items-center justify-center rounded-[16px] bg-app-hero shadow-float"
               style={{
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: 10,
-                backgroundColor: appChromeColors.surface,
+                borderRadius: 16,
+                backgroundColor: appChromeColors.hero,
               }}
             >
-              <Activity size={21} color={appChromeColors.primary} />
+              <Activity size={22} color="#FFFFFF" />
             </View>
             <View className="min-w-0 flex-1" style={{ minWidth: 0, flex: 1 }}>
               <HeroText className="text-[15px] font-semibold tracking-normal text-[#1D1D1F]">
@@ -86,7 +86,7 @@ export function AuthShell({
           ) : null}
           <HeroText
             accessibilityRole="header"
-            className="mt-4 text-[32px] font-bold leading-[38px] tracking-normal text-[#1D1D1F]"
+            className="mt-4 text-[34px] font-bold leading-[39px] tracking-tight text-[#1D1D1F]"
           >
             {title}
           </HeroText>

@@ -2,19 +2,19 @@ import type { BookingStatus, PaymentStatus } from '../../types/domain';
 import type { AppChipVariant } from './AppChip';
 
 export const appChromeColors = {
-  page: '#F7F8FA',
-  pageAuth: '#F7F8FA',
-  pageAdmin: '#F5F7FA',
-  surface: '#FFFFFF',
-  surfaceElevated: '#FFFFFF',
+  page: '#F3F6FA',
+  pageAuth: '#F4F6F9',
+  pageAdmin: '#F1F4F8',
+  surface: '#FCFDFE',
+  surfaceElevated: '#FCFDFE',
   surfaceMuted: '#F3F6FA',
   surfaceTint: '#EEF4FF',
-  hero: '#163B7A',
-  heroDeep: '#102F63',
+  hero: '#102F63',
+  heroDeep: '#091D3E',
   heroForeground: '#FFFFFF',
   heroMuted: '#D6E4FF',
-  tabBar: '#FFFFFF',
-  tabBarBorder: '#D8E0EA',
+  tabBar: '#0D1B34',
+  tabBarActive: '#F8FAFD',
   primary: '#2563EB',
   primaryPressed: '#1D4ED8',
   primarySoft: '#DBEAFE',
@@ -39,10 +39,9 @@ export const appChromeColors = {
   textMuted: '#94A3B8',
   textOnDark: '#FFFFFF',
   textOnDarkSecondary: '#D6E4FF',
-  border: '#D8E0EA',
+  border: '#DCE3EC',
   borderSoft: '#E7ECF2',
   divider: '#E2E8F0',
-  inactive: '#94A3B8',
 } as const;
 
 export const appLayoutMetrics = {
@@ -50,7 +49,7 @@ export const appLayoutMetrics = {
   pagePadding: 16,
   tabletPagePadding: 24,
   desktopPagePadding: 32,
-  headerTopSpacing: 12,
+  headerTopSpacing: 10,
   sectionGap: 24,
 } as const;
 

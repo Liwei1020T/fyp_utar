@@ -50,7 +50,7 @@ export function AppInput({
       <View className={cn('mb-4', className)}>
         <View
           className={cn(
-          'h-12 flex-row items-center gap-3 rounded-[10px] border bg-white px-4',
+          'h-12 flex-row items-center gap-3 rounded-[14px] border bg-white px-4',
             error ? 'border-danger/30' : focusBorder,
             containerClassName,
             innerContainerClassName
@@ -95,14 +95,14 @@ export function AppInput({
       )}
       <View
         className={cn(
-          'rounded-[10px] border bg-white',
+          'rounded-[14px] border bg-white',
           error ? 'border-danger/30' : focusBorder,
           containerClassName
         )}
       >
         <View
           className={cn(
-            'min-h-[52px] flex-row items-center gap-3 rounded-[10px] px-4 py-1',
+            'min-h-[52px] flex-row items-center gap-3 rounded-[14px] px-4 py-1',
             error ? 'bg-danger/5' : 'bg-field-background',
             innerContainerClassName
           )}

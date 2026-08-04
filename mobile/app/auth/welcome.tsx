@@ -59,10 +59,11 @@ export default function WelcomeScreen() {
             style={({ pressed }) => ({
               opacity: pressed ? 0.94 : 1,
               borderWidth: 1,
-              borderColor: appChromeColors.border,
-              borderRadius: 14,
-              padding: 16,
-              backgroundColor: appChromeColors.surface,
+              borderColor: role === 'player' ? appChromeColors.hero : appChromeColors.border,
+              borderRadius: 20,
+              padding: 18,
+              backgroundColor:
+                role === 'player' ? appChromeColors.hero : appChromeColors.surface,
             })}
           >
               <View className="flex-row items-center gap-4">
@@ -75,23 +76,31 @@ export default function WelcomeScreen() {
                     justifyContent: 'center',
                     borderRadius: 12,
                     backgroundColor:
-                      role === 'player' ? appChromeColors.primarySoftest : '#F5F5F7',
+                      role === 'player' ? 'rgba(255,255,255,0.12)' : '#F5F5F7',
                   }}
                 >
-                  <Icon size={22} color={accentColor} />
+                  <Icon
+                    size={22}
+                    color={role === 'player' ? '#FFFFFF' : accentColor}
+                  />
                 </View>
                 <View className="min-w-0 flex-1" style={{ minWidth: 0, flex: 1 }}>
                   <HeroText
-                    className="text-base font-bold tracking-normal text-[#1D1D1F]"
-                    style={{ color: '#1D1D1F', fontSize: 16, fontWeight: '700' }}
+                    className="text-base font-bold tracking-normal"
+                    style={{
+                      color: role === 'player' ? '#FFFFFF' : '#1D1D1F',
+                      fontSize: 16,
+                      fontWeight: '700',
+                    }}
                   >
                     {title}
                   </HeroText>
                   <HeroText
-                    className="mt-1 text-sm leading-5 text-[rgba(29,29,31,0.62)]"
+                    className="mt-1 text-sm leading-5"
                     style={{
                       marginTop: 4,
-                      color: 'rgba(29,29,31,0.62)',
+                      color:
+                        role === 'player' ? appChromeColors.heroMuted : 'rgba(29,29,31,0.62)',
                       fontSize: 14,
                       lineHeight: 20,
                     }}
@@ -107,10 +116,15 @@ export default function WelcomeScreen() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 16,
-                    backgroundColor: '#F5F5F7',
+                    backgroundColor:
+                      role === 'player' ? 'rgba(255,255,255,0.12)' : '#F5F5F7',
                   }}
                 >
-                  <ArrowRight size={15} color={appChromeColors.primary} strokeWidth={2} />
+                  <ArrowRight
+                    size={15}
+                    color={role === 'player' ? '#FFFFFF' : appChromeColors.primary}
+                    strokeWidth={2}
+                  />
                 </View>
               </View>
           </Pressable>
