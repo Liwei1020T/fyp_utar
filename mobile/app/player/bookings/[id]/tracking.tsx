@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, CalendarClock, Clock3 } from 'lucide-react-native';
 import { View } from 'react-native';
+import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
 import { AppChip } from '../../../../components/ui/AppChip';
 import { HeroText } from '../../../../components/ui/heroui';
@@ -78,6 +79,11 @@ export default function BookingTrackingScreen() {
           <HeroText className="text-lg font-bold text-neutral-900">
             This booking is no longer available.
           </HeroText>
+          <AppButton
+            label="Back to bookings"
+            className="mt-6"
+            onPress={() => router.replace('/player/bookings')}
+          />
         </AppCard>
       </AppScreen>
     );

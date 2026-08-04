@@ -111,7 +111,7 @@ function SearchField({
   return (
     <View
       className={cn(
-        'h-11 flex-1 flex-row items-center gap-2 rounded-lg border bg-white px-3.5',
+        'h-12 flex-1 flex-row items-center gap-2 rounded-lg border bg-white px-3.5',
         isFocused ? 'border-primary-600' : 'border-[#D2D2D7]',
       )}
     >

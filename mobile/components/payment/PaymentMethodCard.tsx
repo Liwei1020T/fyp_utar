@@ -27,7 +27,7 @@ export function PaymentMethodCard({
       accessibilityRole="radio"
       accessibilityLabel={`${title}. ${description}. ${badge}`}
       accessibilityHint="Select this payment method"
-      accessibilityState={{ selected: Boolean(selected) }}
+      accessibilityState={{ checked: Boolean(selected) }}
     >
       <AppCard variant={selected ? 'highlighted' : 'elevated'} padding="md">
         <View className="flex-row items-start gap-4">

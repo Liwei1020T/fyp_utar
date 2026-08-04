@@ -3,9 +3,10 @@ import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   BadgeCheck,
-  ChevronRight,
+  Bell,
   Gauge,
   LogOut,
+  MessageSquareText,
   NotebookText,
   Settings2,
   Settings,
@@ -54,28 +55,16 @@ export default function PlayerProfileScreen() {
   ];
   const shortcutItems = [
     {
-      title: 'Edit onboarding profile',
-      subtitle: 'Update skill level, style, priorities, and preferred tension.',
-      icon: <Sparkles size={18} color="#2F64B6" />,
-      route: '/player/profile/edit',
+      title: 'Booking support',
+      subtitle: 'Find messages attached to your service bookings.',
+      icon: <MessageSquareText size={18} color="#2F64B6" />,
+      route: '/player/chat',
     },
     {
-      title: 'My bookings',
-      subtitle: 'Check current orders, collection status, and service history.',
-      icon: <NotebookText size={18} color="#2F64B6" />,
-      route: '/player/bookings',
-    },
-    {
-      title: 'Recommendation setup',
-      subtitle: 'Refresh your recommendation flow with your latest preferences.',
-      icon: <Gauge size={18} color="#2F64B6" />,
-      route: '/player/recommend',
-    },
-    {
-      title: 'App settings',
-      subtitle: 'Manage account, password, privacy, notifications, and deletion requests.',
-      icon: <Settings2 size={18} color="#2F64B6" />,
-      route: '/player/settings',
+      title: 'Notifications',
+      subtitle: 'Review booking, payment, chat, and recommendation updates.',
+      icon: <Bell size={18} color="#2F64B6" />,
+      route: '/player/notifications',
     },
     {
       title: 'Racket passport',
@@ -88,6 +77,30 @@ export default function PlayerProfileScreen() {
       subtitle: 'Review verified balance, transactions, and pending top-ups.',
       icon: <Wallet size={18} color="#2F64B6" />,
       route: '/player/wallet',
+    },
+    {
+      title: 'App settings',
+      subtitle: 'Manage account, password, privacy, notifications, and deletion requests.',
+      icon: <Settings2 size={18} color="#2F64B6" />,
+      route: '/player/settings',
+    },
+    {
+      title: 'Edit onboarding profile',
+      subtitle: 'Update skill level, style, priorities, and preferred tension.',
+      icon: <Sparkles size={18} color="#2F64B6" />,
+      route: '/player/profile/edit',
+    },
+    {
+      title: 'Recommendation setup',
+      subtitle: 'Refresh your recommendation flow with your latest preferences.',
+      icon: <Gauge size={18} color="#2F64B6" />,
+      route: '/player/recommend',
+    },
+    {
+      title: 'My bookings',
+      subtitle: 'Check current orders, collection status, and service history.',
+      icon: <NotebookText size={18} color="#2F64B6" />,
+      route: '/player/bookings',
     },
   ] as const;
   const profileFacts = [
@@ -138,6 +151,42 @@ export default function PlayerProfileScreen() {
           </View>
         </View>
       </AppCard>
+
+      <AppSection
+        eyebrow="ALL FEATURES"
+        title="More player tools"
+        subtitle="Find every account, support, racket, and payment feature here."
+        variant="compact"
+      >
+        <View className="flex-row flex-wrap gap-3">
+          {shortcutItems.map((item) => (
+            <Pressable
+              key={item.title}
+              onPress={() => router.push(item.route as never)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.title}. ${item.subtitle}`}
+              accessibilityHint={`Open ${item.title.toLowerCase()}`}
+              className="w-[48%] active:opacity-70"
+            >
+              <AppCard
+                variant="elevated"
+                padding="sm"
+                className="h-full rounded-[20px]"
+                contentClassName="min-h-[96px] justify-between"
+              >
+                <View className="h-11 w-11 items-center justify-center rounded-2xl bg-primary-50">
+                  {item.icon}
+                </View>
+                <View className="mt-3">
+                  <HeroText className="text-[14px] font-bold leading-5 text-neutral-900">
+                    {item.title}
+                  </HeroText>
+                </View>
+              </AppCard>
+            </Pressable>
+          ))}
+        </View>
+      </AppSection>
 
       <AppSection eyebrow="ACTIVITY" title="Your quick stats" variant="compact">
         <View className="flex-row gap-3">
@@ -193,48 +242,6 @@ export default function PlayerProfileScreen() {
             </HeroText>
           </View>
         </AppCard>
-      </AppSection>
-
-      <AppSection
-        eyebrow="SHORTCUTS"
-        title="Quick actions"
-        subtitle="Jump back into the parts of the app you use most."
-      >
-        <View className="gap-3">
-          {shortcutItems.map((item) => (
-            <Pressable
-              key={item.title}
-              onPress={() => router.push(item.route as never)}
-              accessibilityRole="button"
-              accessibilityLabel={`${item.title}. ${item.subtitle}`}
-              accessibilityHint={`Open ${item.title.toLowerCase()}`}
-              className="active:opacity-70"
-            >
-              <AppCard
-                variant="elevated"
-                padding="md"
-                className="rounded-[24px]"
-              >
-                <View className="flex-row items-center justify-between gap-4">
-                  <View className="flex-row items-center gap-3.5">
-                    <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-50">
-                      {item.icon}
-                    </View>
-                    <View className="flex-1">
-                      <HeroText className="text-[15px] font-bold text-neutral-900 leading-tight">
-                        {item.title}
-                      </HeroText>
-                      <HeroText className="mt-1 text-[13px] leading-5 text-neutral-500 font-medium">
-                        {item.subtitle}
-                      </HeroText>
-                    </View>
-                  </View>
-                  <ChevronRight size={18} color="#94A3B8" />
-                </View>
-              </AppCard>
-            </Pressable>
-          ))}
-        </View>
       </AppSection>
 
       <View className="mt-8 mb-3">

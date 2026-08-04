@@ -573,7 +573,7 @@ function ScoreRow({
             Scale 1 to 10
           </HeroText>
         </View>
-        <View className="h-11 w-[74px] rounded-[14px] border border-[#D8E2EE] bg-[#F8FBFF] px-3">
+        <View className="h-12 w-[74px] rounded-[14px] border border-[#D8E2EE] bg-[#F8FBFF] px-3">
           <HeroTextField
             variant="secondary"
             keyboardType="numeric"

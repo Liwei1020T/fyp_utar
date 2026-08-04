@@ -7,6 +7,7 @@ import {
   Bell,
   CalendarClock,
   ChevronRight,
+  MessageSquareText,
   Search,
   Sparkles,
   Zap,
@@ -14,6 +15,7 @@ import {
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
+import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { appChromeColors, getBookingStatusVariant } from '../../../components/ui/theme';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
@@ -30,30 +32,30 @@ import type { Booking } from '../../../types/domain';
 
 const quickActions = [
   {
-    title: 'Get recommendation',
+    title: 'Recommend',
     route: '/player/recommend',
     icon: Zap,
     color: appChromeColors.primary,
     bgColor: appChromeColors.primarySoft,
   },
   {
-    title: 'Book restring',
+    title: 'Book service',
     route: '/player/bookings/new',
     icon: CalendarClock,
     color: appChromeColors.primary,
     bgColor: appChromeColors.primarySoft,
   },
   {
-    title: 'Browse strings',
+    title: 'String catalog',
     route: '/player/strings',
     icon: Search,
     color: appChromeColors.primary,
     bgColor: appChromeColors.primarySoft,
   },
   {
-    title: 'Track service',
-    route: '/player/bookings',
-    icon: Activity,
+    title: 'Message shop',
+    route: '/player/chat',
+    icon: MessageSquareText,
     color: appChromeColors.primary,
     bgColor: appChromeColors.primarySoft,
   },
@@ -87,8 +89,15 @@ export default function PlayerHomeScreen() {
       title={`Welcome back, ${user.name.split(' ')[0]}`}
       subtitle="Recommendations, bookings, and service updates in one place."
       headerRight={
-        <Pressable
-          accessibilityRole="button"
+        <AppIconButton
+          icon={
+            <View>
+              <Bell size={20} color="#475569" strokeWidth={2} />
+              {hasUnreadNotifications ? (
+                <View className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+              ) : null}
+            </View>
+          }
           accessibilityLabel={
             hasUnreadNotifications
               ? 'Open notifications, unread alerts available'
@@ -96,16 +105,53 @@ export default function PlayerHomeScreen() {
           }
           accessibilityHint="View booking, payment, chat, and recommendation alerts"
           onPress={() => router.push('/player/notifications')}
-          className="h-10 w-10 items-center justify-center rounded-xl border border-[#DCE6F7] bg-white shadow-sm"
-        >
-          <Bell size={20} color="#475569" strokeWidth={2} />
-          {hasUnreadNotifications ? (
-            <View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-          ) : null}
-        </Pressable>
+        />
       }
     >
-      <View className="mt-1">
+      <AppSection
+        eyebrow="START HERE"
+        title="Quick actions"
+        subtitle="The four fastest ways into StringSense."
+        className="mt-1"
+        variant="compact"
+      >
+        <View className="flex-row flex-wrap gap-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+
+            return (
+              <Pressable
+                key={action.title}
+                accessibilityRole="button"
+                accessibilityLabel={action.title}
+                onPress={() => router.push(action.route as never)}
+                className="w-[48%] active:opacity-70"
+              >
+                <AppCard
+                  padding="sm"
+                  className="border border-[#DCE6F7] bg-white shadow-sm"
+                  contentClassName="min-h-[88px] justify-between"
+                >
+                  <View
+                    style={{ backgroundColor: action.bgColor }}
+                    className="h-10 w-10 items-center justify-center rounded-lg"
+                  >
+                    <Icon size={20} color={action.color} strokeWidth={2.15} />
+                  </View>
+                  <HeroText
+                    className="text-[13px] font-semibold leading-[17px] tracking-normal text-slate-900"
+                    numberOfLines={2}
+                  >
+                    {action.title}
+                  </HeroText>
+                </AppCard>
+              </Pressable>
+            );
+          })}
+        </View>
+      </AppSection>
+
+      <View className="mt-5">
         <AppCard variant="dark" className="overflow-hidden" padding="md">
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1">
@@ -164,7 +210,7 @@ export default function PlayerHomeScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="See all strings"
-            className="min-h-11 justify-center"
+            className="min-h-11 min-w-11 items-center justify-center"
             onPress={() => router.push('/player/strings')}
           >
             <HeroText className="text-[13px] font-semibold text-primary-700">
@@ -174,48 +220,6 @@ export default function PlayerHomeScreen() {
         }
       >
         <TrendingStrings />
-      </AppSection>
-
-      <AppSection
-        title="Quick Actions"
-        subtitle="Jump into the tasks you use most."
-        className="mt-5"
-        variant="compact"
-      >
-        <View className="flex-row flex-wrap gap-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-
-            return (
-              <Pressable
-                key={action.title}
-                accessibilityRole="button"
-                accessibilityLabel={action.title}
-                onPress={() => router.push(action.route as never)}
-                className="w-[48%] active:opacity-70"
-              >
-                <AppCard
-                  padding="sm"
-                  className="border border-[#DCE6F7] bg-white shadow-sm"
-                  contentClassName="h-[112px] justify-between"
-                >
-                  <View
-                    style={{ backgroundColor: action.bgColor }}
-                    className="h-11 w-11 items-center justify-center rounded-lg"
-                  >
-                    <Icon size={21} color={action.color} strokeWidth={2.15} />
-                  </View>
-                  <HeroText
-                    className="text-[14px] font-semibold leading-[18px] tracking-normal text-slate-900"
-                    numberOfLines={2}
-                  >
-                    {action.title}
-                  </HeroText>
-                </AppCard>
-              </Pressable>
-            );
-          })}
-        </View>
       </AppSection>
 
       {latestBooking && latestString ? (

@@ -37,7 +37,9 @@ export default function AdminTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: appChromeColors.pageAdmin },
+        sceneStyle: {
+          backgroundColor: appChromeColors.pageAdmin,
+        },
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: appChromeColors.primary,
         tabBarInactiveTintColor: appChromeColors.inactive,
@@ -48,10 +50,8 @@ export default function AdminTabsLayout() {
           height: tabBarHeight,
           paddingBottom: Math.max(insets.bottom, 10),
           paddingTop: 10,
-          position: 'absolute',
-          left: appLayoutMetrics.pagePadding,
-          right: appLayoutMetrics.pagePadding,
-          bottom: Math.max(insets.bottom, 10),
+          marginHorizontal: appLayoutMetrics.pagePadding,
+          marginBottom: Math.max(insets.bottom, 10),
           borderRadius: 8,
           ...(Platform.OS === 'web'
             ? { boxShadow: '0 10px 20px rgba(20, 24, 31, 0.08)' }

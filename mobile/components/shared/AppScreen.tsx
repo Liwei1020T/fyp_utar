@@ -47,6 +47,7 @@ export function AppScreen({
   className,
   contentContainerClassName,
   tone = 'default',
+  style,
   ...props
 }: AppScreenProps) {
   const toneBackgrounds = {
@@ -56,6 +57,7 @@ export function AppScreen({
     admin: appChromeColors.pageAdmin,
   };
 
+  const insets = useSafeAreaInsets();
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);
   const tabBarHeight = React.useContext(BottomTabBarHeightContext) ?? 0;
 
@@ -80,7 +82,12 @@ export function AppScreen({
         {scrollable ? (
           <ScrollView
             className={cn('flex-1', className)}
-            style={{ flex: 1 }}
+            style={[
+              {
+                flex: 1,
+              },
+              style,
+            ]}
             keyboardShouldPersistTaps="handled"
             scrollIndicatorInsets={{ bottom: bottomContentInset }}
             contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomContentInset }}
@@ -101,7 +108,16 @@ export function AppScreen({
             </View>
           </ScrollView>
         ) : (
-          <View className={cn('flex-1', className)} style={{ flex: 1 }} {...props}>
+          <View
+            className={cn('flex-1', className)}
+            style={[
+              {
+                flex: 1,
+              },
+              style,
+            ]}
+            {...props}
+          >
             <View
               className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
               style={{
@@ -122,7 +138,7 @@ export function AppScreen({
             className="w-full self-center px-4"
             style={{ 
               maxWidth: appLayoutMetrics.contentMaxWidth,
-              marginBottom: tabBarHeight + 16,
+              marginBottom: Math.max(insets.bottom, tabBarHeight) + 16,
             }}
           >
             {footer}

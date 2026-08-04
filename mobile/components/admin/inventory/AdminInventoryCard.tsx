@@ -107,7 +107,7 @@ function QuickAction({
       accessibilityLabel={label}
       onPress={onPress}
       className={cn(
-        'h-8 items-center justify-center rounded-[12px] border px-3',
+        'h-11 items-center justify-center rounded-[12px] border px-3',
         variant === 'primary'
           ? 'border-primary-600 bg-primary-600'
           : variant === 'ghost'

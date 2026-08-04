@@ -50,7 +50,7 @@ export function AppInput({
       <View className={cn('mb-4', className)}>
         <View
           className={cn(
-            'h-11 flex-row items-center gap-3 rounded-xl border bg-white px-4 shadow-sm',
+            'h-12 flex-row items-center gap-3 rounded-xl border bg-white px-4 shadow-sm',
             error ? 'border-danger/30' : focusBorder,
             containerClassName,
             innerContainerClassName

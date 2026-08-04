@@ -40,8 +40,8 @@ export function AppIconButton({
   };
 
   const sizeStyles = {
-    md: 'h-10 w-10 rounded-xl',
-    lg: 'h-11 w-11 rounded-xl',
+    md: 'h-11 w-11 rounded-xl',
+    lg: 'h-12 w-12 rounded-xl',
   };
 
   return (

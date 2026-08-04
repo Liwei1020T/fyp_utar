@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useMemo, useState } from 'react';
-import { FlatList, View, ScrollView } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search, Info } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
@@ -113,12 +113,7 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
               inputClassName="text-[15px] font-medium"
             />
 
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              className="-mx-5 px-5"
-              contentContainerStyle={{ gap: 8, paddingRight: 40 }}
-            >
+            <View className="flex-row flex-wrap gap-2">
               {filters.map((item) => (
                 <AppChip
                   key={item}
@@ -128,7 +123,7 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
                   onPress={() => setFilter(item)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </View>
         }
         renderItem={({ item }) => {

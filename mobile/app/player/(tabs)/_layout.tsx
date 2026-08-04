@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Calendar, Home, List, MessageSquareText, User, Zap } from 'lucide-react-native';
+import { Calendar, Home, List, User, Zap } from 'lucide-react-native';
 import { Platform, View } from 'react-native';
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
@@ -51,10 +51,8 @@ export default function TabsLayout() {
           height: tabBarHeight,
           paddingBottom: Math.max(insets.bottom, 10),
           paddingTop: 10,
-          position: 'absolute',
-          left: appLayoutMetrics.pagePadding,
-          right: appLayoutMetrics.pagePadding,
-          bottom: Math.max(insets.bottom, 10),
+          marginHorizontal: appLayoutMetrics.pagePadding,
+          marginBottom: Math.max(insets.bottom, 10),
           borderRadius: 8,
           ...(Platform.OS === 'web'
             ? { boxShadow: '0 10px 20px rgba(20, 24, 31, 0.08)' }
@@ -136,10 +134,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
+          href: null,
           title: 'Chat',
-          tabBarIcon: ({ color, size, focused }) => (
-            <StandardTabIcon icon={MessageSquareText} color={color} size={size} focused={focused} />
-          ),
         }}
       />
       <Tabs.Screen

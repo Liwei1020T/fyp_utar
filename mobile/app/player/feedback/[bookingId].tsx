@@ -490,7 +490,7 @@ export default function FeedbackScreen() {
                     accessibilityState={{
                       checked: detailRatings[key] === value,
                     }}
-                    className={`h-10 flex-1 items-center justify-center rounded-xl ${
+                    className={`h-11 flex-1 items-center justify-center rounded-xl ${
                       detailRatings[key] === value
                         ? 'bg-primary-600'
                         : 'bg-neutral-100'

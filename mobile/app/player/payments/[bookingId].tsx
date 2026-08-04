@@ -268,7 +268,11 @@ export default function PaymentScreen() {
       </AppCard>
 
       <AppSection eyebrow="Methods" title="Choose a payment method">
-        <View className="gap-3">
+        <View
+          className="gap-3"
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Payment method"
+        >
           {paymentOptions.map((item) => (
             <PaymentMethodCard
               key={item.method}

@@ -184,7 +184,12 @@ export default function AdminRecommendationRunsScreen() {
                   </View>
 
                   <View className="flex-row flex-wrap gap-2">
-                    <AppChip label={item.algorithm_version} variant="primary" size="sm" />
+                    <AppChip
+                      label={item.algorithm_version}
+                      variant="primary"
+                      size="sm"
+                      className="max-w-full"
+                    />
                     <AppChip
                       label={`${item.items.length} result${item.items.length === 1 ? '' : 's'}`}
                       variant="neutral"

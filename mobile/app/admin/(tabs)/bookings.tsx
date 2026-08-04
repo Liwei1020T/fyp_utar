@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, ScrollView, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CalendarDays, Search } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -258,11 +258,7 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
               inputClassName="text-[15px] font-medium"
             />
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, paddingRight: 4 }}
-            >
+            <View className="flex-row flex-wrap gap-2">
               {FILTER_OPTIONS.map((option) => (
                 <AppChip
                   key={option.value}
@@ -272,7 +268,7 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
                   onPress={() => setFilter(option.value)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </View>
         }
         ListEmptyComponent={

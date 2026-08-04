@@ -46,7 +46,7 @@ export function FloatingCompareTray() {
           accessibilityLabel="Clear comparison shortlist"
           accessibilityHint="Remove all selected strings"
           onPress={clearCompareSelection}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white/12 border border-white/5"
+          className="h-11 w-11 items-center justify-center rounded-full bg-white/12 border border-white/5"
           hitSlop={6}
         >
           <X size={18} color="white" strokeWidth={2.5} />
@@ -57,7 +57,7 @@ export function FloatingCompareTray() {
           label="Compare" 
           size="sm" 
           variant="primary" 
-          className="h-10 px-5 rounded-full bg-primary-600"
+          className="h-11 px-5 rounded-full bg-primary-600"
           onPress={() => router.push('/player/strings/compare')}
         />
       </View>

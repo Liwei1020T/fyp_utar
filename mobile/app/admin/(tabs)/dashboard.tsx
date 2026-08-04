@@ -35,67 +35,64 @@ import type { BackendAnalyticsSummary } from '../../../types/backend';
 
 const PRIMARY_ACTIONS = [
   {
-    title: 'Feedback',
-    subtitle: 'Review satisfaction scores and low-rating cases.',
-    route: '/admin/feedback',
-    icon: MessageSquareText,
-    variant: 'outline' as const,
-  },
-  {
-    title: 'Notifications',
-    subtitle: 'Inspect devices, delivery logs, and resend failures.',
-    route: '/admin/notifications',
-    icon: BellRing,
-    variant: 'outline' as const,
-  },
-  {
     title: 'Check-in',
-    subtitle: 'Confirm player racket drop-off at the counter.',
+    subtitle: 'Receive a racket at the counter.',
     route: '/admin/check-in',
     icon: Undo2,
-    variant: 'dark' as const,
-  },
-  {
-    title: 'Bookings',
-    subtitle: 'Update service status and monitor the queue.',
-    route: '/admin/bookings',
-    icon: CalendarRange,
-    variant: 'outline' as const,
   },
   {
     title: 'Service queue',
-    subtitle: 'See active rackets grouped by service stage.',
+    subtitle: 'View jobs by service stage.',
     route: '/admin/service-queue',
     icon: ListTodo,
-    variant: 'outline' as const,
+  },
+  {
+    title: 'Bookings',
+    subtitle: 'Update orders and status.',
+    route: '/admin/bookings',
+    icon: CalendarRange,
   },
   {
     title: 'Payments',
-    subtitle: 'Verify pending payments and wallet top-ups.',
+    subtitle: 'Verify payment requests.',
     route: '/admin/payments',
     icon: CreditCard,
-    variant: 'outline' as const,
   },
   {
     title: 'Inventory',
-    subtitle: 'Review string stock and low-stock items.',
+    subtitle: 'Manage strings and stock.',
     route: '/admin/inventory',
     icon: Boxes,
-    variant: 'outline' as const,
+  },
+  {
+    title: 'Feedback',
+    subtitle: 'Review player ratings.',
+    route: '/admin/feedback',
+    icon: MessageSquareText,
+  },
+  {
+    title: 'Notifications',
+    subtitle: 'Send player updates.',
+    route: '/admin/notifications',
+    icon: BellRing,
+  },
+  {
+    title: 'Recommendation runs',
+    subtitle: 'Audit saved AI results.',
+    route: '/admin/recommendations',
+    icon: ScanSearch,
   },
   {
     title: 'Business hours',
-    subtitle: 'Adjust slots and store availability windows.',
+    subtitle: 'Adjust shop availability.',
     route: '/admin/business-hours',
     icon: Clock3,
-    variant: 'outline' as const,
   },
   {
     title: 'Store settings',
-    subtitle: 'Edit store profile, notes, and policies.',
+    subtitle: 'Edit details and policies.',
     route: '/admin/settings',
     icon: Settings2,
-    variant: 'outline' as const,
   },
 ];
 
@@ -172,6 +169,81 @@ export default function AdminDashboardScreen() {
             </HeroText>
           </AppCard>
         ) : null}
+        <AppSection
+          eyebrow="All features"
+          title="Choose a counter task"
+          subtitle="Every admin tool starts here; daily counter work comes first."
+          rightAction={
+            <AppChip
+              label={analytics ? `${awaitingDropOffCount} awaiting` : '— awaiting'}
+              variant="warning"
+              className="mt-1"
+            />
+          }
+          variant="compact"
+        >
+          <View className="flex-row flex-wrap gap-3">
+            {analytics?.pending_feedback_count ? (
+              <AppCard
+                variant="highlighted"
+                padding="md"
+                className="w-full"
+                onPress={() => router.push('/admin/feedback')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-10 w-10 items-center justify-center rounded-[16px] bg-warning-50">
+                    <MessageSquareText size={18} color={appChromeColors.warning} />
+                  </View>
+                  <View className="flex-1">
+                    <HeroText className="text-[14px] font-semibold tracking-tight text-slate-900">
+                      {analytics.pending_feedback_count} feedback items to review
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Open the feedback queue and start with low-satisfaction cases.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={16} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
+            {PRIMARY_ACTIONS.map((action) => {
+              const Icon = action.icon;
+
+              return (
+                <AppCard
+                  key={action.title}
+                  variant={action.title === 'Check-in' ? 'highlighted' : 'elevated'}
+                  padding="sm"
+                  className="w-[48%]"
+                  contentClassName="min-h-[128px] justify-between"
+                  onPress={() => router.push(action.route as never)}
+                >
+                  <View
+                    className={
+                      action.title === 'Check-in'
+                        ? 'h-11 w-11 items-center justify-center rounded-[16px] bg-primary-600'
+                        : 'h-11 w-11 items-center justify-center rounded-[16px] border border-primary-200 bg-primary-50'
+                    }
+                  >
+                    <Icon
+                      size={19}
+                      color={action.title === 'Check-in' ? '#FFFFFF' : appChromeColors.primary}
+                    />
+                  </View>
+                  <View className="mt-3">
+                    <HeroText className="text-[15px] font-semibold leading-5 tracking-tight text-slate-900">
+                      {action.title}
+                    </HeroText>
+                    <HeroText className="mt-1 text-[12px] leading-[17px] text-slate-600" numberOfLines={2}>
+                      {action.subtitle}
+                    </HeroText>
+                  </View>
+                </AppCard>
+              );
+            })}
+          </View>
+        </AppSection>
+
         <AppSection eyebrow="Today" title="Operational snapshot" variant="compact">
           <View className="flex-row flex-wrap gap-3">
             <MetricStatCard
@@ -206,83 +278,6 @@ export default function AdminDashboardScreen() {
           </View>
         </AppSection>
 
-        <AppSection
-          eyebrow="Primary actions"
-          title="Start with the counter flow"
-          subtitle="Keep the work queue, counter flow, and store setup close at hand."
-          rightAction={
-            <AppChip
-              label={analytics ? `${awaitingDropOffCount} awaiting` : '— awaiting'}
-              variant="warning"
-              className="mt-1"
-            />
-          }
-          variant="compact"
-        >
-          <View className="gap-3">
-            {analytics?.pending_feedback_count ? (
-              <AppCard
-                variant="highlighted"
-                padding="md"
-                onPress={() => router.push('/admin/feedback')}
-              >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-10 w-10 items-center justify-center rounded-[16px] bg-warning-50">
-                    <MessageSquareText size={18} color={appChromeColors.warning} />
-                  </View>
-                  <View className="flex-1">
-                    <HeroText className="text-[14px] font-semibold tracking-tight text-slate-900">
-                      {analytics.pending_feedback_count} feedback items to review
-                    </HeroText>
-                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Open the feedback queue and start with low-satisfaction cases.
-                    </HeroText>
-                  </View>
-                  <ArrowRight size={16} color={appChromeColors.textMuted} />
-                </View>
-              </AppCard>
-            ) : null}
-            {PRIMARY_ACTIONS.map((action) => {
-              const Icon = action.icon;
-
-              return (
-                <AppCard
-                  key={action.title}
-                  variant={action.title === 'Check-in' ? 'highlighted' : 'elevated'}
-                  padding="md"
-                  onPress={() => router.push(action.route as never)}
-                >
-                  <View className="flex-row items-center justify-between gap-4">
-                    <View className="flex-row items-center gap-3 flex-1">
-                      <View
-                        className={
-                          action.title === 'Check-in'
-                            ? 'h-12 w-12 items-center justify-center rounded-[18px] bg-primary-600'
-                            : 'h-12 w-12 items-center justify-center rounded-[18px] border border-primary-200 bg-primary-50'
-                        }
-                      >
-                        <Icon
-                          size={20}
-                          color={action.title === 'Check-in' ? '#FFFFFF' : appChromeColors.primary}
-                        />
-                      </View>
-                      <View className="flex-1">
-                        <HeroText className="text-[16px] font-semibold tracking-tight text-slate-900">
-                          {action.title}
-                        </HeroText>
-                        <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                          {action.subtitle}
-                        </HeroText>
-                      </View>
-                    </View>
-                    <ArrowRight size={16} color={appChromeColors.textMuted} />
-                  </View>
-                </AppCard>
-              );
-            })}
-          </View>
-        </AppSection>
-
         <AppSection eyebrow="Highlights" title="What needs attention?" className="mb-12" variant="compact">
           <View className="gap-3">
             <AppCard variant="subtle" padding="md">
@@ -313,22 +308,6 @@ export default function AdminDashboardScreen() {
                     ? `${lowStockCount} string SKU${lowStockCount === 1 ? '' : 's'} flagged for stock review.`
                     : 'Live inventory metrics are unavailable.'}
                 </HeroText>
-              </View>
-            </AppCard>
-            <AppCard variant="elevated" padding="md" onPress={() => router.push('/admin/recommendations')}>
-              <View className="flex-row items-center gap-3">
-                <View className="h-10 w-10 items-center justify-center rounded-[16px] bg-primary-50">
-                  <ScanSearch size={18} color={appChromeColors.primary} />
-                </View>
-                <View className="flex-1">
-                  <HeroText className="text-[14px] font-semibold tracking-tight text-slate-900">
-                    Recommendation runs
-                  </HeroText>
-                  <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                    Review saved recommendation histories, profile snapshots, and score breakdowns.
-                  </HeroText>
-                </View>
-                <ArrowRight size={16} color={appChromeColors.textMuted} />
               </View>
             </AppCard>
           </View>
