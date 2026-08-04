@@ -130,52 +130,44 @@ export default function PlayerHomeScreen() {
           </Pressable>
         }
       >
-        <View className="flex-row flex-wrap gap-3">
+        <View className="flex-row items-start gap-1">
           {quickActions.map((action) => {
             const Icon = action.icon;
             const isFeatured = action.route === '/player/recommend';
 
             return (
-              <AppCard
+              <Pressable
                 key={action.title}
-                variant={isFeatured ? 'dark' : 'elevated'}
-                padding="none"
                 onPress={() => router.push(action.route as never)}
                 accessibilityRole="button"
                 accessibilityLabel={action.accessibilityLabel}
-                className={isFeatured ? 'border-[#163B7A]' : 'border-[#D6E4FF]'}
-                contentClassName="min-h-[108px] justify-between p-3.5"
-                style={{ flexBasis: '47%', flexGrow: 1 }}
+                className="min-h-[84px] flex-1 items-center rounded-[14px] px-1 py-1.5"
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.72 : 1,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
               >
-                <View className="flex-row items-start justify-between gap-3">
-                  <View
-                    style={{
-                      backgroundColor: isFeatured
-                        ? 'rgba(255,255,255,0.12)'
-                        : appChromeColors.primarySoft,
-                    }}
-                    className="h-11 w-11 items-center justify-center rounded-[15px]"
-                  >
-                    <Icon
-                      size={20}
-                      color={isFeatured ? '#F5D67A' : appChromeColors.primary}
-                      strokeWidth={2.1}
-                    />
-                  </View>
-                  <ChevronRight
-                    size={15}
-                    color={isFeatured ? '#D6E4FF' : '#94A3B8'}
+                <View
+                  style={{
+                    backgroundColor: isFeatured
+                      ? appChromeColors.primary
+                      : appChromeColors.primarySoft,
+                  }}
+                  className="h-11 w-11 items-center justify-center rounded-[15px]"
+                >
+                  <Icon
+                    size={20}
+                    color={isFeatured ? '#F5D67A' : appChromeColors.primary}
+                    strokeWidth={2.1}
                   />
                 </View>
                 <HeroText
-                  className={isFeatured
-                    ? 'mt-3 text-[14px] font-semibold leading-[18px] text-white'
-                    : 'mt-3 text-[14px] font-semibold leading-[18px] text-slate-900'}
-                  numberOfLines={1}
+                  className="mt-2 text-center text-[12px] font-semibold leading-[15px] text-slate-800"
+                  numberOfLines={2}
                 >
                   {action.title}
                 </HeroText>
-              </AppCard>
+              </Pressable>
             );
           })}
         </View>
