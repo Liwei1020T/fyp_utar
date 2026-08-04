@@ -119,9 +119,7 @@ export default function LoginScreen() {
 
   return (
     <AuthShell
-      eyebrow="Secure account access"
       title="Welcome back"
-      subtitle="Enter your account details. We will open the correct player or store workspace automatically."
       footer={
         <View className="items-center gap-3">
           <Pressable
@@ -157,7 +155,6 @@ export default function LoginScreen() {
                 errors.countryCode?.message ??
                 errors.phoneNumber?.message
               }
-              helperText="Use the phone number registered to your account."
             />
           )}
         />
@@ -176,7 +173,6 @@ export default function LoginScreen() {
                 setFormError(null);
               }}
               error={errors.password?.message}
-              helperText="Use the password for this account."
               leftAdornment={<LockKeyhole size={18} color="#64748B" />}
             />
           )}

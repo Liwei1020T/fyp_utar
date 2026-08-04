@@ -37,7 +37,6 @@ export function AppScreen({
   children,
   scrollable = true,
   title,
-  subtitle,
   headerRight,
   headerVariant = 'primary',
   compactHeader = false,
@@ -79,14 +78,12 @@ export function AppScreen({
         <AppMotion delay={0}>
           <AppPageHeader
             title={title}
-            subtitle={subtitle}
             headerRight={headerRight}
             variant={headerVariant}
             compact={compactHeader}
             showBackButton={showBackButton}
             onBackPress={onBackPress}
             backAccessibilityLabel={backAccessibilityLabel}
-            tone={tone}
           />
         </AppMotion>
         {scrollable ? (

@@ -89,6 +89,21 @@ test('authentication uses one account entry and routes from the backend role', a
   assert.match(index, /: '\/auth\/login'/);
 });
 
+test('headers keep only task-critical copy', async () => {
+  const [pageHeader, authShell, login] = await Promise.all(
+    [
+      'components/shared/AppPageHeader.tsx',
+      'components/auth/AuthShell.tsx',
+      'app/auth/login.tsx',
+    ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
+  );
+
+  assert.doesNotMatch(pageHeader, /toneLabels|subtitleStyles|FOCUSED FLOW/);
+  assert.match(pageHeader, /header-string-weave\.png/);
+  assert.doesNotMatch(authShell, /Badminton stringing|Find your ideal string setup/);
+  assert.doesNotMatch(login, /helperText=/);
+});
+
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
   const [profileEdit, home, recommendation, results, adminDashboard] =
     await Promise.all(

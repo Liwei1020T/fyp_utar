@@ -133,13 +133,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <AuthShell
-      eyebrow="Player recovery"
       title={stage === 'request' ? 'Reset your password' : 'Enter your verification code'}
-      subtitle={
-        stage === 'request'
-          ? 'Request a 6-digit code for your phone-based player account.'
-          : 'Use the code you received and set a new password.'
-      }
       onBack={() => {
         if (router.canGoBack()) {
           router.back();

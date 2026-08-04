@@ -91,9 +91,7 @@ export default function RegisterScreen() {
 
   return (
     <AuthShell
-      eyebrow="New player"
       title="Create your account"
-      subtitle="Set up a player login and continue straight into your profile."
       onBack={() => {
         if (router.canGoBack()) {
           router.back();
