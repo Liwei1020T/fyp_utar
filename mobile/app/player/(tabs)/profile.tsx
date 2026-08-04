@@ -1,18 +1,7 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  BadgeCheck,
-  Bell,
-  Gauge,
-  LogOut,
-  MessageSquareText,
-  NotebookText,
-  Settings2,
-  Settings,
-  Sparkles,
-  Wallet,
-} from 'lucide-react-native';
+import { LogOut, Settings, Settings2 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -53,56 +42,6 @@ export default function PlayerProfileScreen() {
     `${user.preferredTension} lbs`,
     formatPlayFrequency(user.playFrequency).replace(' / ', '/'),
   ];
-  const shortcutItems = [
-    {
-      title: 'Booking support',
-      subtitle: 'Find messages attached to your service bookings.',
-      icon: <MessageSquareText size={18} color="#2F64B6" />,
-      route: '/player/chat',
-    },
-    {
-      title: 'Notifications',
-      subtitle: 'Review booking, payment, chat, and recommendation updates.',
-      icon: <Bell size={18} color="#2F64B6" />,
-      route: '/player/notifications',
-    },
-    {
-      title: 'Racket passport',
-      subtitle: 'Review rackets and stringing history from completed bookings.',
-      icon: <BadgeCheck size={18} color="#2F64B6" />,
-      route: '/player/rackets',
-    },
-    {
-      title: 'Wallet',
-      subtitle: 'Review verified balance, transactions, and pending top-ups.',
-      icon: <Wallet size={18} color="#2F64B6" />,
-      route: '/player/wallet',
-    },
-    {
-      title: 'App settings',
-      subtitle: 'Manage account, password, privacy, notifications, and deletion requests.',
-      icon: <Settings2 size={18} color="#2F64B6" />,
-      route: '/player/settings',
-    },
-    {
-      title: 'Edit onboarding profile',
-      subtitle: 'Update skill level, style, priorities, and preferred tension.',
-      icon: <Sparkles size={18} color="#2F64B6" />,
-      route: '/player/profile/edit',
-    },
-    {
-      title: 'Recommendation setup',
-      subtitle: 'Refresh your recommendation flow with your latest preferences.',
-      icon: <Gauge size={18} color="#2F64B6" />,
-      route: '/player/recommend',
-    },
-    {
-      title: 'My bookings',
-      subtitle: 'Check current orders, collection status, and service history.',
-      icon: <NotebookText size={18} color="#2F64B6" />,
-      route: '/player/bookings',
-    },
-  ] as const;
   const profileFacts = [
     { label: 'Skill level', value: apiAlignedSkillLevel },
     { label: 'Playing style', value: apiAlignedPlayingStyle },
@@ -116,7 +55,7 @@ export default function PlayerProfileScreen() {
     <AppScreen
       headerVariant="primary"
       title="Profile"
-      subtitle="Your badminton preferences, activity snapshot, and quick actions."
+      subtitle="Your badminton preferences and account."
       headerRight={
         <AppIconButton
           icon={<Settings size={20} color="#475569" />}
@@ -151,42 +90,6 @@ export default function PlayerProfileScreen() {
           </View>
         </View>
       </AppCard>
-
-      <AppSection
-        eyebrow="ALL FEATURES"
-        title="More player tools"
-        subtitle="Find every account, support, racket, and payment feature here."
-        variant="compact"
-      >
-        <View className="flex-row flex-wrap gap-3">
-          {shortcutItems.map((item) => (
-            <Pressable
-              key={item.title}
-              onPress={() => router.push(item.route as never)}
-              accessibilityRole="button"
-              accessibilityLabel={`${item.title}. ${item.subtitle}`}
-              accessibilityHint={`Open ${item.title.toLowerCase()}`}
-              className="w-[48%] active:opacity-70"
-            >
-              <AppCard
-                variant="elevated"
-                padding="sm"
-                className="h-full rounded-[20px]"
-                contentClassName="min-h-[96px] justify-between"
-              >
-                <View className="h-11 w-11 items-center justify-center rounded-2xl bg-primary-50">
-                  {item.icon}
-                </View>
-                <View className="mt-3">
-                  <HeroText className="text-[14px] font-bold leading-5 text-neutral-900">
-                    {item.title}
-                  </HeroText>
-                </View>
-              </AppCard>
-            </Pressable>
-          ))}
-        </View>
-      </AppSection>
 
       <AppSection eyebrow="ACTIVITY" title="Your quick stats" variant="compact">
         <View className="flex-row gap-3">
@@ -249,6 +152,13 @@ export default function PlayerProfileScreen() {
           Account
         </HeroText>
         <AppButton
+          label="Account settings"
+          variant="outline"
+          size="md"
+          leadingIcon={<Settings2 size={18} color="#2F64B6" />}
+          onPress={() => router.push('/player/settings')}
+        />
+        <AppButton
           label="Log out"
           variant="ghost"
           size="md"
@@ -258,7 +168,7 @@ export default function PlayerProfileScreen() {
           }}
           leadingIcon={<LogOut size={18} color="#DC2626" />}
           textClassName="text-red-600 font-semibold"
-          className="h-[48px] justify-start rounded-[18px] border border-red-100/80 bg-white/70 px-4"
+          className="mt-3 h-[48px] justify-start rounded-[18px] border border-red-100/80 bg-white/70 px-4"
         />
       </View>
     </AppScreen>

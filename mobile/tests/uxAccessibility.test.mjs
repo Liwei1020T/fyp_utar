@@ -105,11 +105,13 @@ test('headers keep only task-critical copy', async () => {
 });
 
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
-  const [profileEdit, home, recommendation, results, adminDashboard] =
+  const [profileEdit, home, profile, tools, recommendation, results, adminDashboard] =
     await Promise.all(
       [
         'app/player/profile/edit.tsx',
         'app/player/(tabs)/home.tsx',
+        'app/player/(tabs)/profile.tsx',
+        'app/player/tools.tsx',
         'app/player/(tabs)/recommend.tsx',
         'app/player/(tabs)/results.tsx',
         'app/admin/(tabs)/dashboard.tsx',
@@ -120,12 +122,20 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(profileEdit, /showAdvanced/);
   assert.match(home, /activeBooking/);
   assert.match(home, /Open all player features/);
+  assert.match(home, /router\.push\('\/player\/tools'\)/);
   assert.match(home, /isFeatured/);
   assert.match(home, /min-h-\[84px\] flex-1 items-center/);
   assert.doesNotMatch(home, /flex-row flex-wrap gap-3/);
   assert.match(home, /Find your next string/);
   assert.doesNotMatch(home, /playerBookings\.length\} logged/);
   assert.doesNotMatch(home, /eyebrow="ESSENTIALS"/);
+  assert.doesNotMatch(profile, /More player tools|ALL FEATURES/);
+  assert.match(profile, /label="Account settings"/);
+  assert.match(tools, /title="All tools"/);
+  assert.match(tools, /title: 'Play'/);
+  assert.match(tools, /title: 'Service'/);
+  assert.match(tools, /title: 'Account'/);
+  assert.doesNotMatch(tools, /\/player\/profile\/edit/);
   assert.doesNotMatch(recommendation, /Saved Priority Weights/);
   assert.match(results, /StringProductImage/);
   assert.match(results, /Why this fits/);

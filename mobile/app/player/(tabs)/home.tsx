@@ -121,7 +121,7 @@ export default function PlayerHomeScreen() {
             accessibilityRole="button"
             accessibilityLabel="Open all player features"
             className="min-h-11 flex-row items-center gap-1 rounded-[14px] border border-primary-100 bg-white px-3"
-            onPress={() => router.push('/player/profile')}
+            onPress={() => router.push('/player/tools')}
           >
             <HeroText className="text-[13px] font-semibold text-primary-700">
               All tools
