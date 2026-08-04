@@ -149,7 +149,12 @@ export default function ForgotPasswordScreen() {
       }}
       footer={
         <View className="items-center">
-          <Pressable onPress={() => router.replace('/auth/login?role=player')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to player login"
+            className="min-h-11 justify-center"
+            onPress={() => router.replace('/auth/login?role=player')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               Back to login
             </HeroText>

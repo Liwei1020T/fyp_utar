@@ -30,6 +30,7 @@ export default function AdminFeedbackScreen() {
   const [stringId, setStringId] = useState<string | undefined>();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [showStringFilters, setShowStringFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -120,20 +121,31 @@ export default function AdminFeedbackScreen() {
           ))}
         </View>
         {strings.length ? (
-          <View className="mt-3 flex-row flex-wrap gap-2">
-            <AppChip
-              label="All strings"
-              variant={!stringId ? 'secondary' : 'neutral'}
-              onPress={() => setStringId(undefined)}
+          <View className="mt-3">
+            <AppButton
+              label={showStringFilters ? 'Hide string filters' : stringId ? 'Change string filter (1)' : 'Filter by string'}
+              variant="outline"
+              size="sm"
+              accessibilityState={{ expanded: showStringFilters }}
+              onPress={() => setShowStringFilters((current) => !current)}
             />
-            {strings.map((item) => (
-              <AppChip
-                key={item.id}
-                label={`${item.brand} ${item.model}`}
-                variant={stringId === item.id ? 'secondary' : 'neutral'}
-                onPress={() => setStringId(item.id)}
-              />
-            ))}
+            {showStringFilters ? (
+              <View className="mt-3 flex-row flex-wrap gap-2">
+                <AppChip
+                  label="All strings"
+                  variant={!stringId ? 'secondary' : 'neutral'}
+                  onPress={() => setStringId(undefined)}
+                />
+                {strings.map((item) => (
+                  <AppChip
+                    key={item.id}
+                    label={`${item.brand} ${item.model}`}
+                    variant={stringId === item.id ? 'secondary' : 'neutral'}
+                    onPress={() => setStringId(item.id)}
+                  />
+                ))}
+              </View>
+            ) : null}
           </View>
         ) : null}
         <View className="mt-3 flex-row gap-3">

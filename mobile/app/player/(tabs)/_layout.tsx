@@ -68,7 +68,7 @@ export default function TabsLayout() {
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '700',
           marginTop: 2,
         },

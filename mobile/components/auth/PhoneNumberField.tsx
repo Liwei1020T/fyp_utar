@@ -82,6 +82,7 @@ export function PhoneNumberField({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Choose country code"
+          accessibilityState={{ expanded: isCountryPickerOpen }}
           onPress={() => setIsCountryPickerOpen((current) => !current)}
           className="h-14 min-w-[94px] flex-row items-center justify-center gap-1.5 border-r border-[#D2D2D7] px-3"
         >
@@ -104,6 +105,8 @@ export function PhoneNumberField({
           className="ml-3"
         />
         <TextInput
+          accessibilityLabel={label}
+          accessibilityHint={error ?? helperText}
           placeholder={placeholder}
           keyboardType="phone-pad"
           value={value}
@@ -123,7 +126,9 @@ export function PhoneNumberField({
             return (
               <Pressable
                 key={item.value}
-                accessibilityRole="button"
+                accessibilityRole="radio"
+                accessibilityLabel={`${item.caption}, ${item.value}`}
+                accessibilityState={{ checked: isSelected }}
                 onPress={() => {
                   onChangeCountryCode(item.value);
                   setIsCountryPickerOpen(false);
@@ -153,7 +158,10 @@ export function PhoneNumberField({
         </View>
       ) : null}
       {error ? (
-        <HeroText className="ml-1 text-xs leading-5 text-danger">
+        <HeroText
+          accessibilityLiveRegion="polite"
+          className="ml-1 text-xs leading-5 text-danger"
+        >
           {error}
         </HeroText>
       ) : helperText ? (

@@ -186,6 +186,7 @@ export default function PlayerSettingsScreen() {
                   <Pressable
                     key={key}
                     accessibilityRole="switch"
+                    accessibilityLabel={PRIVACY_LABELS[key]}
                     accessibilityState={{ checked: enabled }}
                     onPress={() => void togglePrivacy(key)}
                   >

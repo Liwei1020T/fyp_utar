@@ -187,7 +187,12 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
   }
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Booking ${orderCode}, ${racketName}, ${formatBookingStatus(booking.status)}`}
+      accessibilityHint="Open booking details"
+      onPress={onPress}
+    >
       <View className="mb-3">
         {content}
       </View>

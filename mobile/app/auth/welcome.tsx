@@ -35,7 +35,12 @@ export default function WelcomeScreen() {
       subtitle="Choose a workspace, then continue with a backend-backed login."
       footer={
         <View className="items-center gap-3">
-          <Pressable onPress={() => router.push('/auth/register')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Create a player account"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/auth/register')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               New player? Create an account
             </HeroText>
@@ -47,6 +52,9 @@ export default function WelcomeScreen() {
         {roleCards.map(({ role, title, description, icon: Icon, accentClassName, accentColor }) => (
           <Pressable
             key={role}
+            accessibilityRole="button"
+            accessibilityLabel={`${title}. ${description}`}
+            accessibilityHint={`Continue to ${role} login`}
             onPress={() => router.push(`/auth/login?role=${role}`)}
             style={({ pressed }) => ({
               opacity: pressed ? 0.94 : 1,
@@ -111,6 +119,8 @@ export default function WelcomeScreen() {
 
       <View className="mt-5 gap-3" style={{ gap: 12, marginTop: 20 }}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Continue to login"
           onPress={() => router.push('/auth/login')}
           style={({ pressed }) => ({
             opacity: pressed ? 0.92 : 1,

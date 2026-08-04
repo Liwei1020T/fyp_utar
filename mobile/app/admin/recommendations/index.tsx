@@ -151,7 +151,7 @@ export default function AdminRecommendationRunsScreen() {
             <AppInput
               variant="minimal"
               className="mb-0"
-              placeholder="Search phone, algorithm, matrix version, or top result..."
+              placeholder="Search runs, phone, or algorithm..."
               value={search}
               onChangeText={setSearch}
               leftAdornment={<Search size={18} color="#94A3B8" strokeWidth={2.5} />}

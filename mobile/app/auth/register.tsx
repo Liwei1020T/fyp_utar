@@ -103,7 +103,12 @@ export default function RegisterScreen() {
       }}
       footer={
         <View className="items-center">
-          <Pressable onPress={() => router.push('/auth/login')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log in to an existing account"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/auth/login')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               Already have an account? Log in
             </HeroText>

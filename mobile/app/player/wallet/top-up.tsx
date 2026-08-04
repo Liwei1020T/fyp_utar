@@ -78,6 +78,16 @@ export default function WalletTopUpScreen() {
       subtitle="Create a persisted top-up request for shop verification."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Request top-up"
+            isLoading={isSubmitting}
+            onPress={() => void submitTopUp()}
+          />
+          <AppButton label="Back to wallet" variant="outline" onPress={() => router.back()} />
+        </View>
+      }
     >
       <AppCard variant="highlighted" padding="lg">
         <HeroText className="text-sm leading-6 text-neutral-600">
@@ -122,19 +132,11 @@ export default function WalletTopUpScreen() {
         </View>
       </View>
 
-      <View className="mt-6 gap-3">
-        <AppButton
-          label="Request top-up"
-          isLoading={isSubmitting}
-          onPress={() => void submitTopUp()}
-        />
-        {error ? (
-          <HeroText className="text-sm font-medium text-red-600">
-            {error}
-          </HeroText>
-        ) : null}
-        <AppButton label="Back to wallet" variant="outline" onPress={() => router.back()} />
-      </View>
+      {error ? (
+        <HeroText className="mt-6 text-sm font-medium text-red-600">
+          {error}
+        </HeroText>
+      ) : null}
     </AppScreen>
   );
 }

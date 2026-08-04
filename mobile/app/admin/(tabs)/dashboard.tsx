@@ -220,6 +220,28 @@ export default function AdminDashboardScreen() {
           variant="compact"
         >
           <View className="gap-3">
+            {analytics?.pending_feedback_count ? (
+              <AppCard
+                variant="highlighted"
+                padding="md"
+                onPress={() => router.push('/admin/feedback')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-10 w-10 items-center justify-center rounded-[16px] bg-warning-50">
+                    <MessageSquareText size={18} color={appChromeColors.warning} />
+                  </View>
+                  <View className="flex-1">
+                    <HeroText className="text-[14px] font-semibold tracking-tight text-slate-900">
+                      {analytics.pending_feedback_count} feedback items to review
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Open the feedback queue and start with low-satisfaction cases.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={16} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
             {PRIMARY_ACTIONS.map((action) => {
               const Icon = action.icon;
 

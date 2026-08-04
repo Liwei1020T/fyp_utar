@@ -104,14 +104,18 @@ export function AppPageHeader({
 
           <View className="min-w-0 flex-1">
             {title ? (
-              <HeroText className={titleStyles[variant]} numberOfLines={1}>
+              <HeroText
+                accessibilityRole="header"
+                className={titleStyles[variant]}
+                numberOfLines={2}
+              >
                 {title}
               </HeroText>
             ) : null}
             {subtitle ? (
               <HeroText
                 className={cn(subtitleStyles[variant], title ? 'mt-1' : undefined)}
-                numberOfLines={2}
+                numberOfLines={3}
               >
                 {subtitle}
               </HeroText>

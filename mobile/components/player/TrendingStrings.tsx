@@ -82,6 +82,9 @@ export function TrendingStrings() {
           return (
             <Pressable
               key={item.id}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.brand} ${item.model}, ${item.gauge}`}
+              accessibilityHint="Open string details"
               onPress={() => router.push(`/player/strings/${item.id}`)}
               className="w-[152px] active:opacity-80"
             >

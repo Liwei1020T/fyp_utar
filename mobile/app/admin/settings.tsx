@@ -243,6 +243,15 @@ export default function AdminSettingsScreen() {
       subtitle="Manage public contact details, support copy, booking policy, and featured strings."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Save store settings"
+            onPress={saveSettings}
+            isLoading={isSaving}
+          />
+        </View>
+      }
     >
       <AppSection eyebrow="Store" title="Public-facing details">
         <AppInput label="Store name" value={storeName} onChangeText={setStoreName} />
@@ -424,12 +433,6 @@ export default function AdminSettingsScreen() {
         </HeroText>
       ) : null}
 
-      <AppButton
-        label="Save store settings"
-        className="mt-6"
-        onPress={saveSettings}
-        isLoading={isSaving}
-      />
     </AppScreen>
   );
 }

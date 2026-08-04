@@ -193,6 +193,34 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
       subtitle="Make onboarding feel premium and keep recommendations grounded in real preferences."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Save player profile"
+            size="lg"
+            onPress={handleSubmit(onSubmit)}
+            isLoading={isSubmitting}
+          />
+          <AppButton
+            label="Reset preference sliders"
+            variant="outline"
+            onPress={() => {
+              setPriorities({
+                power: 5,
+                control: 5,
+                durability: 5,
+                comfort: 5,
+                sound: 5,
+              });
+              setAdvancedPreferences({
+                elasticity: 5,
+                tensionRetention: 5,
+                stringMovement: 5,
+              });
+            }}
+          />
+        </View>
+      }
     >
       <AppCard variant="highlighted" className="rounded-[32px]" padding="lg">
         <View className="flex-row items-start justify-between gap-4">
@@ -261,6 +289,9 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
               {styleOptions.map((style) => (
                 <Pressable
                   key={style.value}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${style.label}. ${style.description}`}
+                  accessibilityState={{ checked: value === style.value }}
                   className="w-full"
                   onPress={() => onChange(style.value)}
                 >
@@ -460,33 +491,6 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
         </View>
       </AppSection>
 
-      <View className="mb-12 mt-8">
-        <AppButton
-          label="Reset preference sliders"
-          variant="outline"
-          className="mb-3"
-          onPress={() => {
-            setPriorities({
-              power: 5,
-              control: 5,
-              durability: 5,
-              comfort: 5,
-              sound: 5,
-            });
-            setAdvancedPreferences({
-              elasticity: 5,
-              tensionRetention: 5,
-              stringMovement: 5,
-            });
-          }}
-        />
-        <AppButton
-          label="Save player profile"
-          size="lg"
-          onPress={handleSubmit(onSubmit)}
-          isLoading={isSubmitting}
-        />
-      </View>
     </AppScreen>
   );
 }

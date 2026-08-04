@@ -395,6 +395,17 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
       subtitle="Configure your restring request."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Continue to summary"
+            size="lg"
+            onPress={handleSubmit(onSubmit)}
+            isLoading={isSubmitting}
+            isDisabled={!selectedSlot}
+          />
+        </View>
+      }
     >
       <AppCard variant="highlighted" className="rounded-[28px]" padding="md">
         <View className="flex-row items-start justify-between gap-3">
@@ -444,6 +455,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
                   <Pressable
                     key={item.id}
                     accessibilityRole="button"
+                    accessibilityLabel={`${item.brand} ${item.model}, ${item.gauge}`}
                     accessibilityState={{ selected: isSelected }}
                     onPress={() => {
                       setSelectedStringId(item.id);
@@ -849,15 +861,6 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
         </AppCard>
       </AppSection>
 
-      <View className="mb-12 mt-6">
-        <AppButton
-          label="Continue to summary"
-          size="lg"
-          onPress={handleSubmit(onSubmit)}
-          isLoading={isSubmitting}
-          isDisabled={!selectedSlot}
-        />
-      </View>
     </AppScreen>
   );
 }

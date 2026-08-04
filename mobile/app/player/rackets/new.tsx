@@ -97,6 +97,23 @@ export default function NewRacketScreen() {
       subtitle="Create a durable passport before linking the frame to future bookings."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Register racket"
+            size="lg"
+            isLoading={isSubmitting}
+            isDisabled={!token}
+            onPress={handleSubmit(onSubmit)}
+          />
+          <AppButton
+            label="Cancel"
+            variant="outline"
+            size="lg"
+            onPress={() => router.back()}
+          />
+        </View>
+      }
     >
       {!token ? (
         <AppCard variant="subtle" className="mb-4" padding="md">
@@ -243,21 +260,6 @@ export default function NewRacketScreen() {
         </AppCard>
       ) : null}
 
-      <View className="mb-12 mt-8 gap-3">
-        <AppButton
-          label="Register racket"
-          size="lg"
-          isLoading={isSubmitting}
-          isDisabled={!token}
-          onPress={handleSubmit(onSubmit)}
-        />
-        <AppButton
-          label="Cancel"
-          variant="outline"
-          size="lg"
-          onPress={() => router.back()}
-        />
-      </View>
     </AppScreen>
   );
 }

@@ -515,6 +515,9 @@ export default function AdminCheckInScreen() {
                     return (
                       <Pressable
                         key={item.key}
+                        accessibilityRole="checkbox"
+                        accessibilityLabel={`${item.label}. ${item.helper}`}
+                        accessibilityState={{ checked: isChecked }}
                         onPress={() =>
                           setChecklist((current) => ({
                             ...current,

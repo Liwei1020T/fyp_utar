@@ -165,6 +165,16 @@ export default function AdminBusinessHoursScreen() {
       subtitle="Backend-connected store schedule used to generate player booking slots."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Save business hours"
+            size="lg"
+            onPress={saveBusinessHours}
+            isLoading={isSaving}
+          />
+        </View>
+      }
     >
       <AppSection eyebrow="Schedule" title="Weekly operating pattern">
         <View className="gap-3">
@@ -231,13 +241,6 @@ export default function AdminBusinessHoursScreen() {
           {error}
         </HeroText>
       ) : null}
-      <AppButton
-        label="Save business hours"
-        size="lg"
-        className="mt-8"
-        onPress={saveBusinessHours}
-        isLoading={isSaving}
-      />
     </AppScreen>
   );
 }

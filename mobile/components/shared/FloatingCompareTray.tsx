@@ -42,8 +42,12 @@ export function FloatingCompareTray() {
       <View className="flex-row items-center gap-2">
         {/* Close Button */}
         <Pressable 
+          accessibilityRole="button"
+          accessibilityLabel="Clear comparison shortlist"
+          accessibilityHint="Remove all selected strings"
           onPress={clearCompareSelection}
           className="h-10 w-10 items-center justify-center rounded-full bg-white/12 border border-white/5"
+          hitSlop={6}
         >
           <X size={18} color="white" strokeWidth={2.5} />
         </Pressable>

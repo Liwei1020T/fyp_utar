@@ -20,11 +20,11 @@ export function MetricStatCard({
 }: MetricStatCardProps) {
   const { width } = useWindowDimensions();
   const cardWidth =
-    width >= 900 ? '23%' : width >= 640 ? '31%' : width >= 360 ? '47%' : '100%';
+    width >= 900 ? '18.5%' : width >= 640 ? '31%' : width >= 360 ? '47%' : '100%';
 
   return (
     <View style={{ width: cardWidth, minWidth: 0 }}>
-      <AppCard variant="elevated" padding="md">
+      <AppCard variant="elevated" padding="sm">
         <View
           className={`h-11 w-11 items-center justify-center rounded-[18px] border border-white/70 ${accentClassName}`}
           style={{
@@ -37,11 +37,11 @@ export function MetricStatCard({
         >
           {icon}
         </View>
-        <HeroText className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <HeroText className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
           {title}
         </HeroText>
         <HeroText
-          className="mt-2 text-[26px] font-bold tracking-tight text-slate-900"
+          className="mt-1.5 text-[26px] font-bold tracking-tight text-slate-900"
           numberOfLines={1}
           adjustsFontSizeToFit
         >

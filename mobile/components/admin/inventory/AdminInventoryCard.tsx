@@ -104,6 +104,7 @@ function QuickAction({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       className={cn(
         'h-8 items-center justify-center rounded-[12px] border px-3',

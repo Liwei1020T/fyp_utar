@@ -13,7 +13,7 @@ export const appChromeColors = {
   heroDeep: '#102F63',
   heroForeground: '#FFFFFF',
   heroMuted: '#D6E4FF',
-  tabBar: 'rgba(255, 255, 255, 0.96)',
+  tabBar: '#FFFFFF',
   tabBarBorder: 'rgba(220, 230, 247, 0.92)',
   primary: '#2563EB',
   primaryPressed: '#1D4ED8',

@@ -1059,6 +1059,17 @@ export default function AdminInventoryDetailScreen() {
       onBackPress={() => router.back()}
       title="Edit String"
       subtitle="Manage catalog info, scores, media, and shop inventory."
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label={isDirty ? 'Save string changes' : 'All changes saved'}
+            onPress={() => void saveInventory()}
+            isLoading={isSaving}
+            isDisabled={!isDirty}
+          />
+          <AppButton label="Back to inventory" variant="outline" onPress={() => router.back()} />
+        </View>
+      }
     >
       <AppSection variant="compact">
         <AppCard variant="highlighted" padding="md">
@@ -1334,19 +1345,6 @@ export default function AdminInventoryDetailScreen() {
         <StatusBanner tone={statusBanner.tone} message={statusBanner.message} />
       ) : null}
 
-      <View className="mt-6 gap-3">
-        <AppButton
-          label={isDirty ? 'Save string changes' : 'All changes saved'}
-          onPress={() => void saveInventory()}
-          isLoading={isSaving}
-          isDisabled={!isDirty}
-        />
-        <AppButton
-          label="Back to inventory"
-          variant="outline"
-          onPress={() => router.back()}
-        />
-      </View>
     </AppScreen>
   );
 }

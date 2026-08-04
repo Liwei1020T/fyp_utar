@@ -156,6 +156,26 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
       subtitle="Generate a backend-scored shortlist from your saved player profile."
       showBackButton={router.canGoBack()}
       onBackPress={() => router.back()}
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Generate recommendation"
+            size="lg"
+            onPress={handleGenerate}
+            isLoading={isGenerating}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile and advanced preferences"
+            className="min-h-11 items-center justify-center"
+            onPress={() => router.push('/player/profile/edit')}
+          >
+            <HeroText className="text-xs font-bold uppercase tracking-widest text-primary-700">
+              Edit profile and advanced preferences
+            </HeroText>
+          </Pressable>
+        </View>
+      }
     >
       <AppCard variant="dark" className="rounded-[24px]" padding="md">
         <View className="flex-row items-center justify-between gap-4">
@@ -317,19 +337,6 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
         </AppCard>
       ) : null}
 
-      <View className="mt-8 mb-6">
-        <AppButton
-          label="Generate recommendation"
-          size="lg"
-          onPress={handleGenerate}
-          isLoading={isGenerating}
-        />
-        <Pressable className="mt-4 items-center" onPress={() => router.push('/player/profile/edit')}>
-          <HeroText className="text-xs font-bold text-primary-700 uppercase tracking-widest">
-            Edit profile and advanced preferences
-          </HeroText>
-        </Pressable>
-      </View>
     </AppScreen>
   );
 }

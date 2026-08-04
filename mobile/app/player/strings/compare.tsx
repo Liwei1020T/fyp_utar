@@ -324,11 +324,21 @@ export default function CompareStringsScreen() {
         </View>
 
         <View className="flex-row items-center justify-center gap-6 mt-2">
-          <Pressable onPress={() => router.push('/player/strings')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to string catalog"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/player/strings')}
+          >
             <HeroText className="text-xs font-semibold text-neutral-500">Back to catalog</HeroText>
           </Pressable>
           <View className="w-1 h-1 rounded-full bg-neutral-300" />
-          <Pressable onPress={clearCompareSelection}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Clear comparison list"
+            className="min-h-11 justify-center"
+            onPress={clearCompareSelection}
+          >
             <HeroText className="text-xs font-semibold text-primary-600">Clear compare list</HeroText>
           </Pressable>
         </View>

@@ -162,7 +162,12 @@ export default function LoginScreen() {
       }}
       footer={
         <View className="items-center gap-3">
-          <Pressable onPress={() => router.push('/auth/register')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Create a player account"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/auth/register')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               Need a player account? Create one
             </HeroText>
@@ -179,6 +184,7 @@ export default function LoginScreen() {
                 label={item.label}
                 size="md"
                 variant={selectedRole === item.role ? 'primary' : 'neutral'}
+                accessibilityState={{ selected: selectedRole === item.role }}
                 onPress={() => {
                   setSelectedRole(item.role);
                   setFormError(null);
@@ -248,7 +254,9 @@ export default function LoginScreen() {
 
         {selectedRole === 'player' ? (
           <Pressable
-            className="self-end"
+            accessibilityRole="button"
+            accessibilityLabel="Reset player password"
+            className="min-h-11 self-end justify-center"
             onPress={() =>
               router.push(
                 `/auth/forgot-password?identifier=${encodeURIComponent(

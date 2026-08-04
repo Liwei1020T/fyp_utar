@@ -84,7 +84,10 @@ export function AuthShell({
               className="self-start"
             />
           ) : null}
-          <HeroText className="mt-4 text-[32px] font-bold leading-[38px] tracking-normal text-[#1D1D1F]">
+          <HeroText
+            accessibilityRole="header"
+            className="mt-4 text-[32px] font-bold leading-[38px] tracking-normal text-[#1D1D1F]"
+          >
             {title}
           </HeroText>
           {subtitle ? (

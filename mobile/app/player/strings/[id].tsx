@@ -422,6 +422,9 @@ export default function StringDetailScreen() {
           </View>
 
           <Pressable 
+            accessibilityRole="button"
+            accessibilityLabel={isExplainOpen ? 'Hide deep reasoning' : 'Show deep reasoning'}
+            accessibilityState={{ expanded: isExplainOpen }}
             onPress={() => setIsExplainOpen(!isExplainOpen)}
             className="bg-white border-t border-primary-100 p-4 flex-row items-center justify-between"
           >

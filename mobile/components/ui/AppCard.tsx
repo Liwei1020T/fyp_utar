@@ -26,6 +26,10 @@ export function AppCard({
   padding = 'md',
   variant = 'default',
   contentClassName,
+  accessibilityHint,
+  accessibilityLabel,
+  accessibilityRole,
+  accessibilityState,
   ...props
 }: AppCardProps) {
   const nativeVariantMap: Record<AppCardVariant, SurfaceVariant> = {
@@ -68,6 +72,9 @@ export function AppCard({
         className
       )}
       {...props}
+      {...(onPress
+        ? {}
+        : { accessibilityHint, accessibilityLabel, accessibilityRole, accessibilityState })}
     >
       <View
         className={cn(
@@ -78,7 +85,10 @@ export function AppCard({
         {onPress ? (
           <Pressable
             onPress={onPress}
-            accessibilityRole="button"
+            accessibilityHint={accessibilityHint}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole={accessibilityRole ?? 'button'}
+            accessibilityState={accessibilityState}
             className={cn(paddingStyles[padding], contentClassName)}
             style={({ pressed }) => (pressed ? styles.pressed : undefined)}
           >

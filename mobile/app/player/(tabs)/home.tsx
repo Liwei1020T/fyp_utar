@@ -161,7 +161,12 @@ export default function PlayerHomeScreen() {
         subtitle="Popular setups players are browsing this week."
         className="mt-5"
         rightAction={
-          <Pressable onPress={() => router.push('/player/strings')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="See all strings"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/player/strings')}
+          >
             <HeroText className="text-[13px] font-semibold text-primary-700">
               See all
             </HeroText>
@@ -184,6 +189,8 @@ export default function PlayerHomeScreen() {
             return (
               <Pressable
                 key={action.title}
+                accessibilityRole="button"
+                accessibilityLabel={action.title}
                 onPress={() => router.push(action.route as never)}
                 className="w-[48%] active:opacity-70"
               >

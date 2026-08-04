@@ -148,6 +148,8 @@ function ToolbarButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isActive }}
       onPress={onPress}
       className={cn(
         'h-11 flex-row items-center gap-1.5 rounded-[18px] border px-3.5',

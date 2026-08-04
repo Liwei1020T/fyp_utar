@@ -34,6 +34,12 @@ export function AppInput({
   const isMinimal = variant === 'minimal';
   const [isFocused, setIsFocused] = React.useState(false);
   const focusBorder = isFocused ? 'border-primary-600' : 'border-[#DCE6F7]';
+  const inputAccessibilityLabel = props.accessibilityLabel ?? label ?? props.placeholder;
+  const inputAccessibilityHint = props.accessibilityHint ?? error ?? helperText;
+  const inputAccessibilityState = {
+    ...props.accessibilityState,
+    disabled: isDisabled || props.editable === false || props.accessibilityState?.disabled,
+  };
   const webInputReset =
     Platform.OS === 'web'
       ? ({ outlineStyle: 'none', boxShadow: 'none', borderWidth: 0 } as any)
@@ -53,6 +59,9 @@ export function AppInput({
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
           <TextInput
             {...props}
+            accessibilityHint={inputAccessibilityHint}
+            accessibilityLabel={inputAccessibilityLabel}
+            accessibilityState={inputAccessibilityState}
             className={cn(
               'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
               props.multiline ? 'min-h-24 py-3' : '',
@@ -101,6 +110,9 @@ export function AppInput({
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
           <TextInput
             {...props}
+            accessibilityHint={inputAccessibilityHint}
+            accessibilityLabel={inputAccessibilityLabel}
+            accessibilityState={inputAccessibilityState}
             className={cn(
               'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
               props.multiline ? 'min-h-24 py-3' : '',
@@ -124,6 +136,7 @@ export function AppInput({
       </View>
       {(error || helperText) && (
         <HeroText
+          accessibilityLiveRegion={error ? 'polite' : 'none'}
           className={cn(
             'mt-2 ml-1 text-xs leading-5',
             error ? 'text-danger' : 'text-muted'

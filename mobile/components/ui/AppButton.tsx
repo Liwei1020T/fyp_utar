@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, type AccessibilityState } from 'react-native';
 import { HeroButton, type HeroButtonProps, cn } from './heroui';
 import type { ButtonVariant } from 'heroui-native';
 
@@ -34,8 +34,16 @@ export function AppButton({
   leadingIcon,
   trailingIcon,
   isLoading = false,
+  accessibilityLabel,
+  accessibilityState,
+  isDisabled,
   ...props
 }: AppButtonProps) {
+  const resolvedAccessibilityState = accessibilityState as
+    | AccessibilityState
+    | undefined;
+  const disabled =
+    isLoading || Boolean(isDisabled) || Boolean(resolvedAccessibilityState?.disabled);
   const nativeVariantMap: Record<AppButtonVariant, ButtonVariant> = {
     primary: 'primary',
     secondary: 'secondary',
@@ -91,7 +99,7 @@ export function AppButton({
       {leadingIcon ? <View className="shrink-0">{leadingIcon}</View> : null}
       {label ? (
         <HeroButton.Label className={cn(textStyles[variant], textClassName)}>
-          {isLoading ? 'Loading...' : label}
+          {isLoading ? `${label}…` : label}
         </HeroButton.Label>
       ) : null}
       {trailingIcon ? (
@@ -109,16 +117,22 @@ export function AppButton({
 
   return (
     <HeroButton
+      {...props}
       feedbackVariant="none"
       variant={nativeVariantMap[variant]}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{
+        ...resolvedAccessibilityState,
+        busy: isLoading,
+        disabled,
+      }}
       className={cn(
         'items-center justify-center border disabled:opacity-60',
         variantStyles[variant],
         sizeStyles[size],
         className
       )}
-      {...props}
-      isDisabled={isLoading || props.isDisabled}
+      isDisabled={disabled}
     >
       {content}
     </HeroButton>
