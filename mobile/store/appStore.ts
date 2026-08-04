@@ -366,7 +366,7 @@ export function useCurrentUser() {
 
 export function useRoleHome() {
   const user = useCurrentUser();
-  return user ? getRoleHome(user.role) : '/auth/welcome';
+  return user ? getRoleHome(user.role) : '/auth/login';
 }
 
 export function usePreferredAdminId() {

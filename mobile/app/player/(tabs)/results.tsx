@@ -9,11 +9,13 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { FloatingCompareTray } from '../../../components/shared/FloatingCompareTray';
+import { StringProductImage } from '../../../components/shared/StringProductImage';
 import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
+  useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
@@ -22,51 +24,10 @@ import {
 } from '../../../services/backendMappers';
 import { formatCurrency } from '../../../lib/formatters';
 
-function formatScore(value?: number) {
-  if (value == null) {
-    return '—';
-  }
-  return `${Math.round(value * 100)}%`;
-}
-
 function humanizeFeature(value: string) {
   return value
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
-function ScoreMeter({
-  label,
-  value,
-  tone = 'primary',
-}: {
-  label: string;
-  value?: number;
-  tone?: 'primary' | 'accent' | 'neutral';
-}) {
-  const percent = value == null ? 0 : Math.max(0, Math.min(100, Math.round(value * 100)));
-  const fillClassName =
-    tone === 'accent'
-      ? 'bg-accent-500'
-      : tone === 'neutral'
-        ? 'bg-neutral-500'
-        : 'bg-primary-600';
-
-  return (
-    <View className="flex-1 min-w-[92px]">
-      <View className="flex-row items-center justify-between">
-        <HeroText className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-          {label}
-        </HeroText>
-        <HeroText className="text-xs font-black text-neutral-800">
-          {formatScore(value)}
-        </HeroText>
-      </View>
-      <View className="mt-2 h-2 overflow-hidden rounded-full bg-white">
-        <View className={`h-full rounded-full ${fillClassName}`} style={{ width: `${percent}%` }} />
-      </View>
-    </View>
-  );
 }
 
 export default function RecommendationResultsScreen() {
@@ -74,6 +35,7 @@ export default function RecommendationResultsScreen() {
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const liveResults = useLiveRecommendationResults();
+  const strings = useStrings();
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
   const setLiveRecommendationResults = useAppStore(
     (state) => state.setLiveRecommendationResults,
@@ -164,8 +126,8 @@ export default function RecommendationResultsScreen() {
     <View className="flex-1">
       <AppScreen
         headerVariant="primary"
-        title="AI Shortlist"
-        subtitle="Preference-led picks with rules, budget, and review evidence separated."
+        title="Your shortlist"
+        subtitle="Start with the best fit, then open the evidence only when you need it."
       >
         {!isLive ? (
           <AppCard variant="subtle" className="mt-6" padding="lg">
@@ -178,7 +140,7 @@ export default function RecommendationResultsScreen() {
             <AppButton
               label="Go to login"
               className="mt-6"
-              onPress={() => router.replace('/auth/login?role=player')}
+              onPress={() => router.replace('/auth/login')}
             />
           </AppCard>
         ) : isWaitingForInitialResults ? (
@@ -206,7 +168,7 @@ export default function RecommendationResultsScreen() {
           </AppCard>
         ) : null}
 
-        <AppSection eyebrow="Ranked shortlist" title="Decision cards">
+        <AppSection eyebrow="PERSONALISED" title="Best matches">
           <View className="gap-5 pb-36">
             {hasResults &&
               liveResults.map((item, index) => {
@@ -216,18 +178,27 @@ export default function RecommendationResultsScreen() {
                   .sort((left, right) => right[1] - left[1])
                   .slice(0, 2)
                   .map(([label]) => label.replace(/_/g, ' '));
-                const nlpEvidenceCount = Object.keys(
-                  item.rationalePayload?.nlp_review_scores ?? {},
-                ).length;
                 const fitAngle = item.fitAngle ?? `Rank #${index + 1}`;
-                const tradeOff =
-                  item.tradeOffSummary ??
-                  'No evidence-backed trade-off was recorded.';
+                const stringItem = strings.find(
+                  (string) => string.id === item.stringId,
+                );
 
                 return (
                   <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md" className="rounded-[30px]">
-                    <View className="flex-row items-start justify-between">
-                      <View className="flex-1">
+                    <View className="flex-row items-start gap-3">
+                      <View className="h-20 w-20 overflow-hidden rounded-[20px] bg-neutral-950">
+                        <StringProductImage
+                          imageUrl={stringItem?.imageUrl}
+                          brand={item.brand}
+                          model={item.modelName}
+                          gauge={stringItem?.gauge ?? 'String'}
+                          className="h-20 w-20"
+                          fallbackClassName="h-20 w-20 rounded-[20px] border-0"
+                          fallbackTextClassName="px-2 text-[11px] leading-[13px]"
+                          fallbackGaugeClassName="mt-2 px-2 py-0.5"
+                        />
+                      </View>
+                      <View className="min-w-0 flex-1">
                         <View className="flex-row items-center gap-2">
                           <AppChip 
                             label={fitAngle}
@@ -242,21 +213,16 @@ export default function RecommendationResultsScreen() {
                           {item.modelName}
                         </HeroText>
                         <HeroText className="mt-1 text-sm font-semibold text-primary-700">
-                          {item.matchScore}% match
+                          {item.matchScore}% match • {item.price != null ? formatCurrency(item.price) : 'Price pending'}
                         </HeroText>
                       </View>
-                      <View className="items-end gap-2">
+                      <View className="items-end gap-1">
                         <HeroText className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                           Rank
                         </HeroText>
                         <View className="rounded-2xl bg-white/80 px-3 py-2">
                           <HeroText className="text-lg font-black text-primary-700">
                             #{index + 1}
-                          </HeroText>
-                        </View>
-                        <View className="rounded-full bg-neutral-100 px-3 py-1.5">
-                          <HeroText className="text-[11px] font-semibold text-neutral-700">
-                            {item.price != null ? formatCurrency(item.price) : 'Price pending'}
                           </HeroText>
                         </View>
                       </View>
@@ -269,49 +235,7 @@ export default function RecommendationResultsScreen() {
                       <HeroText className="mt-2 text-sm leading-5 text-neutral-700">
                         {item.reasons[0] ?? 'No scorer reason was returned.'}
                       </HeroText>
-                      <View className="mt-3 h-px bg-neutral-200" />
-                      <HeroText className="mt-3 text-sm leading-5 text-neutral-600">
-                        <HeroText className="font-bold text-neutral-800">Trade-off:</HeroText> {tradeOff}
-                      </HeroText>
                     </View>
-
-                    {item.scoreBreakdown ? (
-                      <View className="mt-4 rounded-2xl border border-primary-100 bg-primary-50/70 p-4">
-                        <View className="gap-2">
-                          <HeroText className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-700">
-                            Score model
-                          </HeroText>
-                          <AppChip
-                            label="NLP inside Preference"
-                            variant="info"
-                            size="sm"
-                            className="self-start"
-                          />
-                        </View>
-                        <View className="mt-4 flex-row flex-wrap gap-3">
-                          <ScoreMeter
-                            label="Preference"
-                            value={item.scoreBreakdown.preferenceMatch}
-                            tone="primary"
-                          />
-                          <ScoreMeter
-                            label="Rule"
-                            value={item.scoreBreakdown.ruleFit}
-                            tone="accent"
-                          />
-                          <ScoreMeter
-                            label="Budget"
-                            value={item.scoreBreakdown.budgetFit}
-                            tone="neutral"
-                          />
-                        </View>
-                        <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
-                          {nlpEvidenceCount > 0
-                            ? `${nlpEvidenceCount} review-derived signals are blended into Preference Match.`
-                            : 'Preference Match can still use official/manual values when review signals are missing.'}
-                        </HeroText>
-                      </View>
-                    ) : null}
 
                     <View className="mt-4 flex-row flex-wrap gap-2">
                       {topAspectLabels.map((label) => (
@@ -336,7 +260,7 @@ export default function RecommendationResultsScreen() {
                       />
                       <View className="flex-row gap-3">
                         <AppButton
-                          label="Explain fit"
+                          label="Why this fits"
                           variant="ghost"
                           size="sm"
                           className="flex-1"

@@ -17,7 +17,7 @@ export default function IndexScreen() {
       return;
     }
 
-    router.replace((user ? getRoleHome(user.role) : '/auth/welcome') as never);
+    router.replace((user ? getRoleHome(user.role) : '/auth/login') as never);
   }, [hasHydrated, router, user]);
 
   return (

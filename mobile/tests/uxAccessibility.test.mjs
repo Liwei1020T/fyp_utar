@@ -74,3 +74,41 @@ test('shared controls and catalog preserve recoverable UX states', async () => {
   assert.match(catalog, /label="Clear filters"/);
   assert.doesNotMatch(catalog, />\s*View All\s*</);
 });
+
+test('authentication uses one account entry and routes from the backend role', async () => {
+  const [login, welcome, index] = await Promise.all(
+    ['app/auth/login.tsx', 'app/auth/welcome.tsx', 'app/index.tsx'].map((file) =>
+      readFile(new URL(file, mobileRoot), 'utf8'),
+    ),
+  );
+
+  assert.doesNotMatch(login, /selectedRole|roleOptions/);
+  assert.match(login, /if \(auth\.role === 'admin'\)/);
+  assert.match(login, /if \(auth\.role !== 'customer'\)/);
+  assert.match(welcome, /<Redirect href="\/auth\/login"/);
+  assert.match(index, /: '\/auth\/login'/);
+});
+
+test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
+  const [profileEdit, home, recommendation, results, adminDashboard] =
+    await Promise.all(
+      [
+        'app/player/profile/edit.tsx',
+        'app/player/(tabs)/home.tsx',
+        'app/player/(tabs)/recommend.tsx',
+        'app/player/(tabs)/results.tsx',
+        'app/admin/(tabs)/dashboard.tsx',
+      ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
+    );
+
+  assert.match(profileEdit, /Step \{step\} of 3/);
+  assert.match(profileEdit, /showAdvanced/);
+  assert.match(home, /activeBooking/);
+  assert.match(home, /Open all player features/);
+  assert.doesNotMatch(recommendation, /Saved Priority Weights/);
+  assert.match(results, /StringProductImage/);
+  assert.match(results, /Why this fits/);
+  assert.doesNotMatch(results, /Score model/);
+  assert.match(adminDashboard, /title="Needs attention"/);
+  assert.match(adminDashboard, /label="Search tools"/);
+});

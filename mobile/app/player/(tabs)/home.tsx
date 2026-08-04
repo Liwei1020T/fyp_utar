@@ -16,6 +16,7 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
+import { AppMotion } from '../../../components/ui/AppMotion';
 import { appChromeColors, getBookingStatusVariant } from '../../../components/ui/theme';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
@@ -32,7 +33,8 @@ import type { Booking } from '../../../types/domain';
 
 const quickActions = [
   {
-    title: 'Recommend',
+    title: 'Advisor',
+    accessibilityLabel: 'Get recommendation',
     route: '/player/recommend',
     icon: Zap,
     color: appChromeColors.primary,
@@ -40,6 +42,7 @@ const quickActions = [
   },
   {
     title: 'Book service',
+    accessibilityLabel: 'Book service',
     route: '/player/bookings/new',
     icon: CalendarClock,
     color: appChromeColors.primary,
@@ -47,6 +50,7 @@ const quickActions = [
   },
   {
     title: 'String catalog',
+    accessibilityLabel: 'Open string catalog',
     route: '/player/strings',
     icon: Search,
     color: appChromeColors.primary,
@@ -54,6 +58,7 @@ const quickActions = [
   },
   {
     title: 'Message shop',
+    accessibilityLabel: 'Message shop',
     route: '/player/chat',
     icon: MessageSquareText,
     color: appChromeColors.primary,
@@ -73,20 +78,27 @@ export default function PlayerHomeScreen() {
   }
 
   const playerBookings = bookings.filter((item) => item.playerId === user.id);
+  const activeBooking = playerBookings.find(
+    (item) => !['completed', 'cancelled', 'rejected'].includes(item.status),
+  );
   const hasUnreadNotifications = notifications.some(
     (item) => item.userId === user.id && !item.read,
   );
   const latestBooking = playerBookings[0];
-  const latestString = latestBooking
-    ? strings.find((item) => item.id === latestBooking.stringId)
+  const primaryBooking = activeBooking ?? latestBooking;
+  const latestString = primaryBooking
+    ? strings.find((item) => item.id === primaryBooking.stringId)
     : undefined;
+  const firstName = user.name.trim().split(/\s+/)[0] || 'player';
+  const greetingName =
+    firstName.length > 18 ? `${firstName.slice(0, 17)}…` : firstName;
 
   return (
     <AppScreen
       tone="player"
       headerVariant="primary"
       compactHeader
-      title={`Welcome back, ${user.name.split(' ')[0]}`}
+      title={`Welcome back, ${greetingName}`}
       subtitle="Recommendations, bookings, and service updates in one place."
       headerRight={
         <AppIconButton
@@ -113,6 +125,18 @@ export default function PlayerHomeScreen() {
         title="Jump back in"
         className="mt-1"
         variant="compact"
+        rightAction={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open all player features"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/player/profile')}
+          >
+            <HeroText className="text-[13px] font-semibold text-primary-700">
+              All tools
+            </HeroText>
+          </Pressable>
+        }
       >
         <View className="flex-row justify-between gap-2">
           {quickActions.map((action) => {
@@ -122,7 +146,7 @@ export default function PlayerHomeScreen() {
               <Pressable
                 key={action.title}
                 accessibilityRole="button"
-                accessibilityLabel={action.title}
+                accessibilityLabel={action.accessibilityLabel}
                 onPress={() => router.push(action.route as never)}
                 className="min-h-[88px] flex-1 items-center rounded-[16px] px-1.5 py-2 active:bg-white/70"
               >
@@ -133,7 +157,7 @@ export default function PlayerHomeScreen() {
                   <Icon size={21} color={action.color} strokeWidth={2.15} />
                 </View>
                 <HeroText
-                  className="mt-2 w-full text-center text-[10px] font-semibold leading-[13px] tracking-normal text-slate-800"
+                  className="mt-2 w-full text-center text-[11px] font-semibold leading-[14px] tracking-normal text-slate-800"
                   numberOfLines={2}
                 >
                   {action.title}
@@ -144,6 +168,46 @@ export default function PlayerHomeScreen() {
         </View>
       </AppSection>
 
+      {activeBooking && latestString ? (
+        <AppMotion className="mt-5">
+          <AppCard variant="dark" className="overflow-hidden rounded-[24px]" padding="lg">
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="min-w-0 flex-1">
+                <AppChip
+                  label={formatBookingStatus(activeBooking.status)}
+                  variant={getBookingStatusVariant(activeBooking.status)}
+                  className="self-start"
+                />
+                <HeroText className="mt-4 text-[25px] font-bold leading-[30px] tracking-tight text-white">
+                  Your restring is moving.
+                </HeroText>
+                <HeroText className="mt-2 text-sm leading-5 text-secondary-100">
+                  {latestString.brand} {latestString.model} • {activeBooking.requestedTension} lbs
+                </HeroText>
+              </View>
+              <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-white/10">
+                <Activity size={20} color="#FFFFFF" />
+              </View>
+            </View>
+            <View className="mt-5 rounded-[16px] border border-white/15 bg-white/10 px-4 py-3">
+              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
+                Next step
+              </HeroText>
+              <HeroText className="mt-1.5 text-sm leading-5 text-white">
+                {getNextBookingStep(activeBooking.status, activeBooking.dropOffDate)}
+              </HeroText>
+            </View>
+            <AppButton
+              label="Open service progress"
+              variant="accent"
+              size="md"
+              className="mt-4 w-full"
+              trailingIcon={<ArrowRight size={16} color="#9A6700" />}
+              onPress={() => router.push(`/player/bookings/${activeBooking.id}/tracking`)}
+            />
+          </AppCard>
+        </AppMotion>
+      ) : (
       <View className="mt-5">
         <AppCard variant="dark" className="overflow-hidden rounded-[24px]" padding="lg">
           <View
@@ -202,6 +266,7 @@ export default function PlayerHomeScreen() {
           />
         </AppCard>
       </View>
+      )}
 
       <AppSection
         title="Trending Strings"
@@ -223,7 +288,7 @@ export default function PlayerHomeScreen() {
         <TrendingStrings />
       </AppSection>
 
-      {latestBooking && latestString ? (
+      {!activeBooking && latestBooking && latestString ? (
         <AppSection
           title="Latest Booking"
           subtitle="Your current restring progress at a glance."

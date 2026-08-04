@@ -14,12 +14,10 @@ import {
   useCurrentUser,
   useStrings,
 } from '../../../store/appStore';
-import { formatPlayFrequency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   mapBackendStringToStringItem,
   mapRecommendationResponse,
-  deriveAdvancedPreferences,
 } from '../../../services/backendMappers';
 import type { PlayerProfile } from '../../../types/domain';
 
@@ -30,18 +28,6 @@ const priorityLabels = [
   { key: 'comfort', title: 'Comfort' },
   { key: 'sound', title: 'Hitting sound' },
 ] as const;
-
-function clampPreference(value: number) {
-  return Math.max(1, Math.min(10, Math.round(value)));
-}
-
-const styleOptions = [
-  { value: 'Attacking', label: 'Attacking' },
-  { value: 'Balanced', label: 'Balanced' },
-  { value: 'Control', label: 'Control / Defensive' },
-] as const;
-
-const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
 
 export default function RecommendationInputScreen() {
   const user = useCurrentUser();
@@ -127,28 +113,6 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
       .map(([key]) => priorityLabels.find((p) => p.key === key)?.title.split(' ')[0])
       .join(', ');
   }, [priorities]);
-  const advancedPreferences = useMemo(
-    () => {
-      const savedAdvanced =
-        user.advancedPreferences ?? deriveAdvancedPreferences(priorities);
-      return [
-        {
-          label: 'Elasticity',
-          value: clampPreference(savedAdvanced.elasticity),
-        },
-        {
-          label: 'Tension retention',
-          value: clampPreference(savedAdvanced.tensionRetention),
-        },
-        {
-          label: 'String movement',
-          value: clampPreference(savedAdvanced.stringMovement),
-        },
-      ];
-    },
-    [priorities, user.advancedPreferences],
-  );
-
   return (
     <AppScreen
       headerVariant="flow"
@@ -235,86 +199,6 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
             </View>
           </View>
         </AppCard>
-      </AppSection>
-
-      <AppSection eyebrow="Context" title="Saved Player Context">
-        <AppCard variant="elevated" padding="md" className="gap-4">
-          <View>
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Playing style</HeroText>
-            <View className="mt-2 flex-row flex-wrap gap-2">
-              {styleOptions.map((style) => (
-                <AppChip
-                  key={style.value}
-                  label={style.label}
-                  size="sm"
-                  variant={playingStyle === style.value ? 'primary' : 'neutral'}
-                />
-              ))}
-            </View>
-          </View>
-
-          <View>
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Skill level</HeroText>
-            <View className="mt-2 flex-row flex-wrap gap-2">
-              {skillOptions.map((level) => (
-                <AppChip
-                  key={level}
-                  label={level}
-                  size="sm"
-                  variant={skillLevel === level ? 'primary' : 'neutral'}
-                />
-              ))}
-            </View>
-          </View>
-
-          <View className="flex-row items-center justify-between">
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Play frequency</HeroText>
-            <AppChip label={formatPlayFrequency(user.playFrequency)} size="sm" variant="secondary" />
-          </View>
-        </AppCard>
-      </AppSection>
-
-      <AppSection eyebrow="Matrix input" title="Saved Priority Weights">
-        <View className="gap-3">
-          {priorityLabels.map((item) => (
-            <AppCard key={item.key} variant="elevated" padding="sm" className="px-4 py-3">
-              <View className="flex-row items-center justify-between">
-                <HeroText className="text-sm font-bold text-neutral-900">
-                  {item.title}
-                </HeroText>
-                <HeroText className="text-sm font-black text-primary-600">
-                  {priorities[item.key]}/10
-                </HeroText>
-              </View>
-              <View className="mt-3">
-                <View className="h-2 overflow-hidden rounded-full bg-neutral-100">
-                  <View
-                    className="h-full rounded-full bg-primary-600"
-                    style={{ width: `${Math.max(10, priorities[item.key] * 10)}%` }}
-                  />
-                </View>
-              </View>
-            </AppCard>
-          ))}
-          <AppCard variant="subtle" padding="md" className="rounded-[24px]">
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-              Advanced preferences
-            </HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              These editable inputs help the recommendation engine account for
-              elasticity, tension retention, and string movement.
-            </HeroText>
-            <View className="mt-4 flex-row flex-wrap gap-2">
-              {advancedPreferences.map((item) => (
-                <AppChip
-                  key={item.label}
-                  label={`${item.label} ${item.value}/10`}
-                  variant="neutral"
-                />
-              ))}
-            </View>
-          </AppCard>
-        </View>
       </AppSection>
 
       <AppSection>

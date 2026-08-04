@@ -254,7 +254,7 @@ export default function PlayerProfileScreen() {
           size="md"
           onPress={() => {
             logout();
-            router.replace('/auth/welcome');
+            router.replace('/auth/login');
           }}
           leadingIcon={<LogOut size={18} color="#DC2626" />}
           textClassName="text-red-600 font-semibold"

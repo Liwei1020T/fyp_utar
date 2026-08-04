@@ -99,7 +99,7 @@ This file is the composition root for the frontend.
 ### Root routing
 
 - `app/index.tsx` redirects based on `useCurrentUser()`
-- unauthenticated users go to `/auth/welcome`
+- unauthenticated users go to the unified `/auth/login` screen
 - authenticated users go to the role home returned by `getRoleHome()`
 
 ### Route groups
@@ -165,7 +165,7 @@ Additional operational stack screens:
 
 `RoleGuard` enforces role access at the route-group level:
 
-- no user -> redirect to `/auth/welcome`
+- no user -> redirect to `/auth/login`
 - wrong role -> redirect to that user’s correct role home
 - valid role -> render a stack with hidden headers
 

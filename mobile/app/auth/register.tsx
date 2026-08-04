@@ -79,7 +79,7 @@ export default function RegisterScreen() {
         player: mapBackendUserToPlayerProfile(auth.user, null),
       });
 
-      router.replace('/player/profile/edit');
+      router.replace('/player/profile/edit?onboarding=1');
     } catch (error) {
       setFormError(
         error instanceof BackendApiError
@@ -98,7 +98,7 @@ export default function RegisterScreen() {
         if (router.canGoBack()) {
           router.back();
         } else {
-          router.replace('/auth/welcome');
+          router.replace('/auth/login');
         }
       }}
       footer={

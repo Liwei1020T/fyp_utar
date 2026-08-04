@@ -11,6 +11,7 @@ import {
   LogOut,
   ListTodo,
   ScanSearch,
+  Search,
   MessageSquareText,
   Settings2,
   TimerReset,
@@ -19,6 +20,7 @@ import {
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
+import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
@@ -105,6 +107,7 @@ export default function AdminDashboardScreen() {
     null,
   );
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [toolQuery, setToolQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -138,7 +141,16 @@ export default function AdminDashboardScreen() {
   const awaitingDropOffCount = analytics?.awaiting_dropoff_count;
   const inProgressCount = analytics?.in_progress_count;
   const readyForCollectionCount = analytics?.ready_for_collection_count;
-  const lowStockCount = analytics?.low_stock_count;
+  const filteredActions = PRIMARY_ACTIONS.filter((action) => {
+    const query = toolQuery.trim().toLowerCase();
+    return !query || `${action.title} ${action.subtitle}`.toLowerCase().includes(query);
+  });
+  const hasImmediateWork = Boolean(
+    analytics &&
+      ((awaitingDropOffCount ?? 0) > 0 ||
+        (readyForCollectionCount ?? 0) > 0 ||
+        analytics.pending_feedback_count > 0),
+  );
 
   return (
     <AppScreen
@@ -154,7 +166,7 @@ export default function AdminDashboardScreen() {
           accessibilityLabel="Log out"
           onPress={() => {
             logout();
-            router.replace('/auth/welcome');
+            router.replace('/auth/login');
           }}
         />
       }
@@ -219,44 +231,119 @@ export default function AdminDashboardScreen() {
             </View>
           </View>
         </AppCard>
+
+        <AppSection
+          eyebrow="NOW"
+          title="Needs attention"
+          subtitle="Start with live work before opening the full tool set."
+          variant="compact"
+        >
+          <View className="gap-3">
+            {(awaitingDropOffCount ?? 0) > 0 ? (
+              <AppCard
+                variant="highlighted"
+                padding="md"
+                onPress={() => router.push('/admin/check-in')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-primary-600">
+                    <Undo2 size={19} color="#FFFFFF" />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                      Receive {awaitingDropOffCount} waiting racket{awaitingDropOffCount === 1 ? '' : 's'}
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Open check-in and move each booking onto the service bench.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={17} color={appChromeColors.primary} />
+                </View>
+              </AppCard>
+            ) : null}
+
+            {(readyForCollectionCount ?? 0) > 0 ? (
+              <AppCard
+                variant="elevated"
+                padding="md"
+                onPress={() => router.push('/admin/service-queue')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-[16px] border border-primary-200 bg-primary-50">
+                    <TimerReset size={19} color={appChromeColors.primary} />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                      {readyForCollectionCount} order{readyForCollectionCount === 1 ? '' : 's'} ready for collection
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Confirm handover and keep the player updated.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={17} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
+
+            {(analytics?.pending_feedback_count ?? 0) > 0 ? (
+              <AppCard
+                variant="elevated"
+                padding="md"
+                onPress={() => router.push('/admin/feedback')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-warning-50">
+                    <MessageSquareText size={19} color={appChromeColors.warning} />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                      Review {analytics?.pending_feedback_count} feedback item{analytics?.pending_feedback_count === 1 ? '' : 's'}
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Start with low-satisfaction cases that need follow-up.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={17} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
+
+            {analytics && !hasImmediateWork ? (
+              <AppCard variant="subtle" padding="md">
+                <HeroText className="text-sm font-semibold text-slate-900">
+                  The counter is clear.
+                </HeroText>
+                <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                  No drop-offs, collections, or feedback reviews need immediate action.
+                </HeroText>
+              </AppCard>
+            ) : null}
+          </View>
+        </AppSection>
+
         <AppSection
           eyebrow="ALL TOOLS"
-          title="Run the counter"
-          subtitle="Every operation stays one tap away."
+          title="Find every operation"
+          subtitle="Search the complete workspace without hunting through tabs."
           rightAction={
             <AppChip
-              label={analytics ? `${awaitingDropOffCount} awaiting` : '— awaiting'}
-              variant="warning"
+              label={`${filteredActions.length} tools`}
+              variant="secondary"
               className="mt-1"
             />
           }
           variant="compact"
         >
-          <View className="flex-row flex-wrap gap-3">
-            {analytics?.pending_feedback_count ? (
-              <AppCard
-                variant="highlighted"
-                padding="md"
-                className="w-full"
-                onPress={() => router.push('/admin/feedback')}
-              >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-10 w-10 items-center justify-center rounded-[16px] bg-warning-50">
-                    <MessageSquareText size={18} color={appChromeColors.warning} />
-                  </View>
-                  <View className="flex-1">
-                    <HeroText className="text-[14px] font-semibold tracking-tight text-slate-900">
-                      {analytics.pending_feedback_count} feedback items to review
-                    </HeroText>
-                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Open the feedback queue and start with low-satisfaction cases.
-                    </HeroText>
-                  </View>
-                  <ArrowRight size={16} color={appChromeColors.textMuted} />
-                </View>
-              </AppCard>
-            ) : null}
-            {PRIMARY_ACTIONS.map((action) => {
+          <View className="gap-4">
+            <AppInput
+              label="Search tools"
+              placeholder="Try inventory, payments, or hours"
+              value={toolQuery}
+              onChangeText={setToolQuery}
+              leftAdornment={<Search size={18} color={appChromeColors.textMuted} />}
+            />
+            <View className="flex-row flex-wrap gap-3">
+            {filteredActions.map((action) => {
               const Icon = action.icon;
 
               return (
@@ -291,41 +378,17 @@ export default function AdminDashboardScreen() {
                 </AppCard>
               );
             })}
-          </View>
-        </AppSection>
-
-        <AppSection eyebrow="Highlights" title="What needs attention?" className="mb-12" variant="compact">
-          <View className="gap-3">
-            <AppCard variant="subtle" padding="md">
-              <View className="flex-row items-center gap-3">
-                <Undo2 size={18} color={appChromeColors.warning} />
-                <HeroText className="flex-1 text-sm leading-6 text-slate-600">
-                  {analytics
-                    ? `${awaitingDropOffCount} booking${awaitingDropOffCount === 1 ? '' : 's'} waiting for racket drop-off.`
-                    : 'Live booking metrics are unavailable.'}
+            {filteredActions.length === 0 ? (
+              <AppCard variant="subtle" padding="md" className="w-full">
+                <HeroText className="text-sm font-semibold text-slate-900">
+                  No matching tool
                 </HeroText>
-              </View>
-            </AppCard>
-            <AppCard variant="subtle" padding="md">
-              <View className="flex-row items-center gap-3">
-                <Clock3 size={18} color={appChromeColors.primary} />
-                <HeroText className="flex-1 text-sm leading-6 text-slate-600">
-                  {analytics
-                    ? `${inProgressCount} job${inProgressCount === 1 ? '' : 's'} currently on the stringing bench.`
-                    : 'Live service metrics are unavailable.'}
+                <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                  Try a broader name such as booking, stock, or settings.
                 </HeroText>
-              </View>
-            </AppCard>
-            <AppCard variant="subtle" padding="md">
-              <View className="flex-row items-center gap-3">
-                <Boxes size={18} color={appChromeColors.warning} />
-                <HeroText className="flex-1 text-sm leading-6 text-slate-600">
-                  {analytics
-                    ? `${lowStockCount} string SKU${lowStockCount === 1 ? '' : 's'} flagged for stock review.`
-                    : 'Live inventory metrics are unavailable.'}
-                </HeroText>
-              </View>
-            </AppCard>
+              </AppCard>
+            ) : null}
+            </View>
           </View>
         </AppSection>
       </View>

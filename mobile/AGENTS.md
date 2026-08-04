@@ -44,7 +44,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - App shell: `app/_layout.tsx`
   Owns global providers, `global.css`, HeroUI Native, native secure-session bootstrap, and the root Expo Router stack.
 - Root redirect: `app/index.tsx`
-  Sends users to `/auth/welcome`, `/player`, or `/admin` based on session state.
+  Sends unauthenticated users to `/auth/login` and authenticated users to `/player` or `/admin` based on session state.
 - Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/admin/_layout.tsx`, `components/roles/RoleGuard.tsx`
   Auth screens reject logged-in users; player and admin route groups are role-guarded.
 - Player workspace: `app/player/(tabs)` plus detail flows under `app/player/**`

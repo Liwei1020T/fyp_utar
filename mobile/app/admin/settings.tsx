@@ -223,7 +223,7 @@ export default function AdminSettingsScreen() {
         new_password: newPassword,
       });
       logout();
-      router.replace('/auth/welcome');
+      router.replace('/auth/login');
     } catch (passwordError) {
       setError(
         passwordError instanceof BackendApiError

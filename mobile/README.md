@@ -86,7 +86,7 @@ operations modules.
    ```
 
 6. **Navigate:**
-   - The app starts at `/auth/welcome`.
+   - The app starts at the unified `/auth/login` screen; the backend account role decides whether login continues to Player or Admin.
    - Player flow now uses phone number + password against the Python backend.
    - Every admin route uses the Python backend or backend-derived persisted records.
    - Player accounts are created through registration.

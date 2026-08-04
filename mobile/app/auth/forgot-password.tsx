@@ -118,7 +118,7 @@ export default function ForgotPasswordScreen() {
       });
 
       router.replace(
-        `/auth/login?role=player&identifier=${encodeURIComponent(
+        `/auth/login?identifier=${encodeURIComponent(
           data.phoneNumber,
         )}`,
       );
@@ -144,7 +144,7 @@ export default function ForgotPasswordScreen() {
         if (router.canGoBack()) {
           router.back();
         } else {
-          router.replace('/auth/welcome');
+          router.replace('/auth/login');
         }
       }}
       footer={
@@ -153,7 +153,7 @@ export default function ForgotPasswordScreen() {
             accessibilityRole="button"
             accessibilityLabel="Back to player login"
             className="min-h-11 justify-center"
-            onPress={() => router.replace('/auth/login?role=player')}
+            onPress={() => router.replace('/auth/login')}
           >
             <HeroText className="text-sm font-semibold text-primary-700">
               Back to login

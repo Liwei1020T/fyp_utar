@@ -65,7 +65,7 @@ export default function PlayerSettingsScreen() {
         new_password: newPassword,
       });
       logout();
-      router.replace('/auth/welcome');
+      router.replace('/auth/login');
     } catch (error) {
       setMessage(
         error instanceof BackendApiError
@@ -249,7 +249,7 @@ export default function PlayerSettingsScreen() {
         className="mb-12 mt-8"
         onPress={() => {
           logout();
-          router.replace('/auth/welcome');
+          router.replace('/auth/login');
         }}
       />
     </AppScreen>
