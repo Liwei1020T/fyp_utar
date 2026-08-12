@@ -6,7 +6,6 @@ import type {
   BookingStatusEntry,
   BookingUpdate,
   BookingSlot,
-  BudgetRange,
   BusinessHours,
   ChatConversation,
   NotificationItem,
@@ -15,6 +14,8 @@ import type {
   PlayFrequency,
   PlayingStyle,
   PreferredFeel,
+  PreferredGauge,
+  RecentGoal,
   RecommendationMatch,
   RecommendationScoreBreakdown,
   RacketPassport,
@@ -30,7 +31,6 @@ import type {
   BackendBookingConversation,
   BackendBookingStatusHistory,
   BackendBookingUpdate,
-  BackendBudgetTier,
   BackendInventoryAvailability,
   BackendFeedback,
   BackendNotification,
@@ -137,10 +137,6 @@ function derivedTensionRetentionPreference(
   );
 }
 
-function derivedValuePreference(priorities: PlayerProfile['priorities']) {
-  return toTenPreference(Math.round((priorities.durability + priorities.comfort) / 2));
-}
-
 export function mapBackendSkillLevel(
   value: string | null | undefined,
 ): SkillLevel {
@@ -225,50 +221,52 @@ export function mapPlayFrequencyToBackend(value: PlayFrequency): number {
   }
 }
 
-export function mapBackendBudgetRange(
-  budgetTier?: BackendBudgetTier | null,
-): BudgetRange {
-  if (budgetTier === 'below_30') {
-    return 'Below RM30';
-  }
-  if (budgetTier === 'above_50') {
-    return 'RM50+';
-  }
-  if (budgetTier === 'between_30_50') {
-    return 'RM30–RM50';
-  }
-  return 'RM30–RM50';
-}
-
-function mapBudgetRangeToBackend(
-  value: BudgetRange,
-): { budgetTier: BackendBudgetTier; budgetMin: number; budgetMax: number } {
-  switch (value) {
-    case 'Below RM30':
-      return { budgetTier: 'below_30', budgetMin: 0, budgetMax: 30 };
-    case 'RM50+':
-      return { budgetTier: 'above_50', budgetMin: 50, budgetMax: 999 };
-    case 'RM30–RM50':
-    default:
-      return { budgetTier: 'between_30_50', budgetMin: 30, budgetMax: 50 };
-  }
-}
-
 function mapPreferredFeelToBackend(value: PreferredFeel) {
-  return value.toLowerCase() as 'soft' | 'balanced' | 'crisp' | 'hard';
+  return value.toLowerCase() as 'soft' | 'medium' | 'hard';
 }
 
 export function mapBackendPreferredFeel(profile?: BackendProfile | null): PreferredFeel {
-  if ((profile?.pref_comfort ?? 0) >= 4) {
+  if (profile?.preferred_feel === 'soft') {
     return 'Soft';
   }
-  if ((profile?.pref_attack ?? 0) >= 4 && (profile?.preferred_tension ?? 0) >= 27) {
+  if (profile?.preferred_feel === 'hard') {
     return 'Hard';
   }
-  if ((profile?.pref_attack ?? 0) >= 4 || (profile?.pref_sound ?? 0) >= 4) {
-    return 'Crisp';
-  }
-  return 'Balanced';
+  return 'Medium';
+}
+
+function mapPreferredGaugeToBackend(value: PreferredGauge) {
+  return value.toLowerCase().replace(' ', '_') as
+    | 'no_preference'
+    | 'thin'
+    | 'medium'
+    | 'thick';
+}
+
+function mapBackendPreferredGauge(
+  value: BackendProfile['preferred_gauge'] | undefined,
+): PreferredGauge {
+  if (value === 'thin') return 'Thin';
+  if (value === 'medium') return 'Medium';
+  if (value === 'thick') return 'Thick';
+  return 'No preference';
+}
+
+const recentGoalToBackend = {
+  'Balanced setup': 'balanced',
+  'More power': 'power',
+  'Better control': 'control',
+  'More durability': 'durability',
+  'More comfort': 'comfort',
+  'Hold tension longer': 'tension_retention',
+  'Better value': 'value_for_money',
+} as const;
+
+function mapBackendRecentGoal(value?: BackendProfile['recent_goal']): RecentGoal {
+  const match = Object.entries(recentGoalToBackend).find(
+    ([, backendValue]) => backendValue === value,
+  );
+  return (match?.[0] as RecentGoal | undefined) ?? 'Balanced setup';
 }
 
 export function mapBackendUserToPlayerProfile(
@@ -285,10 +283,8 @@ export function mapBackendUserToPlayerProfile(
     skillLevel: mapBackendSkillLevel(profile?.skill_level),
     playingStyle: mapBackendPlayingStyle(profile?.playing_style),
     playFrequency: mapFrequencyToPlayFrequency(profile?.frequency_per_week),
-    budgetRange: mapBackendBudgetRange(profile?.budget_tier),
-    preferredFeel: profile?.preferred_feel
-      ? titleCase(profile.preferred_feel) as PreferredFeel
-      : mapBackendPreferredFeel(profile),
+    preferredFeel: mapBackendPreferredFeel(profile),
+    preferredGauge: mapBackendPreferredGauge(profile?.preferred_gauge),
     preferredTension: profile?.preferred_tension ?? 24,
     priorities: {
       power: mapBackendPreference(profile?.pref_attack),
@@ -296,6 +292,7 @@ export function mapBackendUserToPlayerProfile(
       durability: mapBackendPreference(profile?.pref_durability),
       comfort: mapBackendPreference(profile?.pref_comfort),
       sound: mapBackendPreference(profile?.pref_sound),
+      value: mapBackendPreference(profile?.pref_value_for_money),
     },
     advancedPreferences: {
       elasticity: mapBackendPreference(profile?.pref_elasticity),
@@ -304,9 +301,7 @@ export function mapBackendUserToPlayerProfile(
     },
     homeVenue: 'Klang Valley',
     preferredAdminId: 'main',
-    recentGoal:
-      profile?.recent_goal ??
-      'Use your saved profile to generate a grounded shortlist for the next restring.',
+    recentGoal: mapBackendRecentGoal(profile?.recent_goal),
   };
 }
 
@@ -1022,25 +1017,23 @@ export function buildBackendProfilePayload(
     | 'playFrequency'
     | 'preferredTension'
     | 'preferredFeel'
+    | 'preferredGauge'
     | 'recentGoal'
     | 'priorities'
-    | 'budgetRange'
   > &
     Partial<Pick<PlayerProfile, 'advancedPreferences'>>,
 ): BackendProfilePayload {
-  const budget = mapBudgetRangeToBackend(player.budgetRange);
   const advanced = advancedPreferencesForPayload(player);
 
   return {
     username: player.name,
     skill_level: mapFrontendSkillLevel(player.skillLevel),
     playing_style: mapFrontendPlayingStyle(player.playingStyle),
-    budget_tier: budget.budgetTier,
     preferred_tension: player.preferredTension,
-    game_type: 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(player.playFrequency),
-    preferred_feel: mapPreferredFeelToBackend(player.preferredFeel ?? 'Balanced'),
-    recent_goal: player.recentGoal,
+    preferred_feel: mapPreferredFeelToBackend(player.preferredFeel ?? 'Medium'),
+    preferred_gauge: mapPreferredGaugeToBackend(player.preferredGauge),
+    recent_goal: recentGoalToBackend[player.recentGoal],
     pref_attack: toTenPreference(player.priorities.power),
     pref_comfort: toTenPreference(player.priorities.comfort),
     pref_control: toTenPreference(player.priorities.control),
@@ -1049,7 +1042,7 @@ export function buildBackendProfilePayload(
     pref_sound: toTenPreference(player.priorities.sound),
     pref_string_movement: toTenPreference(advanced.stringMovement),
     pref_tension_retention: toTenPreference(advanced.tensionRetention),
-    pref_value_for_money: derivedValuePreference(player.priorities),
+    pref_value_for_money: toTenPreference(player.priorities.value),
   };
 }
 
@@ -1059,24 +1052,23 @@ export function buildRecommendationPayload(input: {
   playingStyle: PlayingStyle;
   preferredTension: number;
   playFrequency: PlayFrequency;
-  budgetRange?: BudgetRange;
+  preferredFeel: PreferredFeel;
+  preferredGauge: PreferredGauge;
+  recentGoal: RecentGoal;
   priorities: PlayerProfile['priorities'];
   advancedPreferences?: PlayerProfile['advancedPreferences'];
-  gameType?: string;
 }): BackendRecommendationPayload {
-  const budget = input.budgetRange
-    ? mapBudgetRangeToBackend(input.budgetRange)
-    : { budgetTier: 'between_30_50' as const, budgetMin: 30, budgetMax: 50 };
   const advanced = advancedPreferencesForPayload(input);
 
   return {
     user_id: input.userId,
     skill_level: mapFrontendSkillLevel(input.skillLevel),
     playing_style: mapFrontendPlayingStyle(input.playingStyle),
-    budget_tier: budget.budgetTier,
     preferred_tension: input.preferredTension,
-    game_type: input.gameType ?? 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),
+    preferred_feel: mapPreferredFeelToBackend(input.preferredFeel),
+    preferred_gauge: mapPreferredGaugeToBackend(input.preferredGauge),
+    recent_goal: recentGoalToBackend[input.recentGoal],
     pref_attack: toTenPreference(input.priorities.power),
     pref_comfort: toTenPreference(input.priorities.comfort),
     pref_control: toTenPreference(input.priorities.control),
@@ -1085,7 +1077,7 @@ export function buildRecommendationPayload(input: {
     pref_sound: toTenPreference(input.priorities.sound),
     pref_string_movement: toTenPreference(advanced.stringMovement),
     pref_tension_retention: toTenPreference(advanced.tensionRetention),
-    pref_value_for_money: derivedValuePreference(input.priorities),
+    pref_value_for_money: toTenPreference(input.priorities.value),
     top_n: 3,
   };
 }
@@ -1145,8 +1137,7 @@ function mapRecommendationScoreBreakdown(
   return {
     preferenceMatch: value.preference_match,
     ruleFit: value.rule_fit,
-    budgetFit: value.budget_fit,
-    confidenceScore: value.confidence_score,
+    valueForMoney: value.value_for_money,
     nlpReviewScore: value.nlp_review_score,
     finalScore: value.final_score,
   };

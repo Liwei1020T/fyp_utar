@@ -40,7 +40,7 @@
 - Config/runtime rules:
   - Unified backend reads `.env` through `pydantic-settings`
   - relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root
-  - default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+  - default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate
   - compatibility `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` values point to CSV artifacts under `../ml/nlp-workbench-latest/output/`
   - Alembic is the sole runtime schema owner; ORM `create_all` is test-fixture only
   - `SEED_ADMIN_ENABLED` defaults to `false`; enabling it requires explicit companion credentials

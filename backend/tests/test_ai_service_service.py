@@ -27,10 +27,7 @@ def test_recommendation_service_prefers_attacking_string_from_matrix_fixture(tmp
         RecommendationRequest(
             skill_level="advanced",
             playing_style="attacking",
-            budget_min=40,
-            budget_max=60,
             preferred_tension=26,
-            game_type="doubles",
             frequency_per_week=4,
             pref_attack=5,
             pref_comfort=2,

@@ -45,15 +45,15 @@ cd backend
 - Relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root.
 - The default approved source is `backend/data/string_catalog_db_ready.json`.
 - Relative `RECOMMENDATION_MATRIX_SOURCE_PATH` values also resolve from the backend root.
-- The default NLP review matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
-- Recommendation generation uses `0.60 * PreferenceMatch + 0.15 * RuleFit + 0.15 * BudgetFit + 0.10 * ConfidenceScore`.
+- The default NLP review matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; V9 remains separate.
+- Recommendation generation uses `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90` with fixed official/NLP fusion and no confidence or review-count weighting.
 - Complete profile saves and `POST /api/recommendations/generate` persist raw 1-to-10 scores plus normalized weights in `user_preference_matrix` with `source_layer='profile'`.
 - Generated profile recommendations are cached in `recommendation_score_cache` and can be inspected through `GET /api/recommendations/{user_id}` and `GET /api/recommendations/{user_id}/{catalog_id}`.
-- Startup seeding imports the V9 workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` whenever the workbook exists. A missing workbook does not prevent startup: persisted matrix rows remain usable, health reports `stale` when their `source_version` no longer matches the configured artifact, and reports `catalog_fallback` when none have been imported.
-- Re-import compares artifact provenance, including `source_generated_at`, so a stale timestamp is repaired even when feature values are unchanged.
-- Import first sanitizes the workbook to the live runtime whitelist: matching metadata plus `repulsion` (from source `attack`), `comfort`, `control`, `durability`, `elasticity`, `sound`, `string_movement`, and `tension_retention`.
-- `BudgetFit` follows the saved `budget_tier` directly; missing price falls back to a neutral budget score.
-- Structured catalog data such as gauge is used for RuleFit and filtering, not direct PreferenceMatch scoring.
+- Startup seeding imports the independent MacBERT workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` whenever the workbook exists. A missing workbook does not prevent startup: persisted matrix rows remain usable, and health reports `catalog_fallback` only when no NLP rows exist.
+- Re-import compares scoring values and evidence notes. Any content change clears all recommendation cache rows; an unchanged import preserves them.
+- Import requires matching metadata plus all nine runtime features: `repulsion` (from source `attack`), `comfort`, `control`, `durability`, `elasticity`, `sound`, `string_movement`, `tension_retention`, and `value_for_money`.
+- `value_for_money` is the ninth weighted preference feature; catalog price is descriptive and is not scored.
+- Structured gauge and official feel categories are soft RuleFit inputs and never remove candidates.
 - Admin string write operations still require approved catalog membership.
 - Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.
 - NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.

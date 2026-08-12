@@ -157,9 +157,8 @@ external gateway/webhook is selected.
 - The workbook is an optional startup import. If it is absent, persisted catalog
   and official-performance data remain usable and health reports
   `catalog_fallback`; an imported matrix remains available from the database
-  even when the source workbook is later offline. Health reports `imported` only
-  when the configured source digest matches the persisted `source_version`, and
-  reports `stale` for a mismatch.
+  even when the source workbook is later offline. Health reports the persisted
+  `nlp_review` row count without duplicating artifact metadata on every row.
 - A malformed startup artifact is isolated in a savepoint: its partial writes
   roll back, the persisted matrix remains active, and startup logs the rejection.
 - Manual artifact parsing/validation failures return HTTP 400; database and
@@ -178,20 +177,16 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile'`.
 - Raw 1-to-10 inputs are stored as `raw_score`; backend-normalized weights are stored as `preference_weight`.
 - Active catalog candidates are loaded with official performance, inventory, and matrix entries.
-- FYP1 uses rule-enhanced, confidence-aware, content-based recommendation with official performance + NLP review feature fusion + budget-tier fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
+- FYP1 uses rule-enhanced content-based recommendation with official performance + NLP review feature fusion + profile rules. It does not use collaborative filtering, matrix factorization, embeddings, confidence weighting, review-count weighting, or interaction-history scoring.
 - PreferenceMatch uses only effective item features from official/manual performance and `nlp_review` matrix rows.
-- Core recommendation dimensions are `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, and `string_movement`.
+- Core recommendation dimensions are `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, `string_movement`, and `value_for_money`.
 - Structured catalog heuristics such as gauge are excluded from PreferenceMatch and used only in RuleFit.
-- Per-feature `confidence` from `string_recommendation_matrix` is part of the live fusion input.
-- The scorer applies:
-  - `0.60 * PreferenceMatch`
-  - `0.15 * RuleFit`
-  - `0.15 * BudgetFit`
-  - `0.10 * ConfidenceScore`
-- `BudgetFit` is based on the canonical categorical player budget input: `below_30`, `between_30_50`, and `above_50`.
-- Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown, confidence score, artifact version metadata, and rationale payloads.
+- Official and NLP values use fixed equal fusion when both exist; a single available source is used directly, and the prior is used only when both are missing.
+- The scorer ranks with `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90`.
+- Gauge, official feel, and structured recent goal are soft RuleFit inputs; catalog price is descriptive only.
+- Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
 - Generated recommendations are also persisted into `recommendation_runs` and `recommendation_run_items` for admin inspection and reproducibility.
-- Rationale preserves matrix version, feature-source version, artifact generation time, and per-feature source metadata.
+- Rationale preserves the actual official/NLP values and the fixed source contribution used for each feature.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 
 ## AI Boundary

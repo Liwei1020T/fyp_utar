@@ -24,10 +24,11 @@ from app.shared.errors import NotFoundError
 REQUIRED_PROFILE_FIELDS = {
     "skill_level",
     "playing_style",
-    "budget_tier",
     "preferred_tension",
-    "game_type",
     "frequency_per_week",
+    "preferred_feel",
+    "preferred_gauge",
+    "recent_goal",
     "pref_attack",
     "pref_comfort",
     "pref_control",
@@ -84,10 +85,11 @@ class GenerateRecommendationUseCase:
             user_id=user_id,
             skill_level=profile.skill_level or "",
             playing_style=profile.playing_style or "",
-            budget_tier=profile.budget_tier or "between_30_50",
             preferred_tension=profile.preferred_tension or 0,
-            game_type=profile.game_type or "",
             frequency_per_week=profile.frequency_per_week or 0,
+            preferred_feel=profile.preferred_feel or "medium",
+            preferred_gauge=profile.preferred_gauge or "no_preference",
+            recent_goal=profile.recent_goal or "balanced",
             pref_attack=profile.pref_attack or 0,
             pref_comfort=profile.pref_comfort or 0,
             pref_control=profile.pref_control or 0,
@@ -107,7 +109,10 @@ class GenerateRecommendationUseCase:
         )
 
     def execute_cached(self, *, user_id: str) -> RecommendationResponseModel:
-        cached = self.recommendation_repository.get_cached_results(user_id=user_id)
+        cached = self.recommendation_repository.get_cached_results(
+            user_id=user_id,
+            algorithm_version=ALGORITHM_VERSION,
+        )
         if not cached:
             raise NotFoundError("No cached recommendations found")
         return RecommendationResponseModel(
@@ -125,6 +130,7 @@ class GenerateRecommendationUseCase:
         cached = self.recommendation_repository.get_cached_result_detail(
             user_id=user_id,
             catalog_id=catalog_id,
+            algorithm_version=ALGORITHM_VERSION,
         )
         if cached is None:
             raise NotFoundError("No cached recommendation detail found")
@@ -192,10 +198,6 @@ class GenerateRecommendationUseCase:
             profile_payload=profile_snapshot or request.__dict__,
             result_payloads=result_payloads,
             algorithm_version=response.algorithm_version,
-            matrix_version=_matrix_version_from_results(result_payloads),
-            feature_source_version=_feature_source_version_from_results(
-                result_payloads
-            ),
         )
         self.recommendation_log_repository.create_log(
             user_id=user_id,
@@ -218,10 +220,8 @@ class GenerateRecommendationUseCase:
             breakdown.setdefault("preference_match", cached.preference_match_score)
         if cached.rule_fit_score is not None:
             breakdown.setdefault("rule_fit", cached.rule_fit_score)
-        if cached.budget_fit_score is not None:
-            breakdown.setdefault("budget_fit", cached.budget_fit_score)
-        if cached.confidence_score is not None:
-            breakdown.setdefault("confidence_score", cached.confidence_score)
+        if cached.value_for_money_score is not None:
+            breakdown.setdefault("value_for_money", cached.value_for_money_score)
         if cached.nlp_review_score is not None:
             breakdown.setdefault("nlp_review_score", cached.nlp_review_score)
         breakdown.setdefault("final_score", cached.final_score)
@@ -252,8 +252,7 @@ class GenerateRecommendationUseCase:
             breakdown = {
                 "preference_match": item.preference_match_score,
                 "rule_fit": item.rule_fit_score,
-                "budget_fit": item.budget_fit_score,
-                "confidence_score": item.confidence_score,
+                "value_for_money": item.value_for_money_score,
                 "nlp_review_score": item.nlp_review_score,
                 "final_score": item.final_score,
             }
@@ -267,9 +266,7 @@ class GenerateRecommendationUseCase:
             else None,
             catalog_id=item.catalog_id,
             score=item.final_score,
-            price_rm=_float_or_none(rationale.get("budget", {}).get("price_rm"))
-            if isinstance(rationale.get("budget"), dict)
-            else None,
+            price_rm=_cached_price(rationale),
             aspect_scores={
                 key: float(value)
                 for key, value in aspect_scores.items()
@@ -283,6 +280,7 @@ class GenerateRecommendationUseCase:
                     "sound",
                     "string_movement",
                     "tension_retention",
+                    "value_for_money",
                 }
             },
             reasons=list(
@@ -306,6 +304,15 @@ def _float_or_none(value: object) -> float | None:
     raise TypeError(f"Expected numeric value, got {type(value).__name__}")
 
 
+def _cached_price(rationale: dict[str, object]) -> float | None:
+    if "price_rm" in rationale:
+        return _float_or_none(rationale.get("price_rm"))
+    legacy_budget = rationale.get("budget")
+    if isinstance(legacy_budget, dict):
+        return _float_or_none(legacy_budget.get("price_rm"))
+    return None
+
+
 def _result_payload(item: RecommendationResultModel) -> dict[str, object]:
     return {
         "rank": item.rank,
@@ -323,40 +330,15 @@ def _result_payload(item: RecommendationResultModel) -> dict[str, object]:
     }
 
 
-def _matrix_version_from_results(
-    result_payloads: list[dict[str, object]],
-) -> str | None:
-    for item in result_payloads:
-        rationale = item.get("rationale_payload")
-        if isinstance(rationale, dict):
-            value = rationale.get("matrix_version")
-            if isinstance(value, str):
-                return value
-    return None
-
-
-def _feature_source_version_from_results(
-    result_payloads: list[dict[str, object]],
-) -> str | None:
-    for item in result_payloads:
-        rationale = item.get("rationale_payload")
-        if isinstance(rationale, dict):
-            value = rationale.get("feature_source_version")
-            if isinstance(value, str):
-                return value
-    return None
-
-
 def _profile_snapshot(profile) -> dict[str, object]:
     return {
         "user_id": profile.user_id,
         "skill_level": profile.skill_level,
         "playing_style": profile.playing_style,
-        "budget_tier": profile.budget_tier,
         "preferred_tension": profile.preferred_tension,
-        "game_type": profile.game_type,
         "frequency_per_week": profile.frequency_per_week,
         "preferred_feel": profile.preferred_feel,
+        "preferred_gauge": profile.preferred_gauge,
         "recent_goal": profile.recent_goal,
         "pref_attack": profile.pref_attack,
         "pref_comfort": profile.pref_comfort,

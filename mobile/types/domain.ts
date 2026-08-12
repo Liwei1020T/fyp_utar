@@ -3,9 +3,23 @@ export type UserRole = 'player' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'Competitive';
 export type PlayingStyle = 'Attacking' | 'Balanced' | 'Control' | 'Defensive';
 export type PlayFrequency = 'Social' | 'Weekly' | 'Tournament';
-export type BudgetRange = 'Below RM30' | 'RM30–RM50' | 'RM50+';
-export type PreferredFeel = 'Soft' | 'Balanced' | 'Crisp' | 'Hard';
-export type PriorityKey = 'power' | 'control' | 'durability' | 'comfort' | 'sound';
+export type PreferredFeel = 'Soft' | 'Medium' | 'Hard';
+export type PreferredGauge = 'No preference' | 'Thin' | 'Medium' | 'Thick';
+export type RecentGoal =
+  | 'Balanced setup'
+  | 'More power'
+  | 'Better control'
+  | 'More durability'
+  | 'More comfort'
+  | 'Hold tension longer'
+  | 'Better value';
+export type PriorityKey =
+  | 'power'
+  | 'control'
+  | 'durability'
+  | 'comfort'
+  | 'sound'
+  | 'value';
 export type AdvancedPreferenceKey =
   | 'elasticity'
   | 'tensionRetention'
@@ -27,14 +41,14 @@ export interface PlayerProfile extends UserIdentity {
   skillLevel: SkillLevel;
   playingStyle: PlayingStyle;
   playFrequency: PlayFrequency;
-  budgetRange: BudgetRange;
   preferredFeel: PreferredFeel;
+  preferredGauge: PreferredGauge;
   preferredTension: number;
   priorities: Record<PriorityKey, number>;
   advancedPreferences: Record<AdvancedPreferenceKey, number>;
   homeVenue: string;
   preferredAdminId: string;
-  recentGoal: string;
+  recentGoal: RecentGoal;
 }
 
 export interface AdminProfile extends UserIdentity {
@@ -226,9 +240,8 @@ export interface RecommendationMatch {
 export interface RecommendationScoreBreakdown {
   preferenceMatch?: number;
   ruleFit?: number;
-  budgetFit?: number;
+  valueForMoney?: number;
   nlpReviewScore?: number;
-  confidenceScore?: number;
   finalScore?: number;
 }
 
@@ -236,16 +249,12 @@ export interface RecommendationRationalePayload {
   score_breakdown?: {
     preference_match?: number;
     rule_fit?: number;
-    budget_fit?: number;
-    confidence_score?: number;
+    value_for_money?: number;
     nlp_review_score?: number;
     final_score?: number;
   };
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
-  matrix_version?: string | null;
-  feature_source_version?: string | null;
-  feature_source_generated_at?: string | null;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -257,13 +266,7 @@ export interface RecommendationRationalePayload {
     source?: string;
     official_score?: number | null;
     nlp_review_score?: number | null;
-    nlp_confidence?: number | null;
     nlp_influence?: number | null;
-    fusion_confidence?: number | null;
-    source_version?: string | null;
-    source_generated_at?: string | null;
-    source_ref?: string | null;
-    review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
@@ -276,15 +279,7 @@ export interface RecommendationRationalePayload {
     raw_score?: number | null;
     preference_weight?: number | null;
   }>;
-  budget?: {
-    price_rm?: number | null;
-    budget_tier?: 'below_30' | 'between_30_50' | 'above_50';
-    item_price_tier?: 'low' | 'mid' | 'high' | 'unknown';
-    budget_tier_bounds_rm?: {
-      min_rm?: number;
-      max_rm?: number;
-    };
-  };
+  price_rm?: number | null;
   rule_events?: Array<{
     rule?: string;
     delta?: number;

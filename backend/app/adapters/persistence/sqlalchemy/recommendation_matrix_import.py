@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import csv
-from datetime import UTC
-from datetime import datetime
-import hashlib
 import logging
 import re
 import zipfile
@@ -13,11 +10,13 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+from sqlalchemy import delete
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import selectinload
 
 from app.adapters.persistence.sqlalchemy.models import RecommendationFeatureDefinition
+from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
 from app.domain.catalog.entities import RecommendationMatrixImportReport
@@ -39,7 +38,6 @@ NLP_REVIEW_SOURCE_LAYER = "nlp_review"
 class CsvFeatureSpec:
     column: str
     feature_key: str
-    confidence_column: str | None = None
     evidence_column: str | None = None
 
 
@@ -57,53 +55,49 @@ class CatalogLookupEntry:
 
 
 CSV_FEATURE_SPECS = (
-    CsvFeatureSpec("attack", "repulsion", "attack_confidence", "attack_review_raw"),
-    CsvFeatureSpec("comfort", "comfort", "comfort_confidence", "comfort_review_raw"),
-    CsvFeatureSpec("control", "control", "control_confidence", "control_review_raw"),
+    CsvFeatureSpec("attack", "repulsion", "attack_review_raw"),
+    CsvFeatureSpec("comfort", "comfort", "comfort_review_raw"),
+    CsvFeatureSpec("control", "control", "control_review_raw"),
     CsvFeatureSpec(
         "durability",
         "durability",
-        "durability_confidence",
         "durability_review_raw",
     ),
     CsvFeatureSpec(
         "elasticity",
         "elasticity",
-        "elasticity_confidence",
         "elasticity_review_raw",
     ),
-    CsvFeatureSpec("sound", "sound", "sound_confidence", "sound_review_raw"),
+    CsvFeatureSpec("sound", "sound", "sound_review_raw"),
     CsvFeatureSpec(
         "string_movement",
         "string_movement",
-        "string_movement_confidence",
         "string_movement_review_raw",
     ),
     CsvFeatureSpec(
         "tension_retention",
         "tension_retention",
-        "tension_retention_confidence",
         "tension_retention_review_raw",
     ),
     CsvFeatureSpec(
         "value_for_money",
         "value_for_money",
-        "value_for_money_confidence",
         "value_for_money_review_raw",
     ),
     CsvFeatureSpec(
         "stability_score",
         "stability",
-        "string_movement_confidence",
         "string_movement_review_raw",
     ),
     CsvFeatureSpec("all_round_score", "all_round"),
-    CsvFeatureSpec("attacking_fit_score", "attacking_fit", "attack_confidence"),
-    CsvFeatureSpec("control_fit_score", "control_fit", "control_confidence"),
+    CsvFeatureSpec("attacking_fit_score", "attacking_fit"),
+    CsvFeatureSpec("control_fit_score", "control_fit"),
     CsvFeatureSpec("beginner_fit_score", "beginner_fit"),
 )
 
 MATRIX_METADATA_COLUMNS = {
+    "catalog_id",
+    "canonical_string_name",
     "string_id",
     "string_name",
     "brand",
@@ -112,8 +106,6 @@ MATRIX_METADATA_COLUMNS = {
     "material",
     "price_rm",
     "rating",
-    "review_count",
-    "budget_tier",
     "attacking_fit_label",
     "control_fit_label",
     "durable_fit_label",
@@ -126,7 +118,6 @@ MATRIX_RUNTIME_COLUMNS = MATRIX_METADATA_COLUMNS | {
     for spec in CSV_FEATURE_SPECS
     for column_name in (
         spec.column,
-        spec.confidence_column,
         spec.evidence_column,
     )
     if column_name
@@ -141,6 +132,7 @@ REQUIRED_NLP_FEATURE_KEYS = {
     "sound",
     "string_movement",
     "tension_retention",
+    "value_for_money",
 }
 
 
@@ -176,12 +168,7 @@ def normalize_legacy_feature_keys(db: Session) -> None:
                     source_layer=entry.source_layer,
                     raw_value=entry.raw_value,
                     normalized_score=entry.normalized_score,
-                    confidence=entry.confidence,
                     evidence_note=entry.evidence_note,
-                    source_ref=entry.source_ref,
-                    source_version=entry.source_version,
-                    source_generated_at=entry.source_generated_at,
-                    review_count_snapshot=entry.review_count_snapshot,
                 )
             )
         elif (
@@ -189,12 +176,7 @@ def normalize_legacy_feature_keys(db: Session) -> None:
         ):
             replacement.raw_value = entry.raw_value
             replacement.normalized_score = entry.normalized_score
-            replacement.confidence = entry.confidence
             replacement.evidence_note = entry.evidence_note
-            replacement.source_ref = entry.source_ref
-            replacement.source_version = entry.source_version
-            replacement.source_generated_at = entry.source_generated_at
-            replacement.review_count_snapshot = entry.review_count_snapshot
         db.delete(entry)
 
     legacy_definitions = (
@@ -229,8 +211,6 @@ def import_recommendation_matrix_csv(
 
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
-    source_version = recommendation_matrix_source_version(csv_path)
-    source_generated_at = recommendation_matrix_source_generated_at(csv_path)
 
     lookup = _build_catalog_lookup(db)
     match_counts: Counter[str] = Counter()
@@ -238,6 +218,7 @@ def import_recommendation_matrix_csv(
     inserted_entries = 0
     updated_entries = 0
     unchanged_entries = 0
+    deleted_entries = 0
     matched_strings = 0
     unmatched_strings = 0
     imported_feature_pairs: set[tuple[str, str]] = set()
@@ -256,8 +237,6 @@ def import_recommendation_matrix_csv(
         entry_payloads = _build_matrix_entries(
             row,
             matched_entry.catalog_id,
-            source_version=source_version,
-            source_generated_at=source_generated_at,
         )
         feature_keys = {
             str(entry_payload["feature_key"]) for entry_payload in entry_payloads
@@ -294,19 +273,12 @@ def import_recommendation_matrix_csv(
             for field in (
                 "raw_value",
                 "normalized_score",
-                "confidence",
                 "evidence_note",
-                "source_ref",
-                "source_version",
-                "source_generated_at",
-                "review_count_snapshot",
             ):
                 current_value = getattr(matrix_row, field)
                 next_value = entry_payload[field]
-                if field in {"raw_value", "normalized_score", "confidence"}:
+                if field in {"raw_value", "normalized_score"}:
                     values_match = _same_number(current_value, next_value)
-                elif field == "source_generated_at":
-                    values_match = _same_datetime(current_value, next_value)
                 else:
                     values_match = current_value == next_value
                 if not values_match:
@@ -337,6 +309,10 @@ def import_recommendation_matrix_csv(
             imported_feature_pairs
         ):
             db.delete(existing_row)
+            deleted_entries += 1
+
+    if inserted_entries or updated_entries or deleted_entries:
+        db.execute(delete(RecommendationScoreCache))
 
     db.flush()
     return RecommendationMatrixImportReport(
@@ -508,6 +484,14 @@ def _match_catalog_row(
     row: dict[str, str],
     lookup: list[CatalogLookupEntry],
 ) -> tuple[CatalogLookupEntry | None, str, str | None]:
+    catalog_id = _clean_text(row.get("catalog_id"))
+    if catalog_id:
+        exact_catalog = [entry for entry in lookup if entry.catalog_id == catalog_id]
+        if len(exact_catalog) == 1:
+            return exact_catalog[0], "catalog_id", None
+        warning = f"Unmatched recommendation matrix catalog_id: {catalog_id}."
+        return None, "unmatched", warning
+
     source_url = _clean_text(row.get("source_url"))
     if source_url:
         exact_source = [entry for entry in lookup if entry.source_url == source_url]
@@ -588,33 +572,29 @@ def _matches_identity(
 def _build_matrix_entries(
     row: dict[str, str],
     catalog_id: str,
-    *,
-    source_version: str,
-    source_generated_at: datetime | None,
 ) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
+    uses_five_point_scale = bool(
+        _clean_text(row.get("catalog_id"))
+        and _clean_text(row.get("canonical_string_name"))
+    )
     for spec in CSV_FEATURE_SPECS:
         value = _parse_float(row.get(spec.column))
         if value is None:
             continue
+        if uses_five_point_scale and not 1 <= value <= 5:
+            raise RecommendationMatrixArtifactError(
+                "MacBERT matrix scores must use the 1-to-5 scale"
+            )
+        normalized_value = (value - 1) / 4 if uses_five_point_scale else value
         entries.append(
             {
                 "catalog_id": catalog_id,
                 "feature_key": spec.feature_key,
                 "source_layer": NLP_REVIEW_SOURCE_LAYER,
                 "raw_value": _round_score(value, digits=4),
-                "normalized_score": _round_score(value, digits=4),
-                "confidence": _round_score(
-                    _parse_float(row.get(spec.confidence_column)),
-                    digits=2,
-                )
-                if spec.confidence_column
-                else None,
+                "normalized_score": _round_score(normalized_value, digits=4),
                 "evidence_note": _build_evidence_note(row, spec),
-                "source_ref": _clean_text(row.get("source_url")),
-                "source_version": source_version,
-                "source_generated_at": source_generated_at,
-                "review_count_snapshot": _parse_int(row.get("review_count")),
             }
         )
     return entries
@@ -644,13 +624,6 @@ def _build_evidence_note(row: dict[str, str], spec: CsvFeatureSpec) -> str | Non
         label = _clean_text(row.get("crisp_sound_label"))
         if label:
             parts.append(f"crisp_sound_label={label}")
-
-    review_count = _clean_text(row.get("review_count"))
-    budget_tier = _clean_text(row.get("budget_tier"))
-    if review_count:
-        parts.append(f"review_count={review_count}")
-    if budget_tier:
-        parts.append(f"budget_tier={budget_tier}")
 
     if not parts:
         return None
@@ -684,18 +657,6 @@ def _parse_float(value: str | None) -> float | None:
         ) from error
 
 
-def _parse_int(value: str | None) -> int | None:
-    parsed = _parse_float(value)
-    if parsed is None:
-        return None
-    try:
-        return int(parsed)
-    except (OverflowError, ValueError) as error:
-        raise RecommendationMatrixArtifactError(
-            f"Recommendation matrix contains an invalid integer value: {value}"
-        ) from error
-
-
 def _to_float(value: Any) -> float | None:
     if value is None:
         return None
@@ -708,64 +669,7 @@ def _same_number(left: Any, right: Any) -> bool:
     return abs(float(left) - float(right)) <= 1e-9
 
 
-def _same_datetime(left: datetime | None, right: datetime | None) -> bool:
-    if left is None or right is None:
-        return left is right
-
-    def as_utc(value: datetime) -> datetime:
-        if value.tzinfo is None:
-            return value.replace(tzinfo=UTC)
-        return value.astimezone(UTC)
-
-    return abs((as_utc(left) - as_utc(right)).total_seconds()) <= 1e-6
-
-
 def _round_score(value: float | None, *, digits: int) -> float | None:
     if value is None:
         return None
     return round(value, digits)
-
-
-def recommendation_matrix_source_version(source_path: Path) -> str:
-    digest = hashlib.sha256()
-    with source_path.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return f"sha256:{digest.hexdigest()}"
-
-
-def recommendation_matrix_source_generated_at(
-    source_path: Path,
-) -> datetime | None:
-    if source_path.suffix.lower() != ".xlsx":
-        return None
-
-    try:
-        with zipfile.ZipFile(source_path) as workbook:
-            try:
-                core_xml = workbook.read("docProps/core.xml")
-            except KeyError:
-                return None
-        root = ElementTree.fromstring(core_xml)
-    except RecommendationMatrixArtifactError:
-        raise
-    except (ElementTree.ParseError, UnicodeError, zipfile.BadZipFile) as error:
-        raise RecommendationMatrixArtifactError(
-            f"Recommendation matrix workbook metadata is invalid: {source_path}"
-        ) from error
-
-    namespace = {
-        "dcterms": "http://purl.org/dc/terms/",
-    }
-    for property_name in ("modified", "created"):
-        value = root.findtext(f"dcterms:{property_name}", namespaces=namespace)
-        if value:
-            try:
-                return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(
-                    UTC
-                )
-            except ValueError as error:
-                raise RecommendationMatrixArtifactError(
-                    "Recommendation matrix workbook has invalid metadata timestamps"
-                ) from error
-    return None

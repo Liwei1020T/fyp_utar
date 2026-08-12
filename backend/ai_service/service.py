@@ -20,7 +20,7 @@ from ai_service.schemas import ReviewAspectSignal
 from ai_service.schemas import StringRecord
 
 
-ALGORITHM_VERSION = "practical_matrix_v8_rule_content_v1"
+ALGORITHM_VERSION = "practical_matrix_v8_rule_content_v2"
 
 REVIEW_KEYWORDS: dict[str, tuple[str, ...]] = {
     "attack": ("power", "smash", "repulsion", "弹性"),
@@ -224,24 +224,6 @@ class RecommendationService:
             )
             rule_adjustment += frequent_bonus
             reasons.append("Stability and tension retention help frequent play")
-
-        if request.game_type == "doubles":
-            rule_adjustment += (item.attack * 0.04) + (item.sound * 0.03)
-            reasons.append("Suited to faster doubles exchanges")
-        else:
-            rule_adjustment += (item.control * 0.03) + (item.comfort * 0.02)
-            reasons.append("Control and touch help singles rallies")
-
-        if item.price_rm is not None:
-            if item.price_rm < request.budget_min:
-                rule_adjustment -= min(0.15, (request.budget_min - item.price_rm) / 100)
-                reasons.append("Below your target budget range")
-            elif item.price_rm > request.budget_max:
-                rule_adjustment -= min(0.2, (item.price_rm - request.budget_max) / 100)
-                reasons.append("Above your budget range")
-            else:
-                rule_adjustment += 0.06
-                reasons.append("Falls within your budget range")
 
         if request.preferred_tension >= 27 and item.stability_score >= 0.6:
             rule_adjustment += 0.04

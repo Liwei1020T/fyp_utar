@@ -88,18 +88,23 @@ export interface BackendForgotPasswordRequestResponse
   dev_code_preview: string | null;
 }
 
-export type BackendBudgetTier = 'below_30' | 'between_30_50' | 'above_50';
-
 export interface BackendProfile {
   username: string;
   skill_level: string | null;
   playing_style: string | null;
-  budget_tier: BackendBudgetTier | null;
   preferred_tension: number | null;
-  game_type: string | null;
   frequency_per_week: number | null;
-  preferred_feel: 'soft' | 'balanced' | 'crisp' | 'hard' | null;
-  recent_goal: string | null;
+  preferred_feel: 'soft' | 'medium' | 'hard' | null;
+  preferred_gauge: 'no_preference' | 'thin' | 'medium' | 'thick' | null;
+  recent_goal:
+    | 'balanced'
+    | 'power'
+    | 'control'
+    | 'durability'
+    | 'comfort'
+    | 'tension_retention'
+    | 'value_for_money'
+    | null;
   pref_attack: number | null;
   pref_comfort: number | null;
   pref_control: number | null;
@@ -714,8 +719,7 @@ export interface BackendRecommendationRunItem {
   final_score: number;
   preference_match_score?: number | null;
   rule_fit_score?: number | null;
-  budget_fit_score?: number | null;
-  confidence_score?: number | null;
+  value_for_money_score?: number | null;
   nlp_review_score?: number | null;
   score_breakdown: Record<string, unknown>;
   rationale: Record<string, unknown>;
@@ -727,8 +731,6 @@ export interface BackendRecommendationRun {
   phone_number?: string | null;
   username?: string | null;
   algorithm_version: string;
-  matrix_version?: string | null;
-  feature_source_version?: string | null;
   request_snapshot: Record<string, unknown>;
   profile_snapshot: Record<string, unknown>;
   generated_at?: string | null;
@@ -738,8 +740,7 @@ export interface BackendRecommendationRun {
 export interface BackendRecommendationScoreBreakdown {
   preference_match?: number;
   rule_fit?: number;
-  budget_fit?: number;
-  confidence_score?: number;
+  value_for_money?: number;
   nlp_review_score?: number;
   final_score?: number;
 }
@@ -748,9 +749,6 @@ export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
-  matrix_version?: string | null;
-  feature_source_version?: string | null;
-  feature_source_generated_at?: string | null;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -762,13 +760,7 @@ export interface BackendRecommendationRationale {
     source?: string;
     official_score?: number | null;
     nlp_review_score?: number | null;
-    nlp_confidence?: number | null;
     nlp_influence?: number | null;
-    fusion_confidence?: number | null;
-    source_version?: string | null;
-    source_generated_at?: string | null;
-    source_ref?: string | null;
-    review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
@@ -781,15 +773,7 @@ export interface BackendRecommendationRationale {
     raw_score?: number | null;
     preference_weight?: number | null;
   }>;
-  budget?: {
-    price_rm?: number | null;
-    budget_tier?: BackendBudgetTier;
-    item_price_tier?: 'low' | 'mid' | 'high' | 'unknown';
-    budget_tier_bounds_rm?: {
-      min_rm?: number;
-      max_rm?: number;
-    };
-  };
+  price_rm?: number | null;
   rule_events?: Array<{
     rule?: string;
     delta?: number;
@@ -803,12 +787,18 @@ export interface BackendProfilePayload {
   username?: string;
   skill_level?: string;
   playing_style?: string;
-  budget_tier?: BackendBudgetTier;
   preferred_tension?: number;
-  game_type?: string;
   frequency_per_week?: number;
-  preferred_feel?: 'soft' | 'balanced' | 'crisp' | 'hard';
-  recent_goal?: string;
+  preferred_feel?: 'soft' | 'medium' | 'hard';
+  preferred_gauge?: 'no_preference' | 'thin' | 'medium' | 'thick';
+  recent_goal?:
+    | 'balanced'
+    | 'power'
+    | 'control'
+    | 'durability'
+    | 'comfort'
+    | 'tension_retention'
+    | 'value_for_money';
   pref_attack?: number;
   pref_comfort?: number;
   pref_control?: number;
@@ -824,10 +814,18 @@ export interface BackendRecommendationPayload {
   user_id: string;
   skill_level: string;
   playing_style: string;
-  budget_tier: BackendBudgetTier;
   preferred_tension: number;
-  game_type: string;
   frequency_per_week: number;
+  preferred_feel: 'soft' | 'medium' | 'hard';
+  preferred_gauge: 'no_preference' | 'thin' | 'medium' | 'thick';
+  recent_goal:
+    | 'balanced'
+    | 'power'
+    | 'control'
+    | 'durability'
+    | 'comfort'
+    | 'tension_retention'
+    | 'value_for_money';
   pref_attack: number;
   pref_comfort: number;
   pref_control: number;

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import re
 from functools import lru_cache
@@ -29,6 +30,49 @@ TAG_EFFECTS: dict[str, AspectScoreMap] = {
 }
 
 ASPECT_KEYS = CANONICAL_MATRIX_FEATURE_KEYS
+OFFICIAL_FEEL_BY_CATALOG_ID = {
+    "li-ning-n65": 3.0,
+    "victor-vbs-68-power": 3.0,
+    "yonex-bg65": 3.0,
+    "gosen-ryzonic-65": 5.0,
+    "kumpoo-js-63": 5.0,
+    "li-ning-no1": 5.0,
+    "victor-vbs-66-nano": 5.0,
+    "yonex-aerobite": 5.0,
+    "yonex-bg66-ultimax": 5.0,
+    "yonex-exbolt-63": 5.0,
+    "yonex-bg80": 8.0,
+    "yonex-bg80-power": 8.0,
+}
+
+
+@lru_cache(maxsize=4)
+def load_approved_string_cohort(cohort_path: Path) -> dict[str, str]:
+    with cohort_path.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames != ["catalog_id", "canonical_string_name"]:
+            raise ValueError(
+                "System string cohort must contain catalog_id and canonical_string_name"
+            )
+        rows = list(reader)
+        cohort = {
+            str(row["catalog_id"]).strip(): str(row["canonical_string_name"]).strip()
+            for row in rows
+        }
+    if (
+        len(rows) != 12
+        or len(cohort) != 12
+        or len(set(cohort.values())) != 12
+        or any(not key or not value for key, value in cohort.items())
+    ):
+        raise ValueError(
+            "System string cohort must contain 12 unique non-blank strings"
+        )
+    return cohort
+
+
+def approved_catalog_ids(cohort_path: Path) -> frozenset[str]:
+    return frozenset(load_approved_string_cohort(cohort_path))
 
 
 def normalize_catalog_name(brand: str, model_name: str) -> str:
@@ -111,11 +155,7 @@ def approved_row_to_values(
             "source_layer": "hybrid_derived",
             "raw_value": score,
             "normalized_score": score,
-            "confidence": 0.55,
             "evidence_note": "Backfilled from legacy gauge and community tag heuristics.",
-            "source_ref": legacy_row.get("source_url")
-            if legacy_row
-            else row.get("source_dataset_url"),
         }
         for feature_key, score in scores.items()
     ]
@@ -126,9 +166,7 @@ def approved_row_to_values(
                 "source_layer": "catalog_structured",
                 "raw_value": gauge_mm,
                 "normalized_score": gauge_score,
-                "confidence": 0.9,
                 "evidence_note": "Normalized directly from catalog gauge metadata.",
-                "source_ref": row.get("source_dataset_url"),
             }
         )
 
@@ -189,7 +227,7 @@ def approved_row_to_values(
             "source_region": None,
             "category": None,
             "feature": None,
-            "feel": None,
+            "feel": OFFICIAL_FEEL_BY_CATALOG_ID.get(catalog_id),
             "repulsion_power": None,
             "durability": None,
             "hitting_sound": None,

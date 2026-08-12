@@ -9,6 +9,7 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import approved_catalog_ids
 from app.adapters.persistence.sqlalchemy.catalog_seed import seed_catalog_rows
 from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
     ensure_recommendation_feature_definitions,
@@ -143,10 +144,17 @@ def ensure_catalog_seeded(db: Session) -> None:
     count = db.execute(select(func.count()).select_from(StringCatalogItem)).scalar_one()
     if count == 0:
         seed_rows = seed_catalog_rows(settings.approved_strings_path)
+        cohort_ids = approved_catalog_ids(settings.approved_string_cohort_path)
         for brand in seed_rows["brands"]:
             db.merge(Brand(**brand))
         for payload in seed_rows["items"]:
-            item = StringCatalogItem(**payload["catalog"])
+            catalog_values = dict(payload["catalog"])
+            inventory_values = dict(payload["inventory"])
+            if str(catalog_values["catalog_id"]) not in cohort_ids:
+                catalog_values["is_active"] = False
+                inventory_values["is_active"] = False
+                inventory_values["availability_status"] = "out_of_stock"
+            item = StringCatalogItem(**catalog_values)
             item.metrics = StringCatalogMetric(
                 catalog_id=item.catalog_id,
                 **payload["metrics"],
@@ -158,7 +166,7 @@ def ensure_catalog_seeded(db: Session) -> None:
             item.official_performance = StringOfficialPerformance(
                 **payload["official_performance"]
             )
-            item.inventory_item = StringInventoryItem(**payload["inventory"])
+            item.inventory_item = StringInventoryItem(**inventory_values)
             item.recommendation_entries = [
                 StringRecommendationMatrix(
                     catalog_id=item.catalog_id,

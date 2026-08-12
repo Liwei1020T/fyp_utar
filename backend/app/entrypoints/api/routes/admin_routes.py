@@ -14,6 +14,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.catalog_seed import (
+    approved_catalog_ids,
+)
+from app.adapters.persistence.sqlalchemy.catalog_seed import (
     merge_with_approved_defaults,
 )
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
@@ -122,8 +125,10 @@ BookingPhotoType = Literal["racket", "service_progress", "other"]
 
 
 def _prepare_string_values() -> PrepareStringValuesUseCase:
+    settings = get_settings()
     return PrepareStringValuesUseCase(
-        approved_strings_path=get_settings().approved_strings_path,
+        approved_strings_path=settings.approved_strings_path,
+        approved_catalog_ids=approved_catalog_ids(settings.approved_string_cohort_path),
         merge_defaults=merge_with_approved_defaults,
     )
 

@@ -33,6 +33,8 @@ class RecommendationRepository(Protocol):
         results: list[dict[str, object]],
     ) -> list[CachedRecommendationRecord]: ...
 
+    def clear_score_cache(self, *, user_id: str) -> None: ...
+
     def get_cached_results(
         self,
         *,

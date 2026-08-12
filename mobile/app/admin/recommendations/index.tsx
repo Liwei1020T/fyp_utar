@@ -97,8 +97,6 @@ export default function AdminRecommendationRunsScreen() {
         run.phone_number,
         run.username,
         run.algorithm_version,
-        run.matrix_version,
-        run.feature_source_version,
         topLabel,
       ]
         .filter(Boolean)
@@ -209,14 +207,9 @@ export default function AdminRecommendationRunsScreen() {
                     </HeroText>
                   </View>
 
-                  <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1">
-                    <HeroText className="text-[12px] font-medium text-neutral-500">
-                      Phone: {item.phone_number || 'Unavailable'}
-                    </HeroText>
-                    <HeroText className="text-[12px] font-medium text-neutral-500">
-                      Matrix: {item.matrix_version || 'Unavailable'}
-                    </HeroText>
-                  </View>
+                  <HeroText className="text-[12px] font-medium text-neutral-500">
+                    Phone: {item.phone_number || 'Unavailable'}
+                  </HeroText>
                 </View>
               </AppCard>
             </View>

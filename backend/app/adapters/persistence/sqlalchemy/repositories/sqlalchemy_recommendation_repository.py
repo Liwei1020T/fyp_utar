@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Collection
 from collections.abc import Mapping
 
 from sqlalchemy import delete
@@ -24,25 +25,49 @@ from app.shared.serialization import number_to_float
 
 
 class SqlAlchemyRecommendationRepository:
-    def __init__(self, db: Session) -> None:
+    def __init__(
+        self,
+        db: Session,
+        approved_catalog_ids: Collection[str] | None = None,
+    ) -> None:
         self.db = db
+        self.approved_catalog_ids = (
+            frozenset(approved_catalog_ids)
+            if approved_catalog_ids is not None
+            else None
+        )
 
     def list_active_candidates(self) -> list[RecommendationCandidateModel]:
+        query = (
+            select(StringCatalogItem)
+            .join(
+                StringInventoryItem,
+                StringInventoryItem.catalog_id == StringCatalogItem.catalog_id,
+            )
+            .options(
+                selectinload(StringCatalogItem.brand_ref),
+                selectinload(StringCatalogItem.metrics),
+                selectinload(StringCatalogItem.tags),
+                selectinload(StringCatalogItem.official_performance),
+                selectinload(StringCatalogItem.inventory_item).selectinload(
+                    StringInventoryItem.movements
+                ),
+                selectinload(StringCatalogItem.recommendation_entries),
+            )
+            .where(
+                StringCatalogItem.is_active.is_(True),
+                StringInventoryItem.is_active.is_(True),
+                StringInventoryItem.availability_status.in_(("in_stock", "low_stock")),
+                StringInventoryItem.available_stock > 0,
+            )
+        )
+        if self.approved_catalog_ids is not None:
+            query = query.where(
+                StringCatalogItem.catalog_id.in_(self.approved_catalog_ids)
+            )
         items = (
             self.db.execute(
-                select(StringCatalogItem)
-                .options(
-                    selectinload(StringCatalogItem.brand_ref),
-                    selectinload(StringCatalogItem.metrics),
-                    selectinload(StringCatalogItem.tags),
-                    selectinload(StringCatalogItem.official_performance),
-                    selectinload(StringCatalogItem.inventory_item).selectinload(
-                        StringInventoryItem.movements
-                    ),
-                    selectinload(StringCatalogItem.recommendation_entries),
-                )
-                .where(StringCatalogItem.is_active.is_(True))
-                .order_by(
+                query.order_by(
                     StringCatalogItem.brand_code.asc(),
                     StringCatalogItem.display_name.asc(),
                 )
@@ -127,8 +152,7 @@ class SqlAlchemyRecommendationRepository:
         for result in results:
             preference_match = _float_or_none(result.get("preference_match_score"))
             rule_fit = _float_or_none(result.get("rule_fit_score"))
-            budget_fit = _float_or_none(result.get("budget_fit_score"))
-            confidence_score = _float_or_none(result.get("confidence_score"))
+            value_for_money = _float_or_none(result.get("value_for_money_score"))
             nlp_review_score = _float_or_none(result.get("nlp_review_score"))
             rationale = _required_mapping(result, "rationale")
             self.db.add(
@@ -142,19 +166,11 @@ class SqlAlchemyRecommendationRepository:
                     nlp_score=nlp_review_score,
                     preference_match_score=preference_match,
                     rule_fit_score=rule_fit,
-                    budget_fit_score=budget_fit,
-                    confidence_score=confidence_score,
+                    value_for_money_score=value_for_money,
                     nlp_review_score=nlp_review_score,
                     final_score=_required_float(result, "final_score"),
                     rank_position=_required_int(result, "rank_position"),
                     rationale=rationale,
-                    matrix_version=_optional_string(
-                        result.get("matrix_version") or rationale.get("matrix_version")
-                    ),
-                    feature_source_version=_optional_string(
-                        result.get("feature_source_version")
-                        or rationale.get("feature_source_version")
-                    ),
                 )
             )
         self.db.flush()
@@ -163,18 +179,27 @@ class SqlAlchemyRecommendationRepository:
             algorithm_version=algorithm_version,
         )
 
+    def clear_score_cache(self, *, user_id: str) -> None:
+        self._lock_user(user_id)
+        self.db.execute(
+            delete(RecommendationScoreCache).where(
+                RecommendationScoreCache.user_id == user_id
+            )
+        )
+        self.db.flush()
+
     def get_cached_results(
         self,
         *,
         user_id: str,
         algorithm_version: str | None = None,
     ) -> list[CachedRecommendationRecord]:
+        base_query = self._sellable_cache_query()
         if algorithm_version is None:
+            latest_query = base_query.where(RecommendationScoreCache.user_id == user_id)
             latest = (
                 self.db.execute(
-                    select(RecommendationScoreCache)
-                    .where(RecommendationScoreCache.user_id == user_id)
-                    .order_by(
+                    latest_query.order_by(
                         RecommendationScoreCache.generated_at.desc(),
                         RecommendationScoreCache.algorithm_version.desc(),
                     )
@@ -186,14 +211,13 @@ class SqlAlchemyRecommendationRepository:
                 return []
             algorithm_version = latest.algorithm_version
 
+        query = base_query.where(
+            RecommendationScoreCache.user_id == user_id,
+            RecommendationScoreCache.algorithm_version == algorithm_version,
+        )
         items = (
             self.db.execute(
-                select(RecommendationScoreCache)
-                .where(
-                    RecommendationScoreCache.user_id == user_id,
-                    RecommendationScoreCache.algorithm_version == algorithm_version,
-                )
-                .order_by(
+                query.order_by(
                     RecommendationScoreCache.rank_position.asc(),
                     RecommendationScoreCache.catalog_id.asc(),
                 )
@@ -210,6 +234,11 @@ class SqlAlchemyRecommendationRepository:
         catalog_id: str,
         algorithm_version: str | None = None,
     ) -> CachedRecommendationRecord | None:
+        if (
+            self.approved_catalog_ids is not None
+            and catalog_id not in self.approved_catalog_ids
+        ):
+            return None
         if algorithm_version is None:
             latest = self.get_cached_results(user_id=user_id)
             for cached_item in latest:
@@ -217,13 +246,41 @@ class SqlAlchemyRecommendationRepository:
                     return cached_item
             return None
 
-        row = self.db.get(
-            RecommendationScoreCache,
-            (user_id, catalog_id, algorithm_version),
+        return next(
+            (
+                item
+                for item in self.get_cached_results(
+                    user_id=user_id,
+                    algorithm_version=algorithm_version,
+                )
+                if item.catalog_id == catalog_id
+            ),
+            None,
         )
-        if row is None:
-            return None
-        return _to_cached_record(row)
+
+    def _sellable_cache_query(self):
+        query = (
+            select(RecommendationScoreCache)
+            .join(
+                StringCatalogItem,
+                StringCatalogItem.catalog_id == RecommendationScoreCache.catalog_id,
+            )
+            .join(
+                StringInventoryItem,
+                StringInventoryItem.catalog_id == RecommendationScoreCache.catalog_id,
+            )
+            .where(
+                StringCatalogItem.is_active.is_(True),
+                StringInventoryItem.is_active.is_(True),
+                StringInventoryItem.availability_status.in_(("in_stock", "low_stock")),
+                StringInventoryItem.available_stock > 0,
+            )
+        )
+        if self.approved_catalog_ids is not None:
+            query = query.where(
+                RecommendationScoreCache.catalog_id.in_(self.approved_catalog_ids)
+            )
+        return query
 
     def _lock_user(self, user_id: str) -> None:
         self.db.execute(
@@ -255,11 +312,8 @@ def _to_cached_record(item: RecommendationScoreCache) -> CachedRecommendationRec
         rule_fit_score=number_to_float(item.rule_fit_score)
         if hasattr(item, "rule_fit_score")
         else number_to_float(item.rule_score),
-        budget_fit_score=number_to_float(item.budget_fit_score)
-        if hasattr(item, "budget_fit_score")
-        else None,
-        confidence_score=number_to_float(item.confidence_score)
-        if hasattr(item, "confidence_score")
+        value_for_money_score=number_to_float(item.value_for_money_score)
+        if hasattr(item, "value_for_money_score")
         else None,
         nlp_review_score=number_to_float(item.nlp_review_score)
         if hasattr(item, "nlp_review_score")
@@ -267,10 +321,6 @@ def _to_cached_record(item: RecommendationScoreCache) -> CachedRecommendationRec
         final_score=float(item.final_score),
         rank_position=item.rank_position,
         rationale=dict(item.rationale or {}),
-        matrix_version=item.matrix_version if hasattr(item, "matrix_version") else None,
-        feature_source_version=item.feature_source_version
-        if hasattr(item, "feature_source_version")
-        else None,
         generated_at=item.generated_at,
     )
 
@@ -287,13 +337,8 @@ def _matrix_by_source(
         feature_key = _recommendation_feature_key(entry.feature_key)
         grouped[entry.source_layer][feature_key] = RecommendationFeatureSignalModel(
             normalized_score=float(str(entry.normalized_score)),
-            confidence=number_to_float(entry.confidence),
             raw_value=number_to_float(entry.raw_value),
             evidence_note=entry.evidence_note,
-            source_ref=entry.source_ref,
-            source_version=entry.source_version,
-            source_generated_at=entry.source_generated_at,
-            review_count_snapshot=entry.review_count_snapshot,
         )
     return {source_layer: dict(values) for source_layer, values in grouped.items()}
 

@@ -3,20 +3,6 @@ from __future__ import annotations
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
-
-
-class BudgetRange(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    min: float | None = Field(default=None, ge=0, le=500)
-    max: float | None = Field(default=None, ge=0, le=500)
-
-    @model_validator(mode="after")
-    def validate_range(self) -> "BudgetRange":
-        if self.min is not None and self.max is not None and self.max < self.min:
-            raise ValueError("budget.max must be greater than or equal to budget.min")
-        return self
 
 
 class RecommendationContext(BaseModel):
@@ -25,7 +11,6 @@ class RecommendationContext(BaseModel):
     user_id: str | None = None
     skill_level: str | None = None
     playing_style: str | None = None
-    budget: BudgetRange | None = None
     preferred_tension: float | None = Field(default=None, ge=18, le=35)
     durability_priority: int | None = Field(default=None, ge=1, le=5)
     repulsion_priority: int | None = Field(default=None, ge=1, le=5)

@@ -121,12 +121,11 @@ Example profile request:
 {
   "skill_level": "intermediate",
   "playing_style": "attacking",
-  "budget_tier": "between_30_50",
   "preferred_tension": 25,
-  "game_type": "doubles",
   "frequency_per_week": 3,
-  "preferred_feel": "crisp",
-  "recent_goal": "I want a sharper attacking setup for doubles.",
+  "preferred_feel": "medium",
+  "preferred_gauge": "no_preference",
+  "recent_goal": "power",
   "pref_attack": 5,
   "pref_comfort": 3,
   "pref_control": 4,
@@ -340,7 +339,7 @@ Recommendation matrix inspection responses include:
   - still returned separately from matrix rows
 - `matrix_by_source`
   - raw matrix rows grouped by source layer such as `nlp_review` and `hybrid_derived`
-  - each row exposes `source_version`, `source_generated_at`, and `review_count_snapshot` when the source provides them
+  - each row exposes scoring values and optional evidence notes only
 
 Recommendation matrix import responses include:
 
@@ -355,7 +354,7 @@ Recommendation matrix import responses include:
 - `matched_by`
 - `warnings`
 
-The default runtime import source is the V9 workbook at `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
+The default runtime import source is the independent MacBERT workbook at `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook is not merged or imported by default.
 
 Store-ops responses add:
 
@@ -397,10 +396,11 @@ Direct preview request:
 {
   "skill_level": "intermediate",
   "playing_style": "attacking",
-  "budget_tier": "between_30_50",
   "preferred_tension": 25,
-  "game_type": "doubles",
   "frequency_per_week": 3,
+  "preferred_feel": "medium",
+  "preferred_gauge": "no_preference",
+  "recent_goal": "power",
   "pref_attack": 5,
   "pref_comfort": 3,
   "pref_control": 4,
@@ -426,7 +426,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "fyp1_similarity_confidence_rule_budget_tier_v5",
+  "algorithm_version": "fyp1_similarity_preferences_v9",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
@@ -449,23 +449,19 @@ Recommendation response:
       },
       "reasons": [
         "matches your power and rebound preference",
-        "mid-price tier strongly fits your budget tier",
+        "supports your recent power goal",
         "fits your attacking playing style"
       ],
       "score_breakdown": {
         "preference_match": 0.82,
         "rule_fit": 0.61,
-        "budget_fit": 1.0,
-        "confidence_score": 0.72,
+        "value_for_money": 0.68,
         "nlp_review_score": 0.71,
         "final_score": 0.84
       },
       "rationale_payload": {
-        "algorithm_family": "rule_enhanced_confidence_aware_content_based_official_nlp_budget_tier",
+        "algorithm_family": "rule_enhanced_content_based_preferences",
         "collaborative_filtering_used": false,
-        "matrix_version": "latest_practical_string_feature_matrix_v9_v8dict",
-        "feature_source_version": "latest_practical_string_feature_matrix_v9_v8dict",
-        "feature_source_generated_at": "2026-04-12T13:55:00+00:00",
         "feature_sources": {
           "repulsion": "nlp_review",
           "control": "nlp_review"
@@ -479,13 +475,7 @@ Recommendation response:
             "source": "official_performance+nlp_review",
             "official_score": 0.77,
             "nlp_review_score": 0.88,
-            "nlp_confidence": 1.0,
-            "nlp_influence": 0.46,
-            "fusion_confidence": 0.79,
-            "source_version": "latest_practical_string_feature_matrix_v9_v8dict",
-            "source_generated_at": "2026-04-12T13:55:00+00:00",
-            "source_ref": "https://example.invalid/source",
-            "review_count_snapshot": 3109
+            "nlp_influence": 0.5
           }
         ],
         "nlp_review_signal_count": 2,
@@ -496,19 +486,13 @@ Recommendation response:
           { "feature_key": "tension_retention", "raw_score": 4, "preference_weight": 0.10 },
           { "feature_key": "string_movement", "raw_score": 4, "preference_weight": 0.10 }
         ],
-        "budget": {
-          "price_rm": 45.0,
-          "budget_tier": "between_30_50",
-          "item_price_tier": "mid",
-          "budget_tier_bounds_rm": {
-            "min_rm": 30.0,
-            "max_rm": 50.0
-          }
-        },
+        "price_rm": 45.0,
         "profile_context": {
           "skill_level": "intermediate",
           "playing_style": "attacking",
-          "budget_tier": "between_30_50"
+          "preferred_feel": "medium",
+          "preferred_gauge": "no_preference",
+          "recent_goal": "power"
         },
         "rule_events": []
       },
@@ -518,10 +502,10 @@ Recommendation response:
 }
 ```
 
-`budget_fit` reflects price alignment against the user's selected `budget_tier`. It is not derived from a separate `value_for_money` runtime score.
+`value_for_money` is a review-derived feature and the ninth saved preference dimension. Catalog price is descriptive and does not affect ranking.
 
 `nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
-The FYP1 recommender is rule-enhanced, confidence-aware, content-based recommendation with official performance + NLP review feature fusion + budget-tier fit. It does not use collaborative filtering, matrix factorization, embeddings, or interaction-history scoring.
+The FYP1 recommender is rule-enhanced, content-based recommendation with fixed official + NLP review feature fusion and profile rules. It does not use collaborative filtering, matrix factorization, embeddings, confidence weighting, review-count weighting, or interaction-history scoring.
 
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload. The `/profile` route is retained as a compatibility alias.
 

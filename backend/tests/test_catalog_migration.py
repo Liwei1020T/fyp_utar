@@ -305,7 +305,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260731_0026"
+        assert version_row["version_num"] == "20260812_0028"
 
         repaired_row = (
             connection.execute(
@@ -379,4 +379,15 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-    assert version == "20260731_0026"
+    assert version == "20260812_0028"
+
+    matrix_columns = {
+        item["name"] for item in inspector.get_columns("string_recommendation_matrix")
+    }
+    assert {
+        "confidence",
+        "source_ref",
+        "source_version",
+        "source_generated_at",
+        "review_count_snapshot",
+    }.isdisjoint(matrix_columns)

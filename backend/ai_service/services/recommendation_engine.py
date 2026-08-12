@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from math import inf
-
-from ai_service.schemas.recommendation import BudgetRange
 from ai_service.schemas.recommendation import ExplainRequest
 from ai_service.schemas.recommendation import ExplainResponse
 from ai_service.schemas.recommendation import RecommendRequest
@@ -11,7 +8,7 @@ from ai_service.schemas.recommendation import RecommendationContext
 from ai_service.schemas.recommendation import RecommendationResultItem
 from ai_service.schemas.recommendation import StringCandidate
 
-ALGORITHM_VERSION = "fyp1-rule-based-content-v4"
+ALGORITHM_VERSION = "fyp1-rule-based-content-v5"
 
 
 def generate_recommendations(payload: RecommendRequest) -> RecommendResponse:
@@ -29,7 +26,6 @@ def generate_recommendations(payload: RecommendRequest) -> RecommendResponse:
     results.sort(
         key=lambda item: (
             -item.match_score,
-            item.price if item.price is not None else inf,
             item.brand,
             item.model_name,
         )
@@ -79,27 +75,12 @@ def filter_candidates(
     catalog: list[StringCandidate],
     context: RecommendationContext,
 ) -> tuple[list[StringCandidate], str | None]:
-    budget_matches = [item for item in catalog if matches_budget(item, context.budget)]
     tension_matches = [
-        item
-        for item in budget_matches
-        if matches_tension(item, context.preferred_tension)
+        item for item in catalog if matches_tension(item, context.preferred_tension)
     ]
     if tension_matches:
         return tension_matches, None
-    if budget_matches:
-        return budget_matches, "closest tension match available in the current catalog"
-    return catalog, "closest active catalog match available for the current budget"
-
-
-def matches_budget(item: StringCandidate, budget: BudgetRange | None) -> bool:
-    if item.price is None or budget is None:
-        return True
-    if budget.min is not None and item.price < budget.min:
-        return False
-    if budget.max is not None and item.price > budget.max:
-        return False
-    return True
+    return catalog, "closest tension match available in the current catalog"
 
 
 def matches_tension(item: StringCandidate, preferred_tension: float | None) -> bool:
@@ -232,23 +213,7 @@ def score_item(
             )
         )
 
-    if context.budget is not None and item.price is not None:
-        midpoint = budget_midpoint(context.budget)
-        if midpoint is not None:
-            distance = abs(item.price - midpoint)
-            contributions.append(("budget fit", max(0.0, 3.0 - distance / 5.0)))
-
     score += sum(value for _, value in contributions if value > 0)
     contributions.sort(key=lambda item: item[1], reverse=True)
     reasons = [label for label, value in contributions if value > 0]
     return score, list(dict.fromkeys(reasons))
-
-
-def budget_midpoint(budget: BudgetRange) -> float | None:
-    if budget.min is not None and budget.max is not None:
-        return (budget.min + budget.max) / 2
-    if budget.max is not None:
-        return budget.max
-    if budget.min is not None:
-        return budget.min
-    return None

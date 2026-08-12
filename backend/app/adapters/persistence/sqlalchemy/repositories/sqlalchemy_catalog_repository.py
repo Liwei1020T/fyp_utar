@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Collection
 from collections.abc import Mapping
 from collections.abc import Sequence
 from pathlib import Path
@@ -44,11 +45,20 @@ from app.shared.pagination import Page
 
 
 class SqlAlchemyCatalogRepository:
-    def __init__(self, db: Session) -> None:
+    def __init__(
+        self,
+        db: Session,
+        approved_catalog_ids: Collection[str] | None = None,
+    ) -> None:
         self.db = db
+        self.approved_catalog_ids = (
+            frozenset(approved_catalog_ids)
+            if approved_catalog_ids is not None
+            else None
+        )
 
     def _base_query(self):
-        return select(StringCatalogItem).options(
+        query = select(StringCatalogItem).options(
             selectinload(StringCatalogItem.brand_ref),
             selectinload(StringCatalogItem.metrics),
             selectinload(StringCatalogItem.tags),
@@ -60,6 +70,11 @@ class SqlAlchemyCatalogRepository:
                 StringRecommendationMatrix.feature_definition
             ),
         )
+        if self.approved_catalog_ids is not None:
+            query = query.where(
+                StringCatalogItem.catalog_id.in_(self.approved_catalog_ids)
+            )
+        return query
 
     def _apply_string_filters(
         self,
@@ -74,6 +89,10 @@ class SqlAlchemyCatalogRepository:
         is_hybrid: bool | None = None,
         search: str | None = None,
     ):
+        if self.approved_catalog_ids is not None:
+            count_query = count_query.where(
+                StringCatalogItem.catalog_id.in_(self.approved_catalog_ids)
+            )
         if is_active is True:
             query = query.join(StringCatalogItem.inventory_item).where(
                 and_(
@@ -451,6 +470,11 @@ class SqlAlchemyCatalogRepository:
         self,
         string_id: str,
     ) -> OfficialPerformanceRecord | None:
+        if (
+            self.approved_catalog_ids is not None
+            and string_id not in self.approved_catalog_ids
+        ):
+            return None
         item = self.db.get(StringOfficialPerformance, string_id)
         return to_official_performance(item)
 
@@ -509,6 +533,11 @@ class SqlAlchemyCatalogRepository:
         limit: int | None,
         offset: int,
     ) -> Page[InventoryMovementRecord]:
+        if (
+            self.approved_catalog_ids is not None
+            and string_id not in self.approved_catalog_ids
+        ):
+            return Page(items=[], total=0, limit=limit, offset=offset)
         inventory = self.db.execute(
             select(StringInventoryItem).where(
                 StringInventoryItem.catalog_id == string_id

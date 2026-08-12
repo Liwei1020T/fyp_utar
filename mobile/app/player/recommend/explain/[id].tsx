@@ -37,13 +37,6 @@ function formatScore(value?: number) {
   return `${Math.round(value * 100)}%`;
 }
 
-function formatCurrency(value?: number | null) {
-  if (value == null) {
-    return 'Price pending';
-  }
-  return `RM${value.toFixed(0)}`;
-}
-
 function humanizeFeature(value: string) {
   return value
     .replace(/_/g, ' ')
@@ -65,26 +58,6 @@ function toFeatureCopy(featureKey?: string, displayLabel?: string) {
     title: `${label} review signal`,
     body: `The imported review matrix contains a review-derived score for ${label.toLowerCase()}.`,
   };
-}
-
-function getBudgetCopy(
-  rationale: BackendRecommendationRationale | null,
-  fallbackPrice?: number | null,
-) {
-  const price = rationale?.budget?.price_rm ?? fallbackPrice;
-  const budgetTier = rationale?.budget?.budget_tier;
-  const minimum = rationale?.budget?.budget_tier_bounds_rm?.min_rm;
-  const maximum = rationale?.budget?.budget_tier_bounds_rm?.max_rm;
-
-  if (price == null || budgetTier == null) {
-    return 'Price fit against your saved budget tier.';
-  }
-
-  if (minimum == null || maximum == null) {
-    return `${formatCurrency(price)} is scored against your saved budget tier.`;
-  }
-
-  return `${formatCurrency(price)} is scored against your RM${minimum.toFixed(0)}-RM${maximum.toFixed(0)} tier.`;
 }
 
 function buildMatchReasons(reasons: string[]) {
@@ -251,7 +224,7 @@ export default function RecommendationExplanationScreen() {
       ? {
           preferenceMatch: detailResult.score_breakdown.preference_match,
           ruleFit: detailResult.score_breakdown.rule_fit,
-          budgetFit: detailResult.score_breakdown.budget_fit,
+          valueForMoney: detailResult.score_breakdown.value_for_money,
           nlpReviewScore: detailResult.score_breakdown.nlp_review_score,
           finalScore: detailResult.score_breakdown.final_score,
         }
@@ -456,9 +429,9 @@ export default function RecommendationExplanationScreen() {
               tone="warning"
             />
             <ScoreBlock
-              label="Budget"
-              value={scoreBreakdown.budgetFit}
-              note={getBudgetCopy(rationale, detailResult?.price_rm ?? stringItem?.price)}
+              label="Value"
+              value={scoreBreakdown.valueForMoney}
+              note="Review-derived value for money, weighted by your saved preference."
               tone="neutral"
             />
           </View>

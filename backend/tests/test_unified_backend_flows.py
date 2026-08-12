@@ -101,7 +101,7 @@ def test_health_aliases_share_the_same_contract():
     assert root_response.status_code == 200
     assert api_response.status_code == 200
     assert api_response.json() == root_response.json()
-    assert "source_version" in root_response.json()["recommendation_artifact"]
+    assert root_response.json()["recommendation_artifact"]["rows"] == 108
 
 
 def test_auth_profile_booking_and_admin_status_flow():
@@ -125,10 +125,11 @@ def test_auth_profile_booking_and_admin_status_flow():
             "username": "Tan Wei Jie Updated",
             "skill_level": "intermediate",
             "playing_style": "attacking",
-            "budget_tier": "between_30_50",
             "preferred_tension": 25,
-            "game_type": "doubles",
             "frequency_per_week": 3,
+            "preferred_feel": "medium",
+            "preferred_gauge": "no_preference",
+            "recent_goal": "power",
             "pref_attack": 5,
             "pref_comfort": 3,
             "pref_control": 4,
@@ -250,10 +251,11 @@ def test_recommendations_logs_and_admin_string_controls():
         json={
             "skill_level": "advanced",
             "playing_style": "balanced",
-            "budget_tier": "between_30_50",
             "preferred_tension": 26,
-            "game_type": "doubles",
             "frequency_per_week": 4,
+            "preferred_feel": "medium",
+            "preferred_gauge": "thick",
+            "recent_goal": "balanced",
             "pref_attack": 5,
             "pref_comfort": 2,
             "pref_control": 4,
@@ -284,17 +286,20 @@ def test_recommendations_logs_and_admin_string_controls():
     assert set(top_recommendation["score_breakdown"]) >= {
         "preference_match",
         "rule_fit",
-        "budget_fit",
-        "confidence_score",
+        "value_for_money",
         "final_score",
     }
     rationale = top_recommendation["rationale_payload"]
     assert rationale["feature_sources"]
-    assert rationale["feature_source_generated_at"]
-    assert any(
-        row["source_generated_at"]
+    assert all(
+        not {
+            "confidence_score",
+            "source_ref",
+            "source_version",
+            "source_generated_at",
+            "review_count_snapshot",
+        }.intersection(row)
         for row in rationale["feature_evidence"]
-        if row["nlp_review_score"] is not None
     )
 
     cached_response = client.get(
@@ -331,7 +336,7 @@ def test_recommendations_logs_and_admin_string_controls():
         assert all(row.raw_score is not None for row in preference_rows)
         assert len(cache_rows) == 3
         assert cache_rows[0].preference_match_score is not None
-        assert cache_rows[0].budget_fit_score is not None
+        assert cache_rows[0].value_for_money_score is not None
 
     log_response = client.get(
         "/api/admin/recommendations/logs",
@@ -348,10 +353,8 @@ def test_recommendations_logs_and_admin_string_controls():
     assert runs_response.status_code == 200
     assert runs_response.json()["total"] == 1
     run = runs_response.json()["items"][0]
-    assert run["matrix_version"]
-    assert run["feature_source_version"]
     assert len(run["items"]) == 3
-    assert run["items"][0]["confidence_score"] is not None
+    assert "confidence_score" not in run["items"][0]
 
     run_detail_response = client.get(
         f"/api/admin/recommendations/runs/{run['id']}",
@@ -454,7 +457,7 @@ def test_public_string_filters_expose_normalized_catalog_fields():
 
     all_strings = client.get("/api/strings", headers=headers(customer_token))
     assert all_strings.status_code == 200
-    assert all_strings.json()["total"] >= 30
+    assert all_strings.json()["total"] == 12
 
     hybrid_strings = client.get(
         "/api/strings",

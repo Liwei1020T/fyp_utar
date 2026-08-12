@@ -120,6 +120,9 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
 
   assert.match(profileEdit, /Step \{step\} of 3/);
   assert.match(profileEdit, /showAdvanced/);
+  assert.match(profileEdit, /skillLevel === 'Beginner' && tension > 25/);
+  assert.match(profileEdit, /For beginners, 22–25 lbs is recommended/);
+  assert.match(profileEdit, /Adjust to 25 lbs/);
   assert.match(home, /activeBooking/);
   assert.match(home, /Open all player features/);
   assert.match(home, /router\.push\('\/player\/tools'\)/);

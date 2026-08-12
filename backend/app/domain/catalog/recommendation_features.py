@@ -235,15 +235,6 @@ RECOMMENDATION_FEATURE_DEFINITIONS: list[dict[str, Any]] = [
         "description": "Weight derived from playing style.",
     },
     {
-        "feature_key": "budget_weight",
-        "feature_label": "Budget Weight",
-        "feature_group": "user_preference",
-        "data_type": "weight",
-        "min_value": 0,
-        "max_value": 1,
-        "description": "Weight derived from budget fit.",
-    },
-    {
         "feature_key": "durability_preference",
         "feature_label": "Durability Preference",
         "feature_group": "user_preference",

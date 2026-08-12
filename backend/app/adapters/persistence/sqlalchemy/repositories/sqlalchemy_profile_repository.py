@@ -36,11 +36,10 @@ class SqlAlchemyProfileRepository:
         values = {
             "skill_level": profile.skill_level,
             "playing_style": profile.playing_style,
-            "budget_tier": profile.budget_tier,
             "preferred_tension": profile.preferred_tension,
-            "game_type": profile.game_type,
             "frequency_per_week": profile.frequency_per_week,
             "preferred_feel": profile.preferred_feel,
+            "preferred_gauge": profile.preferred_gauge,
             "recent_goal": profile.recent_goal,
             "pref_attack": profile.pref_attack,
             "pref_comfort": profile.pref_comfort,

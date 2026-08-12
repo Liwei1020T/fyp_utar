@@ -27,6 +27,7 @@ const priorityLabels = [
   { key: 'durability', title: 'Durability' },
   { key: 'comfort', title: 'Comfort' },
   { key: 'sound', title: 'Hitting sound' },
+  { key: 'value', title: 'Value for money' },
 ] as const;
 
 export default function RecommendationInputScreen() {
@@ -58,8 +59,7 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
     user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
       ? user.skillLevel
       : 'Advanced';
-  const savedBudgetRange = user.budgetRange ?? 'RM30–RM50';
-  const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
+  const savedPreferredFeel = user.preferredFeel ?? 'Medium';
 
   const playingStyle = normalizedPlayingStyle;
   const skillLevel = normalizedSkillLevel;
@@ -190,8 +190,8 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
               <HeroText className="text-sm font-medium text-primary-600">{topThreePriorities}</HeroText>
             </View>
             <View className="w-1/2 mt-1 pr-2">
-              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Budget</HeroText>
-              <HeroText className="text-sm font-medium text-neutral-800">{savedBudgetRange}</HeroText>
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Gauge</HeroText>
+              <HeroText className="text-sm font-medium text-neutral-800">{user.preferredGauge}</HeroText>
             </View>
             <View className="w-1/2 mt-1">
               <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Feel</HeroText>
@@ -207,7 +207,7 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
               Recommendations combine your preferences with verified string
-              specifications, playing characteristics, and budget fit.
+              specifications, playing characteristics, feel, gauge, and value priorities.
             </HeroText>
           </View>
         </AppCard>

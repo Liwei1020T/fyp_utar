@@ -61,11 +61,10 @@ Stores the canonical recommendation and profile fields:
 
 - `skill_level`
 - `playing_style`
-- `budget_tier`
 - `preferred_tension`
-- `game_type`
 - `frequency_per_week`
 - `preferred_feel`
+- `preferred_gauge`
 - `recent_goal`
 - `pref_attack`
 - `pref_comfort`
@@ -164,7 +163,7 @@ Current seed/import behavior keeps two important layers separate:
 - `hybrid_derived`
   - compatibility fallback rows backfilled from the old flat catalog heuristics
 - `nlp_review`
-  - the primary item-side recommendation matrix imported from `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+  - the primary item-side recommendation matrix imported from `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 
 Important rules:
 
@@ -172,7 +171,7 @@ Important rules:
 - official/manual values stay in `string_official_performance`
 - recommendation matrix values do not get copied into `strings`
 - re-imports are idempotent on `(catalog_id, feature_key, source_layer)`
-- both CSV and XLSX practical matrix sources are supported; V9 XLSX is the current default runtime source
+- both CSV and XLSX practical matrix sources are supported; the independent 12-by-9 MacBERT XLSX is the current default runtime source and V9 remains protected and separate
 - before import, the backend sanitizes the source file to a runtime whitelist so only the currently used live-scoring fields and matching metadata are written into the feature store; stale `nlp_review` rows outside that whitelist are pruned on re-import
 
 Current `nlp_review` runtime import keys are:
@@ -197,7 +196,7 @@ Raw 1-to-10 UI inputs are stored in `raw_score`, and backend-normalized weights 
 
 Current persisted feature rows include:
 
-- core preference weights: `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, and `string_movement`
+- core preference weights: `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, `string_movement`, and `value_for_money`
 
 These rows are regenerated when a complete profile is saved and when profile recommendations are generated.
 
@@ -206,14 +205,17 @@ These rows are regenerated when a complete profile is saved and when profile rec
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
 The active algorithm version is
-`fyp1_similarity_confidence_rule_budget_tier_v5`.
+`fyp1_similarity_preferences_v9`.
+
+Profile saves invalidate that user's cache. Matrix content changes invalidate
+all score-cache rows, while an unchanged startup import preserves them. Cached reads
+also exclude inactive or unavailable inventory.
 
 Score fields:
 
 - `preference_match_score`
 - `rule_fit_score`
-- `budget_fit_score`
-- `confidence_score`
+- `value_for_money_score`
 - `nlp_review_score`
 - `final_score`
 

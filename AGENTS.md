@@ -36,15 +36,17 @@
   - `backend/`: FastAPI + SQLAlchemy backend plus in-process AI logic
   - `ml/nlp-workbench-latest/`: canonical notebook, datasets, and generated recommendation artifacts
   - `docs/`: workspace-level orientation docs
+  - `config/approved_string_cohort_v1.csv`: the 12-string system catalog boundary shared by backend runtime and BERT preparation
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
-  - NLP artifact handoff: default runtime workbook in `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`
+  - NLP artifact handoff: independent 12-string MacBERT workbook in `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`; legacy V9 remains separate
   - AI-service compatibility artifact handoff: `ml/nlp-workbench-latest/output/` -> backend `AI_*_PATH` config
 - State/data boundaries:
   - `backend/` owns runtime data, auth, bookings, notification preferences, commerce ledgers, and recommendation logs
   - `mobile/` is API-only at runtime: every route page uses backend or backend-derived records and no seeded mock session exists
   - `ml/nlp-workbench-latest/` is offline experimentation and artifact generation, not a public service
+  - catalog, inventory, booking selection, and recommendation APIs expose only the 12 approved cohort IDs; other persisted strings remain hidden for historical-reference integrity
 
 ## Change Rules
 
@@ -88,4 +90,4 @@
   - Run `.venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`; do not reuse run IDs.
   - Generated files stay under `output/runs/<run-id>/` with `promotion.status=not_promoted`.
   - Never open `data/archive_latest.zip`; use only the extracted JSON input.
-  - Do not overwrite `data/*_latest.csv` or `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` without a separate approved promotion task.
+  - Do not overwrite `data/*_latest.csv`, `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`, or `output/latest_macbert_review_matrix_system12.xlsx` without a separate approved promotion task.

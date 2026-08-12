@@ -30,7 +30,12 @@ Key variables:
 - `SEED_ADMIN_*`: optional admin seed controls; enabling them requires a valid
   username, 9-to-15-digit phone number, and password
 
-In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`).
+In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`).
+
+The active catalog and recommendation boundary is the versioned 12-string list
+in `../config/approved_string_cohort_v1.csv`. Other master-data rows remain
+persisted for historical booking and audit references, but catalog, inventory,
+editing, booking selection, and recommendation APIs do not expose them.
 
 `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` remain for standalone `ai_service/` compatibility and use CSV artifacts under `../ml/nlp-workbench-latest/output/`.
 
@@ -187,7 +192,7 @@ More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-cont
 - Master catalog data now lives in normalized `brands` and `strings` tables.
 - Community metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
-- The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`.
+- The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate.
 - Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
 - The backend imports the canonical recommendation artifact into `string_recommendation_matrix` with `source_layer='nlp_review'`; each import fully replaces that source layer and records a SHA-256 source version.
@@ -199,17 +204,13 @@ The current design review found that the backend already had the right normalize
 Final score:
 
 ```text
-FinalScore = 0.60 * PreferenceMatch
-           + 0.15 * RuleFit
-           + 0.15 * BudgetFit
-           + 0.10 * ConfidenceScore
+FinalScore = (0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90
 ```
 
 - `PreferenceMatch` compares normalized 1-to-10 user priorities against effective item features.
 - Effective item features use official performance when available and NLP/review matrix values as enrichment.
 - Structured catalog fields such as gauge are excluded from direct PreferenceMatch and are used only by RuleFit, filtering, and display.
-- `RuleFit` applies badminton-specific logic such as beginner thin-gauge penalties and attacking/control bonuses.
-- `BudgetFit` scores explicit alignment with the user's chosen budget range and current price only.
-- NLP/review signals are imported from the V9 workbench workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings` or `string_official_performance`.
-- Matrix inspection and recommendation rationale preserve `source_version`, `source_generated_at`, and `review_count_snapshot` for artifact provenance.
+- `RuleFit` applies badminton-specific logic such as beginner thin-gauge support, high-tension/high-frequency thick-gauge support, and attacking/control bonuses.
+- NLP/review signals are imported from the independent 12-by-9 MacBERT workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings`, `string_official_performance`, or the protected V9 workbook.
+- Matrix rows contain only scoring values and optional evidence notes; confidence, review-count, reference, and per-row artifact metadata are not persisted.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

@@ -431,10 +431,11 @@ These screens call the backend recommendation endpoints, map cached/generated re
 
 The active backend-aligned recommendation contract now assumes:
 
-- canonical player budget input is `budget_tier`
-- backend rationale exposes `confidence_score`
-- explanation payloads include feature-level evidence such as `nlp_confidence`, `fusion_confidence`, and `review_count_snapshot`
-- recommendation detail screens can read budget-tier copy from `rationale_payload.budget`
+- canonical player setup inputs include `preferred_feel`, `preferred_gauge`, and structured `recent_goal`
+- `pref_value_for_money` comes directly from the Value for money slider
+- backend rationale exposes only values that contribute to the active score or explain a rule adjustment
+- explanation payloads identify the contributing feature layer without unused confidence, review-count, or artifact-provenance metadata
+- recommendation detail screens show the returned `value_for_money` score; catalog price remains descriptive
 
 ### Booking
 

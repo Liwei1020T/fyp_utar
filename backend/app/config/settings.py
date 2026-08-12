@@ -15,6 +15,7 @@ from pydantic_settings import SettingsConfigDict
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
+SYSTEM_STRING_COHORT_PATH = BACKEND_ROOT.parent / "config/approved_string_cohort_v1.csv"
 
 
 class Settings(BaseSettings):
@@ -75,7 +76,7 @@ class Settings(BaseSettings):
         alias="APPROVED_STRINGS_SOURCE_PATH",
     )
     recommendation_matrix_source_path: str = Field(
-        default="../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx",
+        default="../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx",
         alias="RECOMMENDATION_MATRIX_SOURCE_PATH",
     )
     seed_admin_enabled: bool = Field(default=False, alias="SEED_ADMIN_ENABLED")
@@ -119,6 +120,10 @@ class Settings(BaseSettings):
         if candidate.is_absolute():
             return candidate
         return BACKEND_ROOT / candidate
+
+    @property
+    def approved_string_cohort_path(self) -> Path:
+        return SYSTEM_STRING_COHORT_PATH
 
     @property
     def recommendation_matrix_path(self) -> Path:

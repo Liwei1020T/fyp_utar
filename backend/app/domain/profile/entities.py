@@ -27,11 +27,10 @@ class PlayerProfile:
     user_id: str
     skill_level: str | None
     playing_style: str | None
-    budget_tier: str | None
     preferred_tension: float | None
-    game_type: str | None
     frequency_per_week: int | None
     preferred_feel: str | None
+    preferred_gauge: str | None
     recent_goal: str | None
     pref_attack: int | None
     pref_comfort: int | None

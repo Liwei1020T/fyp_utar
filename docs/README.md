@@ -6,6 +6,7 @@
 - [Customer and Administrator Acceptance Record (2026-07-24)](./customer-admin-acceptance-2026-07-24.md)
 - [Administrator Acceptance Record (2026-07-23)](./admin-acceptance-2026-07-23.md)
 - [FYP2 Readiness Gate 5 Result](./plans/fyp2-readiness/04-remediation-results-and-readiness.md)
+- [Current BERT ABSA Design](./superpowers/specs/2026-05-31-bert-absa-review-optimization-design.md)
 - [Workspace Root](../README.md)
 - [Mobile README](../mobile/README.md)
 - [Mobile Architecture](../mobile/docs/frontend-architecture.md)
@@ -16,3 +17,4 @@
 - [Backend Clean Architecture Migration Map](../backend/docs/clean-architecture-migration-map.md)
 - [Backend Runbook](../backend/docs/runbook.md)
 - [NLP Workbench Latest README](../ml/nlp-workbench-latest/README.md)
+- [NLP and Recommendation Artifacts Appendix](../appendix/G_nlp_artifacts.md)

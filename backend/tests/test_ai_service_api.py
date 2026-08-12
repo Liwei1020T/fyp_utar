@@ -32,10 +32,7 @@ def test_internal_recommendation_endpoint_returns_ranked_results():
         json={
             "skill_level": "intermediate",
             "playing_style": "attacking",
-            "budget_min": 40,
-            "budget_max": 80,
             "preferred_tension": 25,
-            "game_type": "doubles",
             "frequency_per_week": 3,
             "pref_attack": 5,
             "pref_comfort": 3,
@@ -52,7 +49,7 @@ def test_internal_recommendation_endpoint_returns_ranked_results():
 
     assert response.status_code == 200
     data = response.json()
-    assert data["algorithm_version"] == "practical_matrix_v8_rule_content_v1"
+    assert data["algorithm_version"] == "practical_matrix_v8_rule_content_v2"
     assert len(data["results"]) == 3
     assert data["results"][0]["rank"] == 1
     assert isinstance(data["results"][0]["reasons"], list)

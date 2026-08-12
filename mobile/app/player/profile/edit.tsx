@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,11 +31,19 @@ const profileSchema = z.object({
   name: z.string().min(2, 'Please enter your name'),
   skillLevel: z.enum(['Beginner', 'Intermediate', 'Advanced']),
   playingStyle: z.enum(['Attacking', 'Balanced', 'Control']),
-  budgetRange: z.enum(['Below RM30', 'RM30–RM50', 'RM50+']),
-  preferredFeel: z.enum(['Soft', 'Balanced', 'Crisp', 'Hard']),
+  preferredFeel: z.enum(['Soft', 'Medium', 'Hard']),
+  preferredGauge: z.enum(['No preference', 'Thin', 'Medium', 'Thick']),
   preferredTension: z.coerce.number().min(18).max(32),
   playFrequency: z.enum(['Social', 'Weekly', 'Tournament']),
-  recentGoal: z.string().min(8, 'Tell us what you want from your next setup'),
+  recentGoal: z.enum([
+    'Balanced setup',
+    'More power',
+    'Better control',
+    'More durability',
+    'More comfort',
+    'Hold tension longer',
+    'Better value',
+  ]),
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
@@ -47,6 +55,7 @@ const priorityKeys = [
   { key: 'durability', label: 'Durability' },
   { key: 'comfort', label: 'Comfort' },
   { key: 'sound', label: 'Sound' },
+  { key: 'value', label: 'Value for money' },
 ] as const;
 
 const advancedPreferenceKeys = [
@@ -86,8 +95,17 @@ const styleOptions = [
 ] as const;
 
 const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
-const budgetOptions = ['Below RM30', 'RM30–RM50', 'RM50+'] as const;
-const preferredFeelOptions = ['Soft', 'Balanced', 'Crisp', 'Hard'] as const;
+const preferredFeelOptions = ['Soft', 'Medium', 'Hard'] as const;
+const preferredGaugeOptions = ['No preference', 'Thin', 'Medium', 'Thick'] as const;
+const recentGoalOptions = [
+  'Balanced setup',
+  'More power',
+  'Better control',
+  'More durability',
+  'More comfort',
+  'Hold tension longer',
+  'Better value',
+] as const;
 
 export default function ProfileEditScreen() {
   const user = useCurrentUser();
@@ -116,7 +134,7 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
     },
     2: {
       title: 'Shape your ideal setup.',
-      description: 'Set your budget, impact feel, and usual tension.',
+      description: 'Set your impact feel, preferred gauge, and usual tension.',
     },
     3: {
       title: 'Tune what matters most.',
@@ -132,8 +150,7 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
     user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
       ? user.skillLevel
       : 'Advanced';
-  const savedBudgetRange = user.budgetRange ?? 'RM30–RM50';
-  const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
+  const savedPreferredFeel = user.preferredFeel ?? 'Medium';
 
   const [priorities, setPriorities] = useState(user.priorities);
   const [advancedPreferences, setAdvancedPreferences] = useState(
@@ -142,7 +159,9 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
 
   const {
     control,
+    getValues,
     handleSubmit,
+    setValue,
     trigger,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormInput, unknown, ProfileForm>({
@@ -151,8 +170,8 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
       name: user.name,
       skillLevel: normalizedSkillLevel,
       playingStyle: normalizedPlayingStyle,
-      budgetRange: savedBudgetRange,
       preferredFeel: savedPreferredFeel,
+      preferredGauge: user.preferredGauge ?? 'No preference',
       preferredTension: user.preferredTension,
       playFrequency: user.playFrequency,
       recentGoal: user.recentGoal,
@@ -174,8 +193,8 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
           skillLevel: data.skillLevel,
           playingStyle: data.playingStyle,
           playFrequency: data.playFrequency,
-          budgetRange: data.budgetRange,
           preferredFeel: data.preferredFeel,
+          preferredGauge: data.preferredGauge,
           preferredTension: data.preferredTension,
           recentGoal: data.recentGoal,
           priorities,
@@ -217,11 +236,41 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
             'skillLevel',
             'playFrequency',
           ] as const)
-        : (['budgetRange', 'preferredFeel', 'preferredTension'] as const);
+        : (['preferredFeel', 'preferredGauge', 'preferredTension'] as const);
     const isValid = await trigger(fields);
-    if (isValid) {
-      setStep((current) => (current === 1 ? 2 : 3));
+    if (!isValid) {
+      return;
     }
+
+    if (step === 2) {
+      const { skillLevel, preferredTension } = getValues();
+      const tension = Number(preferredTension);
+      if (skillLevel === 'Beginner' && tension > 25) {
+        Alert.alert(
+          'High tension for a beginner',
+          `For beginners, 22–25 lbs is recommended. You selected ${tension} lbs.`,
+          [
+            {
+              text: 'Adjust to 25 lbs',
+              onPress: () => {
+                setValue('preferredTension', 25, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+                setStep(3);
+              },
+            },
+            {
+              text: `Keep ${tension} lbs`,
+              onPress: () => setStep(3),
+            },
+          ],
+        );
+        return;
+      }
+    }
+
+    setStep((current) => (current === 1 ? 2 : 3));
   };
 
   const goToPreviousStep = () => {
@@ -282,6 +331,7 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
                     durability: 5,
                     comfort: 5,
                     sound: 5,
+                    value: 5,
                   });
                   setAdvancedPreferences({
                     elasticity: 5,
@@ -347,15 +397,17 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
             control={control}
             name="recentGoal"
             render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Current setup goal"
-                placeholder="e.g. More punch on clears without losing net control"
-                value={value}
-                onChangeText={onChange}
-                error={errors.recentGoal?.message}
-                multiline
-                inputClassName="min-h-24"
-              />
+              <View className="mt-4 flex-row flex-wrap gap-2">
+                {recentGoalOptions.map((option) => (
+                  <AppChip
+                    key={option}
+                    label={option}
+                    size="md"
+                    variant={value === option ? 'primary' : 'neutral'}
+                    onPress={() => onChange(option)}
+                  />
+                ))}
+              </View>
             )}
           />
         </AppCard>
@@ -440,16 +492,16 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
       {step === 2 ? (
         <>
       <AppSection
-        eyebrow="BUDGET"
-        title="Choose your price range"
-        subtitle="Used to balance recommendation quality and affordability."
+        eyebrow="FEEL"
+        title="How should the string feel on impact?"
+        subtitle="This helps the system match strings to your preferred hitting sensation."
       >
         <Controller
           control={control}
-          name="budgetRange"
+          name="preferredFeel"
           render={({ field: { onChange, value } }) => (
             <View className="flex-row flex-wrap gap-2">
-              {budgetOptions.map((option) => (
+              {preferredFeelOptions.map((option) => (
                 <AppChip
                   key={option}
                   label={option}
@@ -464,16 +516,16 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
       </AppSection>
 
       <AppSection
-        eyebrow="FEEL"
-        title="How should the string feel on impact?"
-        subtitle="This helps the system match strings to your preferred hitting sensation."
+        eyebrow="GAUGE"
+        title="Preferred string gauge"
+        subtitle="A soft preference only; every available string remains eligible."
       >
         <Controller
           control={control}
-          name="preferredFeel"
+          name="preferredGauge"
           render={({ field: { onChange, value } }) => (
             <View className="flex-row flex-wrap gap-2">
-              {preferredFeelOptions.map((option) => (
+              {preferredGaugeOptions.map((option) => (
                 <AppChip
                   key={option}
                   label={option}

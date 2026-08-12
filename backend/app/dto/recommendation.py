@@ -22,12 +22,13 @@ class RecommendationRequestDto(BaseModel):
     user_id: str | None = None
     skill_level: str = Field(pattern="^(beginner|intermediate|advanced)$")
     playing_style: str = Field(pattern="^(attacking|balanced|control_defensive)$")
-    budget_tier: str = Field(
-        pattern="^(below_30|between_30_50|above_50)$",
-    )
     preferred_tension: float = Field(ge=16, le=35)
-    game_type: str = Field(pattern="^(singles|doubles)$")
     frequency_per_week: int = Field(ge=0, le=14)
+    preferred_feel: str = Field(pattern="^(soft|medium|hard)$")
+    preferred_gauge: str = Field(pattern="^(no_preference|thin|medium|thick)$")
+    recent_goal: str = Field(
+        pattern="^(balanced|power|control|durability|comfort|tension_retention|value_for_money)$"
+    )
     pref_attack: int = Field(ge=1, le=10)
     pref_comfort: int = Field(ge=1, le=10)
     pref_control: int = Field(ge=1, le=10)
@@ -88,8 +89,7 @@ class RecommendationRunItemDto(BaseModel):
     final_score: float
     preference_match_score: float | None = None
     rule_fit_score: float | None = None
-    budget_fit_score: float | None = None
-    confidence_score: float | None = None
+    value_for_money_score: float | None = None
     nlp_review_score: float | None = None
     score_breakdown: dict[str, Any]
     rationale: dict[str, Any]
@@ -103,8 +103,6 @@ class RecommendationRunDto(BaseModel):
     phone_number: str | None = None
     username: str | None = None
     algorithm_version: str
-    matrix_version: str | None = None
-    feature_source_version: str | None = None
     request_snapshot: dict[str, Any]
     profile_snapshot: dict[str, Any]
     generated_at: str | None = None
@@ -179,8 +177,6 @@ def recommendation_run_to_dict(item: RecommendationRunRecord) -> dict[str, Any]:
         phone_number=item.phone_number,
         username=item.username,
         algorithm_version=item.algorithm_version,
-        matrix_version=item.matrix_version,
-        feature_source_version=item.feature_source_version,
         request_snapshot=item.request_snapshot,
         profile_snapshot=item.profile_snapshot,
         generated_at=isoformat_or_none(item.generated_at),
@@ -198,8 +194,7 @@ def recommendation_run_item_to_dto(
         final_score=item.final_score,
         preference_match_score=item.preference_match_score,
         rule_fit_score=item.rule_fit_score,
-        budget_fit_score=item.budget_fit_score,
-        confidence_score=item.confidence_score,
+        value_for_money_score=item.value_for_money_score,
         nlp_review_score=item.nlp_review_score,
         score_breakdown=item.score_breakdown,
         rationale=item.rationale,

@@ -305,13 +305,14 @@ canonical offline notebook workflow, not a public runtime service.
 | [ml/nlp-workbench-latest/data/normalization_rules_v8.csv](../ml/nlp-workbench-latest/data/normalization_rules_v8.csv) | Current text/string normalization rules. |
 | [ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv) | Historical pre-boundary output; preserved for audit, not used for training. |
 | [ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv](../ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv) | Historical pre-boundary output; preserved for audit, not used for training. |
-| [ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx](../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx) | Current unified backend recommendation matrix source. |
+| [ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx](../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx) | Current 12-string MacBERT `nlp_review` source. |
+| [ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx](../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx) | Preserved legacy V9 workbook; not merged with MacBERT. |
 
 Experiments write only under ignored, create-once
 `ml/nlp-workbench-latest/output/runs/<run-id>/` directories. The unified backend
-public runtime default recommendation source remains:
+public runtime default review source is:
 
-- `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+- `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 
 No experiment run promotes itself. Replacing the canonical V9 workbook or any
 standalone `AI_*_PATH` compatibility artifact requires a separate comparison and

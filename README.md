@@ -9,6 +9,22 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 - `ml/nlp-workbench-latest/`: canonical notebook package, datasets, and recommendation artifacts
 - `docs/`: workspace-level documentation index
 
+## Current Delivery Boundary
+
+- Player/admin catalog, inventory, booking selection, recommendations, and BERT
+  preparation share the 12-string boundary in
+  `config/approved_string_cohort_v1.csv`.
+- Other persisted or raw-source strings remain available only for historical
+  booking, audit, and research provenance; they are hidden from active system
+  flows rather than deleted.
+- The current BERT task is aspect-conditioned, high-confidence Silver
+  three-class classification: `not_mentioned`, `positive`, and `negative`.
+  `mentioned` and `mixed` are excluded from training. No zero-shot NLI or human
+  Gold claim is part of this bounded implementation.
+- MacBERT training remains an offline Silver experiment. Its separately reviewed
+  12-by-9 Matrix is promoted into the backend `nlp_review` layer; this promotion
+  does not turn Silver validation into Gold, human accuracy, or Kappa evidence.
+
 ## Quick Start
 
 ### 1. Start Postgres
@@ -69,11 +85,17 @@ cd ml/nlp-workbench-latest
 
 The runner executes labeling and the complete pipeline in order and writes only to immutable `output/runs/<run-id>/` directories. It fails on data leakage, protected-input changes, or non-reproducible metrics/CSV outputs.
 
-Experiment outputs are never promoted automatically. The unified backend default recommendation source remains `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` until a separate human-approved promotion task.
+The BERT path is documented separately in
+[`ml/nlp-workbench-latest/README.md`](./ml/nlp-workbench-latest/README.md). Full
+training may run on Colab GPU, but only the prepared Silver dataset and minimum
+training code leave the workspace; raw review archives and protected `latest`
+artifacts stay local.
+
+Experiment outputs are never promoted automatically. The human-approved runtime source is the independent `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate and unchanged.
 
 ## Backend and NLP Integration
 
-- `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+- `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 - The unified FastAPI app does not import the legacy AI adapters or `ai_service` during startup
 - Standalone `ai_service` compatibility CSV settings use the canonical latest output directory when that package is run explicitly
 - If the NLP workbook does not exist, startup keeps persisted matrix rows when present and otherwise serves catalog/official-performance recommendations with health status `catalog_fallback`

@@ -46,8 +46,6 @@ function buildSnapshotItems(snapshot: Record<string, unknown>) {
 function buildRationaleSummary(rationale: Record<string, unknown>) {
   const summaryKeys = [
     'algorithm_family',
-    'feature_source_generated_at',
-    'review_count_snapshot',
     'primary_fit_angle',
     'trade_off_summary',
     'collaborative_filtering_used',
@@ -57,10 +55,7 @@ function buildRationaleSummary(rationale: Record<string, unknown>) {
     .filter((key) => key in rationale && rationale[key] != null)
     .map((key) => ({
       label: formatLabel(key),
-      value:
-        key === 'feature_source_generated_at' && typeof rationale[key] === 'string'
-          ? formatDateTime(rationale[key])
-          : formatScalarValue(rationale[key]),
+      value: formatScalarValue(rationale[key]),
     }));
 }
 
@@ -80,8 +75,7 @@ function ScoreBreakdownRows({ item }: { item: BackendRecommendationRunItem }) {
         {[
           ['Preference match', item.preference_match_score],
           ['Rule fit', item.rule_fit_score],
-          ['Budget fit', item.budget_fit_score],
-          ['Confidence', item.confidence_score],
+          ['Value for money', item.value_for_money_score],
           ['NLP review', item.nlp_review_score],
         ].map(([label, value]) => (
           <View key={label} className="flex-row items-center justify-between">
@@ -210,14 +204,6 @@ export default function AdminRecommendationRunDetailScreen() {
                 {
                   label: 'Algorithm version',
                   value: run.algorithm_version,
-                },
-                {
-                  label: 'Matrix version',
-                  value: run.matrix_version || 'Unavailable',
-                },
-                {
-                  label: 'Feature source version',
-                  value: run.feature_source_version || 'Unavailable',
                 },
               ]}
             />

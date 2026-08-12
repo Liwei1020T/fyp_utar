@@ -5,12 +5,10 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 
 
 SKILL_LEVELS = ("beginner", "intermediate", "advanced")
 PLAYING_STYLES = ("attacking", "balanced", "control_defensive")
-GAME_TYPES = ("singles", "doubles")
 
 
 class RecommendationRequest(BaseModel):
@@ -19,10 +17,7 @@ class RecommendationRequest(BaseModel):
     user_id: str | None = None
     skill_level: str = Field(pattern="^(beginner|intermediate|advanced)$")
     playing_style: str = Field(pattern="^(attacking|balanced|control_defensive)$")
-    budget_min: float = Field(ge=0, le=999)
-    budget_max: float = Field(ge=0, le=999)
     preferred_tension: float = Field(ge=16, le=35)
-    game_type: str = Field(pattern="^(singles|doubles)$")
     frequency_per_week: int = Field(ge=0, le=14)
     pref_attack: int = Field(ge=1, le=5)
     pref_comfort: int = Field(ge=1, le=5)
@@ -34,12 +29,6 @@ class RecommendationRequest(BaseModel):
     pref_tension_retention: int = Field(ge=1, le=5)
     pref_value_for_money: int = Field(ge=1, le=5)
     top_n: int = Field(default=5, ge=1, le=10)
-
-    @model_validator(mode="after")
-    def validate_budget(self) -> "RecommendationRequest":
-        if self.budget_min > self.budget_max:
-            raise ValueError("budget_min must be less than or equal to budget_max")
-        return self
 
 
 class StringRecord(BaseModel):

@@ -58,11 +58,6 @@ class RecommendationRun(Base):
         index=True,
     )
     algorithm_version: Mapped[str] = mapped_column(SAString(80), index=True)
-    matrix_version: Mapped[str | None] = mapped_column(SAString(80), nullable=True)
-    feature_source_version: Mapped[str | None] = mapped_column(
-        SAString(80),
-        nullable=True,
-    )
     request_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
     profile_snapshot: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
     generated_at: Mapped[datetime] = mapped_column(
@@ -99,7 +94,9 @@ class RecommendationRunItem(Base):
     )
     rule_fit_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
     budget_fit_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
-    confidence_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
+    value_for_money_score: Mapped[float | None] = mapped_column(
+        Numeric(6, 4), nullable=True
+    )
     nlp_review_score: Mapped[float | None] = mapped_column(
         Numeric(6, 4),
         nullable=True,

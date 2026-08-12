@@ -26,8 +26,6 @@ class RecommendationLogRepository(Protocol):
         profile_payload: dict[str, Any],
         result_payloads: list[dict[str, Any]],
         algorithm_version: str,
-        matrix_version: str | None,
-        feature_source_version: str | None,
     ) -> None: ...
 
     def list_logs(

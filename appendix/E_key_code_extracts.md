@@ -28,12 +28,13 @@ This appendix identifies representative code sections that are suitable for incl
 
 ```python
 FINAL_SCORE_WEIGHTS = {
-    "preference_match": 0.60,
+    "preference_match": 0.75,
     "rule_fit": 0.15,
-    "budget_fit": 0.15,
-    "confidence_score": 0.10,
 }
 ```
+
+The scorer divides by the `0.90` weight total, so the effective blend is
+`83.33% preference_match + 16.67% rule_fit`.
 
 ### Booking Status Transition Policy
 

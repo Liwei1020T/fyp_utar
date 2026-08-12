@@ -6,6 +6,7 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import approved_catalog_ids
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_booking_repository import (
     SqlAlchemyBookingRepository,
 )
@@ -36,6 +37,7 @@ from app.adapters.services.security.pbkdf2_password_hasher import (
     Pbkdf2PasswordHasher,
 )
 from app.adapters.services.system_clock import SystemClock
+from app.config.settings import get_settings
 from app.domain.auth.entities import UserRole
 from app.shared.errors import ForbiddenError
 from app.shared.errors import UnauthorizedError
@@ -88,7 +90,10 @@ def get_profile_repository(
 def get_catalog_repository(
     db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyCatalogRepository:
-    return SqlAlchemyCatalogRepository(db)
+    return SqlAlchemyCatalogRepository(
+        db,
+        approved_catalog_ids(get_settings().approved_string_cohort_path),
+    )
 
 
 def get_booking_repository(
@@ -112,7 +117,10 @@ def get_recommendation_log_repository(
 def get_recommendation_repository(
     db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyRecommendationRepository:
-    return SqlAlchemyRecommendationRepository(db)
+    return SqlAlchemyRecommendationRepository(
+        db,
+        approved_catalog_ids(get_settings().approved_string_cohort_path),
+    )
 
 
 def get_current_user(

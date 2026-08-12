@@ -293,6 +293,7 @@ export const useAppStore = create<AppStoreState>((set) => ({
           ...state.livePlayerProfile,
           ...patch,
         },
+        liveRecommendationResults: [],
       };
     }),
   setBookingDraft: (draft) => set({ bookingDraft: draft }),

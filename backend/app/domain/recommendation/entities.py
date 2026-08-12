@@ -13,10 +13,11 @@ class RecommendationRequestModel:
     user_id: str | None
     skill_level: str
     playing_style: str
-    budget_tier: str
     preferred_tension: float
-    game_type: str
     frequency_per_week: int
+    preferred_feel: str
+    preferred_gauge: str
+    recent_goal: str
     pref_attack: int
     pref_comfort: int
     pref_control: int
@@ -74,13 +75,8 @@ class UserPreferenceVectorEntry:
 @dataclass(frozen=True)
 class RecommendationFeatureSignalModel:
     normalized_score: float
-    confidence: float | None = None
     raw_value: float | None = None
     evidence_note: str | None = None
-    source_ref: str | None = None
-    source_version: str | None = None
-    source_generated_at: datetime | None = None
-    review_count_snapshot: int | None = None
 
 
 @dataclass(frozen=True)
@@ -99,14 +95,11 @@ class CachedRecommendationRecord:
     algorithm_version: str
     preference_match_score: float | None
     rule_fit_score: float | None
-    budget_fit_score: float | None
-    confidence_score: float | None
+    value_for_money_score: float | None
     nlp_review_score: float | None
     final_score: float
     rank_position: int
     rationale: dict[str, Any]
-    matrix_version: str | None
-    feature_source_version: str | None
     generated_at: datetime | None
 
 
@@ -130,8 +123,7 @@ class RecommendationRunItemRecord:
     final_score: float
     preference_match_score: float | None
     rule_fit_score: float | None
-    budget_fit_score: float | None
-    confidence_score: float | None
+    value_for_money_score: float | None
     nlp_review_score: float | None
     score_breakdown: dict[str, Any]
     rationale: dict[str, Any]
@@ -144,8 +136,6 @@ class RecommendationRunRecord:
     phone_number: str | None
     username: str | None
     algorithm_version: str
-    matrix_version: str | None
-    feature_source_version: str | None
     request_snapshot: dict[str, Any]
     profile_snapshot: dict[str, Any]
     generated_at: datetime | None
