@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict
 from datetime import date
 from datetime import timedelta
 from threading import Barrier
@@ -70,8 +71,16 @@ def test_concurrent_booking_creation_never_exceeds_slot_capacity() -> None:
             )
             user_id = user.id
             string_id = SqlAlchemyCatalogRepository(db).list_active_catalog()[0].id
-            hours = SqlAlchemyStoreRepository(db).get_business_hours()
+            store_repository = SqlAlchemyStoreRepository(db)
+            hours = store_repository.get_business_hours()
             assert hours is not None
+            hours = store_repository.update_business_hours(
+                days=[
+                    {**asdict(day), "is_open": day.day == "Monday"}
+                    for day in hours.days
+                ],
+                special_closed_dates=[],
+            )
             db.commit()
 
         slot_date = next_weekday(0)
