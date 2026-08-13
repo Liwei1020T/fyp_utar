@@ -660,6 +660,33 @@ export interface BackendAdminFeedback extends BackendFeedback {
   customer_phone_number: string;
 }
 
+export interface BackendCommunityFeatureSummary {
+  score: number;
+  distinct_users: number;
+  booking_count: number;
+  confidence: number;
+  weight: number;
+  evidence_scope: 'global_string' | 'exact_racket_model';
+  source_version: string;
+}
+
+export interface BackendCommunityStringSummary {
+  string_id: string;
+  features: Record<string, BackendCommunityFeatureSummary>;
+}
+
+export interface BackendCommunitySummary {
+  policy_version: string;
+  snapshot_version: string;
+  racket_model_key: string | null;
+  strings: BackendCommunityStringSummary[];
+}
+
+export interface BackendAdminCommunitySummary {
+  global: BackendCommunitySummary;
+  racket_contexts: BackendCommunitySummary[];
+}
+
 export interface BackendAdminNotification {
   id: string;
   user_id: string;

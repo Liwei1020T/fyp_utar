@@ -12,14 +12,17 @@
 | Active CF algorithm | `fyp1_similarity_preferences_community_racket_cf_v11` |
 | Current CF status | Guarded enablement above three exact-model supporting users |
 | Implementation status | Scoring, fallback, audit, cache versioning, and demo evaluation implemented |
+| Racket similarity status | Exact normalized model matching active; fuzzy cross-model similarity deferred |
+| CF weight status | Automatically recalculated from distinct supporting users; automatic policy tuning deferred |
 
 This document replaces the earlier design in which racket similarity was only a
 final-score bonus. The recommendation context is the selected racket, and the
 behavioral observation is a completed racket-string-tension interaction.
 
-Implementation and activation are separate review gates. This design does not
-authorize production data changes or claim that the current dataset is already
-sufficient for an enabled collaborative-filtering effect.
+V11 implementation and guarded FYP-demo activation are recorded separately from
+production readiness. This design does not authorize production data changes or
+claim that the current real-user dataset is sufficient for production-quality
+collaborative-filtering effectiveness.
 
 ## Decision Summary
 
@@ -95,21 +98,24 @@ whether the player would use the string again. Their eligibility and provenance
 rules are owned by
 `2026-08-11-community-feedback-calibration-design.md`.
 
-### Missing runtime wiring
+### Runtime wiring implemented
 
-The current recommendation request has no `racket_id`, racket brand, or racket
-model. The mobile recommendation screen generates from the player profile alone.
-The current scorer explicitly records:
+The recommendation request accepts an owned `racket_id`. The backend resolves
+and snapshots its normalized brand/model context, and the mobile recommendation
+screen lets the player select a saved racket. The current scorer records either:
 
 ```text
-collaborative_filtering_used = false
+collaborative_filtering_used = true   when a non-zero gated CF weight is applied
+collaborative_filtering_used = false  for profile-only or sparse fallback
 ```
 
-and persisted recommendation rows store only the raw zero-weight shadow score.
+Persisted recommendation evidence includes the raw CF score, distinct supporting
+users, automatically calculated weight, source version, and fallback reason.
 
-### Local data sufficiency snapshot
+### Historical pre-V11 data sufficiency snapshot
 
-As inspected on 2026-08-13, the approved cohort has:
+Before the labelled FYP demo interaction import on 2026-08-13, the approved
+cohort had:
 
 | Signal | Count |
 | --- | ---: |
@@ -120,9 +126,10 @@ As inspected on 2026-08-13, the approved cohort has:
 | Completed rows with tension | 5 |
 | Feedback rows for those completed bookings | 1 |
 
-This is sufficient to implement deterministic aggregation, cold-start fallback,
-audit evidence, and shadow scoring. It is not sufficient to claim that a stable
-cross-user racket-string relationship has been learned from real usage.
+That historical snapshot justified deterministic aggregation, cold-start
+fallback, audit evidence, and guarded scoring. The later labelled synthetic demo
+dataset may activate the gate for demonstration, but it is still not evidence
+that a stable cross-user relationship has been learned from real usage.
 
 ## Terminology and Identity
 
@@ -275,8 +282,9 @@ tension_similarity =
                / TENSION_SIMILARITY_WINDOW_LBS)
 ```
 
-`TENSION_SIMILARITY_WINDOW_LBS` is one reviewable policy constant. Start with
-`4.0` only for shadow evaluation; do not present it as a scientific threshold.
+`TENSION_SIMILARITY_WINDOW_LBS` is one reviewable policy constant. V11 uses
+`4.0` for guarded FYP-demo evaluation; do not present it as a scientific
+threshold.
 
 An interaction without requested tension remains visible in general history but
 does not contribute to the tension-conditioned CF numerator. If all candidate or
@@ -456,41 +464,41 @@ These are conservative operational gates, not claims of statistical
 significance. If real usage remains sparse, v11 returns the exact v10 base score
 for unsupported candidates.
 
-## Minimal Implementation Plan
+## Implementation Record
 
-### Phase 1: Add target-racket context without changing ranking
+### Phase 1: Add target-racket context without changing ranking — completed
 
-- extend `ProfileRecommendationPayload` with optional `racket_id`;
-- validate ownership and resolve target context in the use case;
-- let mobile select a saved racket on the recommendation screen;
-- persist the context in request/profile snapshots and rationale;
-- preserve exact v9 behavior.
+- `ProfileRecommendationPayload` accepts optional `racket_id`;
+- the use case validates ownership and resolves target context;
+- mobile lets the player select a saved racket on the recommendation screen;
+- request/profile snapshots and rationale persist the context;
+- profile-only fallback preserves exact base behavior.
 
-### Phase 2: Build the read-only CF aggregate
+### Phase 2: Build the read-only CF aggregate — completed
 
-- add one booking-backed repository query for eligible completed interactions;
-- normalize racket model keys in one shared function;
-- calculate per-user deduplicated support, tension similarity, confidence, and
-  source version;
-- write complete audit evidence before any gated score change;
-- add an admin readiness summary.
+- one booking-backed repository query loads eligible completed interactions;
+- one shared function normalizes racket-model keys;
+- aggregation calculates per-user deduplicated support, tension similarity,
+  confidence, and source version;
+- complete audit evidence is written before any gated score change;
+- the admin readiness summary is available.
 
 Do not add a new persisted interaction table; existing bookings are the source of
 truth at the current scale.
 
-### Phase 3: Integrate contextual feedback outcomes
+### Phase 3: Integrate contextual feedback outcomes — completed
 
-Implement the feedback-calibration document's corrected form, provenance,
-context aggregate, and cache policy. Verify that CF reads only completed booking
-interactions and that feedback changes feature outcome evidence only once.
+The corrected form, provenance, context aggregate, and cache policy are
+integrated. CF reads only completed-booking interactions, and feedback changes
+feature outcome evidence only once.
 
-### Phase 4: Evaluate and optionally enable v11
+### Phase 4: Evaluate and guard-enable V11 — completed for FYP demo
 
-- compare v9, v10, and v11 on the same frozen cases;
-- review real and labelled-fixture results separately;
-- keep demo metrics labelled synthetic and production claims separately gated;
-- set `fyp1_similarity_preferences_community_racket_cf_v11` only when non-zero
-  CF influence is enabled.
+- v9, v10, and v11 are distinguishable on the same frozen cases;
+- real and labelled-fixture results remain separate;
+- demo metrics are labelled synthetic and production claims remain gated;
+- `fyp1_similarity_preferences_community_racket_cf_v11` records non-zero CF
+  influence only when the support gate is met.
 
 ## Focused Test Plan
 
@@ -528,7 +536,8 @@ interactions and that feedback changes feature outcome evidence only once.
 - [x] Sparse data keeps the exact v10 base score through a zero-weight fallback.
 - [x] Player and admin explanations match actual evidence.
 - [x] v9, v10, and v11 runs remain distinguishable and reproducible.
-- [x] FYP demo activation has labelled evaluation and explicit owner approval.
+- [x] FYP demo activation uses labelled synthetic evaluation separated from
+      production-quality claims.
 
 ## Deferred Work
 
@@ -537,21 +546,23 @@ interactions and that feedback changes feature outcome evidence only once.
 - a full manufacturer racket-specification database;
 - persisted aggregate/materialized-view tables;
 - simultaneous cached shortlists for several rackets;
-- automated weight tuning;
+- automated tuning of `CF_MIN_SUPPORTING_USERS`, `CF_SHRINKAGE_K`, or
+  `CF_MAX_WEIGHT`; runtime candidate weight is already recalculated
+  automatically from the current distinct supporting-user count;
 - treating free-text feedback as model input.
 
 Add them only when real data volume and measured quality show that the simpler
 exact-model, shadow-first design is insufficient.
 
-## Owner Decisions Required Before Implementation
+## Decisions Applied to V11
 
-1. Approve saved-racket selection as the required UX for claiming a
+1. Saved-racket selection is required for claiming a
    racket-aware recommendation.
-2. Approve exact normalized brand/model matching as the only cross-user racket
+2. Exact normalized brand/model matching is the only cross-user racket
    identity tier in v1.
-3. Approve `CF_SHRINKAGE_K=10`, `CF_MAX_WEIGHT=0.20`, and a 4 lb tension window
-   for shadow comparison only.
-4. Approve the activation gate and the separation of real-data metrics from
+3. V11 uses `CF_MIN_SUPPORTING_USERS=3`, `CF_SHRINKAGE_K=10`,
+   `CF_MAX_WEIGHT=0.20`, and a 4 lb tension window as reviewable demo policy.
+4. The activation gate keeps real-data metrics separate from
    labelled test/demo fixtures.
-5. Approve staged algorithm versions: v10 outcome calibration, then v11 enabled
+5. Algorithm versions remain staged: v10 outcome calibration, then v11 enabled
    racket-conditioned CF.

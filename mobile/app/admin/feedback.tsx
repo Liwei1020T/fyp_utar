@@ -3,19 +3,24 @@ import React, { useCallback, useState } from 'react';
 import { Platform, Share, View } from 'react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
+import { CommunityFeatureList } from '../../components/shared/CommunityFeatureList';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
-import { formatDateTime } from '../../lib/formatters';
+import { formatDateTime, formatLabel } from '../../lib/formatters';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 import {
   useBackendAccessToken,
   useCurrentUser,
   useStrings,
 } from '../../store/appStore';
-import type { BackendAdminFeedback } from '../../types/backend';
+import type {
+  BackendAdminCommunitySummary,
+  BackendAdminFeedback,
+  BackendCommunitySummary,
+} from '../../types/backend';
 
 const PAGE_SIZE = 50;
 
@@ -33,6 +38,12 @@ export default function AdminFeedbackScreen() {
   const [showStringFilters, setShowStringFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [communitySummary, setCommunitySummary] = useState<
+    BackendAdminCommunitySummary | null
+  >(null);
+  const [selectedCommunityScope, setSelectedCommunityScope] = useState('global');
+  const [isCommunityLoading, setIsCommunityLoading] = useState(Boolean(token));
+  const [communityError, setCommunityError] = useState<string | null>(null);
 
   const load = useCallback(async (offset = 0) => {
     if (!token || user?.role !== 'admin') return;
@@ -62,10 +73,28 @@ export default function AdminFeedbackScreen() {
     }
   }, [dateFrom, dateTo, rating, stringId, token, user?.role]);
 
+  const loadCommunitySummary = useCallback(async () => {
+    if (!token || user?.role !== 'admin') return;
+    setIsCommunityLoading(true);
+    setCommunityError(null);
+    try {
+      setCommunitySummary(await backendApi.adminFetchCommunitySummary(token));
+    } catch (error) {
+      setCommunityError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Failed to load community calibration evidence.',
+      );
+    } finally {
+      setIsCommunityLoading(false);
+    }
+  }, [token, user?.role]);
+
   useFocusEffect(
     useCallback(() => {
       void load();
-    }, [load]),
+      void loadCommunitySummary();
+    }, [load, loadCommunitySummary]),
   );
 
   if (!user || user.role !== 'admin') return null;
@@ -100,6 +129,16 @@ export default function AdminFeedbackScreen() {
     }
   };
 
+  const communityScopes: BackendCommunitySummary[] = communitySummary
+    ? [communitySummary.global, ...communitySummary.racket_contexts]
+    : [];
+  const activeCommunityScope = communityScopes.find(
+    (scope) => (scope.racket_model_key ?? 'global') === selectedCommunityScope,
+  ) ?? communitySummary?.global ?? null;
+  const visibleCommunityStrings = activeCommunityScope?.strings.filter(
+    (item, index) => (stringId ? item.string_id === stringId : index === 0),
+  ) ?? [];
+
   return (
     <AppScreen
       tone="admin"
@@ -109,6 +148,105 @@ export default function AdminFeedbackScreen() {
       showBackButton
       onBackPress={() => router.back()}
     >
+      <AppSection
+        eyebrow="Recommendation learning"
+        title="Community calibration"
+        subtitle="Read-only evidence used by V11. Exact racket-model ratings are shown separately from global fallback evidence."
+      >
+        <AppCard variant="elevated" padding="md">
+          {isCommunityLoading ? (
+            <HeroText className="text-sm text-neutral-600">
+              Loading recommendation evidence...
+            </HeroText>
+          ) : communityError ? (
+            <View className="gap-3">
+              <HeroText
+                selectable
+                accessibilityLiveRegion="polite"
+                className="text-sm leading-6 text-red-700"
+              >
+                {communityError}
+              </HeroText>
+              <AppButton
+                label="Try again"
+                variant="outline"
+                size="sm"
+                onPress={() => void loadCommunitySummary()}
+              />
+            </View>
+          ) : communitySummary ? (
+            <View className="gap-4">
+              <View className="flex-row flex-wrap gap-2">
+                {communityScopes.map((scope) => {
+                  const scopeKey = scope.racket_model_key ?? 'global';
+                  return (
+                    <AppChip
+                      key={scopeKey}
+                      label={
+                        scope.racket_model_key
+                          ? scope.racket_model_key
+                              .split(':')
+                              .map(formatLabel)
+                              .join(' · ')
+                          : 'Global strings'
+                      }
+                      variant={
+                        selectedCommunityScope === scopeKey
+                          ? 'primary'
+                          : 'neutral'
+                      }
+                      onPress={() => setSelectedCommunityScope(scopeKey)}
+                    />
+                  );
+                })}
+              </View>
+
+              <HeroText selectable className="text-xs leading-5 text-neutral-500">
+                Policy {activeCommunityScope?.policy_version ?? '—'} · snapshot{' '}
+                {activeCommunityScope?.snapshot_version.slice(0, 10) ?? '—'}
+                {stringId
+                  ? ' · follows the selected string filter'
+                  : ' · showing one string; use the filter below to change it'}
+              </HeroText>
+
+              {visibleCommunityStrings.length > 0 ? (
+                <View className="gap-3">
+                  {visibleCommunityStrings.map((summary) => {
+                    const string = strings.find(
+                      (item) => item.id === summary.string_id,
+                    );
+                    return (
+                      <View
+                        key={summary.string_id}
+                        className="rounded-2xl border border-neutral-100 px-4"
+                      >
+                        <HeroText className="pt-4 text-sm font-bold text-neutral-950">
+                          {string
+                            ? `${string.brand} ${string.model}`
+                            : summary.string_id}
+                        </HeroText>
+                        <CommunityFeatureList
+                          features={summary.features}
+                          showScope
+                        />
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : (
+                <HeroText className="text-sm leading-6 text-neutral-600">
+                  No eligible community ratings exist for this scope and string filter.
+                </HeroText>
+              )}
+            </View>
+          ) : (
+            <HeroText className="text-sm leading-6 text-neutral-600">
+              No community calibration snapshot is available.
+            </HeroText>
+          )}
+        </AppCard>
+      </AppSection>
+
       <AppSection eyebrow="Filters" title="Narrow feedback">
         <View className="flex-row flex-wrap gap-2">
           {[undefined, 1, 2, 3, 4, 5].map((value) => (
@@ -171,8 +309,11 @@ export default function AdminFeedbackScreen() {
             <AppButton
               label="Refresh"
               variant="outline"
-              isLoading={isLoading}
-              onPress={() => void load()}
+              isLoading={isLoading || isCommunityLoading}
+              onPress={() => {
+                void load();
+                void loadCommunitySummary();
+              }}
             />
           </View>
           <View className="flex-1">

@@ -4,18 +4,31 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Implemented; activation constants remain reviewable |
+| Status | V11 recommendation core and community presentation implemented |
 | Last reviewed | 2026-08-13 |
 | Scope | Approved 12-string cohort with racket-model context |
 | Baseline recommendation algorithm | `fyp1_similarity_preferences_v9` |
 | Active recommendation algorithm | `fyp1_similarity_preferences_community_racket_cf_v11` |
-| Implementation status | Implemented and validation-gated on 2026-08-13 |
+| Implementation status | Scoring, feedback collection, aggregation, cache, audit, APIs, and dedicated catalog/admin community-summary panels implemented |
 | Model policy | New user comments do not enter MacBERT or any other model |
 | Promotion policy | No automatic workbook or candidate-artifact promotion |
 
 This document is a development handoff, not authorization to change production
 data or promote an NLP artifact. Implementation and activation remain separate
 review gates.
+
+## Current Capability Status
+
+| Capability | Status | Current behaviour | Remaining scope |
+| --- | --- | --- | --- |
+| Fuzzy racket similarity | **Not implemented; deliberately deferred** | V11 normalizes case, Unicode, punctuation, and whitespace, then requires the exact `brand:model` key. It never borrows evidence from a merely similar racket model. | Add only after real interaction data can validate a defensible cross-model similarity rule. |
+| Automatic CF weight adjustment | **Implemented** | Each candidate recalculates its CF weight from the current distinct supporting-user count: `0` below three users, otherwise `min(0.20, 0.20 * n / (n + 10))`. The applied weight, confidence, support count, policy version, and fallback reason are stored in recommendation evidence. | Automated tuning of the fixed threshold, shrinkage constant, or maximum weight remains deferred. |
+| Feedback anti-abuse, deletion, and moderation | **Partially implemented** | Existing safeguards require an authenticated booking owner, a completed booking, one feedback row per booking, 1-to-5 validation, delayed durability, approved strings, per-user averaging, bounded influence, and PII-free aggregate output. Owners can update their feedback. | There is no feedback-delete endpoint, report/flag workflow, admin moderation state/queue, account reputation, or anomaly/fraud detector. |
+
+These statuses must not be shortened to “all three are unfinished.” The active
+system already contains dynamic CF weighting and baseline feedback abuse
+controls; only fuzzy cross-model inference and the advanced feedback-governance
+features remain unimplemented.
 
 ## Decision Summary
 
@@ -42,7 +55,7 @@ The system will:
 9. display local-player feedback separately from the baseline performance
    profile.
 
-The first implementation will use PostgreSQL aggregation and existing backend
+The active implementation uses PostgreSQL aggregation and existing backend
 modules. It will not add a model service, vector database, job queue, scheduled
 retraining pipeline, or persisted community-summary table.
 
@@ -55,10 +68,11 @@ administrator needs to rebuild or promote a matrix.
 It does not mean background training or eager regeneration for every user:
 
 - saved v9 results and immutable recommendation runs are never rewritten;
-- v10 cache rows become stale when eligible community evidence changes;
+- v10 comparison and active v11 cache rows become stale when eligible community
+  or collaborative evidence changes;
 - the next explicit `POST /api/recommendations/profile` or
   `POST /api/recommendations/generate` recalculates against the latest aggregate;
-- a cached-result request never performs a hidden write. When no current v10
+- a cached-result request never performs a hidden write. When no current v11
   cache exists, mobile offers an explicit "Refresh recommendations" action.
 
 When a recommendation includes a selected racket, the next generation uses the
@@ -101,10 +115,11 @@ Expo mobile
   -> PostgreSQL catalog, matrix, cache, and audit records
 ```
 
-The recommendation scorer currently uses the official and `nlp_review` layers
-for core features. Although `community_signal` is a reserved source name, it is
-currently used only as a lower-priority auxiliary fallback and does not calibrate
-the core recommendation features.
+The active V11 scorer uses the official and reviewed NLP layers as its stable
+baseline, applies eligible `community_signal` calibration to supported physical
+features, and then applies bounded exact-racket-model CF when at least three
+distinct supporting users exist. Sparse or missing CF evidence preserves the
+community-calibrated base score.
 
 ### Current feedback path
 
@@ -131,28 +146,27 @@ racket brand/model snapshot, the installed string, and requested tension. These
 booking-owned snapshots make contextual feedback possible without changing the
 feedback table into a second booking record.
 
-### Current feedback defects
+### Feedback collection corrections implemented
 
-The current mobile form initializes the overall rating, every detail rating, and
-`would_use_again` to positive values. A user can therefore submit ratings they
-never actively selected. At the same time, mobile and backend validation reject
-a structured-only response unless it also contains text or a tag.
+The mobile form now starts required and optional ratings, including
+`would_use_again`, in an unanswered state. Structured-only feedback is accepted;
+comment text and tags are optional and never enter recommendation scoring.
 
-The form also mixes three different meanings:
+The form separates three different meanings:
 
 - service quality;
 - recommendation quality;
 - string-performance experience.
 
-These defects must be fixed before feedback can influence recommendations.
+Only explicitly confirmed structured string-performance fields can influence
+recommendations.
 
-### Current migration drift
+### Migration alignment implemented
 
-The SQLAlchemy `BookingFeedback` model declares
-`ck_booking_feedback_detail_ratings`, but migration
-`20260726_0025_player_admin_operations.py` added the detail columns without the
-equivalent database constraint. A new forward-only migration must repair this
-before the structured values become recommendation inputs.
+Forward-only migration `20260813_0029_feedback_provenance.py` adds the missing
+`ck_booking_feedback_detail_ratings` database constraint together with
+`durability_rated_at` and `structured_field_confirmed_at`. PostgreSQL migration
+and integration validation are required release checks.
 
 ## Goals
 
@@ -207,7 +221,7 @@ flowchart LR
     A["Player structured feedback"] --> B["booking_feedback raw record"]
     K["Completed booking racket/string/tension snapshot"] --> C["Global and exact-model aggregation"]
     B --> C
-    D["Official plus reviewed NLP baseline"] --> E["v10 context-aware feature calibration"]
+    D["Official plus reviewed NLP baseline"] --> E["v11 community calibration plus exact-model CF"]
     L["Selected racket context"] --> E
     C --> E
     E --> F["Recommendation result"]
@@ -295,8 +309,8 @@ to preserve tension over time.
    - service experience;
    - recommendation relevance;
    - string playing experience.
-7. Existing feedback is read-only until the edit endpoint described below is
-   implemented.
+7. Existing feedback can be edited by its authenticated booking owner through
+   the implemented PATCH endpoint.
 8. Empty optional fields are omitted or sent as `null`; they are never replaced
    by a neutral or positive default.
 9. Optional values stored by the legacy positive-default form are displayed as
@@ -357,12 +371,12 @@ Contract changes:
 - derive `structured_field_confirmed_at` from optional fields that the player
   explicitly supplied with non-null values; map each field key to server time,
   and never accept this metadata from clients;
-- once v10 is enabled, invalidate its score caches in the same database
+- invalidate v10 comparison and active v11 score caches in the same database
   transaction when eligible recommendation evidence changes.
 
 ### Update feedback
 
-Add:
+Implemented endpoint:
 
 ```http
 PATCH /api/bookings/{booking_id}/feedback
@@ -389,12 +403,13 @@ The endpoint exists mainly so a player can add durability later. It must:
   removal of a previously eligible value;
 - leave previous recommendation runs immutable.
 
-Deleting feedback is outside this scope. If deletion is added later, it must use
-the same cache invalidation and source-version rules.
+Deleting feedback is not implemented. If it is added later, owner/admin
+authorization, audit history, the same cache invalidation, and deterministic
+source-version rules are required.
 
 ### Community summary
 
-Add authenticated aggregate responses for the approved cohort:
+Authenticated aggregate responses for the approved cohort are implemented at:
 
 ```http
 GET /api/strings/community-summary
@@ -405,7 +420,7 @@ Declare the static player route before `GET /api/strings/{string_id}` so
 `community-summary` is not interpreted as a string ID. The same aggregation
 module should serve player and admin presentation so the numbers cannot drift.
 
-`FeedbackOut` should also expose server-derived durability state:
+`FeedbackOut` exposes server-derived durability state:
 
 ```json
 {
@@ -478,14 +493,14 @@ timestamp, not the row-level `updated_at`.
 Continue using `booking_feedback`. Do not create a community-summary table in
 the first version.
 
-Add two server-owned columns:
+The implemented migration adds two server-owned columns:
 
 ```text
 durability_rated_at TIMESTAMPTZ NULL
 structured_field_confirmed_at JSON NOT NULL DEFAULT {}
 ```
 
-Add a forward-only Alembic migration that:
+Forward-only Alembic migration `20260813_0029_feedback_provenance.py`:
 
 1. adds `durability_rated_at`;
 2. adds `structured_field_confirmed_at` with an empty object for every historical
@@ -787,7 +802,7 @@ explicit refresh action described above.
 
 ### Feedback screen
 
-Update `mobile/app/player/feedback/[bookingId].tsx` to:
+`mobile/app/player/feedback/[bookingId].tsx` now:
 
 - separate service, recommendation, and string sections;
 - remove positive defaults;
@@ -803,8 +818,8 @@ Update `mobile/app/player/feedback/[bookingId].tsx` to:
 
 ### String catalog presentation
 
-Do not replace the existing performance profile or radar values. Add a separate
-"Local player feedback" section containing:
+The player string-detail screen keeps the existing performance profile and radar
+values, then presents a separate "Local player feedback" section containing:
 
 - average structured rating by supported feature;
 - distinct-player count;
@@ -820,9 +835,10 @@ racket model's outcome as a universal string property.
 
 ## Admin Experience
 
-Keep the raw feedback list and CSV export for operational review. Add a
-read-only community-summary section grouped first by evidence scope, then by
-approved string and feature.
+The raw feedback list and CSV export are implemented for operational review. The
+admin page also consumes the backend read-only community-summary endpoint and
+groups evidence first by global or exact-racket-model scope, then by approved
+string and feature.
 
 It must show:
 
@@ -866,11 +882,11 @@ rename the existing service average to a string-performance score.
 | Unknown or non-approved string | Exclude from aggregate and recommendation |
 | Comment contains unsupported language | Store within existing limits; never invoke a model |
 
-## Implementation Plan
+## Implementation Record
 
-### Phase 1: Correct feedback collection
+### Phase 1: Correct feedback collection — completed
 
-Files expected to change:
+Files changed include:
 
 - `mobile/app/player/feedback/[bookingId].tsx`
 - `mobile/types/domain.ts`
@@ -894,25 +910,25 @@ Deliverables:
 - missing database constraint;
 - no recommendation behavior change yet.
 
-### Phase 2: Build and inspect community aggregates in shadow mode
+### Phase 2: Build and inspect community aggregates — completed
 
-Expected changes:
+Implemented backend changes include:
 
 - one small SQLAlchemy community-feedback aggregation adapter with the typed
   Interface defined above;
 - aggregate DTOs;
-- admin community-summary route and UI;
+- player and admin community-summary routes and their dedicated read-only panels;
 - aggregation tests for racket identity normalization, global/context selection,
   per-user averaging, durability eligibility, approved-cohort filtering, and
   source-version determinism.
 
-Shadow mode means aggregates are calculated and displayed to admin but do not
-change recommendation scores. Review real counts and distributions before
-activating v10.
+The aggregation seam is shared by admin presentation and recommendation
+generation. It preserves distinct-user counts, evidence scope, and deterministic
+source versions.
 
-### Phase 3: Enable v10 calibration
+### Phase 3: Enable community calibration and V11 CF — completed
 
-Expected changes:
+Implemented changes include:
 
 - `backend/app/adapters/persistence/sqlalchemy/repositories/sqlalchemy_recommendation_repository.py`
 - `backend/app/domain/recommendation/scoring.py`
@@ -923,14 +939,17 @@ Expected changes:
 - `backend/tests/test_recommendation_use_case.py`;
 - PostgreSQL integration coverage in `backend/tests/test_unified_backend_flows.py`.
 
-Community weighting is enabled as the v10 base component after owner review. The
-combined active runtime is v11; v10 remains a distinguishable comparison version.
+Community weighting is the V10 comparison component. The active V11 runtime adds
+exact-racket-model collaborative evidence with a three-user gate and a dynamic,
+bounded weight. V10 remains a distinguishable comparison version.
 
-### Phase 4: Player community presentation
+### Phase 4: Player and admin community presentation — completed
 
-Add the separate local-player summary to string detail after the aggregate API
-and labels are stable. This phase is presentation only and must not alter scorer
-logic.
+The player string-detail page shows global local-player evidence separately from
+the official/review-derived profile. The Admin Feedback page can switch between
+global and exact-racket-model snapshots, follows the existing string filter, and
+shows the normalized rating, player/booking counts, evidence scope, and applied
+community weight. These panels are read-only and do not alter scorer logic.
 
 ## Test Plan
 
@@ -1010,42 +1029,43 @@ tests are not sufficient evidence for the Alembic constraint.
 
 The design is complete when all of the following are true:
 
-- [ ] New user comment text is never passed to MacBERT or another model.
-- [ ] Unanswered detail ratings are stored as null.
-- [ ] Historical positive defaults remain stored but are excluded until a player
+- [x] New user comment text is never passed to MacBERT or another model.
+- [x] Unanswered detail ratings are stored as null.
+- [x] Historical positive defaults remain stored but are excluded until a player
       explicitly confirms each structured field.
-- [ ] Structured-only feedback can be submitted.
-- [ ] Service, recommendation, and string-performance meanings are separated.
-- [ ] Durability means long-term string durability and only eligible delayed
+- [x] Structured-only feedback can be submitted.
+- [x] Service, recommendation, and string-performance meanings are separated.
+- [x] Durability means long-term string durability and only eligible delayed
       ratings affect it.
-- [ ] Only feedback created by the authenticated owner of a completed booking
+- [x] Only feedback created by the authenticated owner of a completed booking
       can contribute.
-- [ ] Only the approved 12 strings are aggregated.
-- [ ] Repeat bookings are first averaged per user and evidence scope.
-- [ ] Exact normalized racket-model evidence is used only for the selected
+- [x] Only the approved 12 strings are aggregated.
+- [x] Repeat bookings are first averaged per user and evidence scope.
+- [x] Exact normalized racket-model evidence is used only for the selected
       racket; otherwise scoring falls back to global string evidence.
-- [ ] Missing or fuzzy racket identity never creates inferred physical
+- [x] Missing or fuzzy racket identity never creates inferred physical
       similarity.
-- [ ] The same feedback is not applied twice in one feature score.
-- [ ] Zero feedback preserves the previous baseline result.
-- [ ] Community influence is bounded at 30% per supported feature.
-- [ ] Official values, V9, NLP rows, and historical catalog community metrics are
+- [x] The same feedback is not applied twice in one feature score.
+- [x] Zero feedback preserves the previous baseline result.
+- [x] Community influence is bounded at 30% per supported feature.
+- [x] Official values, V9, NLP rows, and historical catalog community metrics are
       unchanged.
-- [ ] Cache invalidation prevents stale community-calibrated recommendations.
-- [ ] Recommendation evidence records counts, weights, policy, source, and
+- [x] Cache invalidation prevents stale community-calibrated recommendations.
+- [x] Recommendation evidence records counts, weights, policy, source, and
       snapshot versions.
-- [ ] Aggregate outputs contain no PII or comment text.
-- [ ] Backend, migration, mobile, and PostgreSQL integration checks pass.
-- [ ] Shadow aggregate results receive explicit owner approval before v10
-      activation.
+- [x] Aggregate outputs contain no PII or comment text.
+- [x] Backend, migration, mobile, and PostgreSQL integration checks pass.
+- [x] CF weight is zero below three supporting users, increases with support,
+      and never exceeds 20%.
+- [x] V11 activation preserves explicit algorithm and evidence versions.
 
 ## Rollback
 
-If v10 produces unacceptable recommendation changes:
+If active V11 produces unacceptable recommendation changes:
 
 1. restore the scorer to the exact v9 baseline behavior under a new corrective
    algorithm version or disable community application in a reviewed code change;
-2. clear v10 `recommendation_score_cache` rows;
+2. clear V10 comparison and active V11 `recommendation_score_cache` rows;
 3. keep all raw feedback and immutable recommendation runs;
 4. do not roll back or overwrite the protected V9 workbook;
 5. compare stored evidence to identify which feature and sample caused the
@@ -1054,7 +1074,7 @@ If v10 produces unacceptable recommendation changes:
 The raw feedback collection improvements can remain active even if community
 calibration is disabled.
 
-## Deferred Work
+## Deferred or Partial Work
 
 The following are deliberately deferred:
 
@@ -1062,28 +1082,31 @@ The following are deliberately deferred:
 - local signals for sound, elasticity, tension retention, and string movement;
 - per-string cache invalidation;
 - persisted aggregate/materialized views;
-- fuzzy or learned cross-model racket similarity;
+- fuzzy or learned cross-model racket similarity; exact normalized-model
+  matching is already active;
 - historically complete racket weight/balance snapshots;
-- account reputation or anomaly detection;
-- feedback deletion and moderation workflows;
-- automated tuning of shrinkage or maximum weight;
+- account reputation, anomaly detection, or coordinated-abuse detection; the
+  completed-booking, one-row-per-booking, per-user-average, and bounded-weight
+  safeguards are already active;
+- feedback deletion, reporting, and admin moderation workflows; owner feedback
+  update is already active;
+- automated tuning of the CF support threshold, shrinkage constant, or maximum
+  weight; runtime CF weight adjustment from supporting-user count is already
+  active;
 - retraining or promoting MacBERT from runtime feedback.
 
 Add these only when actual data volume, user completion behavior, or measured
 recommendation quality shows that the simpler design is insufficient.
 
-## Owner Decisions Required Before Implementation
+## Decisions Applied to V11
 
-1. Approve that `rating` remains the required service rating rather than being
-   renamed at the database level.
-2. Approve seven days as the initial durability eligibility proxy.
-3. Approve `K=10` and a maximum 30% community feature weight for shadow
-   comparison.
-4. Approve the staged rollout: collection correction, shadow aggregate, then
-   v10.
-5. Decide whether player-facing local summaries ship with v10 or in the later
-   presentation phase.
-6. Approve exact normalized brand/model matching as the only contextual
-   cross-user racket identity tier in v10.
-7. Approve keeping public catalog summaries global while racket-specific evidence
-   appears only in authenticated recommendation and admin views.
+1. `rating` remains the required service rating rather than being renamed at the
+   database level.
+2. Seven days is the initial durability eligibility proxy.
+3. Community calibration uses `K=10` and a maximum 30% feature weight.
+4. V11 CF uses a three-distinct-user activation gate, `K=10`, and a maximum 20%
+   final-score weight.
+5. Exact normalized brand/model matching is the only contextual cross-user
+   racket identity tier; fuzzy cross-model inference is disabled.
+6. Public catalog summaries remain global while racket-specific evidence appears
+   only in authenticated recommendation and admin views.

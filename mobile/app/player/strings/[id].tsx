@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, Share, View, Pressable } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { 
   Scale, 
   Share2, 
@@ -26,6 +26,7 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { StringProductImage } from '../../../components/shared/StringProductImage';
 import {
   useAppStore,
+  useBackendAccessToken,
   useCurrentUser,
   useLiveRecommendationResults,
   useStrings,
@@ -33,6 +34,9 @@ import {
 import { formatLabel } from '../../../lib/formatters';
 import { formatTensionRange, getInventoryPriceLabel } from '../../../lib/inventory';
 import { AppRadarChart } from '../../../components/ui/AppRadarChart';
+import { CommunityFeatureList } from '../../../components/shared/CommunityFeatureList';
+import { BackendApiError, backendApi } from '../../../services/backendApi';
+import type { BackendCommunityStringSummary } from '../../../types/backend';
 
 const FEATURE_LABELS: Record<string, string> = {
   attack: 'Power',
@@ -110,12 +114,48 @@ export default function StringDetailScreen() {
   const strings = useStrings();
   const selectedString = strings.find((item) => item.id === params.id);
   const user = useCurrentUser();
+  const token = useBackendAccessToken();
   const playerUser = user?.role === 'player' ? user : null;
   const liveResults = useLiveRecommendationResults();
   const compareSelection = useAppStore((state) => state.compareSelection);
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
 
   const [isExplainOpen, setIsExplainOpen] = useState(false);
+  const [communitySummary, setCommunitySummary] = useState<
+    BackendCommunityStringSummary | null
+  >(null);
+  const [isCommunityLoading, setIsCommunityLoading] = useState(Boolean(token));
+  const [communityError, setCommunityError] = useState<string | null>(null);
+
+  const loadCommunitySummary = useCallback(async () => {
+    if (!token || !params.id) {
+      setIsCommunityLoading(false);
+      return;
+    }
+
+    setIsCommunityLoading(true);
+    setCommunityError(null);
+    try {
+      const response = await backendApi.fetchCommunitySummary(token);
+      setCommunitySummary(
+        response.strings.find((item) => item.string_id === params.id) ?? null,
+      );
+    } catch (error) {
+      setCommunityError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Failed to load local player feedback.',
+      );
+    } finally {
+      setIsCommunityLoading(false);
+    }
+  }, [params.id, token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadCommunitySummary();
+    }, [loadCommunitySummary]),
+  );
 
   if (!selectedString) {
     return (
@@ -498,6 +538,43 @@ export default function StringDetailScreen() {
               </HeroText>
             )}
           </View>
+        </AppCard>
+      </AppSection>
+
+      <AppSection
+        eyebrow="Community"
+        title="Local player feedback"
+        subtitle="Verified completed bookings only. These ratings calibrate future recommendations without replacing official specifications."
+        variant="compact"
+      >
+        <AppCard variant="elevated" padding="md">
+          {isCommunityLoading ? (
+            <HeroText className="text-sm text-neutral-600">
+              Loading local feedback evidence...
+            </HeroText>
+          ) : communityError ? (
+            <View className="gap-3">
+              <HeroText
+                selectable
+                accessibilityLiveRegion="polite"
+                className="text-sm leading-6 text-red-700"
+              >
+                {communityError}
+              </HeroText>
+              <AppButton
+                label="Try again"
+                variant="outline"
+                size="sm"
+                onPress={() => void loadCommunitySummary()}
+              />
+            </View>
+          ) : communitySummary && Object.keys(communitySummary.features).length > 0 ? (
+            <CommunityFeatureList features={communitySummary.features} />
+          ) : (
+            <HeroText className="text-sm leading-6 text-neutral-600">
+              No eligible local ratings yet. This string continues using its official and reviewed baseline.
+            </HeroText>
+          )}
         </AppCard>
       </AppSection>
 
