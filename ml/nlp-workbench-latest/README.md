@@ -11,8 +11,8 @@ they are not a public service and do not replace the backend scorer.
 - Treat the V8 dictionary and normalization rules as read-only inputs.
 - Preserve every `data/*_latest.csv` as historical evidence. The two ABSA
   `*_latest.csv` files predate the leakage-safe split and are not training inputs.
-- Never overwrite the backend's current canonical artifact at
-  `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` from a notebook.
+- Never overwrite the protected V9 workbook or the backend's independent
+  `output/latest_macbert_review_matrix_system12.xlsx` source from a notebook.
 - Create experiment artifacts only under `output/runs/<run-id>/`. That directory
   is ignored by Git and every stage is create-once.
 
@@ -113,6 +113,175 @@ The HTML stores progress in browser local storage and can export/import a JSON
 progress backup. Its CSV export remains marked `human_reviewed_ai_assisted` and
 cannot be merged as independent blind human Gold.
 
+## BERT pseudo-label baseline
+
+When human Gold is unavailable, prepare a leakage-safe, high-confidence
+three-class Silver pseudo-label dataset without changing its provenance.
+Preparation keeps only `not_mentioned`, `positive`, and `negative` rows with
+`needs_manual_review=0`; `mentioned` and `mixed` are excluded rather than forced
+into training labels. It is limited to the 12 system strings in
+`../../config/approved_string_cohort_v1.csv`; the 33-string raw source remains
+unchanged:
+
+```bash
+.venv/bin/python scripts/prepare_bert.py \
+  --run-id <unique-bert-prep-id> \
+  --model-name hfl/chinese-macbert-base \
+  --seed 42
+```
+
+This writes `bert_pseudo_labeled_dataset.csv`, `bert_dataset_report.json`, and
+`bert_training_config.json` under `output/runs/<run-id>/bert/`. The source
+label, high-confidence flag, manual-review flag, and
+`rule_based_silver_not_human_gold` provenance remain visible on every row.
+
+The current prepared cohort run is
+`bert-prep-system12-high3-20260810-v1`: 130,421 review-aspect rows from 16,184
+reviews and 12 strings, split into 104,045 train, 13,077 validation, and 13,299
+test rows with zero review/text/group partition crossings. Its frozen dataset
+SHA-256 is
+`64ff725a7f38696cb21a178249b3ce642c4f8bb99485a914b8beff80af89754d`.
+
+The experiment plan uses `google-bert/bert-base-chinese` as the academic
+baseline and `hfl/chinese-macbert-base` as the primary model. After
+bootstrapping the BERT dependencies, start with a bounded smoke run:
+
+```bash
+HF_HOME=/private/tmp/stringsense-hf-cache \
+  .venv/bin/python scripts/train_bert.py \
+  --run-id <unique-bert-training-id> \
+  --dataset output/runs/<bert-prep-id>/bert/bert_pseudo_labeled_dataset.csv \
+  --smoke-samples-per-split 500
+```
+
+Remove `--smoke-samples-per-split` only after the smoke run succeeds. The
+training entry point uses aspect-conditioned input, inverse-frequency class
+weights, deterministic seeds, early stopping on validation macro-F1, and writes
+only to `output/runs/<run-id>/bert_training/`. Metrics measured against these
+pseudo labels are pipeline-validation metrics, not human-ground-truth claims.
+
+### Full training on Colab
+
+The full run uses a Google Colab T4 session rather than the local CPU. Upload
+only the prepared Silver CSV and minimum training code. Do not upload the raw
+archive, historical `*_latest.csv` files, or the backend's protected current
+matrix.
+
+From the extracted portable workbench inside Colab, run:
+
+```bash
+python scripts/train_bert.py \
+  --run-id <unique-full-training-id> \
+  --dataset output/runs/<bert-prep-id>/bert/bert_pseudo_labeled_dataset.csv \
+  --expected-dataset-sha256 <frozen-dataset-sha256> \
+  --model-name hfl/chinese-macbert-base \
+  --seed 42 \
+  --max-length 128 \
+  --epochs 3 \
+  --train-batch-size 8 \
+  --eval-batch-size 16
+```
+
+`--expected-dataset-sha256` activates the portable dataset-only boundary. The
+training manifest records `input_boundary.mode=portable_dataset_sha256` and
+`protected_source_assets_uploaded=false`; a digest mismatch fails before model
+training. Download the complete run directory back into the matching local
+`output/runs/<run-id>/` path before ending the Colab session.
+
+The completed bounded method benchmark
+`bert-benchmark-system12-high3-macbert-weighted-20260810-v1` used 5,000 rows per
+split and reached pseudo-label test macro-F1 `0.86877`, including negative-class
+F1 `0.71828`. This validates the weighted three-class method only; it is not the
+final full-data result and is not human-Gold evaluation.
+
+### Frozen-model offline inference
+
+Predict one approved string/aspect input without writing runtime data:
+
+```bash
+.venv/bin/python scripts/infer_bert.py predict \
+  --model-run-id bert-full-system12-high3-macbert-weighted-colab-20260810-v1 \
+  --string "Yonex BG80" \
+  --aspect control \
+  --review-text "控球稳定，落点清楚" \
+  --source-review-id smoke-control-001
+```
+
+Generate the full run-scoped candidate evidence chain:
+
+```bash
+.venv/bin/python scripts/infer_bert.py run \
+  --run-id <unique-inference-run-id> \
+  --model-run-id bert-full-system12-high3-macbert-weighted-colab-20260810-v1 \
+  --dataset-run-id bert-prep-system12-high3-20260810-v1
+```
+
+The command rechecks the frozen dataset digest, runs all 16,184 cohort reviews
+against all nine aspects, records all three probabilities and low-confidence
+exclusions, and writes only under `output/runs/<run-id>/bert_inference/`. Its
+pilot threshold decision is based on held-out Silver error and coverage, not
+human Gold or calibrated correctness. The resulting 12-by-9 matrix remains
+`not_promoted`; importing it or changing the protected V9 workbook is a separate
+approval task.
+
+Review an immutable candidate without changing its threshold or importing it:
+
+```bash
+.venv/bin/python scripts/infer_bert.py review \
+  --run-id <unique-review-run-id> \
+  --source-run-id <inference-run-id>
+```
+
+The review run compares `0.99` and `0.995` separately on validation and test,
+records Codex-assisted disagreement analysis pending project-owner confirmation,
+adds descriptive cell-stability intervals, and runs ten fixed virtual-person
+profiles through the backend's pure domain scorer. The run writes full rankings,
+per-string Top 1/3/5 coverage, and descriptive near-tie outcomes without
+reranking. Prices and official performance remain neutral/disabled in this
+matrix-only comparison. It does not use the database, modify V9, choose a new
+threshold, create Gold labels, calculate Kappa, or authorize promotion.
+
+Try a lower threshold against the frozen probabilities without replacing the
+confirmed pilot:
+
+```bash
+.venv/bin/python scripts/infer_bert.py sensitivity \
+  --run-id <unique-sensitivity-run-id> \
+  --source-run-id <inference-run-id> \
+  --owner-confirmation-run-id <confirmation-run-id> \
+  --confidence-threshold 0.8
+```
+
+The sensitivity run keeps the confirmed threshold and V9 immutable. It writes
+only changed evidence statuses, a separate candidate Matrix, cell deltas, and
+fixed-profile comparisons under its own `output/runs/<run-id>/` directory.
+
+Compare the live scorer's default preference weights with the fixed squared
+shadow variant using a read-only system catalog snapshot:
+
+```bash
+cd ../..
+backend/.venv/bin/python backend/scripts/export_recommendation_catalog_snapshot.py \
+  --output /private/tmp/stringsense-recommendation-catalog-snapshot.json
+
+cd ml/nlp-workbench-latest
+.venv/bin/python scripts/infer_bert.py optimize \
+  --run-id <unique-optimization-run-id> \
+  --source-run-id <inference-run-id> \
+  --catalog-snapshot /private/tmp/stringsense-recommendation-catalog-snapshot.json
+```
+
+The exporter uses a read-only database transaction and includes the 12 approved
+catalog rows, reviewed official performance, non-sensitive inventory prices,
+and each row's `is_active` state. Cost prices and inventory notes are excluded.
+The optimizer scores only `is_active=true` candidates, matching the live
+repository boundary; rows without complete `manual_reviewed` official scores
+remain NLP-backed. It compares exponent `1` with exponent `2` for the fixed
+virtual profiles, but leaves the live scorer default unchanged and records
+`selection_status=comparison_only_not_selected` and
+`promotion.status=not_promoted`. Selecting the variant, enabling inactive
+catalog rows, importing a Matrix, or changing V9 requires separate approval.
+
 `merge` is unavailable until both files are complete. `adjudicate` refuses to
 write `gold_dataset.csv` while any resolved label is missing or invalid. Having
 templates is therefore not evidence that a human Gold Dataset exists.
@@ -154,17 +323,36 @@ output/runs/<run-id>/
 │   ├── run_summary.json
 │   ├── model artifacts
 │   └── versioned matrices and evidence CSVs
+├── bert/
+│   ├── bert_pseudo_labeled_dataset.csv
+│   ├── bert_dataset_report.json
+│   └── bert_training_config.json
+├── bert_training/
+│   ├── model/
+│   ├── training_metrics.json
+│   └── test_predictions.csv
 ├── run_manifest.json
 └── execution_report.json
 ```
 
-Every run manifest ends with `promotion.status = "not_promoted"`. Comparing and
-promoting an experiment artifact to the backend V9 workbook is a separate task
-that requires explicit human approval. The backend continues to use:
+Experiment runs default to `promotion.status = "not_promoted"`. Comparing and
+promoting an experiment artifact into backend runtime use is a separate task
+that requires explicit human approval. The owner later clarified that MacBERT
+must remain separate from V9. The current promotion is recorded by
+`bert-macbert-separate-matrix-promotion-20260812-v1`; the backend reads the
+independent MacBERT Matrix from:
 
 ```text
-output/latest_practical_string_feature_matrix_v9_v8dict.xlsx
+output/latest_macbert_review_matrix_system12.xlsx
 ```
+
+It contains exactly the approved 12 strings and nine MacBERT aspects and has
+SHA256
+`dd30e792a213a03386101c4c8d6ba5aae07fa0bfc8d3f7439c6df92171424f87`.
+The old V9 workbook remains unchanged at SHA256
+`382d71cd90e195fcc41550c38175c13e1bb01515615fda572cf22fee90e05209`.
+Runtime database import is complete: PostgreSQL contains 108 `nlp_review` rows
+for the approved 12 strings and reports health status `imported`.
 
 ## Dataset summary
 
@@ -191,3 +379,7 @@ output/latest_practical_string_feature_matrix_v9_v8dict.xlsx
 
 The leakage-safe split groups by SHA-256 of normalized review text. All aspects
 and duplicate normalized texts inherit one deterministic 80/10/10 partition.
+
+The JSON above describes the preserved 33-string raw/historical source. The
+current BERT training cohort is the approved 12-string subset and is documented
+by its run-scoped manifest; neither scope should be substituted for the other.

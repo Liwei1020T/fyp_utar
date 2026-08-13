@@ -47,7 +47,17 @@ def run_root(workbench: Path, run_id: str) -> Path:
 
 
 def create_stage_directory(workbench: Path, run_id: str, stage: str) -> Path:
-    if stage not in {"labeling", "pipeline", "nlp01"}:
+    if stage not in {
+        "labeling",
+        "pipeline",
+        "nlp01",
+        "bert",
+        "bert_training",
+        "bert_inference",
+        "bert_candidate_review",
+        "bert_threshold_sensitivity",
+        "bert_recommendation_optimization",
+    }:
         raise ValueError(f"Unsupported experiment stage: {stage}")
     root = run_root(workbench, run_id)
     root.mkdir(parents=True, exist_ok=True)

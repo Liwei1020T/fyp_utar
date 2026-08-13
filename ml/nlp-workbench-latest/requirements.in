@@ -2,6 +2,9 @@ pandas
 numpy
 jieba
 scikit-learn
+torch>=2.8
+transformers>=4.57,<5
+accelerate>=1.10
 openpyxl
 joblib
 nbformat
