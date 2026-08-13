@@ -13,6 +13,7 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
+from app.domain.recommendation.entities import CommunitySnapshot
 from app.shared.serialization import isoformat_or_none
 
 
@@ -78,6 +79,7 @@ class ProfileRecommendationPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     top_n: int = Field(default=5, ge=1, le=10)
+    racket_id: str | None = Field(default=None, min_length=1, max_length=36)
 
 
 class RecommendationRunItemDto(BaseModel):
@@ -107,6 +109,36 @@ class RecommendationRunDto(BaseModel):
     profile_snapshot: dict[str, Any]
     generated_at: str | None = None
     items: list[RecommendationRunItemDto]
+
+
+def community_snapshot_to_dict(
+    snapshot: CommunitySnapshot,
+    *,
+    racket_model_key: str | None,
+) -> dict[str, object]:
+    return {
+        "policy_version": "community_feedback_v1",
+        "snapshot_version": snapshot.snapshot_version,
+        "racket_model_key": racket_model_key,
+        "strings": [
+            {
+                "string_id": catalog_id,
+                "features": {
+                    feature: {
+                        "score": aggregate.normalized_score,
+                        "distinct_users": aggregate.distinct_users,
+                        "booking_count": aggregate.booking_count,
+                        "confidence": aggregate.confidence,
+                        "weight": aggregate.weight,
+                        "evidence_scope": aggregate.evidence_scope,
+                        "source_version": aggregate.source_version,
+                    }
+                    for feature, aggregate in sorted(features.items())
+                },
+            }
+            for catalog_id, features in sorted(snapshot.by_catalog.items())
+        ],
+    }
 
 
 def recommendation_request_to_domain(

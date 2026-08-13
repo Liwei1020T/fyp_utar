@@ -269,10 +269,22 @@ def test_recommendations_logs_and_admin_string_controls():
     )
     assert profile_response.status_code == 200
 
+    racket_response = client.post(
+        "/api/rackets",
+        headers=headers(customer_token),
+        json={
+            "nickname": "Recommendation racket",
+            "brand": "Yonex",
+            "model": "Astrox 88D Pro",
+        },
+    )
+    assert racket_response.status_code == 200
+    racket_id = racket_response.json()["id"]
+
     recommendation_response = client.post(
         "/api/recommendations/generate",
         headers=headers(customer_token),
-        json={"top_n": 3},
+        json={"top_n": 3, "racket_id": racket_id},
     )
     assert recommendation_response.status_code == 200
     assert recommendation_response.json()["algorithm_version"] == ALGORITHM_VERSION
@@ -290,6 +302,13 @@ def test_recommendations_logs_and_admin_string_controls():
         "final_score",
     }
     rationale = top_recommendation["rationale_payload"]
+    assert rationale["racket_context"]["racket_id"] == racket_id
+    assert rationale["racket_context"]["normalized_model_key"] == (
+        "yonex:astrox 88d pro"
+    )
+    assert rationale["collaborative_filtering_used"] is False
+    assert rationale["cf_shadow"]["cf_weight"] == 0
+    assert rationale["community_snapshot_version"].startswith("sha256:")
     assert rationale["feature_sources"]
     assert all(
         not {

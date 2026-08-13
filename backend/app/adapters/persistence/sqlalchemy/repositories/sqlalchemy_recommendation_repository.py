@@ -9,6 +9,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import selectinload
 
+from app.adapters.persistence.sqlalchemy.models import Booking
+from app.adapters.persistence.sqlalchemy.models import BookingFeedback
+from app.adapters.persistence.sqlalchemy.models import BookingStatusHistory
+from app.adapters.persistence.sqlalchemy.models import Profile
+from app.adapters.persistence.sqlalchemy.models import Racket
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StringInventoryItem
@@ -18,9 +23,13 @@ from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
 from app.domain.catalog.recommendation_features import domain_feature_key
 from app.domain.recommendation.entities import CachedRecommendationRecord
+from app.domain.recommendation.entities import CommunityFeedbackRow
 from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationCandidateModel
+from app.domain.recommendation.entities import RecommendationInteraction
+from app.domain.recommendation.entities import RacketRecommendationContext
 from app.domain.recommendation.entities import UserPreferenceVectorEntry
+from app.domain.recommendation.learning_signals import normalize_racket_model_key
 from app.shared.serialization import number_to_float
 
 
@@ -83,6 +92,90 @@ class SqlAlchemyRecommendationRepository:
             )
             for item in items
         ]
+
+    def get_owned_racket_context(
+        self,
+        *,
+        user_id: str,
+        racket_id: str,
+        target_tension: float,
+    ) -> RacketRecommendationContext | None:
+        racket = self.db.execute(
+            select(Racket).where(Racket.id == racket_id, Racket.user_id == user_id)
+        ).scalar_one_or_none()
+        if racket is None:
+            return None
+        model_key = normalize_racket_model_key(racket.brand, racket.model)
+        if model_key is None:
+            return None
+        return RacketRecommendationContext(
+            racket_id=racket.id,
+            brand=racket.brand,
+            model=racket.model,
+            model_key=model_key,
+            target_tension=target_tension,
+        )
+
+    def list_community_feedback_rows(self) -> list[CommunityFeedbackRow]:
+        completed_at = self._completed_at_subquery()
+        query = select(BookingFeedback, Booking, completed_at).join(
+            Booking, Booking.id == BookingFeedback.booking_id
+        )
+        if self.approved_catalog_ids is not None:
+            query = query.where(Booking.string_id.in_(self.approved_catalog_ids))
+        rows = self.db.execute(query).all()
+        return [
+            CommunityFeedbackRow(
+                feedback_id=feedback.id,
+                user_id=feedback.user_id,
+                catalog_id=booking.string_id,
+                racket_model_key=normalize_racket_model_key(
+                    booking.racket_brand, booking.racket_model
+                ),
+                ratings={
+                    "comfort": feedback.comfort,
+                    "control": feedback.control,
+                    "repulsion": feedback.repulsion,
+                    "durability": feedback.durability,
+                },
+                confirmed_at=dict(feedback.structured_field_confirmed_at or {}),
+                durability_rated_at=feedback.durability_rated_at,
+                completed_at=completed,
+            )
+            for feedback, booking, completed in rows
+            if booking.status == "completed"
+        ]
+
+    def list_recommendation_interactions(self) -> list[RecommendationInteraction]:
+        completed_at = self._completed_at_subquery()
+        query = (
+            select(Booking, Profile, completed_at)
+            .outerjoin(Profile, Profile.user_id == Booking.user_id)
+            .where(Booking.status == "completed")
+        )
+        if self.approved_catalog_ids is not None:
+            query = query.where(Booking.string_id.in_(self.approved_catalog_ids))
+        rows = self.db.execute(query).all()
+        interactions: list[RecommendationInteraction] = []
+        for booking, profile, completed in rows:
+            model_key = normalize_racket_model_key(
+                booking.racket_brand, booking.racket_model
+            )
+            if model_key is None or completed is None:
+                continue
+            interactions.append(
+                RecommendationInteraction(
+                    booking_id=booking.id,
+                    user_id=booking.user_id,
+                    catalog_id=booking.string_id,
+                    racket_id=booking.racket_id,
+                    racket_model_key=model_key,
+                    requested_tension=number_to_float(booking.requested_tension),
+                    completed_at=completed,
+                    preference_vector=_profile_preference_vector(profile),
+                )
+            )
+        return interactions
 
     def replace_user_preference_vector(
         self,
@@ -154,6 +247,7 @@ class SqlAlchemyRecommendationRepository:
             rule_fit = _float_or_none(result.get("rule_fit_score"))
             value_for_money = _float_or_none(result.get("value_for_money_score"))
             nlp_review_score = _float_or_none(result.get("nlp_review_score"))
+            collaborative_score = _float_or_none(result.get("collaborative_score"))
             rationale = _required_mapping(result, "rationale")
             self.db.add(
                 RecommendationScoreCache(
@@ -161,7 +255,7 @@ class SqlAlchemyRecommendationRepository:
                     catalog_id=str(result["catalog_id"]),
                     algorithm_version=algorithm_version,
                     content_score=preference_match,
-                    collaborative_score=None,
+                    collaborative_score=collaborative_score,
                     rule_score=rule_fit,
                     nlp_score=nlp_review_score,
                     preference_match_score=preference_match,
@@ -287,6 +381,20 @@ class SqlAlchemyRecommendationRepository:
             select(User.id).where(User.id == user_id).with_for_update()
         ).scalar_one()
 
+    @staticmethod
+    def _completed_at_subquery():
+        return (
+            select(BookingStatusHistory.changed_at)
+            .where(
+                BookingStatusHistory.booking_id == Booking.id,
+                BookingStatusHistory.new_status == "completed",
+            )
+            .order_by(BookingStatusHistory.changed_at.desc())
+            .limit(1)
+            .correlate(Booking)
+            .scalar_subquery()
+        )
+
 
 def _to_preference_entry(item: UserPreferenceMatrix) -> UserPreferenceVectorEntry:
     return UserPreferenceVectorEntry(
@@ -298,6 +406,22 @@ def _to_preference_entry(item: UserPreferenceMatrix) -> UserPreferenceVectorEntr
         preferred_min=number_to_float(item.preferred_min),
         preferred_max=number_to_float(item.preferred_max),
         updated_at=item.updated_at,
+    )
+
+
+def _profile_preference_vector(profile: Profile | None) -> tuple[int | None, ...]:
+    if profile is None:
+        return (None,) * 9
+    return (
+        profile.pref_attack,
+        profile.pref_comfort,
+        profile.pref_control,
+        profile.pref_durability,
+        profile.pref_elasticity,
+        profile.pref_sound,
+        profile.pref_string_movement,
+        profile.pref_tension_retention,
+        profile.pref_value_for_money,
     )
 
 

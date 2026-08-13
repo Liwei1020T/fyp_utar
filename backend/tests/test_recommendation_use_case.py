@@ -14,6 +14,9 @@ from app.domain.catalog.recommendation_features import (
     RECOMMENDATION_FEATURE_DEFINITIONS,
 )
 from app.domain.recommendation.entities import CachedRecommendationRecord
+from app.domain.recommendation.entities import CollaborativeEvidence
+from app.domain.recommendation.entities import CommunityFeatureAggregate
+from app.domain.recommendation.entities import CommunitySnapshot
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
@@ -22,6 +25,7 @@ from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.dto.profile import ProfilePayload
 from app.dto.recommendation import RecommendationRequestDto
+from app.shared.errors import NotFoundError
 from app.shared.pagination import Page
 from app.use_cases.recommendation.generate_recommendation import (
     GenerateRecommendationUseCase,
@@ -100,6 +104,21 @@ class FakeRecommendationRepository:
                 },
             ),
         ]
+
+    def get_owned_racket_context(
+        self,
+        *,
+        user_id: str,
+        racket_id: str,
+        target_tension: float,
+    ):
+        return None
+
+    def list_community_feedback_rows(self):
+        return []
+
+    def list_recommendation_interactions(self):
+        return []
 
     def replace_user_preference_vector(
         self,
@@ -305,6 +324,138 @@ def test_fixed_fusion_ignores_review_popularity_and_removed_metadata() -> None:
     )
 
 
+def test_zero_community_feedback_preserves_baseline_scores_and_order() -> None:
+    scorer = Fyp1ContentRecommendationScorer()
+    candidates = FakeRecommendationRepository().list_active_candidates()
+    request = _attacking_request()
+
+    baseline = scorer.score_candidates(
+        candidates=candidates,
+        request=request,
+        top_n=2,
+    )
+    empty_snapshot = scorer.score_candidates(
+        candidates=candidates,
+        request=request,
+        top_n=2,
+        community_snapshot=CommunitySnapshot(
+            by_catalog={},
+            snapshot_version="sha256:empty",
+        ),
+    )
+
+    assert [row.result.catalog_id for row in empty_snapshot] == [
+        row.result.catalog_id for row in baseline
+    ]
+    assert [row.result.score for row in empty_snapshot] == [
+        row.result.score for row in baseline
+    ]
+
+
+def test_community_and_enabled_cf_are_bounded() -> None:
+    scorer = Fyp1ContentRecommendationScorer()
+    candidate = FakeRecommendationRepository().list_active_candidates()[0]
+    request = _attacking_request()
+    baseline = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+    )[0].result
+    aggregate = CommunityFeatureAggregate(
+        normalized_score=0.0,
+        distinct_users=100,
+        booking_count=100,
+        confidence=1.0,
+        weight=0.30,
+        evidence_scope="global_string",
+        racket_model_key=None,
+        source_version="sha256:community",
+    )
+    snapshot = CommunitySnapshot(
+        by_catalog={candidate.item.id: {"repulsion": aggregate}},
+        snapshot_version="sha256:snapshot",
+    )
+    calibrated = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+        community_snapshot=snapshot,
+        cf_evidence=CollaborativeEvidence(
+            score_by_catalog={candidate.item.id: 1.0},
+            supporting_users_by_catalog={candidate.item.id: 20},
+            source_version="sha256:cf",
+            eligible_interaction_count=20,
+            eligible_peer_count=20,
+            fallback_reason=None,
+        ),
+    )[0].result
+
+    evidence = {
+        row["feature_key"]: row
+        for row in (calibrated.rationale_payload or {})["feature_evidence"]
+    }
+    assert evidence["repulsion"]["community_weight"] == pytest.approx(0.30)
+    assert calibrated.score != baseline.score
+    cf_evidence = (calibrated.rationale_payload or {})["cf_shadow"]
+    assert cf_evidence["mode"] == "enabled"
+    assert 0 < cf_evidence["cf_weight"] < 0.20
+    assert (calibrated.rationale_payload or {})["collaborative_filtering_used"] is True
+
+
+def test_insufficient_cf_support_preserves_exact_base_score() -> None:
+    scorer = Fyp1ContentRecommendationScorer()
+    candidate = FakeRecommendationRepository().list_active_candidates()[0]
+    request = _attacking_request()
+    baseline = scorer.score_candidates(
+        candidates=[candidate], request=request, top_n=1
+    )[0].result
+    sparse = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+        cf_evidence=CollaborativeEvidence(
+            score_by_catalog={candidate.item.id: 0.0},
+            supporting_users_by_catalog={candidate.item.id: 2},
+            source_version="sha256:sparse",
+            eligible_interaction_count=2,
+            eligible_peer_count=2,
+            fallback_reason=None,
+        ),
+    )[0].result
+
+    assert sparse.score == baseline.score
+    assert (sparse.rationale_payload or {})["cf_shadow"]["cf_weight"] == 0.0
+    assert (sparse.rationale_payload or {})["collaborative_filtering_used"] is False
+
+
+def test_enabled_cf_can_change_ranking() -> None:
+    scorer = Fyp1ContentRecommendationScorer()
+    candidates = FakeRecommendationRepository().list_active_candidates()
+    request = _attacking_request()
+    baseline = scorer.score_candidates(candidates=candidates, request=request, top_n=2)
+    first_id = baseline[0].result.catalog_id
+    second_id = baseline[1].result.catalog_id
+    assert first_id is not None
+    assert second_id is not None
+
+    enabled = scorer.score_candidates(
+        candidates=candidates,
+        request=request,
+        top_n=2,
+        cf_evidence=CollaborativeEvidence(
+            score_by_catalog={first_id: 0.05, second_id: 1.0},
+            supporting_users_by_catalog={first_id: 100, second_id: 100},
+            source_version="sha256:ranking",
+            eligible_interaction_count=200,
+            eligible_peer_count=100,
+            fallback_reason=None,
+        ),
+    )
+
+    assert enabled[0].result.catalog_id == second_id
+    assert enabled[0].result.score > enabled[1].result.score
+
+
 def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     repository = FakeRecommendationRepository()
     logs = FakeRecommendationLogRepository()
@@ -393,6 +544,42 @@ def test_execute_profile_persists_true_profile_snapshot() -> None:
     assert profile_payload["recent_goal"] == "power"
     assert request_payload["top_n"] == 3
     assert "top_n" not in profile_payload
+
+
+def test_profile_recommendation_rejects_unowned_racket() -> None:
+    profile = PlayerProfile(
+        user_id="user-1",
+        skill_level="advanced",
+        playing_style="balanced",
+        preferred_tension=26,
+        frequency_per_week=4,
+        preferred_feel="medium",
+        preferred_gauge="thick",
+        recent_goal="balanced",
+        pref_attack=5,
+        pref_comfort=5,
+        pref_control=5,
+        pref_durability=5,
+        pref_elasticity=5,
+        pref_sound=5,
+        pref_string_movement=5,
+        pref_tension_retention=5,
+        pref_value_for_money=5,
+        created_at=None,
+        updated_at=None,
+    )
+    use_case = GenerateRecommendationUseCase(
+        profile_repository=FakeProfileRepository(profile),
+        recommendation_repository=FakeRecommendationRepository(),
+        recommendation_log_repository=FakeRecommendationLogRepository(),
+    )
+
+    with pytest.raises(NotFoundError, match="Racket not found"):
+        use_case.execute_profile(
+            user_id="user-1",
+            top_n=3,
+            racket_id="another-user-racket",
+        )
 
 
 def test_profile_update_invalidates_cached_recommendations() -> None:

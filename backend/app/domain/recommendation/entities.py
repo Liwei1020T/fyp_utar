@@ -89,6 +89,67 @@ class RecommendationCandidateModel:
 
 
 @dataclass(frozen=True)
+class RacketRecommendationContext:
+    racket_id: str
+    brand: str
+    model: str
+    model_key: str
+    target_tension: float
+
+
+@dataclass(frozen=True)
+class CommunityFeedbackRow:
+    feedback_id: str
+    user_id: str
+    catalog_id: str
+    racket_model_key: str | None
+    ratings: Mapping[str, int | None]
+    confirmed_at: Mapping[str, str]
+    durability_rated_at: datetime | None
+    completed_at: datetime | None
+
+
+@dataclass(frozen=True)
+class CommunityFeatureAggregate:
+    normalized_score: float
+    distinct_users: int
+    booking_count: int
+    confidence: float
+    weight: float
+    evidence_scope: str
+    racket_model_key: str | None
+    source_version: str
+
+
+@dataclass(frozen=True)
+class CommunitySnapshot:
+    by_catalog: Mapping[str, Mapping[str, CommunityFeatureAggregate]]
+    snapshot_version: str
+
+
+@dataclass(frozen=True)
+class RecommendationInteraction:
+    booking_id: str
+    user_id: str
+    catalog_id: str
+    racket_id: str | None
+    racket_model_key: str
+    requested_tension: float | None
+    completed_at: datetime
+    preference_vector: tuple[int | None, ...]
+
+
+@dataclass(frozen=True)
+class CollaborativeEvidence:
+    score_by_catalog: Mapping[str, float]
+    supporting_users_by_catalog: Mapping[str, int]
+    source_version: str
+    eligible_interaction_count: int
+    eligible_peer_count: int
+    fallback_reason: str | None
+
+
+@dataclass(frozen=True)
 class CachedRecommendationRecord:
     user_id: str
     catalog_id: str

@@ -471,6 +471,13 @@ export interface BackendCreateFeedbackPayload {
   sentiment_tags?: BackendFeedbackSentimentTag[];
 }
 
+export type BackendUpdateFeedbackPayload = Partial<BackendCreateFeedbackPayload>;
+
+export interface BackendFeedbackEligibility {
+  durability_available_at: string | null;
+  can_rate_durability: boolean;
+}
+
 export interface BackendFeedback {
   id: string;
   booking_id: string;
@@ -483,6 +490,10 @@ export interface BackendFeedback {
   control: number | null;
   repulsion: number | null;
   durability: number | null;
+  durability_available_at: string | null;
+  can_rate_durability: boolean;
+  durability_rated_at: string | null;
+  structured_field_confirmed_at: Record<string, string>;
   would_use_again: boolean | null;
   comment: string | null;
   string_feedback: string | null;

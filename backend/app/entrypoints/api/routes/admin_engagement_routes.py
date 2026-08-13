@@ -38,11 +38,39 @@ from app.dto.notifications import SendNotificationPayload
 from app.dto.racket_feedback import AdminFeedbackOut
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_admin
+from app.entrypoints.api.dependencies import get_recommendation_repository
+from app.domain.recommendation.learning_signals import build_community_snapshot
+from app.dto.recommendation import community_snapshot_to_dict
 from app.entrypoints.api.routes.racket_feedback_routes import feedback_to_dto
 from app.shared.errors import NotFoundError
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+@router.get("/feedback/community-summary", response_model=dict)
+def get_admin_community_summary(
+    _: CurrentUser = Depends(get_current_admin),
+    recommendation_repository=Depends(get_recommendation_repository),
+) -> dict[str, object]:
+    rows = recommendation_repository.list_community_feedback_rows()
+    model_keys = sorted(
+        {row.racket_model_key for row in rows if row.racket_model_key is not None}
+    )
+    global_snapshot = build_community_snapshot(rows, target_racket_model_key=None)
+    return {
+        "global": community_snapshot_to_dict(
+            global_snapshot,
+            racket_model_key=None,
+        ),
+        "racket_contexts": [
+            community_snapshot_to_dict(
+                build_community_snapshot(rows, target_racket_model_key=model_key),
+                racket_model_key=model_key,
+            )
+            for model_key in model_keys
+        ],
+    }
 
 
 @dataclass(frozen=True, slots=True)

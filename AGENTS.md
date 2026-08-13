@@ -39,6 +39,7 @@
   - `config/approved_string_cohort_v1.csv`: the 12-string system catalog boundary shared by backend runtime and BERT preparation
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
+  - recommendation learning loop: completed booking feedback -> bounded v10 community calibration; exact-racket interaction history -> gated v11 CF with exact v10 fallback below three independent supporters
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
   - NLP artifact handoff: independent 12-string MacBERT workbook in `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`; legacy V9 remains separate
   - AI-service compatibility artifact handoff: `ml/nlp-workbench-latest/output/` -> backend `AI_*_PATH` config

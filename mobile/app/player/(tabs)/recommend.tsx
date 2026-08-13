@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Info, WandSparkles } from 'lucide-react-native';
@@ -12,6 +12,7 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
+  useRackets,
   useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
@@ -44,12 +45,22 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
   const router = useRouter();
   const token = useBackendAccessToken();
   const strings = useStrings();
+  const rackets = useRackets();
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
   const setLiveRecommendationResults = useAppStore(
     (state) => state.setLiveRecommendationResults,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedRacketId, setSelectedRacketId] = useState<string | null>(
+    rackets[0]?.id ?? null,
+  );
+
+  useEffect(() => {
+    if (selectedRacketId == null && rackets[0]) {
+      setSelectedRacketId(rackets[0].id);
+    }
+  }, [rackets, selectedRacketId]);
 
   const normalizedPlayingStyle =
     user.playingStyle === 'Attacking' || user.playingStyle === 'Balanced'
@@ -90,7 +101,11 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
       if (strings.length === 0) {
         setLiveStrings(availableStrings);
       }
-      const response = await backendApi.generateRecommendations(token, 3);
+      const response = await backendApi.generateRecommendations(
+        token,
+        3,
+        selectedRacketId ?? undefined,
+      );
       setLiveRecommendationResults(
         mapRecommendationResponse(response, availableStrings),
       );
@@ -201,13 +216,38 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
         </AppCard>
       </AppSection>
 
+      <AppSection title="Racket context">
+        <AppCard variant="subtle" padding="sm">
+          {rackets.length > 0 ? (
+            <View className="flex-row flex-wrap gap-2">
+              {rackets.map((racket) => (
+                <AppChip
+                  key={racket.id}
+                  label={`${racket.brand} ${racket.model}`}
+                  variant={selectedRacketId === racket.id ? 'primary' : 'neutral'}
+                  accessibilityState={{ selected: selectedRacketId === racket.id }}
+                  onPress={() => setSelectedRacketId(racket.id)}
+                />
+              ))}
+            </View>
+          ) : (
+            <HeroText className="text-sm leading-5 text-neutral-600">
+              No saved racket is available. This run will use your profile only;
+              save a racket to enable racket-conditioned evidence.
+            </HeroText>
+          )}
+        </AppCard>
+      </AppSection>
+
       <AppSection>
         <AppCard variant="subtle" padding="sm" className="bg-primary-50/50 border-0">
           <View className="flex-row items-center gap-2">
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
               Recommendations combine your preferences with verified string
-              specifications, playing characteristics, feel, gauge, and value priorities.
+              evidence and local structured feedback. Collaborative racket–string
+              evidence is applied only when at least three independent users support
+              the same exact racket model and string; sparse cases keep the base score.
             </HeroText>
           </View>
         </AppCard>

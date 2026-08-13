@@ -6,12 +6,19 @@ from dataclasses import dataclass
 
 from app.domain.catalog.entities import StringItem
 from app.domain.recommendation.entities import RecommendationCandidateModel
+from app.domain.recommendation.entities import CollaborativeEvidence
+from app.domain.recommendation.entities import CommunityFeatureAggregate
+from app.domain.recommendation.entities import CommunitySnapshot
 from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
+from app.domain.recommendation.entities import RacketRecommendationContext
+from app.domain.recommendation.learning_signals import CF_POLICY_VERSION
+from app.domain.recommendation.learning_signals import CF_SHRINKAGE_K
+from app.domain.recommendation.learning_signals import cf_weight_for_support
 
 
-ALGORITHM_VERSION = "fyp1_similarity_preferences_v9"
+ALGORITHM_VERSION = "fyp1_similarity_preferences_community_racket_cf_v11"
 PREFERENCE_SOURCE_LAYER = "profile"
 
 CORE_RECOMMENDATION_FEATURES = (
@@ -125,6 +132,9 @@ class Fyp1ContentRecommendationScorer:
         candidates: list[RecommendationCandidateModel],
         request: RecommendationRequestModel,
         top_n: int,
+        community_snapshot: CommunitySnapshot | None = None,
+        cf_evidence: CollaborativeEvidence | None = None,
+        racket_context: RacketRecommendationContext | None = None,
     ) -> list[ScoredRecommendation]:
         preference_vector_rows = self.build_preference_vector(
             user_id=request.user_id or "",
@@ -135,6 +145,16 @@ class Fyp1ContentRecommendationScorer:
         for candidate in candidates:
             effective_scores, feature_sources, feature_meta = _effective_item_features(
                 candidate
+            )
+            effective_scores, feature_sources, feature_meta = _apply_community(
+                effective_scores=effective_scores,
+                feature_sources=feature_sources,
+                feature_meta=feature_meta,
+                aggregates=(
+                    community_snapshot.by_catalog.get(candidate.item.id, {})
+                    if community_snapshot is not None
+                    else {}
+                ),
             )
             feature_evidence = _build_feature_evidence(
                 effective_scores=effective_scores,
@@ -156,13 +176,18 @@ class Fyp1ContentRecommendationScorer:
                 effective_scores=effective_scores,
                 request=request,
             )
-            final_score = round(
+            base_score = round(
                 clamp01(
                     (preference_match * FINAL_SCORE_WEIGHTS["preference_match"])
                     + (rule_fit * FINAL_SCORE_WEIGHTS["rule_fit"])
                 )
                 / FINAL_SCORE_WEIGHT_TOTAL,
                 4,
+            )
+            final_score, cf_payload = _apply_cf(
+                base_score=base_score,
+                evidence=cf_evidence,
+                catalog_id=candidate.item.id,
             )
 
             reasons = _build_reasons(
@@ -175,6 +200,7 @@ class Fyp1ContentRecommendationScorer:
                 "preference_match": round(preference_match, 4),
                 "rule_fit": round(rule_fit, 4),
                 "value_for_money": round(effective_scores["value_for_money"], 4),
+                "base_score": base_score,
                 "final_score": final_score,
             }
             if nlp_review_score is not None:
@@ -189,8 +215,29 @@ class Fyp1ContentRecommendationScorer:
                 "display_name": candidate.item.display_name,
                 "brand": candidate.item.brand,
                 "model_name": candidate.item.model_name,
-                "algorithm_family": "rule_enhanced_content_based_preferences",
-                "collaborative_filtering_used": False,
+                "algorithm_family": "community_calibrated_racket_cf",
+                "collaborative_filtering_used": cf_payload.get("mode") == "enabled",
+                "community_calibration_used": any(
+                    (_to_float(row.get("community_weight")) or 0) > 0
+                    for row in feature_evidence
+                ),
+                "community_snapshot_version": (
+                    community_snapshot.snapshot_version
+                    if community_snapshot is not None
+                    else None
+                ),
+                "racket_context": (
+                    {
+                        "racket_id": racket_context.racket_id,
+                        "brand": racket_context.brand,
+                        "model": racket_context.model,
+                        "normalized_model_key": racket_context.model_key,
+                        "target_tension": racket_context.target_tension,
+                    }
+                    if racket_context is not None
+                    else None
+                ),
+                "cf_shadow": cf_payload,
                 "primary_fit_angle": fit_angle,
                 "trade_off_summary": _trade_off_summary(
                     effective_scores,
@@ -273,6 +320,11 @@ class Fyp1ContentRecommendationScorer:
                         "rule_fit_score": breakdown["rule_fit"],
                         "value_for_money_score": breakdown["value_for_money"],
                         "nlp_review_score": breakdown.get("nlp_review_score"),
+                        "collaborative_score": (
+                            cf_evidence.score_by_catalog.get(candidate.item.id)
+                            if cf_evidence is not None
+                            else None
+                        ),
                         "final_score": final_score,
                         "rank_position": 0,
                         "rationale": rationale_payload,
@@ -365,6 +417,90 @@ def _effective_item_features(
     return effective, sources, feature_meta
 
 
+def _apply_community(
+    *,
+    effective_scores: dict[str, float],
+    feature_sources: dict[str, str],
+    feature_meta: dict[str, dict[str, object]],
+    aggregates: Mapping[str, CommunityFeatureAggregate],
+) -> tuple[dict[str, float], dict[str, str], dict[str, dict[str, object]]]:
+    calibrated = dict(effective_scores)
+    sources = dict(feature_sources)
+    meta = {feature: dict(values) for feature, values in feature_meta.items()}
+    for feature, aggregate in aggregates.items():
+        if feature not in calibrated or aggregate.weight <= 0:
+            continue
+        baseline = calibrated[feature]
+        calibrated[feature] = clamp01(
+            baseline * (1 - aggregate.weight)
+            + aggregate.normalized_score * aggregate.weight
+        )
+        sources[feature] = f"{sources[feature]}+community_signal"
+        meta[feature].update(
+            {
+                "baseline_score": baseline,
+                "community_score": aggregate.normalized_score,
+                "community_distinct_users": aggregate.distinct_users,
+                "community_booking_count": aggregate.booking_count,
+                "community_confidence": aggregate.confidence,
+                "community_weight": aggregate.weight,
+                "community_evidence_scope": aggregate.evidence_scope,
+                "community_racket_model_key": aggregate.racket_model_key,
+                "community_source_version": aggregate.source_version,
+            }
+        )
+    return calibrated, sources, meta
+
+
+def _apply_cf(
+    *,
+    base_score: float,
+    evidence: CollaborativeEvidence | None,
+    catalog_id: str,
+) -> tuple[float, dict[str, object]]:
+    if evidence is None:
+        return base_score, {
+            "mode": "unavailable",
+            "raw_cf_score": None,
+            "cf_weight": 0.0,
+            "base_score": base_score,
+            "final_score": base_score,
+            "fallback_reason": "not_calculated",
+        }
+    raw_cf_score = evidence.score_by_catalog.get(catalog_id)
+    supporting_users = evidence.supporting_users_by_catalog.get(catalog_id, 0)
+    cf_weight = cf_weight_for_support(supporting_users)
+    final_score = base_score
+    if raw_cf_score is not None and cf_weight > 0:
+        final_score = round(
+            clamp01(base_score * (1 - cf_weight) + raw_cf_score * cf_weight),
+            4,
+        )
+    fallback_reason = evidence.fallback_reason
+    if raw_cf_score is None:
+        fallback_reason = fallback_reason or "no_candidate_support"
+    elif cf_weight == 0:
+        fallback_reason = "insufficient_distinct_supporting_users"
+    return final_score, {
+        "mode": "enabled" if cf_weight > 0 else "fallback",
+        "raw_cf_score": raw_cf_score,
+        "cf_confidence": round(
+            supporting_users / (supporting_users + CF_SHRINKAGE_K), 4
+        )
+        if supporting_users
+        else 0.0,
+        "cf_weight": cf_weight,
+        "distinct_supporting_users": supporting_users,
+        "eligible_peer_count": evidence.eligible_peer_count,
+        "eligible_interaction_count": evidence.eligible_interaction_count,
+        "base_score": base_score,
+        "final_score": final_score,
+        "fallback_reason": fallback_reason,
+        "policy_version": CF_POLICY_VERSION,
+        "source_version": evidence.source_version,
+    }
+
+
 def _official_feature_scores(item: StringItem) -> dict[str, float]:
     official = item.official_performance
     if official is None:
@@ -449,6 +585,15 @@ def _build_feature_evidence(
             else None,
             "nlp_influence": round(_to_float(meta.get("nlp_influence")) or 0.0, 4),
             "prior_score": round(_to_float(meta.get("prior_score")) or 0.0, 4),
+            "baseline_score": _to_float(meta.get("baseline_score")),
+            "community_score": _to_float(meta.get("community_score")),
+            "community_distinct_users": meta.get("community_distinct_users"),
+            "community_booking_count": meta.get("community_booking_count"),
+            "community_confidence": _to_float(meta.get("community_confidence")),
+            "community_weight": _to_float(meta.get("community_weight")) or 0.0,
+            "community_evidence_scope": meta.get("community_evidence_scope"),
+            "community_racket_model_key": meta.get("community_racket_model_key"),
+            "community_source_version": meta.get("community_source_version"),
         }
         rows.append(row)
 

@@ -14,6 +14,7 @@ import type {
   BackendCreateFeedbackPayload,
   BackendCreateRacketPayload,
   BackendFeedback,
+  BackendFeedbackEligibility,
   BackendForgotPasswordRequestResponse,
   BackendInventoryUpdatePayload,
   BackendMarkNotificationsReadPayload,
@@ -48,6 +49,7 @@ import type {
   BackendStringEditorUpdatePayload,
   BackendStringWritePayload,
   BackendUpdateRacketPayload,
+  BackendUpdateFeedbackPayload,
   BackendWallet,
 } from '../types/backend';
 import { Platform } from 'react-native';
@@ -938,10 +940,27 @@ export const backendApi = {
       token,
     });
   },
+  updateBookingFeedback(
+    token: string,
+    bookingId: string,
+    payload: BackendUpdateFeedbackPayload,
+  ) {
+    return requestJson<BackendFeedback>(`/bookings/${bookingId}/feedback`, {
+      method: 'PATCH',
+      body: payload,
+      token,
+    });
+  },
   fetchBookingFeedback(token: string, bookingId: string) {
     return requestJson<BackendFeedback | null>(`/bookings/${bookingId}/feedback`, {
       token,
     });
+  },
+  fetchBookingFeedbackEligibility(token: string, bookingId: string) {
+    return requestJson<BackendFeedbackEligibility>(
+      `/bookings/${bookingId}/feedback-eligibility`,
+      { token },
+    );
   },
   previewRecommendations(token: string, payload: BackendRecommendationPayload) {
     return requestJson<BackendRecommendationResponse>('/recommendations/preview', {
@@ -950,17 +969,17 @@ export const backendApi = {
       token,
     });
   },
-  profileRecommendations(token: string, top_n = 3) {
+  profileRecommendations(token: string, top_n = 3, racket_id?: string) {
     return requestJson<BackendRecommendationResponse>('/recommendations/profile', {
       method: 'POST',
-      body: { top_n },
+      body: { top_n, racket_id },
       token,
     });
   },
-  generateRecommendations(token: string, top_n = 3) {
+  generateRecommendations(token: string, top_n = 3, racket_id?: string) {
     return requestJson<BackendRecommendationResponse>('/recommendations/generate', {
       method: 'POST',
-      body: { top_n },
+      body: { top_n, racket_id },
       token,
     });
   },

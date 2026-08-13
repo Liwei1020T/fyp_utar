@@ -205,7 +205,7 @@ These rows are regenerated when a complete profile is saved and when profile rec
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
 The active algorithm version is
-`fyp1_similarity_preferences_v9`.
+`fyp1_similarity_preferences_community_racket_cf_v11`.
 
 Profile saves invalidate that user's cache. Matrix content changes invalidate
 all score-cache rows, while an unchanged startup import preserves them. Cached reads
@@ -219,7 +219,12 @@ Score fields:
 - `nlp_review_score`
 - `final_score`
 
-Compatibility columns (`content_score`, `collaborative_score`, `rule_score`, and `nlp_score`) remain available for older inspection/debug paths. FYP1 does not write collaborative-filtering scores; `collaborative_score` should stay `NULL`. The `rationale` JSON stores raw user scores, normalized weights, effective official+NLP feature scores, NLP review evidence, rule events, profile context, and top human-readable reasons.
+Compatibility columns (`content_score`, `collaborative_score`, `rule_score`, and
+`nlp_score`) remain available for inspection. `collaborative_score` may store the
+raw racket-conditioned score. It has a bounded non-zero ranking weight only after
+the three-distinct-user exact-model gate passes. The
+`rationale` JSON stores preference inputs, effective scores, community snapshot
+and source versions, racket context, CF shadow evidence, rule events, and reasons.
 
 ### `store_business_hours`
 

@@ -73,13 +73,13 @@ class CreateFeedbackPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     rating: int = Field(ge=1, le=5, strict=True)
-    recommendation_relevance: int | None = Field(default=None, ge=1, le=5)
-    string_satisfaction: int | None = Field(default=None, ge=1, le=5)
-    tension_satisfaction: int | None = Field(default=None, ge=1, le=5)
-    comfort: int | None = Field(default=None, ge=1, le=5)
-    control: int | None = Field(default=None, ge=1, le=5)
-    repulsion: int | None = Field(default=None, ge=1, le=5)
-    durability: int | None = Field(default=None, ge=1, le=5)
+    recommendation_relevance: int | None = Field(default=None, ge=1, le=5, strict=True)
+    string_satisfaction: int | None = Field(default=None, ge=1, le=5, strict=True)
+    tension_satisfaction: int | None = Field(default=None, ge=1, le=5, strict=True)
+    comfort: int | None = Field(default=None, ge=1, le=5, strict=True)
+    control: int | None = Field(default=None, ge=1, le=5, strict=True)
+    repulsion: int | None = Field(default=None, ge=1, le=5, strict=True)
+    durability: int | None = Field(default=None, ge=1, le=5, strict=True)
     would_use_again: bool | None = None
     comment: str | None = Field(default=None, min_length=1, max_length=2000)
     string_feedback: str | None = Field(
@@ -96,14 +96,37 @@ class CreateFeedbackPayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_feedback(self) -> "CreateFeedbackPayload":
-        if not (
-            self.comment
-            or self.string_feedback
-            or self.service_feedback
-            or self.sentiment_tags
-        ):
-            raise ValueError("Add a comment or at least one sentiment tag")
         if len(self.sentiment_tags) != len(set(self.sentiment_tags)):
+            raise ValueError("sentiment_tags must be unique")
+        return self
+
+
+class UpdateFeedbackPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    rating: int | None = Field(default=None, ge=1, le=5, strict=True)
+    recommendation_relevance: int | None = Field(default=None, ge=1, le=5, strict=True)
+    string_satisfaction: int | None = Field(default=None, ge=1, le=5, strict=True)
+    tension_satisfaction: int | None = Field(default=None, ge=1, le=5, strict=True)
+    comfort: int | None = Field(default=None, ge=1, le=5, strict=True)
+    control: int | None = Field(default=None, ge=1, le=5, strict=True)
+    repulsion: int | None = Field(default=None, ge=1, le=5, strict=True)
+    durability: int | None = Field(default=None, ge=1, le=5, strict=True)
+    would_use_again: bool | None = None
+    comment: str | None = Field(default=None, min_length=1, max_length=2000)
+    string_feedback: str | None = Field(default=None, min_length=1, max_length=2000)
+    service_feedback: str | None = Field(default=None, min_length=1, max_length=2000)
+    sentiment_tags: list[SentimentTag] | None = Field(default=None, max_length=4)
+
+    @model_validator(mode="after")
+    def validate_update(self) -> "UpdateFeedbackPayload":
+        if not self.model_fields_set:
+            raise ValueError("At least one feedback field is required")
+        if "rating" in self.model_fields_set and self.rating is None:
+            raise ValueError("rating cannot be null")
+        if self.sentiment_tags is not None and len(self.sentiment_tags) != len(
+            set(self.sentiment_tags)
+        ):
             raise ValueError("sentiment_tags must be unique")
         return self
 
@@ -120,6 +143,10 @@ class FeedbackOut(BaseModel):
     control: int | None
     repulsion: int | None
     durability: int | None
+    durability_available_at: str | None = None
+    can_rate_durability: bool = False
+    durability_rated_at: str | None = None
+    structured_field_confirmed_at: dict[str, str] = Field(default_factory=dict)
     would_use_again: bool | None
     comment: str | None
     string_feedback: str | None
@@ -127,6 +154,11 @@ class FeedbackOut(BaseModel):
     sentiment_tags: list[SentimentTag]
     created_at: str
     updated_at: str
+
+
+class FeedbackEligibilityOut(BaseModel):
+    durability_available_at: str | None
+    can_rate_durability: bool
 
 
 class AdminFeedbackOut(FeedbackOut):

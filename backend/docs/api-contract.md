@@ -426,7 +426,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "fyp1_similarity_preferences_v9",
+  "algorithm_version": "fyp1_similarity_preferences_community_racket_cf_v11",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
@@ -460,7 +460,8 @@ Recommendation response:
         "final_score": 0.84
       },
       "rationale_payload": {
-        "algorithm_family": "rule_enhanced_content_based_preferences",
+        "algorithm_family": "community_calibrated_content_preferences",
+        "community_calibration_used": true,
         "collaborative_filtering_used": false,
         "feature_sources": {
           "repulsion": "nlp_review",
@@ -505,7 +506,15 @@ Recommendation response:
 `value_for_money` is a review-derived feature and the ninth saved preference dimension. Catalog price is descriptive and does not affect ranking.
 
 `nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
-The FYP1 recommender is rule-enhanced, content-based recommendation with fixed official + NLP review feature fusion and profile rules. It does not use collaborative filtering, matrix factorization, embeddings, confidence weighting, review-count weighting, or interaction-history scoring.
+The active FYP1 recommender is rule-enhanced content recommendation with fixed
+official/NLP fusion and bounded, explicitly confirmed community-feedback
+calibration. When `racket_id` is supplied, the racket must belong to the current
+user. Racket-conditioned interaction-history CF is persisted as `cf_shadow` for
+backward-compatible audit naming. It receives a non-zero weight only for a
+candidate supported by at least three independent users on the exact normalized
+racket model. Otherwise `cf_weight=0.0` and the v10 score is unchanged. Matrix
+factorization, embeddings, review-count weighting, and historical catalog
+community metrics are not ranking inputs.
 
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload. The `/profile` route is retained as a compatibility alias.
 

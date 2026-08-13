@@ -55,7 +55,11 @@ def recommend_for_profile(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
-    ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
+    ).execute_profile(
+        user_id=current_user.user_id,
+        top_n=payload.top_n,
+        racket_id=payload.racket_id,
+    )
     return recommendation_response_to_dto(result)
 
 
@@ -71,7 +75,11 @@ def generate_recommendations(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
-    ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
+    ).execute_profile(
+        user_id=current_user.user_id,
+        top_n=payload.top_n,
+        racket_id=payload.racket_id,
+    )
     return recommendation_response_to_dto(result)
 
 

@@ -6,7 +6,7 @@ This document describes the current recommendation runtime in `backend/app/domai
 
 Algorithm version:
 
-- `fyp1_similarity_preferences_v9`
+- `fyp1_similarity_preferences_community_racket_cf_v11`
 
 Design style:
 
@@ -14,25 +14,30 @@ Design style:
 - Rule-based adjustments for profile-context constraints
 - Gauge, feel, tension, frequency, and recent-goal rule adjustments
 - Fixed official/NLP feature fusion without confidence or review-count weighting
+- Bounded structured-feedback calibration, preferring exact racket-model evidence
+- Racket-conditioned collaborative filtering with a three-user activation gate
 
-This is not collaborative filtering.
+Collaborative evidence is observable and persisted. It receives a non-zero,
+shrunk weight only when one candidate has at least three independent supporting
+users on the exact normalized racket model. Sparse cases preserve the v10 score.
 
 ## 2. End-to-End Runtime Flow
 
 ```mermaid
 flowchart TD
     A[Client Request: preview/profile] --> B[GenerateRecommendationUseCase]
-    B --> C[List Active Candidates]
-    C --> D[Load String Item + Official Performance + Matrix Entries]
-    D --> E[Fyp1ContentRecommendationScorer]
-    E --> F[Per-Candidate Scoring]
-    F --> G[Rank + Top N]
-    G --> H[Persist Run + Log]
-    H --> I{Request Type}
-    I -->|profile| J[Persist Preference Vector + Score Cache]
-    I -->|preview| K[Skip Profile Persistence]
-    J --> L[API Response]
-    K --> L
+    B --> C[Load Owned Racket Context]
+    C --> D[Build Community Snapshot + CF Shadow]
+    D --> E[Load String Item + Official Performance + Matrix Entries]
+    E --> F[Fyp1ContentRecommendationScorer]
+    F --> G[Per-Candidate Scoring]
+    G --> H[Rank + Top N]
+    H --> I[Persist Run + Log]
+    I --> J{Request Type}
+    J -->|profile| K[Persist Preference Vector + Score Cache]
+    J -->|preview| L[Skip Profile Persistence]
+    K --> M[API Response]
+    L --> M
 ```
 
 Primary orchestration lives in `app/use_cases/recommendation/generate_recommendation.py`.
@@ -123,6 +128,15 @@ Official coverage caveat:
 - `elasticity`, `tension_retention`, and `string_movement` mainly rely on NLP matrix signals or prior fallback.
 
 Catalog review counts are not recommendation inputs.
+
+### 3.4 Runtime learning signals
+
+- Explicitly confirmed structured feedback is averaged per user before aggregation.
+- Exact normalized racket-model evidence is preferred; global string evidence is
+  the fallback. Influence is shrunk with `K=10` and capped at `0.30` per feature.
+- Completed bookings from similar users on the exact racket model produce a
+  tension-aware CF shadow score. Its runtime weight remains `0.0`.
+- Snapshot/source hashes are stored in rationale and checked on cached reads.
 
 ### 4.4 PreferenceMatch calculation
 
@@ -231,6 +245,8 @@ For each result, scorer stores:
 - score breakdown (`preference_match`, `rule_fit`, descriptive `value_for_money`, optional `nlp_review_score`)
 - top reasons and rule events
 - feature evidence rows with official value, NLP value, fixed NLP contribution, and effective score
+- community scope, counts, bounded weight, and source/snapshot versions
+- selected racket context and gated CF evidence with base/final score audit fields
 
 Persistence behavior by request type:
 
@@ -249,5 +265,7 @@ The current design is a hybrid recommender:
 - Rule-based enforces profile-aware domain constraints
 - Value for money is a first-class weighted preference
 - Official and NLP feature values use fixed, inspectable fusion
+- Eligible community feedback calibrates features within a fixed bound
+- Racket-conditioned CF is auditable and affects ranking only after its support gate
 
 This keeps recommendations explainable, tunable, and stable for FYP use while still allowing NLP-derived signals to improve personalization dynamically.

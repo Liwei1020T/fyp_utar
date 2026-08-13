@@ -91,6 +91,14 @@ class BookingFeedback(Base):
     control: Mapped[int | None] = mapped_column(Integer, nullable=True)
     repulsion: Mapped[int | None] = mapped_column(Integer, nullable=True)
     durability: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    durability_rated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    structured_field_confirmed_at: Mapped[dict[str, str]] = mapped_column(
+        JSON,
+        default=dict,
+        server_default="{}",
+    )
     would_use_again: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     string_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)

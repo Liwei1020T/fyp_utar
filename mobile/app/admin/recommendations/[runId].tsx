@@ -48,7 +48,11 @@ function buildRationaleSummary(rationale: Record<string, unknown>) {
     'algorithm_family',
     'primary_fit_angle',
     'trade_off_summary',
+    'community_calibration_used',
+    'community_snapshot_version',
     'collaborative_filtering_used',
+    'racket_context',
+    'cf_shadow',
   ] as const;
 
   return summaryKeys

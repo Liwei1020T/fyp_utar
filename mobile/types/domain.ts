@@ -372,6 +372,10 @@ export interface BookingFeedback {
   control?: number;
   repulsion?: number;
   durability?: number;
+  durabilityAvailableAt?: string;
+  canRateDurability: boolean;
+  durabilityRatedAt?: string;
+  structuredFieldConfirmedAt: Record<string, string>;
   wouldUseAgain?: boolean;
   comment?: string;
   stringFeedback?: string;

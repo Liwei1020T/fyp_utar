@@ -11,6 +11,7 @@ from fastapi import Form
 from fastapi import Query
 from fastapi import UploadFile
 from sqlalchemy import select
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.catalog_seed import (
@@ -20,6 +21,7 @@ from app.adapters.persistence.sqlalchemy.catalog_seed import (
     merge_with_approved_defaults,
 )
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
+from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
@@ -572,6 +574,7 @@ def admin_update_booking_status(
     payload: UpdateBookingStatusPayload,
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingOut:
     booking = UpdateBookingStatusUseCase(
         booking_repository=booking_repository,
@@ -585,6 +588,17 @@ def admin_update_booking_status(
         changed_by_user_id=current_user.user_id,
         note=payload.note,
     )
+    if payload.status == "completed":
+        db.execute(
+            delete(RecommendationScoreCache).where(
+                RecommendationScoreCache.algorithm_version.in_(
+                    {
+                        "fyp1_similarity_preferences_community_v10",
+                        "fyp1_similarity_preferences_community_racket_cf_v11",
+                    }
+                )
+            )
+        )
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
