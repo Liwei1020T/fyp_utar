@@ -157,7 +157,14 @@ applying those preferences. Read event IDs are persisted per user.
 
 Device registration stores only the authenticated user's Expo token. Admin
 delivery always creates an in-app notification record; remote Expo delivery is
-attempted only when `EXPO_PUSH_ENABLED=true`.
+attempted only when `EXPO_PUSH_ENABLED=true`. Production startup also requires
+the server-only `EXPO_ACCESS_TOKEN`, which is sent to Expo as a bearer token and
+must never be bundled into the mobile app.
+
+Alternatively, `OPENWA_ENABLED=true` sends the same persisted delivery through
+the configured self-hosted OpenWA session using the player's account phone
+number. OpenWA and Expo cannot be enabled together; OpenWA requires a
+server-only, session-scoped operator API key.
 
 ### Account Security and Privacy
 

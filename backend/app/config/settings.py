@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 from zoneinfo import ZoneInfoNotFoundError
 
 from pydantic import Field
+from pydantic import SecretStr
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
@@ -58,10 +59,21 @@ class Settings(BaseSettings):
         alias="PASSWORD_RESET_DEV_PREVIEW_ENABLED",
     )
     expo_push_enabled: bool = Field(default=False, alias="EXPO_PUSH_ENABLED")
+    expo_push_access_token: SecretStr | None = Field(
+        default=None,
+        alias="EXPO_ACCESS_TOKEN",
+    )
     expo_push_endpoint: str = Field(
         default="https://exp.host/--/api/v2/push/send",
         alias="EXPO_PUSH_ENDPOINT",
     )
+    openwa_enabled: bool = Field(default=False, alias="OPENWA_ENABLED")
+    openwa_base_url: str = Field(
+        default="http://127.0.0.1:2785/api",
+        alias="OPENWA_BASE_URL",
+    )
+    openwa_session_id: str | None = Field(default=None, alias="OPENWA_SESSION_ID")
+    openwa_api_key: SecretStr | None = Field(default=None, alias="OPENWA_API_KEY")
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://127.0.0.1:3000",
@@ -156,6 +168,27 @@ class Settings(BaseSettings):
         return raw
 
     def validate_runtime(self) -> None:
+        if self.expo_push_enabled and self.openwa_enabled:
+            raise ValueError("Enable only one remote notification provider")
+        if (
+            self.environment == "production"
+            and self.expo_push_enabled
+            and (
+                self.expo_push_access_token is None
+                or not self.expo_push_access_token.get_secret_value().strip()
+            )
+        ):
+            raise ValueError(
+                "EXPO_ACCESS_TOKEN must be set when Expo push is enabled in production"
+            )
+        if self.openwa_enabled:
+            if not self.openwa_session_id:
+                raise ValueError("OPENWA_SESSION_ID must be set when OpenWA is enabled")
+            if (
+                self.openwa_api_key is None
+                or not self.openwa_api_key.get_secret_value().strip()
+            ):
+                raise ValueError("OPENWA_API_KEY must be set when OpenWA is enabled")
         if self.seed_admin_enabled:
             self._require_seed_fields(
                 "admin",

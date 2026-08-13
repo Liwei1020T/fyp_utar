@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,6 +17,7 @@ from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationRun,
 )
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
+from app.config.settings import Settings
 from app.config.settings import get_settings
 from app.main import app
 from app.entrypoints.api.routes import admin_engagement_routes
@@ -32,6 +35,38 @@ class NotificationActivity:
 
 def _headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def test_production_push_requires_a_server_access_token() -> None:
+    settings = Settings(  # type: ignore[call-arg]
+        _env_file=None,
+        APP_ENV="production",
+        DATABASE_URL="sqlite+pysqlite:///:memory:",
+        JWT_SECRET_KEY="production-test-jwt-secret",
+        EXPO_PUSH_ENABLED=True,
+        EXPO_ACCESS_TOKEN=SecretStr(""),
+        SEED_ADMIN_ENABLED=False,
+    )
+
+    with pytest.raises(ValueError, match="EXPO_ACCESS_TOKEN must be set"):
+        settings.validate_runtime()
+
+
+def test_remote_notification_providers_are_mutually_exclusive() -> None:
+    settings = Settings(  # type: ignore[call-arg]
+        _env_file=None,
+        APP_ENV="testing",
+        DATABASE_URL="sqlite+pysqlite:///:memory:",
+        JWT_SECRET_KEY="test-jwt-secret",
+        EXPO_PUSH_ENABLED=True,
+        OPENWA_ENABLED=True,
+        OPENWA_SESSION_ID="session-1",
+        OPENWA_API_KEY=SecretStr("openwa-test-key"),
+        SEED_ADMIN_ENABLED=False,
+    )
+
+    with pytest.raises(ValueError, match="only one remote notification provider"):
+        settings.validate_runtime()
 
 
 def _register(phone_number: str) -> tuple[str, str]:
@@ -284,6 +319,11 @@ def test_admin_push_delivery_returns_persisted_outcome_and_resends_once(
     settings = get_settings()
     monkeypatch.setattr(settings, "expo_push_enabled", True)
     monkeypatch.setattr(settings, "expo_push_endpoint", "https://expo.test/send")
+    monkeypatch.setattr(
+        settings,
+        "expo_push_access_token",
+        SecretStr("test-expo-access-token"),
+    )
     observed_statuses: list[str] = []
     provider_calls: list[object] = []
 
@@ -303,6 +343,7 @@ def test_admin_push_delivery_returns_persisted_outcome_and_resends_once(
     def fake_urlopen(request, timeout: int):
         assert request.full_url == "https://expo.test/send"
         assert timeout == 5
+        assert request.get_header("Authorization") == "Bearer test-expo-access-token"
         provider_calls.append(request)
         with SessionLocal() as db:
             notification = db.scalar(
@@ -357,6 +398,62 @@ def test_admin_push_delivery_returns_persisted_outcome_and_resends_once(
         assert notification is not None
         assert notification.status == "failed"
         assert notification.attempts == 2
+
+
+def test_admin_openwa_delivery_uses_player_phone_without_a_device_token(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "expo_push_enabled", False)
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
+    monkeypatch.setattr(settings, "openwa_session_id", "session-1")
+    monkeypatch.setattr(
+        settings,
+        "openwa_api_key",
+        SecretStr("openwa-test-key"),
+    )
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b'{"messageId":"wa-message-1"}'
+
+    def fake_urlopen(request, timeout: int):
+        assert request.full_url == (
+            "http://openwa.test/api/sessions/session-1/messages/send-text"
+        )
+        assert timeout == 5
+        headers = {key.lower(): value for key, value in request.header_items()}
+        assert headers["x-api-key"] == "openwa-test-key"
+        assert json.loads(request.data) == {
+            "chatId": "60127770001@c.us",
+            "text": "*WhatsApp delivery*\nSent from StringSense.",
+        }
+        return FakeResponse()
+
+    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fake_urlopen)
+    response = client.post(
+        "/api/admin/notifications",
+        headers=_headers(_admin_token()),
+        json={
+            "user_id": notification_activity.owner_id,
+            "category": "service",
+            "title": "WhatsApp delivery",
+            "body": "Sent from StringSense.",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "sent"
+    assert response.json()["provider_message"] == "wa-message-1"
+    assert response.json()["token_preview"] is None
 
 
 def test_admin_push_delivery_skips_provider_when_initial_commit_fails(

@@ -56,6 +56,10 @@ operations modules.
    npm install
    ```
 
+   Copy `.env.example` to an untracked `.env` and set the EAS project UUID as
+   `EXPO_PUBLIC_EAS_PROJECT_ID`. The project UUID is public; the Expo access
+   token belongs only in `backend/.env`.
+
 3. **Run the App in a browser:**
    ```bash
    EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web
@@ -84,6 +88,11 @@ operations modules.
    npm run ios
    npm run android
    ```
+
+   Remote push requires an EAS preview or production build, not Expo Go. Link
+   the app with `npx eas-cli init`, configure Android FCM V1 and/or the iOS APNs
+   key with `npx eas-cli credentials`, then build with
+   `npx eas-cli build --profile preview --platform <android|ios>`.
 
 6. **Navigate:**
    - The app starts at the unified `/auth/login` screen; the backend account role decides whether login continues to Player or Admin.

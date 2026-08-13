@@ -75,11 +75,13 @@ def get_admin_community_summary(
 
 @dataclass(frozen=True, slots=True)
 class _NotificationDeliveryTarget:
-    token: str
+    provider: str
+    recipient: str
     title: str
     body: str
     route: str | None
     endpoint: str
+    access_token: str | None
 
 
 def _token_preview(token: str) -> str:
@@ -165,6 +167,28 @@ def _prepare_notification_delivery(
     db: Session,
     notification: NotificationDelivery,
 ) -> bool:
+    settings = get_settings()
+    store_settings = db.get(StoreSettings, "main")
+    category_settings = (
+        dict(store_settings.notification_settings or {}).get(notification.category, {})
+        if store_settings
+        else {}
+    )
+    if isinstance(category_settings, dict) and not category_settings.get(
+        "enabled", True
+    ):
+        notification.status = "disabled"
+        notification.provider_message = "Notification category is disabled"
+        return False
+
+    if settings.openwa_enabled:
+        notification.device_token_id = None
+        notification.attempts += 1
+        notification.last_attempt_at = datetime.now(timezone.utc)
+        notification.status = "pending"
+        notification.provider_message = None
+        return True
+
     device_token = (
         db.get(DeviceToken, notification.device_token_id)
         if notification.device_token_id
@@ -186,20 +210,6 @@ def _prepare_notification_delivery(
         return False
     notification.device_token_id = device_token.id
 
-    store_settings = db.get(StoreSettings, "main")
-    category_settings = (
-        dict(store_settings.notification_settings or {}).get(notification.category, {})
-        if store_settings
-        else {}
-    )
-    if isinstance(category_settings, dict) and not category_settings.get(
-        "enabled", True
-    ):
-        notification.status = "disabled"
-        notification.provider_message = "Notification category is disabled"
-        return False
-
-    settings = get_settings()
     if not settings.expo_push_enabled:
         notification.status = "disabled"
         notification.provider_message = "Expo push delivery is disabled"
@@ -213,30 +223,53 @@ def _prepare_notification_delivery(
 def _send_notification_to_provider(
     target: _NotificationDeliveryTarget,
 ) -> tuple[str, str | None]:
-    body = json.dumps(
-        {
-            "to": target.token,
+    payload: dict[str, object]
+    if target.provider == "openwa":
+        payload = {
+            "chatId": target.recipient,
+            "text": f"*{target.title}*\n{target.body}",
+        }
+    else:
+        payload = {
+            "to": target.recipient,
             "title": target.title,
             "body": target.body,
             "data": {"route": target.route} if target.route else {},
         }
-    ).encode("utf-8")
+    body = json.dumps(payload).encode("utf-8")
+    headers = {"Accept": "application/json", "Content-Type": "application/json"}
+    if target.access_token:
+        header = "X-API-Key" if target.provider == "openwa" else "Authorization"
+        value = (
+            target.access_token
+            if target.provider == "openwa"
+            else f"Bearer {target.access_token}"
+        )
+        headers[header] = value
     request = urllib_request.Request(
         target.endpoint,
         data=body,
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     try:
         with urllib_request.urlopen(request, timeout=5) as response:
             provider_response = json.loads(response.read().decode("utf-8"))
         if not isinstance(provider_response, dict):
-            raise ValueError("Expo returned an invalid response")
-        ticket = provider_response.get("data", {})
-        if not isinstance(ticket, dict):
-            raise ValueError("Expo returned an invalid delivery ticket")
-        status = "sent" if ticket.get("status") == "ok" else "failed"
-        provider_message = ticket.get("message") or ticket.get("id")
+            raise ValueError(f"{target.provider} returned an invalid response")
+        if target.provider == "openwa":
+            status = "sent"
+            provider_message = (
+                provider_response.get("messageId")
+                or provider_response.get("id")
+                or "OpenWA accepted"
+            )
+        else:
+            ticket = provider_response.get("data", {})
+            if not isinstance(ticket, dict):
+                raise ValueError("Expo returned an invalid delivery ticket")
+            status = "sent" if ticket.get("status") == "ok" else "failed"
+            provider_message = ticket.get("message") or ticket.get("id")
         return status, str(provider_message) if provider_message is not None else None
     except (OSError, TypeError, ValueError) as exc:
         return "failed", str(exc)[:500]
@@ -289,21 +322,53 @@ def _deliver_notification(notification_id: str) -> AdminNotificationOut:
         notification = db.get(NotificationDelivery, notification_id)
         if notification is None:
             raise NotFoundError("Notification not found")
-        device_token = (
-            db.get(DeviceToken, notification.device_token_id)
-            if notification.device_token_id
-            else None
-        )
-        if device_token is None or not device_token.enabled:
-            provider_message = "No active device token"
+        settings = get_settings()
+        if settings.openwa_enabled:
+            user = db.get(User, notification.user_id)
+            if user is None:
+                provider_message = "User not found"
+            else:
+                phone_digits = "".join(
+                    character for character in user.phone_number if character.isdigit()
+                )
+                target = _NotificationDeliveryTarget(
+                    provider="openwa",
+                    recipient=f"{phone_digits}@c.us",
+                    title=notification.title,
+                    body=notification.body,
+                    route=notification.route,
+                    endpoint=(
+                        f"{settings.openwa_base_url.rstrip('/')}"
+                        f"/sessions/{settings.openwa_session_id}/messages/send-text"
+                    ),
+                    access_token=(
+                        settings.openwa_api_key.get_secret_value()
+                        if settings.openwa_api_key is not None
+                        else None
+                    ),
+                )
         else:
-            target = _NotificationDeliveryTarget(
-                token=device_token.token,
-                title=notification.title,
-                body=notification.body,
-                route=notification.route,
-                endpoint=get_settings().expo_push_endpoint,
+            device_token = (
+                db.get(DeviceToken, notification.device_token_id)
+                if notification.device_token_id
+                else None
             )
+            if device_token is None or not device_token.enabled:
+                provider_message = "No active device token"
+            else:
+                target = _NotificationDeliveryTarget(
+                    provider="expo",
+                    recipient=device_token.token,
+                    title=notification.title,
+                    body=notification.body,
+                    route=notification.route,
+                    endpoint=settings.expo_push_endpoint,
+                    access_token=(
+                        settings.expo_push_access_token.get_secret_value()
+                        if settings.expo_push_access_token is not None
+                        else None
+                    ),
+                )
 
     if target is None:
         status = "failed"

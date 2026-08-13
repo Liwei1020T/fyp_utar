@@ -157,7 +157,7 @@ export default function AdminNotificationsScreen() {
       tone="admin"
       headerVariant="flow"
       title="Notification management"
-      subtitle="Send updates, inspect device tokens, and retry failed deliveries."
+      subtitle="Send app, push, or WhatsApp updates and retry failed deliveries."
       showBackButton
       onBackPress={() => router.back()}
     >
