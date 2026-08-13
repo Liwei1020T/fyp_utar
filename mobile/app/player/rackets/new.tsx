@@ -10,7 +10,9 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
+import { RacketModelSelector } from '../../../components/rackets/RacketModelSelector';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
+import type { BackendRacketModelOption } from '../../../types/backend';
 import { mapBackendRacketToRacketPassport } from '../../../services/backendMappers';
 import {
   useAppStore,
@@ -38,9 +40,11 @@ export default function NewRacketScreen() {
   const token = useBackendAccessToken();
   const upsertLiveRacket = useAppStore((state) => state.upsertLiveRacket);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedModelKey, setSelectedModelKey] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RacketFormInput, unknown, RacketForm>({
     resolver: zodResolver(racketSchema),
@@ -70,6 +74,7 @@ export default function NewRacketScreen() {
     try {
       const response = await backendApi.createRacket(token, {
         nickname: data.nickname,
+        model_key: selectedModelKey,
         brand: data.brand,
         model: data.model,
         weight_class: data.weightClass || null,
@@ -88,6 +93,12 @@ export default function NewRacketScreen() {
           : 'Failed to register the racket.',
       );
     }
+  };
+
+  const selectModel = (option: BackendRacketModelOption | null) => {
+    setSelectedModelKey(option?.key ?? null);
+    setValue('brand', option?.brand ?? '', { shouldValidate: true });
+    setValue('model', option?.model ?? '', { shouldValidate: true });
   };
 
   return (
@@ -140,34 +151,43 @@ export default function NewRacketScreen() {
               />
             )}
           />
-          <Controller
-            control={control}
-            name="brand"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Brand"
-                placeholder="Yonex"
-                value={value}
-                onChangeText={onChange}
-                error={errors.brand?.message}
-                maxLength={100}
-              />
-            )}
+          <RacketModelSelector
+            token={token}
+            selectedKey={selectedModelKey}
+            onSelect={selectModel}
           />
-          <Controller
-            control={control}
-            name="model"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Model"
-                placeholder="Astrox 88D Pro"
-                value={value}
-                onChangeText={onChange}
-                error={errors.model?.message}
-                maxLength={100}
+          {selectedModelKey === null ? (
+            <>
+              <Controller
+                control={control}
+                name="brand"
+                render={({ field: { onChange, value } }) => (
+                  <AppInput
+                    label="Brand"
+                    placeholder="Apacs"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.brand?.message}
+                    maxLength={100}
+                  />
+                )}
               />
-            )}
-          />
+              <Controller
+                control={control}
+                name="model"
+                render={({ field: { onChange, value } }) => (
+                  <AppInput
+                    label="Model"
+                    placeholder="Z-Ziggler"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.model?.message}
+                    maxLength={100}
+                  />
+                )}
+              />
+            </>
+          ) : null}
         </AppCard>
       </AppSection>
 

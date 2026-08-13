@@ -26,6 +26,7 @@ from app.dto.racket_feedback import CreateRacketPayload
 from app.dto.racket_feedback import FeedbackOut
 from app.dto.racket_feedback import FeedbackEligibilityOut
 from app.dto.racket_feedback import RacketDetailOut
+from app.dto.racket_feedback import RacketModelOptionOut
 from app.dto.racket_feedback import RacketOut
 from app.dto.racket_feedback import RacketServiceHistoryOut
 from app.dto.racket_feedback import SentimentTag
@@ -36,6 +37,10 @@ from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_clock
 from app.dto.auth import MessageResponse
 from app.ports.services.clock import Clock
+from app.domain.recommendation.learning_signals import canonical_racket_model_key
+from app.domain.recommendation.learning_signals import STANDARD_RACKET_MODELS
+from app.domain.recommendation.learning_signals import standard_racket_model_for_key
+from app.shared.errors import BadRequestError
 from app.shared.errors import ConflictError
 from app.shared.errors import NotFoundError
 from app.shared.serialization import number_to_float
@@ -55,9 +60,10 @@ STRUCTURED_FEEDBACK_FIELDS = {
     "would_use_again",
 }
 RECOMMENDATION_FEATURE_FIELDS = {"comfort", "control", "repulsion", "durability"}
+RACKET_CF_ALGORITHM_VERSION = "fyp1_similarity_preferences_community_racket_cf_v11"
 FEEDBACK_ALGORITHM_VERSIONS = {
     "fyp1_similarity_preferences_community_v10",
-    "fyp1_similarity_preferences_community_racket_cf_v11",
+    RACKET_CF_ALGORITHM_VERSION,
 }
 
 
@@ -66,6 +72,7 @@ def _racket_to_dto(racket: Racket) -> RacketOut:
         id=racket.id,
         user_id=racket.user_id,
         nickname=racket.nickname,
+        model_key=canonical_racket_model_key(racket.brand, racket.model),
         brand=racket.brand,
         model=racket.model,
         weight_class=racket.weight_class,
@@ -76,6 +83,26 @@ def _racket_to_dto(racket: Racket) -> RacketOut:
         created_at=racket.created_at.isoformat(),
         updated_at=racket.updated_at.isoformat(),
     )
+
+
+def _resolve_racket_identity(
+    *,
+    model_key: str | None,
+    brand: str,
+    model: str,
+) -> tuple[str, str]:
+    if model_key is not None:
+        standard_model = standard_racket_model_for_key(model_key)
+        if standard_model is None:
+            raise BadRequestError("Unknown standard racket model")
+        return standard_model
+
+    canonical_key = canonical_racket_model_key(brand, model)
+    if canonical_key is None:
+        return brand, model
+    standard_model = standard_racket_model_for_key(canonical_key)
+    assert standard_model is not None
+    return standard_model
 
 
 def _utc(value: datetime) -> datetime:
@@ -219,6 +246,15 @@ def _invalidate_feedback_caches(db: Session) -> None:
     )
 
 
+def _invalidate_user_racket_cache(db: Session, user_id: str) -> None:
+    db.execute(
+        delete(RecommendationScoreCache).where(
+            RecommendationScoreCache.user_id == user_id,
+            RecommendationScoreCache.algorithm_version == RACKET_CF_ALGORITHM_VERSION,
+        )
+    )
+
+
 @router.get("/rackets", response_model=list[RacketOut])
 def list_rackets(
     current_user: CurrentUser = Depends(get_current_customer),
@@ -236,13 +272,30 @@ def list_rackets(
     return [_racket_to_dto(racket) for racket in rackets]
 
 
+@router.get("/racket-models", response_model=list[RacketModelOptionOut])
+def list_racket_models(
+    _: CurrentUser = Depends(get_current_customer),
+) -> list[RacketModelOptionOut]:
+    return [
+        RacketModelOptionOut(key=key, brand=brand, model=model)
+        for key, brand, model in STANDARD_RACKET_MODELS
+    ]
+
+
 @router.post("/rackets", response_model=RacketOut)
 def create_racket(
     payload: CreateRacketPayload,
     current_user: CurrentUser = Depends(get_current_customer),
     db: Session = Depends(get_db, scope="function"),
 ) -> RacketOut:
-    racket = Racket(user_id=current_user.user_id, **payload.model_dump())
+    values = payload.model_dump()
+    model_key = values.pop("model_key")
+    values["brand"], values["model"] = _resolve_racket_identity(
+        model_key=model_key,
+        brand=payload.brand,
+        model=payload.model,
+    )
+    racket = Racket(user_id=current_user.user_id, **values)
     db.add(racket)
     db.flush()
     db.refresh(racket)
@@ -321,7 +374,30 @@ def update_racket(
     db: Session = Depends(get_db, scope="function"),
 ) -> RacketOut:
     racket = _get_owned_racket(db, racket_id, current_user.user_id)
-    for field_name, value in payload.model_dump(exclude_unset=True).items():
+    previous_identity = (racket.brand, racket.model)
+    values = payload.model_dump(exclude_unset=True)
+    model_key = values.pop("model_key", None)
+    if model_key is not None:
+        values["brand"], values["model"] = _resolve_racket_identity(
+            model_key=model_key,
+            brand=racket.brand,
+            model=racket.model,
+        )
+    elif "brand" in values or "model" in values:
+        values["brand"], values["model"] = _resolve_racket_identity(
+            model_key=None,
+            brand=values.get("brand", racket.brand),
+            model=values.get("model", racket.model),
+        )
+    if not values:
+        raise BadRequestError("At least one persisted racket field is required")
+    next_identity = (
+        values.get("brand", racket.brand),
+        values.get("model", racket.model),
+    )
+    if next_identity != previous_identity:
+        _invalidate_user_racket_cache(db, current_user.user_id)
+    for field_name, value in values.items():
         setattr(racket, field_name, value)
     db.flush()
     db.refresh(racket)
@@ -335,6 +411,7 @@ def delete_racket(
     db: Session = Depends(get_db, scope="function"),
 ) -> MessageResponse:
     racket = _get_owned_racket(db, racket_id, current_user.user_id)
+    _invalidate_user_racket_cache(db, current_user.user_id)
     db.delete(racket)
     db.flush()
     return MessageResponse(message="Racket deleted")

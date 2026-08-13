@@ -414,6 +414,7 @@ export interface BackendBookingConversation {
 
 export interface BackendCreateRacketPayload {
   nickname: string;
+  model_key?: string | null;
   brand: string;
   model: string;
   weight_class?: string | null;
@@ -425,6 +426,7 @@ export interface BackendCreateRacketPayload {
 
 export interface BackendUpdateRacketPayload {
   nickname?: string;
+  model_key?: string | null;
   brand?: string;
   model?: string;
   weight_class?: string | null;
@@ -438,6 +440,7 @@ export interface BackendRacket {
   id: string;
   user_id: string;
   nickname: string;
+  model_key: string | null;
   brand: string;
   model: string;
   weight_class: string | null;
@@ -447,6 +450,12 @@ export interface BackendRacket {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface BackendRacketModelOption {
+  key: string;
+  brand: string;
+  model: string;
 }
 
 export type BackendFeedbackSentimentTag =

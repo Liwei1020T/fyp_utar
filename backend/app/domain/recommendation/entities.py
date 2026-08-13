@@ -93,7 +93,7 @@ class RacketRecommendationContext:
     racket_id: str
     brand: str
     model: str
-    model_key: str
+    model_key: str | None
     target_tension: float
 
 

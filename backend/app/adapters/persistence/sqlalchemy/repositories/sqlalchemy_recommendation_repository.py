@@ -29,7 +29,7 @@ from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationInteraction
 from app.domain.recommendation.entities import RacketRecommendationContext
 from app.domain.recommendation.entities import UserPreferenceVectorEntry
-from app.domain.recommendation.learning_signals import normalize_racket_model_key
+from app.domain.recommendation.learning_signals import canonical_racket_model_key
 from app.shared.serialization import number_to_float
 
 
@@ -105,14 +105,11 @@ class SqlAlchemyRecommendationRepository:
         ).scalar_one_or_none()
         if racket is None:
             return None
-        model_key = normalize_racket_model_key(racket.brand, racket.model)
-        if model_key is None:
-            return None
         return RacketRecommendationContext(
             racket_id=racket.id,
             brand=racket.brand,
             model=racket.model,
-            model_key=model_key,
+            model_key=canonical_racket_model_key(racket.brand, racket.model),
             target_tension=target_tension,
         )
 
@@ -129,7 +126,7 @@ class SqlAlchemyRecommendationRepository:
                 feedback_id=feedback.id,
                 user_id=feedback.user_id,
                 catalog_id=booking.string_id,
-                racket_model_key=normalize_racket_model_key(
+                racket_model_key=canonical_racket_model_key(
                     booking.racket_brand, booking.racket_model
                 ),
                 ratings={
@@ -158,7 +155,7 @@ class SqlAlchemyRecommendationRepository:
         rows = self.db.execute(query).all()
         interactions: list[RecommendationInteraction] = []
         for booking, profile, completed in rows:
-            model_key = normalize_racket_model_key(
+            model_key = canonical_racket_model_key(
                 booking.racket_brand, booking.racket_model
             )
             if model_key is None or completed is None:

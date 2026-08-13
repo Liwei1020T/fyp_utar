@@ -8,6 +8,7 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { RacketModelSelector } from '../../../components/rackets/RacketModelSelector';
 import {
   useAppStore,
   useBackendAccessToken,
@@ -18,10 +19,12 @@ import {
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendRacketToRacketPassport } from '../../../services/backendMappers';
 import { formatDateTime } from '../../../lib/formatters';
+import type { BackendRacketModelOption } from '../../../types/backend';
 import type { RacketPassport } from '../../../types/domain';
 
 interface RacketEditFields {
   nickname: string;
+  modelKey: string | null;
   brand: string;
   model: string;
   weightClass: string;
@@ -34,6 +37,7 @@ interface RacketEditFields {
 function editFieldsFor(racket: RacketPassport): RacketEditFields {
   return {
     nickname: racket.nickname,
+    modelKey: racket.modelKey,
     brand: racket.brand,
     model: racket.model,
     weightClass:
@@ -182,6 +186,28 @@ export default function RacketPassportDetailScreen() {
     );
   };
 
+  const selectEditModel = (option: BackendRacketModelOption | null) => {
+    setEditFields((current) => {
+      if (!current) {
+        return current;
+      }
+      if (option) {
+        return {
+          ...current,
+          modelKey: option.key,
+          brand: option.brand,
+          model: option.model,
+        };
+      }
+      return {
+        ...current,
+        modelKey: null,
+        brand: current.modelKey === null ? current.brand : '',
+        model: current.modelKey === null ? current.model : '',
+      };
+    });
+  };
+
   const saveRacket = async () => {
     if (!token || !editFields) {
       setSaveError('A live player login is required to edit this passport.');
@@ -201,6 +227,7 @@ export default function RacketPassportDetailScreen() {
     try {
       const response = await backendApi.updateRacket(token, racket.id, {
         nickname: editFields.nickname.trim(),
+        model_key: editFields.modelKey,
         brand: editFields.brand.trim(),
         model: editFields.model.trim(),
         weight_class: editFields.weightClass.trim() || null,
@@ -355,18 +382,27 @@ export default function RacketPassportDetailScreen() {
               onChangeText={(value) => patchEditField('nickname', value)}
               maxLength={80}
             />
-            <AppInput
-              label="Brand"
-              value={editFields.brand}
-              onChangeText={(value) => patchEditField('brand', value)}
-              maxLength={100}
+            <RacketModelSelector
+              token={token}
+              selectedKey={editFields.modelKey}
+              onSelect={selectEditModel}
             />
-            <AppInput
-              label="Model"
-              value={editFields.model}
-              onChangeText={(value) => patchEditField('model', value)}
-              maxLength={100}
-            />
+            {editFields.modelKey === null ? (
+              <>
+                <AppInput
+                  label="Brand"
+                  value={editFields.brand}
+                  onChangeText={(value) => patchEditField('brand', value)}
+                  maxLength={100}
+                />
+                <AppInput
+                  label="Model"
+                  value={editFields.model}
+                  onChangeText={(value) => patchEditField('model', value)}
+                  maxLength={100}
+                />
+              </>
+            ) : null}
             <AppInput
               label="Weight class"
               value={editFields.weightClass}

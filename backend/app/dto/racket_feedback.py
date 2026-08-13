@@ -20,6 +20,7 @@ class CreateRacketPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     nickname: str = Field(min_length=1, max_length=80)
+    model_key: str | None = Field(default=None, min_length=1, max_length=200)
     brand: str = Field(min_length=1, max_length=100)
     model: str = Field(min_length=1, max_length=100)
     weight_class: str | None = Field(default=None, min_length=1, max_length=30)
@@ -33,6 +34,7 @@ class UpdateRacketPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     nickname: str | None = Field(default=None, min_length=1, max_length=80)
+    model_key: str | None = Field(default=None, min_length=1, max_length=200)
     brand: str | None = Field(default=None, min_length=1, max_length=100)
     model: str | None = Field(default=None, min_length=1, max_length=100)
     weight_class: str | None = Field(default=None, min_length=1, max_length=30)
@@ -58,6 +60,7 @@ class RacketOut(BaseModel):
     id: str
     user_id: str
     nickname: str
+    model_key: str | None
     brand: str
     model: str
     weight_class: str | None
@@ -67,6 +70,12 @@ class RacketOut(BaseModel):
     notes: str | None
     created_at: str
     updated_at: str
+
+
+class RacketModelOptionOut(BaseModel):
+    key: str
+    brand: str
+    model: str
 
 
 class CreateFeedbackPayload(BaseModel):

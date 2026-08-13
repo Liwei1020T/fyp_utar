@@ -5,8 +5,13 @@ from datetime import timedelta
 from datetime import timezone
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy import update
 
+from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
+    SqlAlchemyRecommendationRepository,
+)
 from app.adapters.persistence.sqlalchemy.models.booking import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.domain.booking.enums import BookingStatus
@@ -90,6 +95,96 @@ def create_booking(token: str, racket_id: str) -> dict[str, object]:
     return response.json()
 
 
+def test_standard_racket_catalog_and_server_owned_identity() -> None:
+    token = register_customer(
+        username="racket-catalog-owner",
+        phone_number="+60121110020",
+    )
+
+    assert client.get("/api/racket-models").status_code == 401
+    catalog_response = client.get("/api/racket-models", headers=headers(token))
+    assert catalog_response.status_code == 200
+    catalog = catalog_response.json()
+    assert len(catalog) == 6
+    assert len({item["key"] for item in catalog}) == len(catalog)
+
+    model_key = "yonex:astrox 88d pro"
+    standard_response = client.post(
+        "/api/rackets",
+        headers=headers(token),
+        json={
+            "nickname": "Server canonical frame",
+            "model_key": model_key,
+            "brand": "Spoofed brand",
+            "model": "Spoofed model",
+        },
+    )
+    assert standard_response.status_code == 200
+    standard = standard_response.json()
+    assert standard["model_key"] == model_key
+    assert standard["brand"] == "Yonex"
+    assert standard["model"] == "Astrox 88D Pro"
+
+    with SessionLocal() as db:
+        db.add(
+            RecommendationScoreCache(
+                user_id=str(standard["user_id"]),
+                catalog_id=first_string_id(token),
+                algorithm_version=(
+                    "fyp1_similarity_preferences_community_racket_cf_v11"
+                ),
+                final_score=0.9,
+                rank_position=1,
+                rationale={},
+            )
+        )
+        db.commit()
+    changed_model = client.patch(
+        f"/api/rackets/{standard['id']}",
+        headers=headers(token),
+        json={"model_key": "yonex:arcsaber 11 pro"},
+    )
+    assert changed_model.status_code == 200
+    assert changed_model.json()["model"] == "Arcsaber 11 Pro"
+    with SessionLocal() as db:
+        assert db.execute(select(RecommendationScoreCache)).scalar_one_or_none() is None
+
+    unknown_response = client.post(
+        "/api/rackets",
+        headers=headers(token),
+        json={
+            "nickname": "Unknown key",
+            "model_key": "yonex:not-a-real-model",
+            "brand": "Yonex",
+            "model": "Not a real model",
+        },
+    )
+    assert unknown_response.status_code == 400
+
+    custom_response = client.post(
+        "/api/rackets",
+        headers=headers(token),
+        json={
+            "nickname": "Custom frame",
+            "model_key": None,
+            "brand": "Apacs",
+            "model": "Z-Ziggler",
+        },
+    )
+    assert custom_response.status_code == 200
+    custom = custom_response.json()
+    assert custom["model_key"] is None
+
+    with SessionLocal() as db:
+        context = SqlAlchemyRecommendationRepository(db).get_owned_racket_context(
+            user_id=str(custom["user_id"]),
+            racket_id=str(custom["id"]),
+            target_tension=26,
+        )
+    assert context is not None
+    assert context.model_key is None
+
+
 def complete_booking(admin_token: str, booking_id: str) -> None:
     for status in ("in_progress", "ready_for_collection", "completed"):
         response = client.patch(
@@ -113,6 +208,7 @@ def test_racket_crud_ownership_and_booking_snapshot() -> None:
     assert client.get("/api/rackets").status_code == 401
     racket = create_racket(owner_token)
     racket_id = str(racket["id"])
+    assert racket["model_key"] == "yonex:astrox 88d pro"
 
     list_response = client.get("/api/rackets", headers=headers(owner_token))
     assert list_response.status_code == 200

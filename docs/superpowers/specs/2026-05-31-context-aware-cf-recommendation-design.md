@@ -12,7 +12,8 @@
 | Active CF algorithm | `fyp1_similarity_preferences_community_racket_cf_v11` |
 | Current CF status | Guarded enablement above three exact-model supporting users |
 | Implementation status | Scoring, fallback, audit, cache versioning, and demo evaluation implemented |
-| Racket similarity status | Exact normalized model matching active; fuzzy cross-model similarity deferred |
+| Racket similarity status | Exact normalized model matching active; fuzzy cross-model similarity is an explicit non-goal |
+| Racket identity input | Authenticated six-model server catalogue and mobile selector implemented; `Other model` is global-only |
 | CF weight status | Automatically recalculated from distinct supporting users; automatic policy tuning deferred |
 
 This document replaces the earlier design in which racket similarity was only a
@@ -111,6 +112,33 @@ collaborative_filtering_used = false  for profile-only or sparse fallback
 
 Persisted recommendation evidence includes the raw CF score, distinct supporting
 users, automatically calculated weight, source version, and fallback reason.
+
+Racket Passport create/edit now obtains the six FYP standard models from the
+authenticated `GET /api/racket-models` endpoint and submits the selected
+server-owned `model_key`. The backend rejects unknown keys and replaces any
+client-supplied brand/model display text with the canonical catalogue values.
+Legacy exact text is canonicalized for compatibility. A custom `Other model`
+remains valid, but its key is `null`: its feedback contributes globally and its
+cross-user CF weight stays zero instead of guessing a similar model.
+
+### Standard identity acceptance evidence (2026-08-13)
+
+- the authenticated catalogue returned six unique standard keys;
+- a real Expo Web player flow created `Yonex Astrox 88D Pro`, reopened its edit
+  form, and exposed `Other model` inputs only after that option was selected;
+- a second PostgreSQL user submitted the same key with spoofed display text and
+  the backend stored the canonical `Yonex / Astrox 88D Pro` identity;
+- both distinct users received `yonex:astrox 88d pro` in V11 rationale;
+- with the same profile and 26 lbs target, both users received the same top-three
+  order (`yonex-exbolt-63`, `kumpoo-js-63`, `gosen-ryzonic-65`);
+- current candidate support remained below the three-user gate, so both runs
+  truthfully recorded `cf_weight=0` and
+  `insufficient_distinct_supporting_users` instead of claiming learned accuracy;
+- an unknown submitted `model_key` returned HTTP 400.
+
+This evidence proves deterministic identity and fallback behaviour. It does not
+claim production CF accuracy; that still requires enough independent completed
+interactions per exact model/string candidate.
 
 ### Historical pre-V11 data sufficiency snapshot
 
@@ -504,8 +532,9 @@ feature outcome evidence only once.
 
 1. A recommendation cannot use another player's `racket_id`.
 2. No selected racket returns the exact base ordering and scores.
-3. Racket identity normalization handles case, punctuation, and whitespace only.
-4. Same brand or fuzzy model text alone contributes no cross-model support.
+3. Every standard catalogue key matches the normalized canonical brand/model.
+4. Unknown keys are rejected; custom and fuzzy model text contributes globally
+   but never creates cross-model CF support.
 5. Only approved completed bookings enter CF.
 6. Repeat interactions from one user are reduced before cross-user support.
 7. A completed booking is never converted into a satisfaction rating.
@@ -524,6 +553,10 @@ feature outcome evidence only once.
 ## Acceptance Criteria
 
 - [x] The recommendation request identifies the selected owned racket.
+- [x] Standard Racket Passports use a server-validated catalogue key across
+      different users and clients.
+- [x] Custom `Other model` rackets remain usable through exact base/global
+      fallback with no inferred CF neighbor.
 - [x] Every racket-aware result records an immutable racket context snapshot.
 - [x] CF interactions are approved completed bookings only.
 - [x] The model learns exact racket-model/string behavior; it does not infer
@@ -539,10 +572,15 @@ feature outcome evidence only once.
 - [x] FYP demo activation uses labelled synthetic evaluation separated from
       production-quality claims.
 
+## Explicit Non-Goal
+
+Fuzzy physical-racket or learned cross-model similarity is not planned for the
+FYP. Exact normalized brand/model matching is the final supported racket identity
+tier and this item must not be reported as unfinished work.
+
 ## Deferred Work
 
 - learned racket embeddings or neural collaborative filtering;
-- fuzzy physical-racket similarity;
 - a full manufacturer racket-specification database;
 - persisted aggregate/materialized-view tables;
 - simultaneous cached shortlists for several rackets;
@@ -560,9 +598,11 @@ exact-model, shadow-first design is insufficient.
    racket-aware recommendation.
 2. Exact normalized brand/model matching is the only cross-user racket
    identity tier in v1.
-3. V11 uses `CF_MIN_SUPPORTING_USERS=3`, `CF_SHRINKAGE_K=10`,
+3. Only the six server-catalogued FYP models receive a cross-user key; custom
+   rackets use global community evidence and zero CF weight.
+4. V11 uses `CF_MIN_SUPPORTING_USERS=3`, `CF_SHRINKAGE_K=10`,
    `CF_MAX_WEIGHT=0.20`, and a 4 lb tension window as reviewable demo policy.
-4. The activation gate keeps real-data metrics separate from
+5. The activation gate keeps real-data metrics separate from
    labelled test/demo fixtures.
-5. Algorithm versions remain staged: v10 outcome calibration, then v11 enabled
+6. Algorithm versions remain staged: v10 outcome calibration, then v11 enabled
    racket-conditioned CF.

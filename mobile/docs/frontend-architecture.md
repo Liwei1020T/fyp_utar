@@ -481,6 +481,8 @@ The profile captures recommendation preferences, while retention modules use liv
 - profile and priorities
 - budget tier, preferred feel, and recent goal now persist through the backend profile contract
 - owned physical racket passports and completed linked service history
+- server-catalogued standard racket identity selection with an explicit custom
+  `Other model` fallback; only the backend-issued key enables exact-model CF
 - wallet top-up and balance
 - notifications and preferences
 

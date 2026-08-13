@@ -21,14 +21,15 @@ review gates.
 
 | Capability | Status | Current behaviour | Remaining scope |
 | --- | --- | --- | --- |
-| Fuzzy racket similarity | **Not implemented; deliberately deferred** | V11 normalizes case, Unicode, punctuation, and whitespace, then requires the exact `brand:model` key. It never borrows evidence from a merely similar racket model. | Add only after real interaction data can validate a defensible cross-model similarity rule. |
+| Fuzzy racket similarity | **Explicit non-goal; not planned** | V11 normalizes case, Unicode, punctuation, and whitespace, then requires the exact `brand:model` key. It never borrows evidence from a merely similar racket model. | None. Cross-model fuzzy inference is outside the FYP scope. |
+| Standard racket identity | **Implemented** | Racket Passport create/edit uses an authenticated six-model backend catalogue. The server validates `model_key`, canonicalizes display values, and maps `Other model` to global-only evidence. | Expand the catalogue only when the FYP cohort intentionally adds a verified model. |
 | Automatic CF weight adjustment | **Implemented** | Each candidate recalculates its CF weight from the current distinct supporting-user count: `0` below three users, otherwise `min(0.20, 0.20 * n / (n + 10))`. The applied weight, confidence, support count, policy version, and fallback reason are stored in recommendation evidence. | Automated tuning of the fixed threshold, shrinkage constant, or maximum weight remains deferred. |
-| Feedback anti-abuse, deletion, and moderation | **Partially implemented** | Existing safeguards require an authenticated booking owner, a completed booking, one feedback row per booking, 1-to-5 validation, delayed durability, approved strings, per-user averaging, bounded influence, and PII-free aggregate output. Owners can update their feedback. | There is no feedback-delete endpoint, report/flag workflow, admin moderation state/queue, account reputation, or anomaly/fraud detector. |
+| Feedback safeguards and governance | **Baseline safeguards implemented; advanced governance is an explicit non-goal** | Existing safeguards require an authenticated booking owner, a completed booking, one feedback row per booking, 1-to-5 validation, delayed durability, approved strings, per-user averaging, bounded influence, and PII-free aggregate output. Owners can update their feedback. | None for FYP. Feedback deletion, reporting, moderation queues, reputation, and anomaly detection are not planned. |
 
 These statuses must not be shortened to “all three are unfinished.” The active
 system already contains dynamic CF weighting and baseline feedback abuse
-controls; only fuzzy cross-model inference and the advanced feedback-governance
-features remain unimplemented.
+controls. Fuzzy cross-model inference and advanced feedback governance are
+explicit non-goals, not unfinished backlog items.
 
 ## Decision Summary
 
@@ -195,8 +196,8 @@ and integration validation are required release checks.
 - Overwriting historical `community_rating` or `review_count` catalog fields
 - Adjusting all nine core features when the feedback form has evidence for
   only four
-- Building fraud detection, reputation scoring, queues, stream processing, or a
-  data warehouse before real usage requires them
+- Building feedback deletion/reporting/moderation, fraud detection, reputation
+  scoring, queues, stream processing, or a data warehouse for the FYP
 
 ## Terminology and Data Ownership
 
@@ -403,9 +404,8 @@ The endpoint exists mainly so a player can add durability later. It must:
   removal of a previously eligible value;
 - leave previous recommendation runs immutable.
 
-Deleting feedback is not implemented. If it is added later, owner/admin
-authorization, audit history, the same cache invalidation, and deterministic
-source-version rules are required.
+Deleting feedback is not implemented and is an explicit FYP non-goal. The owner
+update endpoint is the supported correction path for submitted feedback.
 
 ### Community summary
 
@@ -544,9 +544,9 @@ A feedback row contributes only when:
   status-history completion timestamp.
 
 Every eligible row may enter the global string aggregate. It enters an exact
-racket-model aggregate only when both booking snapshot fields normalize to a
-non-empty model key. Missing racket identity never falls into a made-up
-`unknown-racket` cohort.
+racket-model aggregate only when the booking snapshot maps to one of the six
+server-catalogued FYP model keys. Missing and custom racket identity never falls
+into a made-up `unknown-racket` cohort and never shares a `null` context bucket.
 
 Service ratings, text, tags, recommendation relevance, and tension satisfaction
 never enter the physical-feature aggregate.
@@ -866,8 +866,8 @@ rename the existing service average to a string-performance score.
   source-version hashing.
 - No claim of anonymity should be shown in the raw admin view because admins can
   currently see customer identity.
-- No advanced fraud model is added in v1. Add abuse controls only if verified
-  booking abuse appears in real data.
+- No advanced fraud model, deletion/report workflow, or moderation queue is
+  planned for the FYP. The controls above are the final FYP abuse boundary.
 
 ## Failure Behaviour
 
@@ -972,9 +972,10 @@ community weight. These panels are read-only and do not alter scorer logic.
 11. Explicitly confirming, replacing, or clearing one structured field updates
     only that field's provenance.
 12. Repeated bookings by one user are averaged before cross-user aggregation.
-13. Racket normalization reconciles case, punctuation, and whitespace but does
-    not fuzzy-match different models.
-14. Missing racket identity contributes to global evidence only.
+13. Standard racket keys are server-validated and canonical across users;
+    unknown submitted keys are rejected.
+14. Missing or custom racket identity contributes to global evidence only and
+    never creates a shared null-racket context.
 15. Exact-model evidence is selected when available; otherwise scoring falls
     back to global string evidence.
 16. One score never applies the same feedback globally and contextually.
@@ -1041,6 +1042,8 @@ The design is complete when all of the following are true:
       can contribute.
 - [x] Only the approved 12 strings are aggregated.
 - [x] Repeat bookings are first averaged per user and evidence scope.
+- [x] Standard Racket Passports use the authenticated backend catalogue and a
+      server-owned canonical model key.
 - [x] Exact normalized racket-model evidence is used only for the selected
       racket; otherwise scoring falls back to global string evidence.
 - [x] Missing or fuzzy racket identity never creates inferred physical
@@ -1074,6 +1077,19 @@ If active V11 produces unacceptable recommendation changes:
 The raw feedback collection improvements can remain active even if community
 calibration is disabled.
 
+## Explicit Non-Goals
+
+The following are closed FYP scope decisions and must not be reported as
+unfinished work:
+
+- fuzzy or learned cross-model racket similarity; exact normalized-model
+  matching remains the only racket identity tier;
+- feedback deletion, reporting, and admin moderation workflows; owner feedback
+  update and the read-only admin evidence view remain active;
+- account reputation, anomaly detection, and coordinated-abuse detection; the
+  existing booking ownership, uniqueness, per-user averaging, and bounded-weight
+  safeguards remain active.
+
 ## Deferred or Partial Work
 
 The following are deliberately deferred:
@@ -1082,14 +1098,7 @@ The following are deliberately deferred:
 - local signals for sound, elasticity, tension retention, and string movement;
 - per-string cache invalidation;
 - persisted aggregate/materialized views;
-- fuzzy or learned cross-model racket similarity; exact normalized-model
-  matching is already active;
 - historically complete racket weight/balance snapshots;
-- account reputation, anomaly detection, or coordinated-abuse detection; the
-  completed-booking, one-row-per-booking, per-user-average, and bounded-weight
-  safeguards are already active;
-- feedback deletion, reporting, and admin moderation workflows; owner feedback
-  update is already active;
 - automated tuning of the CF support threshold, shrinkage constant, or maximum
   weight; runtime CF weight adjustment from supporting-user count is already
   active;
@@ -1110,3 +1119,5 @@ recommendation quality shows that the simpler design is insufficient.
    racket identity tier; fuzzy cross-model inference is disabled.
 6. Public catalog summaries remain global while racket-specific evidence appears
    only in authenticated recommendation and admin views.
+7. Fuzzy racket similarity and advanced feedback deletion/moderation are outside
+   the FYP scope and are not future implementation requirements.

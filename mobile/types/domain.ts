@@ -400,6 +400,7 @@ export interface RacketPassport {
   id: string;
   playerId: string;
   nickname: string;
+  modelKey: string | null;
   brand: string;
   model: string;
   weightClass: string;

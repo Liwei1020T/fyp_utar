@@ -10,8 +10,10 @@ from app.domain.recommendation.entities import CommunityFeedbackRow
 from app.domain.recommendation.entities import RecommendationInteraction
 from app.domain.recommendation.learning_signals import build_cf_evidence
 from app.domain.recommendation.learning_signals import build_community_snapshot
+from app.domain.recommendation.learning_signals import canonical_racket_model_key
 from app.domain.recommendation.learning_signals import cf_weight_for_support
 from app.domain.recommendation.learning_signals import normalize_racket_model_key
+from app.domain.recommendation.learning_signals import STANDARD_RACKET_MODELS
 
 
 NOW = datetime(2026, 8, 13, tzinfo=timezone.utc)
@@ -22,6 +24,12 @@ def test_racket_key_normalizes_identity_without_fuzzy_matching() -> None:
     assert normalize_racket_model_key(" YONEX ", "Astrox-88D  Pro") == MODEL_KEY
     assert normalize_racket_model_key("Yonex", "Astrox 88D") != MODEL_KEY
     assert normalize_racket_model_key("Yonex", None) is None
+    assert canonical_racket_model_key(" YONEX ", "Astrox-88D  Pro") == MODEL_KEY
+    assert canonical_racket_model_key("Yonex", "Astrox 88D") is None
+    assert all(
+        normalize_racket_model_key(brand, model) == key
+        for key, brand, model in STANDARD_RACKET_MODELS
+    )
 
 
 def test_community_uses_exact_context_then_global_and_averages_each_user() -> None:
@@ -64,6 +72,17 @@ def test_community_source_version_changes_when_rating_changes() -> None:
         != changed.by_catalog["yonex-bg80"]["control"].source_version
     )
     assert first.snapshot_version != changed.snapshot_version
+
+
+def test_custom_racket_feedback_uses_global_scope() -> None:
+    snapshot = build_community_snapshot(
+        [_feedback("f1", "u1", 5, None)],
+        target_racket_model_key=None,
+    )
+
+    aggregate = snapshot.by_catalog["yonex-bg80"]["control"]
+    assert aggregate.evidence_scope == "global_string"
+    assert aggregate.racket_model_key is None
 
 
 def test_community_snapshot_version_does_not_depend_on_query_order() -> None:
@@ -118,7 +137,7 @@ def _feedback(
     feedback_id: str,
     user_id: str,
     control: int,
-    model_key: str,
+    model_key: str | None,
     *,
     confirmed: bool = True,
 ) -> CommunityFeedbackRow:

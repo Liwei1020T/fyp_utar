@@ -193,6 +193,7 @@ booking update history with a dedicated conversation channel.
 
 ### Rackets and Feedback
 
+- `GET /api/racket-models`
 - `GET /api/rackets`
 - `POST /api/rackets`
 - `GET /api/rackets/{racket_id}`
@@ -201,12 +202,19 @@ booking update history with a dedicated conversation channel.
 - `GET /api/rackets/{racket_id}/history`
 - `GET /api/bookings/{booking_id}/feedback`
 - `POST /api/bookings/{booking_id}/feedback`
+- `PATCH /api/bookings/{booking_id}/feedback`
+- `GET /api/bookings/{booking_id}/feedback-eligibility`
 - `GET /api/admin/feedback`
 - `GET /api/admin/feedback/export`
 
 Rackets are owned physical records with stable IDs. A booking may reference an
 owned racket and keeps the racket brand/model snapshot used at booking time.
 Racket detail history includes only completed bookings for that racket.
+The authenticated racket-model catalogue returns the six standard FYP
+`key/brand/model` identities. Racket create/update accepts an optional
+`model_key`: an unknown key returns `400`, a valid key makes the server's
+canonical brand/model authoritative, and a custom model returns `model_key=null`
+so recommendation uses global community evidence and no cross-model CF.
 Structured feedback is allowed once per owned completed booking, with a
 1-to-5 overall rating plus optional relevance, string, tension, comfort,
 control, repulsion, and durability ratings. Admins can filter the persisted

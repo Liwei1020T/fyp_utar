@@ -151,6 +151,7 @@ Query cache owner.
 | [mobile/components/chat/ChatBubble.tsx](../mobile/components/chat/ChatBubble.tsx) | Chat message bubble. |
 | [mobile/components/payment/PaymentMethodCard.tsx](../mobile/components/payment/PaymentMethodCard.tsx) | Payment option card. |
 | [mobile/components/rackets/RacketPassportCard.tsx](../mobile/components/rackets/RacketPassportCard.tsx) | Racket passport summary card. |
+| [mobile/components/rackets/RacketModelSelector.tsx](../mobile/components/rackets/RacketModelSelector.tsx) | Authenticated standard-model selector with loading, retry, and custom-model fallback. |
 | [mobile/components/analytics/MetricStatCard.tsx](../mobile/components/analytics/MetricStatCard.tsx) | Admin analytics metric card. |
 
 ### Mobile Visual Assets
@@ -210,7 +211,7 @@ unified startup.
 | [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes/payments, wallet ledger, top-ups, and admin verification. |
 | [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
 | [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-support lifecycle and messages. |
-| [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Owned physical rackets and completed-booking feedback. |
+| [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Server-validated standard racket catalogue, owned physical rackets, and completed-booking feedback. |
 | [backend/app/entrypoints/api/routes/media_routes.py](../backend/app/entrypoints/api/routes/media_routes.py) | Time-limited signed access to persisted upload media. |
 
 ### Backend Domains And Use Cases

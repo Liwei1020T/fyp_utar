@@ -947,6 +947,7 @@ export function mapBackendRacketToRacketPassport(
     id: racket.id,
     playerId: racket.user_id,
     nickname: racket.nickname,
+    modelKey: racket.model_key,
     brand: racket.brand,
     model: racket.model,
     weightClass: racket.weight_class ?? 'Not recorded',

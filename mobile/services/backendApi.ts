@@ -40,6 +40,7 @@ import type {
   BackendRecommendationRun,
   BackendRacket,
   BackendRacketDetail,
+  BackendRacketModelOption,
   BackendSendConversationMessagePayload,
   BackendServiceQueue,
   BackendSlot,
@@ -914,6 +915,9 @@ export const backendApi = {
   },
   listRackets(token: string) {
     return requestJson<BackendRacket[]>('/rackets', { token });
+  },
+  listRacketModels(token: string) {
+    return requestJson<BackendRacketModelOption[]>('/racket-models', { token });
   },
   createRacket(token: string, payload: BackendCreateRacketPayload) {
     return requestJson<BackendRacket>('/rackets', {

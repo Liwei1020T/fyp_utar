@@ -26,6 +26,18 @@ CF_MAX_WEIGHT = 0.20
 CF_MIN_SUPPORTING_USERS = 3
 TENSION_SIMILARITY_WINDOW_LBS = 4.0
 
+STANDARD_RACKET_MODELS: tuple[tuple[str, str, str], ...] = (
+    ("li ning:axforce 80", "Li-Ning", "Axforce 80"),
+    ("victor:auraspeed 90k ii", "Victor", "Auraspeed 90K II"),
+    ("victor:thruster ryuga ii", "Victor", "Thruster Ryuga II"),
+    ("yonex:arcsaber 11 pro", "Yonex", "Arcsaber 11 Pro"),
+    ("yonex:astrox 88d pro", "Yonex", "Astrox 88D Pro"),
+    ("yonex:nanoflare 1000 z", "Yonex", "Nanoflare 1000 Z"),
+)
+_STANDARD_RACKET_MODELS_BY_KEY = {
+    key: (brand, model) for key, brand, model in STANDARD_RACKET_MODELS
+}
+
 
 def normalize_racket_model_key(brand: str | None, model: str | None) -> str | None:
     normalized_brand = _normalize_identity_part(brand)
@@ -33,6 +45,18 @@ def normalize_racket_model_key(brand: str | None, model: str | None) -> str | No
     if not normalized_brand or not normalized_model:
         return None
     return f"{normalized_brand}:{normalized_model}"
+
+
+def standard_racket_model_for_key(model_key: str) -> tuple[str, str] | None:
+    return _STANDARD_RACKET_MODELS_BY_KEY.get(model_key)
+
+
+def canonical_racket_model_key(
+    brand: str | None,
+    model: str | None,
+) -> str | None:
+    model_key = normalize_racket_model_key(brand, model)
+    return model_key if model_key in _STANDARD_RACKET_MODELS_BY_KEY else None
 
 
 def cf_weight_for_support(distinct_supporting_users: int) -> float:
@@ -62,7 +86,10 @@ def build_community_snapshot(
         global_buckets[(row.catalog_id, feature, row.user_id)].append(
             (rating, row.feedback_id, confirmed_at)
         )
-        if row.racket_model_key == target_racket_model_key:
+        if (
+            target_racket_model_key is not None
+            and row.racket_model_key == target_racket_model_key
+        ):
             context_buckets[(row.catalog_id, feature, row.user_id)].append(
                 (rating, row.feedback_id, confirmed_at)
             )
