@@ -36,10 +36,12 @@ def reset_unified_backend_db() -> Generator[None, None, None]:
     from app.entrypoints.api.routes.auth_routes import _login_limiter
     from app.entrypoints.api.routes.auth_routes import _reset_limiter
     from app.entrypoints.api.routes.auth_routes import _reset_request_limiter
+    from app.entrypoints.api.routes.agent_routes import _agent_limiter
 
     _login_limiter.clear()
     _reset_request_limiter.clear()
     _reset_limiter.clear()
+    _agent_limiter.clear()
 
     drop_all_tables()
     create_all_tables()

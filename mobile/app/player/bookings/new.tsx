@@ -328,6 +328,23 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     });
   };
 
+  if (requestedStringId && !requestedString && strings.length === 0 && token) {
+    return (
+      <AppScreen
+        title="Loading catalog"
+        subtitle="Checking the selected string against the active catalog."
+        showBackButton
+        onBackPress={() => router.back()}
+      >
+        <AppCard variant="subtle" className="mt-8" padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Please wait while the live catalog is loaded.
+          </HeroText>
+        </AppCard>
+      </AppScreen>
+    );
+  }
+
   if (requestedStringId && !requestedString) {
     return (
       <AppScreen

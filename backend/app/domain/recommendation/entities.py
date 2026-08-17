@@ -50,6 +50,7 @@ class RecommendationResultModel:
 class RecommendationResponseModel:
     algorithm_version: str
     results: list[RecommendationResultModel]
+    run_id: str | None = None
     generated_at: datetime | None = None
 
 
@@ -57,6 +58,7 @@ class RecommendationResponseModel:
 class RecommendationDetailModel:
     algorithm_version: str
     result: RecommendationResultModel
+    run_id: str | None = None
     generated_at: datetime | None = None
 
 

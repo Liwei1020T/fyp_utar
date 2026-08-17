@@ -33,6 +33,7 @@ type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   token?: string | null;
+  expireSessionOnUnauthorized?: boolean;
 };
 
 export function resolveBackendMediaUrl(value?: string | null) {
@@ -48,7 +49,12 @@ export function resolveBackendMediaUrl(value?: string | null) {
 
 async function request<T>(
   path: string,
-  { method = 'GET', body, token }: RequestOptions = {},
+  {
+    method = 'GET',
+    body,
+    token,
+    expireSessionOnUnauthorized = true,
+  }: RequestOptions = {},
   responseType: 'json' | 'text' = 'json',
 ): Promise<T> {
   const controller = new AbortController();
@@ -78,7 +84,7 @@ async function request<T>(
 
     if (!response.ok) {
       const error = json?.error as { message?: string } | undefined;
-      if (token && response.status === 401) {
+      if (token && response.status === 401 && expireSessionOnUnauthorized) {
         sessionExpiredHandler?.(token);
       }
       throw new BackendApiError(

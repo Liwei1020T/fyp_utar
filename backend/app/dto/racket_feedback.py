@@ -68,6 +68,10 @@ class RacketOut(BaseModel):
     grip_size: str | None
     preferred_use: str | None
     notes: str | None
+    service_count: int = 0
+    current_string_id: str | None = None
+    current_tension: float | None = None
+    last_serviced_at: str | None = None
     created_at: str
     updated_at: str
 

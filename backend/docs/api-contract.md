@@ -164,7 +164,15 @@ must never be bundled into the mobile app.
 Alternatively, `OPENWA_ENABLED=true` sends the same persisted delivery through
 the configured self-hosted OpenWA session using the player's account phone
 number. OpenWA and Expo cannot be enabled together; OpenWA requires a
-server-only, session-scoped operator API key.
+server-only, session-scoped operator API key. A category disabled in the
+player's notification preferences is neither shown in the in-app feed nor sent
+through OpenWA.
+
+Completed bookings with no feedback receive a persisted `service` notification
+after 7 days and one final reminder after 10 days. Each notification links to
+`/player/feedback/{booking_id}`, appears in the App feed, uses OpenWA when it is
+enabled, and is not recreated by repeated scheduler runs. Any submitted feedback
+stops later reminders.
 
 ### Account Security and Privacy
 
@@ -179,9 +187,10 @@ in again. Account deletion is an auditable request, not an immediate destructive
 delete. Privacy settings store analytics, personalization, and marketing consent
 independently from the recommendation profile.
 
-### Booking Support Conversations
+### Human Support Conversations
 
 - `GET /api/conversations`
+- `POST /api/conversations/support`
 - `POST /api/bookings/{booking_id}/support`
 - `GET /api/conversations/{conversation_id}`
 - `POST /api/conversations/{conversation_id}/messages`
@@ -193,10 +202,11 @@ independently from the recommendation profile.
 - `POST /api/admin/conversations/{conversation_id}/resolve`
 - `POST /api/admin/conversations/{conversation_id}/close`
 
-Conversation IDs equal their booking IDs. Only explicitly requested booking
-support threads are listed. State is persisted as `waiting_admin`,
-`admin_joined`, `resolved`, or `closed`; messages remain attached to the
-booking update history with a dedicated conversation channel.
+Booking-linked conversation IDs equal their booking IDs. Booking-free support
+uses its own conversation ID and one reusable thread per player. State is
+persisted as `waiting_admin`, `admin_joined`, `resolved`, or `closed`; booking
+messages remain in booking update history, while general messages use their own
+message table.
 
 ### Rackets and Feedback
 
@@ -300,6 +310,10 @@ Public string listing now supports:
 - `gauge_max`
 - `is_hybrid`
 - `search`
+
+Every public string response includes live `available_stock` and
+`availability_status`, so player screens never infer inventory from catalog
+activation.
 
 Inventory responses extend the base string shape with:
 
@@ -442,6 +456,7 @@ Recommendation response:
 ```json
 {
   "algorithm_version": "fyp1_similarity_preferences_community_racket_cf_v11",
+  "run_id": "recommendation-run-uuid",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
     {
@@ -541,6 +556,61 @@ The returned `algorithm_version` is read from the cached recommendation row, not
 `GET /api/admin/recommendations/runs` returns persisted recommendation run history with item-level score rows.
 
 `GET /api/admin/recommendations/runs/{run_id}` returns one persisted recommendation run with its full item-level score rows and rationale payloads.
+
+### Grounded Player And Admin Agent
+
+- `POST /api/agent/query`
+
+This authenticated endpoint serves the player chatbot, recommendation
+explanation page, and admin assistant. Recommendation explanation context requires
+both the exact `run_id` and `catalog_id`; the backend rejects a run belonging to
+another player.
+
+```json
+{
+  "message": "Why was BG80 recommended to me?",
+  "context": {
+    "surface": "recommendation_explanation",
+    "run_id": "recommendation-run-uuid",
+    "catalog_id": "yonex-bg80"
+  },
+  "conversation_history": []
+}
+```
+
+The response retains a validated answer, summary, evidence status, suggested
+questions/actions, and a source list constructed by the backend. The reduced
+mobile UI hides source and suggested-question chips, while server-side provenance
+remains available for audit. DeepSeek output cannot supply or override the source
+list, and resource actions with identifiers absent from verified data are dropped.
+
+The active FYP player tools cover string details, V11 What-if previews, and
+verified in-stock alternatives. Exact owned recommendation-run and string context
+is preloaded by the backend for the explanation surface without exposing a
+general run-lookup tool to the model. Guided previews may apply a temporary RM
+budget and do not update the saved profile or recommendation cache. Completed
+comparison, review, store, booking, latest-recommendation, and human-handoff code
+remains preserved but inactive.
+
+Provider configuration is server-only. With `AGENT_ENABLED=false` or a missing
+key, the endpoint returns `503`; no model fallback invents an explanation.
+
+An authenticated admin uses the same endpoint with:
+
+```json
+{
+  "message": "Summarize today's operations.",
+  "context": {"surface": "admin_assistant"},
+  "conversation_history": []
+}
+```
+
+Player and admin surfaces have separate role checks and tool allowlists. The
+active admin allowlist exposes only the read-only current operations summary and
+returns no actions. Completed booking, inventory, payment, and support lookup
+tools plus booking-status, stock-count, and support-reply handlers remain
+preserved behind commented inactive registrations. Re-enable all matching tool,
+action, prompt, mobile, test, and documentation entries together.
 
 ### Bookings
 

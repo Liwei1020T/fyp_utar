@@ -85,6 +85,11 @@ def normalize_catalog_name(brand: str, model_name: str) -> str:
     )
 
 
+def normalize_catalog_text(value: str) -> str:
+    """Keep generated catalog prose free of duplicated sentence punctuation."""
+    return re.sub(r"\.{2,}", ".", value.strip())
+
+
 def catalog_source_path(source_path: Path) -> Path:
     if source_path.exists() and source_path.suffix.lower() == ".json":
         return source_path
@@ -190,8 +195,8 @@ def approved_row_to_values(
             "material_summary_en": as_string(row.get("material_summary_en")),
             "image_url": None,
             "color_options_en": list(row.get("color_options_en") or []),
-            "short_description": str(row["short_description"]).strip(),
-            "full_description": str(row["full_description"]).strip(),
+            "short_description": normalize_catalog_text(str(row["short_description"])),
+            "full_description": normalize_catalog_text(str(row["full_description"])),
             "official_performance_status": as_string(
                 row.get("official_performance_status")
             )
@@ -318,6 +323,10 @@ def merge_with_approved_defaults(
         else defaults["catalog"]["display_name"]
     )
     catalog_values["model_name"] = model_name.strip()
+    for field_name in ("short_description", "full_description"):
+        catalog_values[field_name] = normalize_catalog_text(
+            str(catalog_values[field_name])
+        )
     return {**defaults, "catalog": catalog_values, "normalized_name": normalized_name}
 
 

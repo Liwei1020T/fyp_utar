@@ -34,6 +34,9 @@ Key variables:
   notification channel; do not enable it together with Expo push
 - `OPENWA_BASE_URL`, `OPENWA_SESSION_ID`, `OPENWA_API_KEY`: OpenWA REST endpoint
   and session-scoped operator credential
+- `AGENT_ENABLED`, `AGENT_API_KEY`: enable the authenticated FYP-scoped player
+  Agent and read-only admin summary, using a server-only DeepSeek credential
+- `AGENT_MODEL`: defaults to the selected `deepseek-v4-flash` model
 - `SEED_ADMIN_*`: optional admin seed controls; enabling them requires a valid
   username, 9-to-15-digit phone number, and password
 
@@ -50,13 +53,15 @@ Legacy AI env vars such as `AI_INTERNAL_API_KEY` are only needed if you still ru
 
 Keep `EXPO_ACCESS_TOKEN` in the deployment secret store or untracked
 `backend/.env`. Never put it in the mobile app or use an `EXPO_PUBLIC_*` name.
-The same server-only rule applies to `OPENWA_API_KEY`.
+The same server-only rule applies to `OPENWA_API_KEY` and `AGENT_API_KEY`; never
+expose either through an `EXPO_PUBLIC_*` mobile variable.
 
 For an FYP-only WhatsApp channel, run the self-hosted OpenWA `v0.11.1`, create
 and connect one session in its dashboard, mint a session-scoped operator key,
 then set `OPENWA_ENABLED=true`. StringSense sends only the notification title
 and body to `POST /api/sessions/{sessionId}/messages/send-text`; the in-app
-notification remains the audit source of truth if OpenWA is unavailable.
+notification remains the audit source of truth if OpenWA is unavailable. Player
+category preferences apply to both the in-app feed and OpenWA delivery.
 
 ## Local Postgres
 
@@ -158,6 +163,7 @@ Public unified Python endpoints:
 - `POST /api/recommendations/generate`
 - `GET /api/recommendations/{user_id}`
 - `GET /api/recommendations/{user_id}/{catalog_id}`
+- `POST /api/agent/query`
 - `GET /api/admin/strings`
 - `POST /api/admin/strings`
 - `PUT /api/admin/strings/{id}`

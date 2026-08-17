@@ -162,7 +162,7 @@ export default function PlayerChatDetailScreen() {
       <AppScreen
         headerVariant="secondary"
         title="Conversation unavailable"
-        subtitle="Return to booking support or retry this exact conversation link."
+        subtitle="Return to human support or retry this exact conversation link."
         showBackButton
         onBackPress={() => router.back()}
       >
@@ -176,7 +176,7 @@ export default function PlayerChatDetailScreen() {
               : error ??
                 (conversationId
                   ? 'This conversation does not exist or is not available to this player.'
-                  : 'The conversation link is missing its booking identifier.')}
+                  : 'The conversation link is missing its support identifier.')}
           </HeroText>
           <View className="mt-4 gap-3">
             {!isLoading && token && conversationId ? (
@@ -187,7 +187,7 @@ export default function PlayerChatDetailScreen() {
               />
             ) : null}
             <AppButton
-              label="Back to booking support"
+              label="Back to human support"
               onPress={() => router.replace('/player/chat')}
             />
           </View>
@@ -204,7 +204,11 @@ export default function PlayerChatDetailScreen() {
     <AppScreen
       headerVariant="secondary"
       title={conversation.title}
-      subtitle="Player and shop replies are persisted in the linked booking."
+      subtitle={
+        conversation.bookingId
+          ? 'Player and shop replies are persisted in the linked booking.'
+          : 'Player and shop replies are persisted in a general support thread.'
+      }
       showBackButton
       onBackPress={() => router.back()}
     >
@@ -268,7 +272,7 @@ export default function PlayerChatDetailScreen() {
           {conversation.messages.length === 0 ? (
             <AppCard variant="subtle" padding="md">
               <HeroText className="text-sm leading-6 text-neutral-600">
-                No messages yet. Send the first booking support message below.
+                No messages yet. Send the first support message below.
               </HeroText>
             </AppCard>
           ) : null}

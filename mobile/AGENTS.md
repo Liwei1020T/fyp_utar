@@ -50,7 +50,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Player workspace: `app/player/(tabs)` plus detail flows under `app/player/**`
   Covers recommendation, catalog, booking, tracking, profile, booking support, payment, wallet, racket history, notifications, check-in, and feedback.
 - Admin workspace: `app/admin/(tabs)` plus operations screens under `app/admin/**`
-  Covers dashboard, bookings, recommendation audit, inventory, business hours, check-in, support chat, analytics, payments, service queue, and settings.
+  Covers dashboard, read-only operations-summary Admin AI, bookings, recommendation audit, inventory, business hours, check-in, support chat, analytics, payments, service queue, and settings.
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
 - Admin inventory components: `components/admin/inventory/**`

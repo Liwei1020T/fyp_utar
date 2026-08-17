@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Platform, Pressable, View } from 'react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { AppButton } from '../../components/ui/AppButton';
@@ -97,6 +97,31 @@ export default function PlayerSettingsScreen() {
 
   const submitDeletionRequest = () => {
     if (!token) return;
+    const submit = () => {
+      setBusyAction('delete');
+      setMessage(null);
+      void backendApi
+        .requestAccountDeletion(token, deletionReason)
+        .then(() => setMessage('Account deletion request submitted for review.'))
+        .catch((error: unknown) =>
+          setMessage(
+            error instanceof BackendApiError
+              ? error.message
+              : 'Failed to submit deletion request.',
+          ),
+        )
+        .finally(() => setBusyAction(null));
+    };
+    if (Platform.OS === 'web') {
+      if (
+        globalThis.confirm?.(
+          'Request account deletion?\n\nThe admin will review this request. Your account is not deleted immediately.',
+        )
+      ) {
+        submit();
+      }
+      return;
+    }
     Alert.alert(
       'Request account deletion?',
       'The admin will review this request. Your account is not deleted immediately.',
@@ -105,23 +130,7 @@ export default function PlayerSettingsScreen() {
         {
           text: 'Submit request',
           style: 'destructive',
-          onPress: () => {
-            setBusyAction('delete');
-            setMessage(null);
-            void backendApi
-              .requestAccountDeletion(token, deletionReason)
-              .then(() =>
-                setMessage('Account deletion request submitted for review.'),
-              )
-              .catch((error: unknown) =>
-                setMessage(
-                  error instanceof BackendApiError
-                    ? error.message
-                    : 'Failed to submit deletion request.',
-                ),
-              )
-              .finally(() => setBusyAction(null));
-          },
+          onPress: submit,
         },
       ],
     );

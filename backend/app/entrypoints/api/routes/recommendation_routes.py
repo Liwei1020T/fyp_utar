@@ -118,6 +118,7 @@ def get_cached_recommendation_detail(
     return recommendation_detail_to_dto(
         algorithm_version=result.algorithm_version,
         result=result.result,
+        run_id=result.run_id,
         generated_at=result.generated_at,
     )
 

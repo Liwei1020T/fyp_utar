@@ -64,6 +64,7 @@ class RecommendationResponseDto(BaseModel):
 
     algorithm_version: str
     results: list[RecommendationResultDto]
+    run_id: str | None = None
     generated_at: str | None = None
 
 
@@ -72,6 +73,7 @@ class RecommendationDetailDto(BaseModel):
 
     algorithm_version: str
     result: RecommendationResultDto
+    run_id: str | None = None
     generated_at: str | None = None
 
 
@@ -153,6 +155,7 @@ def recommendation_response_to_dto(
     return RecommendationResponseDto(
         algorithm_version=response.algorithm_version,
         results=[recommendation_result_to_dto(item) for item in response.results],
+        run_id=response.run_id,
         generated_at=isoformat_or_none(response.generated_at),
     )
 
@@ -180,11 +183,13 @@ def recommendation_detail_to_dto(
     *,
     algorithm_version: str,
     result: RecommendationResultModel,
+    run_id: str | None = None,
     generated_at: datetime | None = None,
 ) -> RecommendationDetailDto:
     return RecommendationDetailDto(
         algorithm_version=algorithm_version,
         result=recommendation_result_to_dto(result),
+        run_id=run_id,
         generated_at=isoformat_or_none(generated_at or result.generated_at),
     )
 

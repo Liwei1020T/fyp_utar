@@ -24,12 +24,13 @@ export function ConversationCard({ conversation, onPress }: ConversationCardProp
             ? 'neutral'
             : 'primary';
   const updatedLabel = formatDateTime(conversation.updatedAt);
+  const summaryLabel = conversation.summary.replace(/[.!?]+$/, '');
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${conversation.title}. ${conversation.summary}. ${conversation.statusLabel}. Updated ${updatedLabel}`}
+      accessibilityLabel={`${conversation.title}. ${summaryLabel}. ${conversation.statusLabel}. Updated ${updatedLabel}`}
       accessibilityHint="Open this conversation"
     >
       <AppCard variant="elevated" padding="md">

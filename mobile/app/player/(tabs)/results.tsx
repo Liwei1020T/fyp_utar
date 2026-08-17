@@ -182,6 +182,10 @@ export default function RecommendationResultsScreen() {
                 const stringItem = strings.find(
                   (string) => string.id === item.stringId,
                 );
+                const isOutOfStock = stringItem?.availability === 'out_of_stock';
+                const explanationRoute = item.catalogId
+                  ? `/player/recommend/explain/${item.catalogId}${item.runId ? `?runId=${item.runId}` : ''}`
+                  : null;
 
                 return (
                   <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md" className="rounded-[30px]">
@@ -205,6 +209,9 @@ export default function RecommendationResultsScreen() {
                             variant={isTop ? 'primary' : 'neutral'} 
                             size="sm"
                           />
+                          {isOutOfStock ? (
+                            <AppChip label="Out of stock" variant="warning" size="sm" />
+                          ) : null}
                           <HeroText className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                             {item.brand}
                           </HeroText>
@@ -251,12 +258,18 @@ export default function RecommendationResultsScreen() {
 
                     <View className="mt-5 gap-3">
                       <AppButton
-                        label="Book this string"
+                        label={isOutOfStock ? 'Find in-stock alternatives' : 'Book this string'}
                         variant={isTop ? 'primary' : 'outline'}
                         size="md"
                         trailingIcon={isTop ? <ArrowRight size={16} color="white" /> : undefined}
-                        isDisabled={!item.stringId}
-                        onPress={() => item.stringId ? router.push(`/player/bookings/new?stringId=${item.stringId}`) : undefined}
+                        isDisabled={isOutOfStock ? !item.runId || !explanationRoute : !item.stringId}
+                        onPress={() => {
+                          if (isOutOfStock && explanationRoute) {
+                            router.push(explanationRoute);
+                          } else if (item.stringId) {
+                            router.push(`/player/bookings/new?stringId=${item.stringId}`);
+                          }
+                        }}
                       />
                       <View className="flex-row gap-3">
                         <AppButton
@@ -265,7 +278,7 @@ export default function RecommendationResultsScreen() {
                           size="sm"
                           className="flex-1"
                           isDisabled={!item.catalogId}
-                          onPress={() => item.catalogId ? router.push(`/player/recommend/explain/${item.catalogId}`) : undefined}
+                          onPress={() => explanationRoute ? router.push(explanationRoute) : undefined}
                         />
                         <AppButton
                           label={isSelected ? 'Selected' : 'Compare'}

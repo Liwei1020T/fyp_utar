@@ -35,6 +35,7 @@
   - phone-first auth (`phone_number + password`)
   - booking state transition enforcement
   - recommendation flow: frontend -> unified Python backend -> in-process AI module
+  - FYP-scoped Agent flow: guided player recommendation/explanation plus a read-only admin operations summary; broader completed tools and admin write handlers remain preserved but inactive
   - admin string CRUD/import
   - commerce flow: player payment/top-up request -> admin verification -> persisted payment and wallet ledger
 - Config/runtime rules:

@@ -40,7 +40,9 @@
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
   - recommendation learning loop: completed booking feedback -> bounded v10 community calibration; exact-racket interaction history -> gated v11 CF with exact v10 fallback below three independent supporters
+  - FYP-scoped player Agent: four-question guided selection, exact-run explanation, and verified in-stock alternatives -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V11 remains the only ranking owner
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
+  - admin Agent operations: one read-only current-operations summary; detailed tools and write handlers remain preserved but inactive
   - NLP artifact handoff: independent 12-string MacBERT workbook in `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`; legacy V9 remains separate
   - AI-service compatibility artifact handoff: `ml/nlp-workbench-latest/output/` -> backend `AI_*_PATH` config
 - State/data boundaries:

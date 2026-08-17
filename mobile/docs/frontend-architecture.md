@@ -157,7 +157,7 @@ Additional operational stack screens:
 - settings
 - check-in for order-ID-based counter drop-off confirmation
 - recommendation run history and detail review for admin audit of saved recommendation outputs
-- payments monitor, service queue, and booking-support chat detail
+- payments monitor, service queue, and human-support chat detail
 
 `app/admin/index.tsx` redirects to `/admin/dashboard`.
 
@@ -256,7 +256,7 @@ Examples:
 - live string catalog reads
 - live booking reads/creates
 - live confidence-aware recommendation requests
-- persisted booking-support conversations
+- persisted booking-linked and general-support conversations
 - server-owned payment quotes, payments, wallet top-ups, and wallet history
 - owned notifications, read IDs, preferences, rackets, and feedback
 - administrator inventory, booking, check-in, queue, commerce, store, analytics,
@@ -404,7 +404,7 @@ Operational tools live outside the tabs:
 - business hours
 - settings
 
-The admin surface also includes live service queue, payments monitor, booking support, and analytics.
+The admin surface also includes live service queue, payments monitor, human support, and analytics.
 
 ## 11. Feature Module Breakdown
 
@@ -470,9 +470,10 @@ Live screen flows:
 - player chat tab + detail
 - admin chat tab + detail
 
-Each booking is one support thread. Conversation state and read timestamps are
-persisted separately, while player and admin messages use the dedicated
-conversation channel in booking updates and are shared by both role surfaces.
+Booking-linked support keeps one thread per booking. Players without a booking
+can use one reusable general-support thread; its messages live in dedicated
+support tables. Both thread types share the player/admin list, read, reply,
+resolve, and close surfaces.
 
 ### Profile And Player Retention Modules
 
@@ -496,7 +497,7 @@ Admin-specific screens model the operational back office:
 - business hours
 - shop settings
 
-Service queue, payments monitor, booking support, and analytics are live admin operations.
+Service queue, payments monitor, human support, and analytics are live admin operations.
 
 Supporting inventory UI now lives in `components/admin/inventory/`, where shared thumbnail cards and preview cards keep the list and detail editor aligned.
 
@@ -643,6 +644,7 @@ Admin `flow` pages:
 
 Additional live admin pages:
 
+- `/admin/assistant`
 - `/admin/chat`
 - `/admin/chat/[id]`
 - `/admin/analytics`

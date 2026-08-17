@@ -51,6 +51,7 @@ class SqlAlchemyRecommendationLogRepository:
     def create_run(
         self,
         *,
+        run_id: str,
         user_id: str | None,
         request_payload: dict[str, Any],
         profile_payload: dict[str, Any],
@@ -58,6 +59,7 @@ class SqlAlchemyRecommendationLogRepository:
         algorithm_version: str,
     ) -> None:
         run = RecommendationRun(
+            id=run_id,
             user_id=user_id,
             algorithm_version=algorithm_version,
             request_snapshot=request_payload,

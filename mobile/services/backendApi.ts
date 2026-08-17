@@ -4,6 +4,8 @@ import type {
   BackendAdminDeviceToken,
   BackendAdminFeedback,
   BackendAdminNotification,
+  BackendAgentQuery,
+  BackendAgentResponse,
   BackendAnalyticsSummary,
   BackendAuthResponse,
   BackendCheckInLookupResponse,
@@ -167,6 +169,7 @@ export const backendApi = {
       method: 'POST',
       body: payload,
       token,
+      expireSessionOnUnauthorized: false,
     });
   },
   requestAccountDeletion(token: string, reason?: string) {
@@ -349,6 +352,12 @@ export const backendApi = {
         token,
       },
     );
+  },
+  requestGeneralSupport(token: string) {
+    return requestJson<BackendBookingConversation>('/conversations/support', {
+      method: 'POST',
+      token,
+    });
   },
   fetchPlayerConversation(token: string, conversationId: string) {
     return requestJson<BackendBookingConversation>(
@@ -1011,5 +1020,12 @@ export const backendApi = {
       `/recommendations/${encodeURIComponent(userId)}/${encodeURIComponent(catalogId)}`,
       { token },
     );
+  },
+  queryAgent(token: string, payload: BackendAgentQuery) {
+    return requestJson<BackendAgentResponse>('/agent/query', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
   },
 };

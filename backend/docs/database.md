@@ -32,6 +32,11 @@ The active migration sequence is:
 - [20260723_0024_booking_update_channel.py](../migrations/versions/20260723_0024_booking_update_channel.py)
 - [20260726_0025_player_admin_operations.py](../migrations/versions/20260726_0025_player_admin_operations.py)
 - [20260731_0026_auth_and_token_invariants.py](../migrations/versions/20260731_0026_auth_and_token_invariants.py)
+- [20260811_0027_recommendation_preferences.py](../migrations/versions/20260811_0027_recommendation_preferences.py)
+- [20260812_0028_remove_recommendation_confidence_metadata.py](../migrations/versions/20260812_0028_remove_recommendation_confidence_metadata.py)
+- [20260813_0029_feedback_provenance.py](../migrations/versions/20260813_0029_feedback_provenance.py)
+- [20260817_0030_general_support_conversations.py](../migrations/versions/20260817_0030_general_support_conversations.py)
+- [20260817_0031_clean_catalog_descriptions.py](../migrations/versions/20260817_0031_clean_catalog_descriptions.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -263,6 +268,12 @@ Stores one support-conversation state record per booking, including the support
 request time and player/admin read timestamps. Message bodies remain in
 `booking_updates` so the booking keeps one chronological activity trail.
 
+### `support_conversations` and `support_conversation_messages`
+
+Store one reusable booking-free human-support thread per player. These rows are
+separate from booking history, while sharing the same player/admin API and read
+state behavior.
+
 ### `rackets`
 
 Stores user-owned physical racket passports with a stable ID, nickname,
@@ -284,8 +295,8 @@ permits only one unused, unrevoked token per booking.
 ### `device_tokens` and `notifications`
 
 `device_tokens` owns Expo device registrations per user. `notifications`
-stores each admin-composed in-app delivery and its latest optional Expo push
-attempt status.
+stores each admin-composed in-app delivery and its latest optional Expo or
+OpenWA attempt status.
 
 ### `account_deletion_requests`
 

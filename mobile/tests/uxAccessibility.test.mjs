@@ -104,6 +104,20 @@ test('headers keep only task-critical copy', async () => {
   assert.doesNotMatch(login, /helperText=/);
 });
 
+test('reduced Agent cards hide evidence status labels', async () => {
+  const [answerCard, chatbot] = await Promise.all(
+    [
+      'components/agent/AgentAnswerCard.tsx',
+      'app/player/chatbot.tsx',
+    ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
+  );
+
+  assert.match(answerCard, /const showEvidenceStatus = false/);
+  assert.match(answerCard, /showEvidenceStatus \?/);
+  assert.match(chatbot, /label="Contact human support"/);
+  assert.match(chatbot, /router\.push\('\/player\/chat'\)/);
+});
+
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
   const [profileEdit, home, profile, tools, recommendation, results, adminDashboard] =
     await Promise.all(

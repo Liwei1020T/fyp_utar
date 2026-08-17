@@ -216,6 +216,7 @@ class FakeRecommendationLogRepository:
     def create_run(
         self,
         *,
+        run_id: str,
         user_id: str | None,
         request_payload: dict[str, object],
         profile_payload: dict[str, object],
@@ -223,6 +224,7 @@ class FakeRecommendationLogRepository:
         algorithm_version: str,
     ) -> None:
         self.last_run = {
+            "run_id": run_id,
             "user_id": user_id,
             "request_payload": request_payload,
             "profile_payload": profile_payload,
@@ -468,10 +470,13 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     result = use_case.execute_preview(user_id="user-1", request=_attacking_request())
 
     assert result.algorithm_version == ALGORITHM_VERSION
+    assert result.run_id
     assert result.results[0].catalog_id == "yonex-bg80"
     assert result.results[0].score_breakdown is not None
     assert logs.last_log is not None
     assert logs.last_log["algorithm_version"] == ALGORITHM_VERSION
+    assert repository.preference_entries == []
+    assert repository.cached == []
 
     profile_result = use_case._execute(
         user_id="user-1",
@@ -501,6 +506,7 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     ) == pytest.approx(1.0, abs=1e-3)
     assert repository.cached[0].catalog_id == "yonex-bg80"
     assert repository.cached[0].preference_match_score is not None
+    assert repository.cached[0].rationale["run_id"] == profile_result.run_id
 
 
 def test_execute_profile_persists_true_profile_snapshot() -> None:
@@ -537,6 +543,7 @@ def test_execute_profile_persists_true_profile_snapshot() -> None:
 
     assert result.results
     assert logs.last_run is not None
+    assert result.run_id == logs.last_run["run_id"]
     profile_payload = _required_mapping(logs.last_run, "profile_payload")
     request_payload = _required_mapping(logs.last_run, "request_payload")
     assert profile_payload["preferred_feel"] == "hard"
@@ -629,6 +636,7 @@ def test_cached_recommendation_detail_returns_rationale() -> None:
     detail = use_case.execute_detail(user_id="user-1", catalog_id="yonex-bg80")
 
     assert detail.algorithm_version == ALGORITHM_VERSION
+    assert detail.run_id
     assert detail.result.catalog_id == "yonex-bg80"
     assert detail.result.rationale_payload is not None
     assert detail.result.score_breakdown is not None

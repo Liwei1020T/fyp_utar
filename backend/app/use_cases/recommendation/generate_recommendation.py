@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+from uuid import uuid4
 
 from app.domain.recommendation.entities import CachedRecommendationRecord
 from app.domain.recommendation.entities import RecommendationDetailModel
@@ -59,12 +60,25 @@ class GenerateRecommendationUseCase:
         *,
         user_id: str | None,
         request: RecommendationRequestModel,
+        racket_id: str | None = None,
     ) -> RecommendationResponseModel:
+        racket_context = None
+        if racket_id is not None:
+            if user_id is None:
+                raise BadRequestError("A player is required for racket context")
+            racket_context = self.recommendation_repository.get_owned_racket_context(
+                user_id=user_id,
+                racket_id=racket_id,
+                target_tension=request.preferred_tension,
+            )
+            if racket_context is None:
+                raise NotFoundError("Racket not found")
         return self._execute(
             user_id=user_id,
             request=request,
             persist=False,
             profile_snapshot=None,
+            racket_context=racket_context,
         )
 
     def execute_profile(
@@ -138,6 +152,7 @@ class GenerateRecommendationUseCase:
         return RecommendationResponseModel(
             algorithm_version=cached[0].algorithm_version,
             results=[self._record_to_result(item) for item in cached],
+            run_id=_cached_run_id(cached[0]),
             generated_at=cached[0].generated_at,
         )
 
@@ -159,6 +174,7 @@ class GenerateRecommendationUseCase:
         return RecommendationDetailModel(
             algorithm_version=cached.algorithm_version,
             result=self._record_to_result(cached),
+            run_id=_cached_run_id(cached),
             generated_at=cached.generated_at,
         )
 
@@ -194,6 +210,7 @@ class GenerateRecommendationUseCase:
             cf_evidence=cf_evidence,
             racket_context=racket_context,
         )
+        run_id = str(uuid4())
         result_models = [item.result for item in scored_results]
         generated_at = None
 
@@ -228,7 +245,10 @@ class GenerateRecommendationUseCase:
             cached = self.recommendation_repository.replace_score_cache(
                 user_id=user_id,
                 algorithm_version=ALGORITHM_VERSION,
-                results=[item.cache_payload for item in scored_results],
+                results=[
+                    _cache_payload_with_run_id(item.cache_payload, run_id)
+                    for item in scored_results
+                ],
             )
             generated_at = cached[0].generated_at if cached else None
             cached_by_catalog = {item.catalog_id: item for item in cached}
@@ -243,11 +263,13 @@ class GenerateRecommendationUseCase:
         response = RecommendationResponseModel(
             algorithm_version=ALGORITHM_VERSION,
             results=result_models,
+            run_id=run_id,
             generated_at=generated_at,
         )
         result_payloads = [_result_payload(item) for item in response.results]
         response_payload = {
             "algorithm_version": response.algorithm_version,
+            "run_id": response.run_id,
             "generated_at": response.generated_at.isoformat()
             if response.generated_at
             else None,
@@ -258,6 +280,7 @@ class GenerateRecommendationUseCase:
             "racket_context": _racket_context_payload(racket_context),
         }
         self.recommendation_log_repository.create_run(
+            run_id=run_id,
             user_id=user_id,
             request_payload=request_snapshot,
             profile_payload=profile_snapshot or request.__dict__,
@@ -401,6 +424,21 @@ def _float_or_none(value: object) -> float | None:
     if isinstance(value, int | float | str):
         return float(value)
     raise TypeError(f"Expected numeric value, got {type(value).__name__}")
+
+
+def _cached_run_id(item: CachedRecommendationRecord) -> str | None:
+    value = item.rationale.get("run_id")
+    return value if isinstance(value, str) and value else None
+
+
+def _cache_payload_with_run_id(
+    payload: dict[str, object],
+    run_id: str,
+) -> dict[str, object]:
+    raw_rationale = payload.get("rationale")
+    rationale = dict(raw_rationale) if isinstance(raw_rationale, dict) else {}
+    rationale["run_id"] = run_id
+    return {**payload, "rationale": rationale}
 
 
 def _cached_price(rationale: dict[str, object]) -> float | None:

@@ -6,6 +6,10 @@ from app.adapters.persistence.sqlalchemy.models.booking import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models.booking_conversation import (
     BookingConversation,
 )
+from app.adapters.persistence.sqlalchemy.models.support_conversation import (
+    SupportConversation,
+    SupportConversationMessage,
+)
 from app.adapters.persistence.sqlalchemy.models.commerce import Payment
 from app.adapters.persistence.sqlalchemy.models.commerce import WalletTransaction
 from app.adapters.persistence.sqlalchemy.models.notification import CheckInToken
@@ -70,6 +74,8 @@ __all__ = [
     "Brand",
     "Booking",
     "BookingConversation",
+    "SupportConversation",
+    "SupportConversationMessage",
     "BookingFeedback",
     "BookingStatusHistory",
     "BookingUpdate",

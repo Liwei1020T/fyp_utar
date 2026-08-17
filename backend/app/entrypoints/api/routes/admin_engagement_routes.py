@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 from datetime import datetime
 from datetime import time
+from datetime import timedelta
 from datetime import timezone
 from typing import cast
 from urllib import request as urllib_request
@@ -20,9 +21,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.models import Booking
+from app.adapters.persistence.sqlalchemy.models import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models import BookingFeedback
 from app.adapters.persistence.sqlalchemy.models import DeviceToken
 from app.adapters.persistence.sqlalchemy.models import NotificationDelivery
+from app.adapters.persistence.sqlalchemy.models import Profile
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
@@ -168,6 +171,13 @@ def _prepare_notification_delivery(
     notification: NotificationDelivery,
 ) -> bool:
     settings = get_settings()
+    profile = db.scalar(select(Profile).where(Profile.user_id == notification.user_id))
+    user_preferences = dict(profile.notification_preferences or {}) if profile else {}
+    if not user_preferences.get(notification.category, True):
+        notification.status = "disabled"
+        notification.provider_message = "User disabled this notification category"
+        return False
+
     store_settings = db.get(StoreSettings, "main")
     category_settings = (
         dict(store_settings.notification_settings or {}).get(notification.category, {})
@@ -380,6 +390,86 @@ def _deliver_notification(notification_id: str) -> AdminNotificationOut:
         status=status,
         provider_message=provider_message,
     )
+
+
+def run_due_feedback_followups(
+    *,
+    now: datetime | None = None,
+) -> dict[str, int]:
+    current_time = now or datetime.now(timezone.utc)
+    if current_time.tzinfo is None:
+        current_time = current_time.replace(tzinfo=timezone.utc)
+    else:
+        current_time = current_time.astimezone(timezone.utc)
+    completed = (
+        select(
+            BookingStatusHistory.booking_id.label("booking_id"),
+            func.max(BookingStatusHistory.changed_at).label("completed_at"),
+        )
+        .where(BookingStatusHistory.new_status == "completed")
+        .group_by(BookingStatusHistory.booking_id)
+        .subquery()
+    )
+    queued: list[tuple[str, bool]] = []
+    with SessionLocal() as db:
+        rows = db.execute(
+            select(Booking, completed.c.completed_at)
+            .join(completed, completed.c.booking_id == Booking.id)
+            .outerjoin(BookingFeedback, BookingFeedback.booking_id == Booking.id)
+            .where(
+                Booking.status == "completed",
+                BookingFeedback.id.is_(None),
+                completed.c.completed_at <= current_time - timedelta(days=7),
+            )
+        ).all()
+        for booking, completed_at in rows:
+            if completed_at.tzinfo is None:
+                completed_at = completed_at.replace(tzinfo=timezone.utc)
+            age = current_time - completed_at.astimezone(timezone.utc)
+            if age >= timedelta(days=10):
+                title = "A quick feedback reminder"
+                body = (
+                    "Tell us how your string setup is performing. "
+                    "This is the final reminder."
+                )
+            else:
+                title = "How is your string setup?"
+                body = (
+                    "Your service was completed 7 days ago. "
+                    "Share how the string feels and how it is holding up."
+                )
+            route = f"/player/feedback/{booking.id}"
+            # ponytail: single-process dedupe; add a unique follow-up key before
+            # running multiple backend workers.
+            exists = db.scalar(
+                select(NotificationDelivery.id).where(
+                    NotificationDelivery.user_id == booking.user_id,
+                    NotificationDelivery.title == title,
+                    NotificationDelivery.route == route,
+                )
+            )
+            if exists:
+                continue
+            notification = NotificationDelivery(
+                user_id=booking.user_id,
+                category="service",
+                title=title,
+                body=body,
+                route=route,
+            )
+            db.add(notification)
+            db.flush()
+            queued.append(
+                (notification.id, _prepare_notification_delivery(db, notification))
+            )
+        db.commit()
+
+    delivered = 0
+    for notification_id, should_deliver in queued:
+        if should_deliver:
+            _deliver_notification(notification_id)
+            delivered += 1
+    return {"created": len(queued), "delivery_attempts": delivered}
 
 
 @router.get("/feedback", response_model=dict)

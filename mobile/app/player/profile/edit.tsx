@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Platform, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -246,23 +246,37 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
       const { skillLevel, preferredTension } = getValues();
       const tension = Number(preferredTension);
       if (skillLevel === 'Beginner' && tension > 25) {
+        const adjustTension = () => {
+          setValue('preferredTension', 25, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          setStep(3);
+        };
+        const keepTension = () => setStep(3);
+        if (Platform.OS === 'web') {
+          if (
+            globalThis.confirm?.(
+              `For beginners, 22–25 lbs is recommended. You selected ${tension} lbs.\n\nPress OK to adjust to 25 lbs, or Cancel to keep your selection.`,
+            )
+          ) {
+            adjustTension();
+          } else {
+            keepTension();
+          }
+          return;
+        }
         Alert.alert(
           'High tension for a beginner',
           `For beginners, 22–25 lbs is recommended. You selected ${tension} lbs.`,
           [
             {
               text: 'Adjust to 25 lbs',
-              onPress: () => {
-                setValue('preferredTension', 25, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-                setStep(3);
-              },
+              onPress: adjustTension,
             },
             {
               text: `Keep ${tension} lbs`,
-              onPress: () => setStep(3),
+              onPress: keepTension,
             },
           ],
         );

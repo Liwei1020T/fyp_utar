@@ -31,7 +31,7 @@ class BookingConversationMessageOut(BaseModel):
 
 class BookingConversationOut(BaseModel):
     id: str
-    booking_id: str
+    booking_id: str | None
     player_id: str
     state: ConversationState
     support_requested_at: str

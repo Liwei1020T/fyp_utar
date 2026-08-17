@@ -233,7 +233,7 @@ export default function AdminChatDetailScreen() {
   );
   const orderCode = booking
     ? booking.orderCode ?? formatBookingOrderCode(booking.id)
-    : formatBookingOrderCode(conversation.id);
+    : 'General support';
   const isClosed =
     conversation.mode === 'resolved' || conversation.mode === 'closed';
 
@@ -242,7 +242,11 @@ export default function AdminChatDetailScreen() {
       tone="admin"
       headerVariant="secondary"
       title="Admin chat detail"
-      subtitle="Reply as the shop, review booking context, and finish the persisted support thread."
+      subtitle={
+        booking
+          ? 'Reply as the shop, review booking context, and finish the persisted support thread.'
+          : 'Reply as the shop and finish the persisted general support thread.'
+      }
       showBackButton
       onBackPress={() => router.back()}
     >

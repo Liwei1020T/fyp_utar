@@ -84,6 +84,9 @@ Explicitly avoided:
     structured feedback record per completed booking
 - `recommendation`
   - preview/profile recommendation generation, preference-vector persistence, score caching, explainability, and recommendation logging
+- `agent`
+  - authenticated grounded answers, exact-run recommendation explanation,
+    bounded read-only tools, V11 What-if preview, and explicit support handoff
 
 ## Persistence Structure
 
@@ -197,6 +200,14 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 
 - `ai_service/` remains preserved for standalone compatibility, review analysis, and RAG-style helper logic.
 - The active profile recommender now lives in `app/domain/recommendation/scoring.py` and reads normalized catalog/matrix persistence through `app/ports/repositories/recommendation_repository.py`.
+- The unified FYP-scoped Agent lives in `app/use_cases/agent`, calls DeepSeek only
+  through `app/adapters/services/agent`, and supports four-question guided
+  selection, exact-run explanation, verified in-stock alternatives, and one
+  read-only admin operations summary. The model cannot write application state
+  or replace V11 scoring. Broader completed tools and admin confirmation handlers
+  remain preserved behind inactive allowlist entries.
+- Exact recommendation explanations are owner-scoped by persisted `run_id`;
+  source metadata is collected server-side from successful tool calls.
 - The former unified-runtime legacy AI adapters were removed.
   `ai_service.service.RecommendationService` remains isolated inside the
   explicit standalone compatibility package and is not wired into unified
@@ -212,12 +223,17 @@ shared gateway or distributed store.
 
 ## Notification Delivery Boundary
 
-Admin Expo notification requests use an explicit two-phase boundary: the route
+Admin remote notification requests use an explicit two-phase boundary: the route
 commits `pending` before provider I/O, then the provider runs with no original
 request transaction active. The outcome is committed, refreshed, and read in a
 separate short SQLAlchemy session, and enabled send/resend responses return the
 truthful final `sent`/`failed` state. A queue is intentionally out of scope for
-the current single-process FYP deployment.
+the current single-process FYP deployment. The persisted row also supplies the
+App notification feed; the selected FYP remote provider is OpenWA.
+The same persisted-delivery path powers completed-booking feedback follow-ups:
+the single-process scheduler checks immediately at startup and hourly, sends at
+day 7 and once more at day 10 only while feedback is absent, and deduplicates by
+booking route plus follow-up title.
 
 ## Validation Contract
 

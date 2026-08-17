@@ -233,6 +233,7 @@ export interface RecommendationMatch {
   fitAngle?: string;
   tradeOffSummary?: string;
   algorithmVersion?: string;
+  runId?: string | null;
   generatedAt?: string | null;
   suggestedTensionRange: string;
 }

@@ -1,19 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   AlertTriangle,
   CheckCircle2,
   Gauge,
+  SendHorizontal,
   Sparkles,
   Target,
   WalletCards,
   type LucideIcon,
 } from 'lucide-react-native';
 import { HeroText } from '../../../../components/ui/heroui';
+import { AgentAnswerCard } from '../../../../components/agent/AgentAnswerCard';
 import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
 import { AppChip } from '../../../../components/ui/AppChip';
+import { AppInput } from '../../../../components/ui/AppInput';
 import { AppScreen } from '../../../../components/shared/AppScreen';
 import { AppSection } from '../../../../components/shared/AppSection';
 import {
@@ -24,6 +27,9 @@ import {
 } from '../../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../../services/backendApi';
 import type {
+  BackendAgentAction,
+  BackendAgentMessage,
+  BackendAgentResponse,
   BackendRecommendationRationale,
   BackendRecommendationResult,
 } from '../../../../types/backend';
@@ -204,19 +210,27 @@ function getReviewStrengths(rationale: BackendRecommendationRationale | null) {
 
 export default function RecommendationExplanationScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; runId?: string }>();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const strings = useStrings();
   const liveResults = useLiveRecommendationResults();
   const [backendDetail, setBackendDetail] = useState<BackendRecommendationResult | null>(null);
+  const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [agentResponse, setAgentResponse] = useState<BackendAgentResponse | null>(null);
+  const [agentHistory, setAgentHistory] = useState<BackendAgentMessage[]>([]);
+  const [agentDraft, setAgentDraft] = useState('');
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const [isAgentLoading, setIsAgentLoading] = useState(false);
+  const requestedExplanationKey = useRef<string | null>(null);
 
   const stringItem = strings.find((item) => item.id === params.id);
   const liveResult = liveResults.find(
     (item) => item.catalogId === params.id || item.stringId === params.id || item.id === params.id,
   );
   const detailResult = backendDetail ?? null;
+  const runId = params.runId ?? liveResult?.runId ?? detailRunId;
   const rationale = detailResult?.rationale_payload ?? liveResult?.rationalePayload ?? null;
   const scoreBreakdown =
     liveResult?.scoreBreakdown ??
@@ -272,6 +286,7 @@ export default function RecommendationExplanationScreen() {
         const response = await backendApi.fetchRecommendationDetail(accessToken, 'me', catalogId);
         if (isMounted) {
           setBackendDetail(response.result);
+          setDetailRunId(response.run_id ?? null);
         }
       } catch (error) {
         if (!isMounted) {
@@ -292,6 +307,100 @@ export default function RecommendationExplanationScreen() {
     };
   }, [params.id, token]);
 
+  const askAgent = useCallback(
+    async (rawQuestion: string) => {
+      const question = rawQuestion.trim();
+      if (!token || !params.id || !runId || !question || isAgentLoading) {
+        return;
+      }
+      setAgentError(null);
+      setIsAgentLoading(true);
+      try {
+        const response = await backendApi.queryAgent(token, {
+          message: question,
+          context: {
+            surface: 'recommendation_explanation',
+            run_id: runId,
+            catalog_id: params.id,
+          },
+          conversation_history: agentHistory.slice(-12),
+        });
+        setAgentResponse(response);
+        setAgentHistory((current) => [
+          ...current,
+          { role: 'user' as const, content: question },
+          { role: 'assistant' as const, content: response.answer },
+        ].slice(-12));
+        setAgentDraft('');
+      } catch (error) {
+        setAgentError(
+          error instanceof BackendApiError
+            ? error.message
+            : 'The dynamic explanation is temporarily unavailable.',
+        );
+      } finally {
+        setIsAgentLoading(false);
+      }
+    }, [agentHistory, isAgentLoading, params.id, runId, token],
+  );
+
+  const handleAgentAction = (action: BackendAgentAction) => {
+    if (action.action === 'open_string' && action.parameters.catalog_id) {
+      router.push(`/player/strings/${action.parameters.catalog_id}`);
+      return;
+    }
+
+    /* Deferred FYP scope; re-enable with ACTIVE_AGENT_ACTIONS.
+    if (action.action === 'open_booking' && action.parameters.booking_id) {
+      router.push(`/player/bookings/${action.parameters.booking_id}`);
+      return;
+    }
+    if (
+      action.action === 'open_recommendation' &&
+      action.parameters.catalog_id &&
+      action.parameters.run_id
+    ) {
+      router.push(
+        `/player/recommend/explain/${action.parameters.catalog_id}?runId=${action.parameters.run_id}`,
+      );
+      return;
+    }
+    if (action.action !== 'request_human_handoff') {
+      return;
+    }
+    const bookingId = action.parameters.booking_id;
+    if (!bookingId || !token) {
+      router.push('/player/chat');
+      return;
+    }
+    setAgentError(null);
+    try {
+      const conversation = await backendApi.requestBookingSupport(token, bookingId);
+      router.push(`/player/chat/${conversation.id}`);
+    } catch (error) {
+      setAgentError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Unable to request human support.',
+      );
+    }
+    */
+  };
+
+  useEffect(() => {
+    if (!runId || !params.id) {
+      return;
+    }
+    const key = `${runId}:${params.id}`;
+    if (requestedExplanationKey.current === key) {
+      return;
+    }
+    requestedExplanationKey.current = key;
+    void askAgent(
+      'Briefly explain why this string suits me, its main strengths, and one trade-off. Use simple language and do not mention algorithms.',
+    );
+  }, [askAgent, params.id, runId]);
+
   if (!user || user.role !== 'player') {
     return null;
   }
@@ -299,11 +408,15 @@ export default function RecommendationExplanationScreen() {
   const savedReasons =
     rationale?.top_reasons ?? liveResult?.reasons ?? detailResult?.reasons ?? [];
   const matchReasons = buildMatchReasons(savedReasons);
-  const recommendationSummary = rationale?.primary_fit_angle
-    ? `Saved scorer fit angle: ${compactSentence(rationale.primary_fit_angle)}.`
-    : 'This page shows the saved scorer output and only labels evidence that was returned by the backend.';
+  const recommendationSummary = isAgentLoading
+    ? 'Building a grounded explanation from this exact recommendation run...'
+    : rationale?.primary_fit_angle
+      ? `Saved scorer fit angle: ${compactSentence(rationale.primary_fit_angle)}.`
+      : 'No generated explanation is available; the saved scorer evidence remains below.';
   const stringId = stringItem?.id ?? params.id;
-  const canBook = Boolean(stringItem);
+  const canBook = Boolean(
+    stringItem && stringItem.availability !== 'out_of_stock',
+  );
 
   if (!stringItem && !detailResult) {
     return (
@@ -325,7 +438,7 @@ export default function RecommendationExplanationScreen() {
     <AppScreen
       headerVariant="secondary"
       title="Recommendation detail"
-      subtitle="A quick read on fit, confidence, and the main compromise."
+      subtitle="A grounded explanation of fit, evidence, and the main compromise."
       showBackButton
       onBackPress={() => router.back()}
       contentContainerClassName="pt-3"
@@ -371,7 +484,7 @@ export default function RecommendationExplanationScreen() {
 
         <View className="mt-5 gap-3">
           <AppButton
-            label="Book this string"
+            label={canBook ? 'Book this string' : 'Currently out of stock'}
             className="border-white bg-white"
             textClassName="text-primary-700 font-bold"
             isDisabled={!canBook}
@@ -394,6 +507,51 @@ export default function RecommendationExplanationScreen() {
           </HeroText>
         </View>
       ) : null}
+
+      <AppSection title="AI explanation" variant="compact">
+        {agentResponse ? (
+          <AgentAnswerCard
+            response={agentResponse}
+            onQuestion={(question) => void askAgent(question)}
+            onAction={(action) => void handleAgentAction(action)}
+          />
+        ) : (
+          <AppCard variant="subtle" padding="md">
+            <HeroText className="text-sm leading-6 text-neutral-600">
+              {isAgentLoading
+                ? 'Retrieving this run’s saved rationale and evidence...'
+                : agentError ?? 'This recommendation does not have an exact run ID to explain.'}
+            </HeroText>
+          </AppCard>
+        )}
+
+        {agentError && agentResponse ? (
+          <View className="mt-3 rounded-[18px] border border-warning-100 bg-warning-50 px-4 py-3">
+            <HeroText className="text-xs leading-5 text-warning-700">{agentError}</HeroText>
+          </View>
+        ) : null}
+
+        {runId ? (
+          <View className="mt-4">
+            <AppInput
+              className="mb-2"
+              placeholder="Ask a follow-up about this result..."
+              accessibilityLabel="Question about this recommendation"
+              value={agentDraft}
+              onChangeText={setAgentDraft}
+              multiline
+              isDisabled={isAgentLoading}
+            />
+            <AppButton
+              label="Ask about this result"
+              isLoading={isAgentLoading}
+              isDisabled={!agentDraft.trim()}
+              leadingIcon={<SendHorizontal size={16} color="white" />}
+              onPress={() => void askAgent(agentDraft)}
+            />
+          </View>
+        ) : null}
+      </AppSection>
 
       <AppSection title="Why this matches you" variant="compact">
         <View className="gap-3">

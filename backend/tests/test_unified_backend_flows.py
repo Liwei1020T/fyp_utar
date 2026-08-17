@@ -288,6 +288,7 @@ def test_recommendations_logs_and_admin_string_controls():
     )
     assert recommendation_response.status_code == 200
     assert recommendation_response.json()["algorithm_version"] == ALGORITHM_VERSION
+    assert recommendation_response.json()["run_id"]
     assert len(recommendation_response.json()["results"]) == 3
     top_recommendation = recommendation_response.json()["results"][0]
     assert top_recommendation["catalog_id"]
@@ -341,6 +342,7 @@ def test_recommendations_logs_and_admin_string_controls():
         == top_recommendation["catalog_id"]
     )
     assert detail_response.json()["result"]["rationale_payload"]["score_breakdown"]
+    assert detail_response.json()["run_id"] == recommendation_response.json()["run_id"]
 
     with SessionLocal() as db:
         preference_rows = db.execute(select(UserPreferenceMatrix)).scalars().all()

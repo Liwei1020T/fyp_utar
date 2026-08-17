@@ -87,7 +87,7 @@ function AdminChatQueueContent({ user }: { user: AdminProfile }) {
   );
 
   return (
-    <AppScreen headerVariant="primary" title="Chat queue" subtitle="Service-related conversations assigned to the shop admin desk." scrollable={false}>
+    <AppScreen headerVariant="primary" title="Chat queue" subtitle="Booking and general support conversations for the shop admin desk." scrollable={false}>
       <FlatList
         className="flex-1"
         data={adminConversations}

@@ -391,6 +391,19 @@ def test_feedback_requires_owned_completed_booking_and_is_unique() -> None:
     assert history[0]["feedback"]["id"] == create_response.json()["id"]
     assert str(incomplete_booking["id"]) not in {item["booking_id"] for item in history}
 
+    list_after_completion = client.get(
+        "/api/rackets",
+        headers=headers(owner_token),
+    )
+    assert list_after_completion.status_code == 200
+    summary = next(
+        item for item in list_after_completion.json() if item["id"] == racket_id
+    )
+    assert summary["service_count"] == 1
+    assert summary["current_string_id"] == completed_booking["string_id"]
+    assert summary["current_tension"] == 27
+    assert summary["last_serviced_at"] is not None
+
 
 def test_structured_feedback_provenance_patch_and_delayed_durability() -> None:
     owner_token = register_customer(

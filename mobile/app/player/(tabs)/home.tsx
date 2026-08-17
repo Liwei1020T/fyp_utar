@@ -7,7 +7,6 @@ import {
   Bell,
   CalendarClock,
   ChevronRight,
-  MessageSquareText,
   Search,
   Sparkles,
   Zap,
@@ -51,10 +50,10 @@ const quickActions = [
     icon: Search,
   },
   {
-    title: 'Message shop',
-    accessibilityLabel: 'Message shop',
-    route: '/player/chat',
-    icon: MessageSquareText,
+    title: 'Ask AI',
+    accessibilityLabel: 'Open StringSense AI assistant',
+    route: '/player/chatbot',
+    icon: Sparkles,
   },
 ] as const;
 

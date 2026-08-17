@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -264,6 +264,34 @@ export default function RacketPassportDetailScreen() {
     if (!token) {
       return;
     }
+    const performDeletion = () => {
+      setIsDeleting(true);
+      setSaveError(null);
+      void backendApi
+        .deleteRacket(token, racket.id)
+        .then(() => {
+          removeLiveRacket(racket.id);
+          router.replace('/player/rackets');
+        })
+        .catch((error: unknown) => {
+          setSaveError(
+            error instanceof BackendApiError
+              ? error.message
+              : 'Failed to delete this racket passport.',
+          );
+        })
+        .finally(() => setIsDeleting(false));
+    };
+    if (Platform.OS === 'web') {
+      if (
+        globalThis.confirm?.(
+          'Delete racket passport?\n\nCompleted booking history stays on the booking records.',
+        )
+      ) {
+        performDeletion();
+      }
+      return;
+    }
     Alert.alert(
       'Delete racket passport?',
       'Completed booking history stays on the booking records.',
@@ -272,24 +300,7 @@ export default function RacketPassportDetailScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            setIsDeleting(true);
-            setSaveError(null);
-            void backendApi
-              .deleteRacket(token, racket.id)
-              .then(() => {
-                removeLiveRacket(racket.id);
-                router.replace('/player/rackets');
-              })
-              .catch((error: unknown) => {
-                setSaveError(
-                  error instanceof BackendApiError
-                    ? error.message
-                    : 'Failed to delete this racket passport.',
-                );
-              })
-              .finally(() => setIsDeleting(false));
-          },
+          onPress: performDeletion,
         },
       ],
     );

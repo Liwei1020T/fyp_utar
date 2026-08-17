@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -344,35 +344,44 @@ export default function PlayerBookingDetailScreen() {
     if (!token || !canCancel) {
       return;
     }
+    const performCancellation = () => {
+      setIsCancelling(true);
+      setCancelError(null);
+      void backendApi
+        .cancelBooking(
+          token,
+          booking.id,
+          'Cancelled by player before drop-off.',
+        )
+        .then((response) => {
+          upsertLiveBooking(mapBackendBookingToBooking(response));
+        })
+        .catch((error: unknown) => {
+          setCancelError(
+            error instanceof BackendApiError
+              ? error.message
+              : 'Failed to cancel this booking.',
+          );
+        })
+        .finally(() => setIsCancelling(false));
+    };
+    const confirmationMessage =
+      'Cancellation is available only before the racket is checked in.';
+    if (Platform.OS === 'web') {
+      if (globalThis.confirm?.(`Cancel booking?\n\n${confirmationMessage}`)) {
+        performCancellation();
+      }
+      return;
+    }
     Alert.alert(
       'Cancel booking?',
-      'Cancellation is available only before the racket is checked in.',
+      confirmationMessage,
       [
         { text: 'Keep booking', style: 'cancel' },
         {
           text: 'Cancel booking',
           style: 'destructive',
-          onPress: () => {
-            setIsCancelling(true);
-            setCancelError(null);
-            void backendApi
-              .cancelBooking(
-                token,
-                booking.id,
-                'Cancelled by player before drop-off.',
-              )
-              .then((response) => {
-                upsertLiveBooking(mapBackendBookingToBooking(response));
-              })
-              .catch((error: unknown) => {
-                setCancelError(
-                  error instanceof BackendApiError
-                    ? error.message
-                    : 'Failed to cancel this booking.',
-                );
-              })
-              .finally(() => setIsCancelling(false));
-          },
+          onPress: performCancellation,
         },
       ],
     );

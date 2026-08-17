@@ -17,6 +17,10 @@ from app.adapters.persistence.sqlalchemy.models.commerce import Payment
 from app.adapters.persistence.sqlalchemy.models.notification import DeviceToken
 from app.adapters.persistence.sqlalchemy.models.notification import NotificationDelivery
 from app.adapters.persistence.sqlalchemy.models.notification import NotificationRead
+from app.adapters.persistence.sqlalchemy.models.support_conversation import (
+    SupportConversation,
+    SupportConversationMessage,
+)
 from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationRun,
 )
@@ -89,6 +93,19 @@ def _derived_notification_events(
         .order_by(BookingUpdate.created_at.desc())
         .limit(MAX_NOTIFICATION_EVENTS)
     ).all()
+    general_chat_rows = db.execute(
+        select(SupportConversationMessage, SupportConversation.id)
+        .join(
+            SupportConversation,
+            SupportConversation.id == SupportConversationMessage.conversation_id,
+        )
+        .where(
+            SupportConversation.player_id == user_id,
+            SupportConversationMessage.author_role == "admin",
+        )
+        .order_by(SupportConversationMessage.created_at.desc())
+        .limit(MAX_NOTIFICATION_EVENTS)
+    ).all()
     payments = db.scalars(
         select(Payment)
         .where(Payment.user_id == user_id)
@@ -159,6 +176,18 @@ def _derived_notification_events(
             route=f"/player/chat/{booking_id}",
         )
         for update, booking_id in chat_rows
+    )
+    events.extend(
+        NotificationOut(
+            id=f"general-conversation-update:{update.id}",
+            user_id=user_id,
+            category="chat",
+            title="New shop reply",
+            body=update.body[:500],
+            created_at=update.created_at,
+            route=f"/player/chat/{conversation_id}",
+        )
+        for update, conversation_id in general_chat_rows
     )
     events.extend(_payment_notification(payment) for payment in payments)
     events.extend(

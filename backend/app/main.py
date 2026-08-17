@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import suppress
 from contextlib import asynccontextmanager
 
 from fastapi import Depends
@@ -22,11 +24,23 @@ from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.entrypoints.api.health import health_payload
 from app.entrypoints.api.router import router as api_router
+from app.entrypoints.api.routes.admin_engagement_routes import (
+    run_due_feedback_followups,
+)
 from app.shared.errors import AppError
 from app.shared.http import error_payload
 
 
 logger = logging.getLogger(__name__)
+
+
+async def _feedback_followup_loop() -> None:
+    while True:
+        try:
+            await asyncio.to_thread(run_due_feedback_followups)
+        except Exception:
+            logger.exception("Feedback follow-up job failed")
+        await asyncio.sleep(60 * 60)
 
 
 @asynccontextmanager
@@ -36,7 +50,13 @@ async def lifespan(_: FastAPI):
         ensure_catalog_seeded(db)
         ensure_store_defaults(db)
         db.commit()
-    yield
+    followup_task = asyncio.create_task(_feedback_followup_loop())
+    try:
+        yield
+    finally:
+        followup_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await followup_task
 
 
 settings = get_settings()

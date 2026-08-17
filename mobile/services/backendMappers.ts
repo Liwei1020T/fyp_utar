@@ -510,7 +510,11 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const tensionMaxLbs = item.tension_max_lbs;
   const gauge = formatGaugeRange(gaugeBounds.min, gaugeBounds.max);
   const priceStatus = derivePriceStatus(item.price_rm);
-  const availability = deriveAvailabilityStatus(item.is_active ? 8 : 0);
+  const stockQty = Math.max(0, item.available_stock);
+  const availability = deriveAvailabilityStatus(
+    stockQty,
+    item.availability_status,
+  );
   const imageUrl = resolveBackendMediaUrl(item.image_url);
   const catalog = {
     id: item.id,
@@ -541,7 +545,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const inventory = {
     id: item.id,
     stringId: item.id,
-    stockQty: item.is_active ? 8 : 0,
+    stockQty,
     price: item.price_rm ?? null,
     priceStatus,
     availabilityStatus: availability,
@@ -861,17 +865,24 @@ export function mapBackendConversationToConversation(
       sentAt: message.created_at ?? updatedAt,
     } satisfies ChatConversation['messages'][number];
   });
+  const isGeneralSupport = conversation.booking_id == null;
 
   return {
     id: conversation.id,
     playerId: conversation.player_id,
     adminId: booking?.adminId ?? adminId,
-    bookingId: conversation.booking_id,
+    bookingId: conversation.booking_id ?? undefined,
     stringId: booking?.stringId,
-    title: `Booking ${booking?.orderCode ?? formatBookingOrderCode(conversation.booking_id)}`,
+    title: isGeneralSupport
+      ? 'General support'
+      : `Booking ${booking?.orderCode ?? formatBookingOrderCode(conversation.booking_id ?? '')}`,
     mode: conversation.state,
     statusLabel: formatConversationMode(conversation.state),
-    summary: messages.at(-1)?.body ?? 'Support requested for this booking.',
+    summary:
+      messages.at(-1)?.body ??
+      (isGeneralSupport
+        ? 'General support requested.'
+        : 'Support requested for this booking.'),
     updatedAt,
     quickPrompts: [
       'Can you confirm my drop-off time?',
@@ -934,9 +945,13 @@ export function mapBackendRacketToRacketPassport(
       feedback,
     };
   });
+  const summaryTension = racket.current_tension ?? undefined;
   const tensions = serviceHistory.flatMap((entry) =>
     entry.requested_tension == null ? [] : [entry.requested_tension],
   );
+  if (tensions.length === 0 && summaryTension != null) {
+    tensions.push(summaryTension);
+  }
   const preferredRange: [number, number] =
     tensions.length > 0
       ? [Math.min(...tensions), Math.max(...tensions)]
@@ -955,11 +970,13 @@ export function mapBackendRacketToRacketPassport(
     gripSize: racket.grip_size ?? 'Not recorded',
     preferredUse: racket.preferred_use ?? 'Not recorded',
     notes: racket.notes ?? '',
-    serviceCount: serviceHistory.length,
-    currentStringId: currentService?.string_id ?? '',
-    currentTension: currentService?.requested_tension ?? 0,
+    serviceCount: racket.service_count ?? serviceHistory.length,
+    currentStringId:
+      currentService?.string_id ?? racket.current_string_id ?? '',
+    currentTension: currentService?.requested_tension ?? summaryTension ?? 0,
     preferredRange,
-    lastServicedAt: currentService?.serviced_at ?? racket.updated_at,
+    lastServicedAt:
+      currentService?.serviced_at ?? racket.last_serviced_at ?? racket.updated_at,
     stringHistory,
   };
 }
@@ -1121,6 +1138,7 @@ export function mapRecommendationResponse(
       fitAngle: item.rationale_payload?.primary_fit_angle,
       tradeOffSummary: item.rationale_payload?.trade_off_summary,
       algorithmVersion: response.algorithm_version,
+      runId: response.run_id ?? null,
       generatedAt: item.generated_at ?? response.generated_at ?? null,
       suggestedTensionRange: matched
         ? formatTensionRange(

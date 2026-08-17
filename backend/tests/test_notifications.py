@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 import json
 
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.models.notification import (
     NotificationDelivery,
 )
+from app.adapters.persistence.sqlalchemy.models.booking import Booking
+from app.adapters.persistence.sqlalchemy.models.booking import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models.notification import NotificationRead
 from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
     RecommendationRun,
@@ -451,9 +457,73 @@ def test_admin_openwa_delivery_uses_player_phone_without_a_device_token(
     )
 
     assert response.status_code == 200
-    assert response.json()["status"] == "sent"
-    assert response.json()["provider_message"] == "wa-message-1"
-    assert response.json()["token_preview"] is None
+    delivery = response.json()
+    assert delivery["status"] == "sent"
+    assert delivery["provider_message"] == "wa-message-1"
+    assert delivery["token_preview"] is None
+
+    in_app_response = client.get(
+        "/api/notifications",
+        headers=_headers(notification_activity.owner_token),
+    )
+    assert in_app_response.status_code == 200
+    assert any(
+        event["id"] == f"push:{delivery['id']}"
+        and event["title"] == "WhatsApp delivery"
+        for event in in_app_response.json()
+    )
+
+
+def test_admin_openwa_delivery_respects_player_notification_preferences(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "expo_push_enabled", False)
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+
+    preferences = client.get(
+        "/api/notifications/preferences",
+        headers=_headers(notification_activity.owner_token),
+    ).json()
+    preferences["service"] = False
+    assert (
+        client.put(
+            "/api/notifications/preferences",
+            headers=_headers(notification_activity.owner_token),
+            json=preferences,
+        ).status_code
+        == 200
+    )
+
+    def fail_urlopen(*_args, **_kwargs):
+        raise AssertionError("OpenWA must not run for a disabled category")
+
+    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fail_urlopen)
+    response = client.post(
+        "/api/admin/notifications",
+        headers=_headers(_admin_token()),
+        json={
+            "user_id": notification_activity.owner_id,
+            "category": "service",
+            "title": "Disabled update",
+            "body": "This must stay disabled.",
+        },
+    )
+
+    assert response.status_code == 200
+    delivery = response.json()
+    assert delivery["status"] == "disabled"
+    assert delivery["provider_message"] == "User disabled this notification category"
+    assert delivery["attempts"] == 0
+
+    in_app_response = client.get(
+        "/api/notifications",
+        headers=_headers(notification_activity.owner_token),
+    )
+    assert all(
+        event["id"] != f"push:{delivery['id']}" for event in in_app_response.json()
+    )
 
 
 def test_admin_push_delivery_skips_provider_when_initial_commit_fails(
@@ -501,3 +571,140 @@ def test_admin_push_delivery_skips_provider_when_initial_commit_fails(
         )
 
     assert provider_calls == []
+
+
+def test_feedback_followups_send_once_on_day_7_and_day_10_then_stop(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    admin_token = _admin_token()
+    with SessionLocal() as db:
+        first_booking = db.scalar(
+            select(Booking).where(Booking.user_id == notification_activity.owner_id)
+        )
+        assert first_booking is not None
+        string_id = first_booking.string_id
+
+    second_response = client.post(
+        "/api/bookings",
+        headers=_headers(notification_activity.owner_token),
+        json={
+            "string_id": string_id,
+            "racket_brand": "Yonex",
+            "racket_model": "Arcsaber 11",
+            "requested_tension": 24,
+        },
+    )
+    assert second_response.status_code == 200
+    second_booking_id = second_response.json()["id"]
+
+    for booking_id, starts_in_progress in (
+        (first_booking.id, True),
+        (second_booking_id, False),
+    ):
+        if not starts_in_progress:
+            assert (
+                client.patch(
+                    f"/api/admin/bookings/{booking_id}/status",
+                    headers=_headers(admin_token),
+                    json={"status": "in_progress", "note": "Started."},
+                ).status_code
+                == 200
+            )
+        for status in ("ready_for_collection", "completed"):
+            assert (
+                client.patch(
+                    f"/api/admin/bookings/{booking_id}/status",
+                    headers=_headers(admin_token),
+                    json={"status": status, "note": "Status updated."},
+                ).status_code
+                == 200
+            )
+
+    now = datetime(2026, 8, 14, 12, tzinfo=timezone.utc)
+    with SessionLocal() as db:
+        db.execute(
+            update(BookingStatusHistory)
+            .where(BookingStatusHistory.new_status == "completed")
+            .values(changed_at=now - timedelta(days=7))
+        )
+        db.commit()
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "expo_push_enabled", False)
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
+    monkeypatch.setattr(settings, "openwa_session_id", "session-1")
+    provider_calls: list[object] = []
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b'{"messageId":"follow-up-message"}'
+
+    def fake_urlopen(request, timeout: int):
+        assert timeout == 5
+        provider_calls.append(request)
+        return FakeResponse()
+
+    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fake_urlopen)
+
+    assert admin_engagement_routes.run_due_feedback_followups(now=now) == {
+        "created": 2,
+        "delivery_attempts": 2,
+    }
+    assert admin_engagement_routes.run_due_feedback_followups(now=now)["created"] == 0
+
+    feedback_response = client.post(
+        f"/api/bookings/{first_booking.id}/feedback",
+        headers=_headers(notification_activity.owner_token),
+        json={"rating": 5},
+    )
+    assert feedback_response.status_code == 200
+
+    day_10 = now + timedelta(days=3)
+    assert admin_engagement_routes.run_due_feedback_followups(now=day_10) == {
+        "created": 1,
+        "delivery_attempts": 1,
+    }
+    assert (
+        admin_engagement_routes.run_due_feedback_followups(now=day_10)["created"] == 0
+    )
+    assert len(provider_calls) == 3
+
+    with SessionLocal() as db:
+        followups = db.scalars(
+            select(NotificationDelivery)
+            .where(
+                NotificationDelivery.title.in_(
+                    (
+                        "How is your string setup?",
+                        "A quick feedback reminder",
+                    )
+                )
+            )
+            .order_by(NotificationDelivery.created_at)
+        ).all()
+    assert len(followups) == 3
+    assert (
+        sum(item.route == f"/player/feedback/{first_booking.id}" for item in followups)
+        == 1
+    )
+    assert (
+        sum(item.route == f"/player/feedback/{second_booking_id}" for item in followups)
+        == 2
+    )
+    assert all(item.status == "sent" for item in followups)
+
+    feed_response = client.get(
+        "/api/notifications",
+        headers=_headers(notification_activity.owner_token),
+    )
+    assert feed_response.status_code == 200
+    followup_ids = {f"push:{item.id}" for item in followups}
+    assert followup_ids.issubset({item["id"] for item in feed_response.json()})

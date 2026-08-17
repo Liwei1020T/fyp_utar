@@ -21,6 +21,68 @@ export interface BackendMessageResponse {
   message: string;
 }
 
+export type BackendAgentSurface =
+  | 'chatbot'
+  | 'recommendation_explanation'
+  | 'admin_assistant';
+
+export interface BackendAgentMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface BackendAgentQuery {
+  message: string;
+  context: {
+    surface: BackendAgentSurface;
+    run_id?: string | null;
+    catalog_id?: string | null;
+    booking_id?: string | null;
+  };
+  conversation_history?: BackendAgentMessage[];
+}
+
+export interface BackendAgentSource {
+  source_type: string;
+  source_id: string;
+  label: string;
+  version?: string | null;
+}
+
+export interface BackendAgentAction {
+  action:
+    | 'open_string'
+    | 'open_recommendation'
+    | 'open_booking'
+    | 'request_human_handoff'
+    | 'open_admin_booking'
+    | 'open_admin_inventory'
+    | 'open_admin_conversation'
+    | 'open_admin_payments'
+    | 'update_booking_status'
+    | 'update_inventory_stock'
+    | 'send_admin_message';
+  label: string;
+  parameters: Record<string, string>;
+}
+
+export interface BackendAgentResponse {
+  answer: string;
+  summary: string;
+  evidence: string[];
+  sources: BackendAgentSource[];
+  evidence_status: 'complete' | 'partial' | 'insufficient_evidence';
+  suggested_questions: string[];
+  suggested_actions: BackendAgentAction[];
+  handoff?: {
+    recommended: boolean;
+    reason?: string | null;
+    booking_id?: string | null;
+  } | null;
+  model: string;
+  response_id?: string | null;
+}
+
 export interface BackendNotificationPreferences {
   booking: boolean;
   payment: boolean;
@@ -151,6 +213,8 @@ export interface BackendString {
   model_name: string;
   normalized_name: string;
   price_rm: number | null;
+  available_stock: number;
+  availability_status: BackendInventoryAvailability;
   series_key: string | null;
   series_label: string | null;
   is_hybrid: boolean;
@@ -401,7 +465,7 @@ export interface BackendBookingConversationMessage {
 
 export interface BackendBookingConversation {
   id: string;
-  booking_id: string;
+  booking_id: string | null;
   player_id: string;
   state: BackendConversationState;
   support_requested_at: string;
@@ -448,6 +512,10 @@ export interface BackendRacket {
   grip_size: string | null;
   preferred_use: string | null;
   notes: string | null;
+  service_count?: number;
+  current_string_id?: string | null;
+  current_tension?: number | null;
+  last_serviced_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -750,12 +818,14 @@ export interface BackendRecommendationResult {
 export interface BackendRecommendationResponse {
   algorithm_version: string;
   results: BackendRecommendationResult[];
+  run_id?: string | null;
   generated_at?: string | null;
 }
 
 export interface BackendRecommendationDetailResponse {
   algorithm_version: string;
   result: BackendRecommendationResult;
+  run_id?: string | null;
   generated_at?: string | null;
 }
 
@@ -796,6 +866,10 @@ export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
+  community_calibration_used?: boolean;
+  community_snapshot_version?: string | null;
+  racket_context?: Record<string, string | number | null> | null;
+  cf_shadow?: Record<string, string | number | boolean | null>;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -808,6 +882,15 @@ export interface BackendRecommendationRationale {
     official_score?: number | null;
     nlp_review_score?: number | null;
     nlp_influence?: number | null;
+    baseline_score?: number | null;
+    community_score?: number | null;
+    community_distinct_users?: number | null;
+    community_booking_count?: number | null;
+    community_confidence?: number | null;
+    community_weight?: number | null;
+    community_evidence_scope?: string | null;
+    community_racket_model_key?: string | null;
+    community_source_version?: string | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;

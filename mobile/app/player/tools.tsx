@@ -10,6 +10,7 @@ import {
   MessageSquareText,
   NotebookText,
   Settings2,
+  Sparkles,
   Wallet,
   Zap,
 } from 'lucide-react-native';
@@ -53,8 +54,14 @@ const toolGroups = [
     title: 'Service',
     items: [
       {
+        title: 'AI assistant',
+        subtitle: 'Ask grounded questions about strings and recommendations.',
+        icon: Sparkles,
+        route: '/player/chatbot',
+      },
+      {
         title: 'Message shop',
-        subtitle: 'Open conversations linked to your bookings.',
+        subtitle: 'Contact the shop with or without a booking.',
         icon: MessageSquareText,
         route: '/player/chat',
       },

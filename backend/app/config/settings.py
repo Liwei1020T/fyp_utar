@@ -99,6 +99,25 @@ class Settings(BaseSettings):
     )
     seed_admin_password: str | None = Field(default=None, alias="SEED_ADMIN_PASSWORD")
     ai_internal_api_key: str | None = Field(default=None, alias="AI_INTERNAL_API_KEY")
+    agent_enabled: bool = Field(default=False, alias="AGENT_ENABLED")
+    agent_api_key: SecretStr | None = Field(default=None, alias="AGENT_API_KEY")
+    agent_model: str = Field(default="deepseek-v4-flash", alias="AGENT_MODEL")
+    agent_base_url: str = Field(
+        default="https://api.deepseek.com",
+        alias="AGENT_BASE_URL",
+    )
+    agent_timeout_seconds: float = Field(
+        default=20,
+        ge=1,
+        le=60,
+        alias="AGENT_TIMEOUT_SECONDS",
+    )
+    agent_max_tool_rounds: int = Field(
+        default=2,
+        ge=1,
+        le=3,
+        alias="AGENT_MAX_TOOL_ROUNDS",
+    )
     upload_root_path_raw: str = Field(default="var/uploads", alias="UPLOAD_ROOT_PATH")
 
     @field_validator("cors_origins", mode="before")
@@ -189,6 +208,11 @@ class Settings(BaseSettings):
                 or not self.openwa_api_key.get_secret_value().strip()
             ):
                 raise ValueError("OPENWA_API_KEY must be set when OpenWA is enabled")
+        if self.agent_enabled and (
+            self.agent_api_key is None
+            or not self.agent_api_key.get_secret_value().strip()
+        ):
+            raise ValueError("AGENT_API_KEY must be set when Agent is enabled")
         if self.seed_admin_enabled:
             self._require_seed_fields(
                 "admin",

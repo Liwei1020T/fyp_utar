@@ -8,6 +8,7 @@ import {
   Clock3,
   CreditCard,
   BellRing,
+  Bot,
   LogOut,
   ListTodo,
   ScanSearch,
@@ -34,6 +35,12 @@ import { backendApi } from '../../../services/backendApi';
 import type { BackendAnalyticsSummary } from '../../../types/backend';
 
 const PRIMARY_ACTIONS = [
+  {
+    title: 'Admin AI',
+    subtitle: 'Review a read-only summary of current operations.',
+    route: '/admin/assistant',
+    icon: Bot,
+  },
   {
     title: 'Check-in',
     subtitle: 'Receive a racket at the counter.',

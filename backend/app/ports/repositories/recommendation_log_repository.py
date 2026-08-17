@@ -21,6 +21,7 @@ class RecommendationLogRepository(Protocol):
     def create_run(
         self,
         *,
+        run_id: str,
         user_id: str | None,
         request_payload: dict[str, Any],
         profile_payload: dict[str, Any],

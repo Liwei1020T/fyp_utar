@@ -13,6 +13,7 @@ from app.entrypoints.api.routes.admin_engagement_routes import (
     router as admin_engagement_router,
 )
 from app.entrypoints.api.routes.admin_routes import router as admin_router
+from app.entrypoints.api.routes.agent_routes import router as agent_router
 from app.entrypoints.api.routes.auth_routes import router as auth_router
 from app.entrypoints.api.routes.booking_conversation_routes import (
     router as booking_conversation_router,
@@ -54,6 +55,7 @@ router.include_router(booking_conversation_router)
 router.include_router(racket_feedback_router)
 router.include_router(commerce_router)
 router.include_router(recommendation_router)
+router.include_router(agent_router)
 router.include_router(admin_router)
 router.include_router(admin_engagement_router)
 router.include_router(admin_analytics_router)

@@ -23,6 +23,11 @@ operations modules.
   - Booking system for stringing services with status tracking.
   - Persisted payment/wallet, notifications, booking support, racket passport,
     check-in, and completed-service feedback flows.
+  - FYP-scoped DeepSeek Agent for four-question guided selection, exact-run
+    recommendation explanations, verified in-stock alternatives, and a direct
+    user-controlled human-support entry.
+  - Day-7 feedback follow-up and one day-10 reminder through the App feed and
+    configured WhatsApp delivery, stopping after feedback is submitted.
 - **Admin Flow:**
   - Secure Admin Login.
   - Operational Dashboard with key metrics.
@@ -30,8 +35,9 @@ operations modules.
   - String Inventory Management, including atomic editor saves and media.
   - Payment verification, support reply/resolve/close, and service queue.
   - Business hours, store settings, persisted analytics, and recommendation-run audit.
+  - Read-only Admin AI for the current operations summary; detailed lookup and
+    confirmed-action implementations remain preserved but inactive.
 - **Future extension:**
-  - Generative AI assistant backed by a real model endpoint.
   - Advanced Recommendation Engine with NLP/DL.
 
 ## Project Structure
@@ -89,10 +95,9 @@ operations modules.
    npm run android
    ```
 
-   Remote push requires an EAS preview or production build, not Expo Go. Link
-   the app with `npx eas-cli init`, configure Android FCM V1 and/or the iOS APNs
-   key with `npx eas-cli credentials`, then build with
-   `npx eas-cli build --profile preview --platform <android|ios>`.
+   Remote notification delivery uses the backend's OpenWA session. App users do
+   not need an EAS push build; they receive the same persisted update in the app
+   and through WhatsApp when their category preference is enabled.
 
 6. **Navigate:**
    - The app starts at the unified `/auth/login` screen; the backend account role decides whether login continues to Player or Admin.
@@ -112,6 +117,9 @@ operations modules.
 - **Live backend boundary:** Every authenticated route uses the unified Python API or backend-derived persisted records. The mobile runtime contains no seeded mock session.
 - **Session lifecycle:** Native builds keep the backend bearer token in Expo SecureStore. Web builds keep it only in the current tab's session storage. Both revalidate it through `/auth/me` before restoring the authenticated UI.
 - **Failure boundary:** Missing sessions and failed live reads/writes fail closed; the UI never substitutes local business records or reports a local-only success.
+- **Agent boundary:** The mobile app sends authenticated questions to the Python
+  backend and never contains the DeepSeek credential; model downtime falls back
+  to saved recommendation rationale rather than generated facts.
 - **Type Safety:** Strict TypeScript interfaces for all data models.
 
 ## Validation

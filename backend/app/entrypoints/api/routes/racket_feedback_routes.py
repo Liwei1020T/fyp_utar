@@ -67,7 +67,16 @@ FEEDBACK_ALGORITHM_VERSIONS = {
 }
 
 
-def _racket_to_dto(racket: Racket) -> RacketOut:
+RacketServiceSummary = tuple[int, str | None, float | None, str | None]
+
+
+def _racket_to_dto(
+    racket: Racket,
+    service_summary: RacketServiceSummary | None = None,
+) -> RacketOut:
+    service_count, current_string_id, current_tension, last_serviced_at = (
+        service_summary or (0, None, None, None)
+    )
     return RacketOut(
         id=racket.id,
         user_id=racket.user_id,
@@ -80,9 +89,68 @@ def _racket_to_dto(racket: Racket) -> RacketOut:
         grip_size=racket.grip_size,
         preferred_use=racket.preferred_use,
         notes=racket.notes,
+        service_count=service_count,
+        current_string_id=current_string_id,
+        current_tension=current_tension,
+        last_serviced_at=last_serviced_at,
         created_at=racket.created_at.isoformat(),
         updated_at=racket.updated_at.isoformat(),
     )
+
+
+def _racket_service_summaries(
+    db: Session,
+    *,
+    racket_ids: list[str],
+    user_id: str,
+) -> dict[str, RacketServiceSummary]:
+    if not racket_ids:
+        return {}
+    rows = db.execute(
+        select(
+            Booking.racket_id,
+            Booking.string_id,
+            Booking.requested_tension,
+            Booking.collection_datetime,
+            Booking.updated_at,
+            Booking.created_at,
+        )
+        .where(
+            Booking.racket_id.in_(racket_ids),
+            Booking.user_id == user_id,
+            Booking.status == BookingStatus.COMPLETED.value,
+        )
+        .order_by(Booking.updated_at.desc(), Booking.created_at.desc())
+    ).all()
+    counts: dict[str, int] = {}
+    latest: dict[str, tuple[str | None, float | None, str | None]] = {}
+    for (
+        racket_id,
+        string_id,
+        tension,
+        collection_datetime,
+        updated_at,
+        created_at,
+    ) in rows:
+        if racket_id is None:
+            continue
+        counts[racket_id] = counts.get(racket_id, 0) + 1
+        if racket_id not in latest:
+            serviced_at = collection_datetime or updated_at or created_at
+            latest[racket_id] = (
+                string_id,
+                number_to_float(tension),
+                serviced_at.isoformat() if serviced_at is not None else None,
+            )
+    return {
+        racket_id: (
+            count,
+            latest.get(racket_id, (None, None, None))[0],
+            latest.get(racket_id, (None, None, None))[1],
+            latest.get(racket_id, (None, None, None))[2],
+        )
+        for racket_id, count in counts.items()
+    }
 
 
 def _resolve_racket_identity(
@@ -269,7 +337,12 @@ def list_rackets(
         .scalars()
         .all()
     )
-    return [_racket_to_dto(racket) for racket in rackets]
+    summaries = _racket_service_summaries(
+        db,
+        racket_ids=[racket.id for racket in rackets],
+        user_id=current_user.user_id,
+    )
+    return [_racket_to_dto(racket, summaries.get(racket.id)) for racket in rackets]
 
 
 @router.get("/racket-models", response_model=list[RacketModelOptionOut])
@@ -348,8 +421,17 @@ def get_racket(
         )
         for booking, feedback in rows
     ]
+    current_service = service_history[0] if service_history else None
     return RacketDetailOut(
-        **_racket_to_dto(racket).model_dump(),
+        **_racket_to_dto(
+            racket,
+            (
+                len(service_history),
+                current_service.string_id if current_service else None,
+                current_service.requested_tension if current_service else None,
+                current_service.serviced_at if current_service else None,
+            ),
+        ).model_dump(),
         service_history=service_history,
     )
 

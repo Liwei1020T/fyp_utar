@@ -252,3 +252,90 @@ def test_conversation_message_length_validation_and_closed_guard():
         json={"body": "Please reopen"},
     )
     assert blocked_message.status_code == 409
+
+
+def test_general_support_is_available_without_a_booking_and_reuses_thread():
+    player_token = _register_customer("+60121110005")
+    other_token = _register_customer("+60121110006")
+    admin_token = _login_admin()
+
+    requested = client.post(
+        "/api/conversations/support",
+        headers=_headers(player_token),
+    )
+    assert requested.status_code == 200
+    thread = requested.json()
+    assert thread["id"]
+    assert thread["booking_id"] is None
+    assert thread["state"] == "waiting_admin"
+    conversation_id = thread["id"]
+
+    requested_again = client.post(
+        "/api/conversations/support",
+        headers=_headers(player_token),
+    )
+    assert requested_again.status_code == 200
+    assert requested_again.json()["id"] == conversation_id
+
+    message = client.post(
+        f"/api/conversations/{conversation_id}/messages",
+        headers=_headers(player_token),
+        json={"body": "I need help choosing a string."},
+    )
+    assert message.status_code == 200
+    assert message.json()["booking_id"] is None
+    assert message.json()["messages"][0]["author_role"] == "customer"
+
+    assert (
+        client.get(
+            f"/api/conversations/{conversation_id}",
+            headers=_headers(other_token),
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            "/api/admin/conversations",
+            headers=_headers(admin_token),
+        ).json()[0]["id"]
+        == conversation_id
+    )
+    assert (
+        client.get(
+            "/api/admin/analytics/summary",
+            headers=_headers(admin_token),
+        ).json()["unread_chats"]
+        == 1
+    )
+
+    reply = client.post(
+        f"/api/admin/conversations/{conversation_id}/messages",
+        headers=_headers(admin_token),
+        json={"body": "The shop desk can help with that."},
+    )
+    assert reply.status_code == 200
+    assert reply.json()["state"] == "admin_joined"
+
+    notifications = client.get(
+        "/api/notifications",
+        headers=_headers(player_token),
+    )
+    assert notifications.status_code == 200
+    assert any(
+        item["id"]
+        == f"general-conversation-update:{reply.json()['messages'][-1]['id']}"
+        for item in notifications.json()
+    )
+
+    closed = client.post(
+        f"/api/admin/conversations/{conversation_id}/close",
+        headers=_headers(admin_token),
+    )
+    assert closed.status_code == 200
+    reopened = client.post(
+        "/api/conversations/support",
+        headers=_headers(player_token),
+    )
+    assert reopened.status_code == 200
+    assert reopened.json()["id"] == conversation_id
+    assert reopened.json()["state"] == "waiting_admin"

@@ -49,7 +49,7 @@ export default function AdminNotificationsScreen() {
   const recipients = useMemo(() => {
     const byId = new Map<
       string,
-      { id: string; name: string; phone: string; hasToken: boolean }
+      { id: string; name: string; phone: string }
     >();
     bookings.forEach((booking) => {
       if (!booking.playerId) return;
@@ -57,9 +57,6 @@ export default function AdminNotificationsScreen() {
         id: booking.playerId,
         name: booking.customerName ?? 'Player',
         phone: booking.customerPhone ?? '',
-        hasToken: devices.some(
-          (device) => device.user_id === booking.playerId && device.enabled,
-        ),
       });
     });
     devices.forEach((device) => {
@@ -67,7 +64,6 @@ export default function AdminNotificationsScreen() {
         id: device.user_id,
         name: device.customer_username,
         phone: device.customer_phone_number,
-        hasToken: device.enabled,
       });
     });
     return [...byId.values()];
@@ -117,7 +113,7 @@ export default function AdminNotificationsScreen() {
       setNotifications((current) => [created, ...current]);
       setTitle('');
       setBody('');
-      setMessage(`Notification recorded as ${created.status}.`);
+      setMessage(`In-app saved. Remote delivery status: ${created.status}.`);
     } catch (error) {
       setMessage(
         error instanceof BackendApiError
@@ -140,7 +136,7 @@ export default function AdminNotificationsScreen() {
       setNotifications((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
       );
-      setMessage(`Delivery retry finished as ${updated.status}.`);
+      setMessage(`In-app retained. Remote delivery status: ${updated.status}.`);
     } catch (error) {
       setMessage(
         error instanceof BackendApiError
@@ -157,7 +153,7 @@ export default function AdminNotificationsScreen() {
       tone="admin"
       headerVariant="flow"
       title="Notification management"
-      subtitle="Send app, push, or WhatsApp updates and retry failed deliveries."
+      subtitle="Save an in-app update and attempt the configured remote delivery channel."
       showBackButton
       onBackPress={() => router.back()}
     >
@@ -166,7 +162,7 @@ export default function AdminNotificationsScreen() {
           {recipients.map((recipient) => (
             <AppChip
               key={recipient.id}
-              label={`${recipient.name}${recipient.hasToken ? ' • push' : ''}`}
+              label={`${recipient.name}${recipient.phone ? ` • ${recipient.phone}` : ''}`}
               variant={
                 selectedUserId === recipient.id ? 'primary' : 'neutral'
               }
@@ -199,26 +195,6 @@ export default function AdminNotificationsScreen() {
             isDisabled={!selectedUserId || !title.trim() || !body.trim()}
             onPress={() => void send()}
           />
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="Devices" title="Registered push tokens">
-        <View className="gap-3">
-          {devices.map((device) => (
-            <AppCard key={device.id} variant="subtle" padding="sm">
-              <HeroText className="text-sm font-semibold text-neutral-900">
-                {device.customer_username} • {device.platform}
-              </HeroText>
-              <HeroText className="mt-1 text-xs text-neutral-500">
-                {device.token_preview} • {device.enabled ? 'Enabled' : 'Disabled'}
-              </HeroText>
-            </AppCard>
-          ))}
-          {!devices.length ? (
-            <HeroText className="text-sm text-neutral-600">
-              No player has registered a physical device yet.
-            </HeroText>
-          ) : null}
         </View>
       </AppSection>
 

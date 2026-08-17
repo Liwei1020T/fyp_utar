@@ -70,7 +70,7 @@ Query cache owner.
 | [mobile/app/player/(tabs)/strings.tsx](../mobile/app/player/%28tabs%29/strings.tsx) | String catalog browsing and sorting. |
 | [mobile/app/player/(tabs)/recommend.tsx](../mobile/app/player/%28tabs%29/recommend.tsx) | Recommendation input form and backend recommendation trigger. |
 | [mobile/app/player/(tabs)/bookings.tsx](../mobile/app/player/%28tabs%29/bookings.tsx) | Player booking list and filtering. |
-| [mobile/app/player/(tabs)/chat.tsx](../mobile/app/player/%28tabs%29/chat.tsx) | Live player booking-support thread list with persisted conversation state and read timestamps. |
+| [mobile/app/player/(tabs)/chat.tsx](../mobile/app/player/%28tabs%29/chat.tsx) | Live player human-support list for booking-linked and booking-free threads. |
 | [mobile/app/player/(tabs)/profile.tsx](../mobile/app/player/%28tabs%29/profile.tsx) | Player profile overview. |
 | [mobile/app/player/bookings/new.tsx](../mobile/app/player/bookings/new.tsx) | Booking creation form and slot/string selection. |
 | [mobile/app/player/bookings/summary.tsx](../mobile/app/player/bookings/summary.tsx) | Booking draft confirmation summary. |
@@ -81,14 +81,14 @@ Query cache owner.
 | [mobile/app/player/strings/[id].tsx](../mobile/app/player/strings/[id].tsx) | String detail screen. |
 | [mobile/app/player/strings/compare.tsx](../mobile/app/player/strings/compare.tsx) | String comparison flow. |
 | [mobile/app/player/(tabs)/results.tsx](../mobile/app/player/%28tabs%29/results.tsx) | Recommendation result list. |
-| [mobile/app/player/recommend/explain/[id].tsx](../mobile/app/player/recommend/explain/[id].tsx) | Recommendation explanation detail. |
+| [mobile/app/player/recommend/explain/[id].tsx](../mobile/app/player/recommend/explain/[id].tsx) | Exact-run dynamic Agent explanation with saved-rationale fallback. |
 | [mobile/app/player/profile/edit.tsx](../mobile/app/player/profile/edit.tsx) | Editable recommendation/player profile form. |
-| [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/%5Bid%5D.tsx) | Player booking-support detail backed by persisted conversation state and messages. |
-| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | Compatibility redirect to live booking support. |
+| [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/%5Bid%5D.tsx) | Player human-support detail backed by persisted conversation state and messages. |
+| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | FYP-scoped four-question guided-selection Agent with verified replacement-string actions. |
 | [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Expiring server-issued QR check-in token screen. |
 | [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/%5BbookingId%5D.tsx) | Creates or displays the structured feedback record for one completed owned booking. |
 | [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Owned backend event feed with persisted read IDs. |
-| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Backend preferences plus explicit physical-device Expo token registration. |
+| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Backend preferences shared by the in-app feed and OpenWA delivery. |
 | [mobile/app/player/settings.tsx](../mobile/app/player/settings.tsx) | Account, password, privacy, deletion request, version, and logout controls. |
 | [mobile/app/player/rackets.tsx](../mobile/app/player/rackets.tsx) | Owned physical Racket Passport list. |
 | [mobile/app/player/rackets/new.tsx](../mobile/app/player/rackets/new.tsx) | Registers a new owned physical racket passport. |
@@ -100,20 +100,20 @@ Query cache owner.
 | [mobile/app/admin/(tabs)/dashboard.tsx](../mobile/app/admin/%28tabs%29/dashboard.tsx) | Admin operational dashboard. |
 | [mobile/app/admin/(tabs)/bookings.tsx](../mobile/app/admin/%28tabs%29/bookings.tsx) | Admin booking management list. |
 | [mobile/app/admin/(tabs)/inventory.tsx](../mobile/app/admin/%28tabs%29/inventory.tsx) | Admin inventory list. |
-| [mobile/app/admin/(tabs)/chat.tsx](../mobile/app/admin/%28tabs%29/chat.tsx) | Live booking-support queue backed by persisted conversation state. |
+| [mobile/app/admin/(tabs)/chat.tsx](../mobile/app/admin/%28tabs%29/chat.tsx) | Live booking/general human-support queue backed by persisted conversation state. |
 | [mobile/app/admin/(tabs)/analytics.tsx](../mobile/app/admin/%28tabs%29/analytics.tsx) | Backend analytics summary and popular-string view. |
 | [mobile/app/admin/bookings/[id].tsx](../mobile/app/admin/bookings/[id].tsx) | Admin booking detail and status updates. |
 | [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing trending strings. |
 | [mobile/app/admin/business-hours.tsx](../mobile/app/admin/business-hours.tsx) | Store business hours editor. |
 | [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Camera QR scan, secure token confirmation, and manual lookup fallback. |
 | [mobile/app/admin/feedback.tsx](../mobile/app/admin/feedback.tsx) | Structured feedback filter, booking drill-down, and CSV export. |
-| [mobile/app/admin/notifications.tsx](../mobile/app/admin/notifications.tsx) | Device-token visibility, notification composition, delivery status, and resend. |
+| [mobile/app/admin/notifications.tsx](../mobile/app/admin/notifications.tsx) | In-app plus WhatsApp notification composition, delivery status, and resend. |
 | [mobile/app/admin/recommendations/index.tsx](../mobile/app/admin/recommendations/index.tsx) | Admin recommendation run history list backed by the unified backend. |
 | [mobile/app/admin/recommendations/[runId].tsx](../mobile/app/admin/recommendations/%5BrunId%5D.tsx) | Admin recommendation run detail with request/profile snapshots and score breakdown review. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Live booking service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Persisted payment monitor and verification actions. |
 | [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, default service fee, notification templates, trending strings, and admin password controls. |
-| [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Admin booking-support reply screen with persisted read, resolve, and close actions. |
+| [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Admin human-support reply screen with persisted read, resolve, and close actions. |
 
 ### Mobile State, Services, And Types
 
@@ -148,6 +148,7 @@ Query cache owner.
 | [mobile/components/booking/SlotPicker.tsx](../mobile/components/booking/SlotPicker.tsx) | Slot selection UI. |
 | [mobile/components/tracking/TrackingTimeline.tsx](../mobile/components/tracking/TrackingTimeline.tsx) | Booking status timeline UI. |
 | [mobile/components/chat/ConversationCard.tsx](../mobile/components/chat/ConversationCard.tsx) | Chat thread card. |
+| [mobile/components/agent/AgentAnswerCard.tsx](../mobile/components/agent/AgentAnswerCard.tsx) | Shared grounded-answer renderer; source and suggested-question presentation remains preserved but inactive. |
 | [mobile/components/chat/ChatBubble.tsx](../mobile/components/chat/ChatBubble.tsx) | Chat message bubble. |
 | [mobile/components/payment/PaymentMethodCard.tsx](../mobile/components/payment/PaymentMethodCard.tsx) | Payment option card. |
 | [mobile/components/rackets/RacketPassportCard.tsx](../mobile/components/rackets/RacketPassportCard.tsx) | Racket passport summary card. |
@@ -204,13 +205,14 @@ unified startup.
 | [backend/app/entrypoints/api/routes/catalog_routes.py](../backend/app/entrypoints/api/routes/catalog_routes.py) | Public string catalog list/detail. |
 | [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail, cancellation, and QR token issue. |
 | [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Recommendation preview/profile endpoints. |
+| [backend/app/entrypoints/api/routes/agent_routes.py](../backend/app/entrypoints/api/routes/agent_routes.py) | Authenticated, rate-limited player Agent query endpoint and DeepSeek composition. |
 | [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, secure check-in, queue, settings, and recommendation logs. |
 | [backend/app/entrypoints/api/routes/admin_engagement_routes.py](../backend/app/entrypoints/api/routes/admin_engagement_routes.py) | Admin feedback export, device tokens, notification delivery, and resend. |
 | [backend/app/entrypoints/api/routes/admin_analytics_routes.py](../backend/app/entrypoints/api/routes/admin_analytics_routes.py) | Admin analytics summary and popular-string reporting. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
 | [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes/payments, wallet ledger, top-ups, and admin verification. |
 | [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
-| [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-support lifecycle and messages. |
+| [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-linked and booking-free human-support lifecycle and messages. |
 | [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Server-validated standard racket catalogue, owned physical rackets, and completed-booking feedback. |
 | [backend/app/entrypoints/api/routes/media_routes.py](../backend/app/entrypoints/api/routes/media_routes.py) | Time-limited signed access to persisted upload media. |
 
@@ -224,9 +226,10 @@ unified startup.
 | Booking | `domain/booking`, `use_cases/booking`, `dto/booking.py` | Booking creation, list/detail, admin status transitions, status note validation. |
 | Store | `domain/store`, `use_cases/store`, `dto/store.py` | Business hours, slots, check-in, service queue, store settings, analytics. |
 | Recommendation | `domain/recommendation`, `use_cases/recommendation`, `dto/recommendation.py` | Recommendation generation and admin log listing. |
+| Agent | `use_cases/agent`, `adapters/services/agent`, `dto/agent.py` | FYP-scoped guided selection, exact-run context, in-stock alternatives, read-only admin summary, DeepSeek transport, and validated response. |
 | Commerce | `routes/commerce_routes.py`, `dto/commerce.py`, commerce models | Server quotes, payment verification, and append-only wallet ledger. |
 | Notifications | `routes/notification_routes.py`, `dto/notifications.py`, notification models | Owned event feed, per-user read state, and persisted preferences. |
-| Booking support | `routes/booking_conversation_routes.py`, `dto/booking_conversation.py`, conversation model | One persisted support state per booking and conversation-channel booking updates. |
+| Human support | `routes/booking_conversation_routes.py`, `dto/booking_conversation.py`, conversation models | Booking-linked support plus one reusable booking-free support thread per player. |
 | Rackets and feedback | `routes/racket_feedback_routes.py`, `dto/racket_feedback.py`, racket/feedback models | Owned physical racket passports and one feedback record per completed booking. |
 
 When adding reusable or multi-repository behavior, follow the dependency
@@ -246,7 +249,7 @@ reuse seam.
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260731_0026`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260817_0031`. |
 | [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
 
@@ -277,6 +280,7 @@ loaded by the unified runtime.
 | [backend/tests/test_unified_backend_flows.py](../backend/tests/test_unified_backend_flows.py) | End-to-end API flow coverage: auth, profile, booking, admin controls, recommendation logs, store ops. |
 | [backend/tests/test_sqlalchemy_repositories.py](../backend/tests/test_sqlalchemy_repositories.py) | Repository persistence behavior. |
 | [backend/tests/test_recommendation_use_case.py](../backend/tests/test_recommendation_use_case.py) | Recommendation use-case behavior. |
+| [backend/tests/test_agent.py](../backend/tests/test_agent.py) | Agent tool bounds, ownership, provider payload, What-if mapping, auth, and API behavior. |
 | [backend/tests/test_booking_policies.py](../backend/tests/test_booking_policies.py) | Booking domain status transition and note policies. |
 | [backend/tests/test_booking_conversations.py](../backend/tests/test_booking_conversations.py) | Booking-support lifecycle, ownership, admin role, and closed-thread guards. |
 | [backend/tests/test_commerce_quote.py](../backend/tests/test_commerce_quote.py) | Server-owned booking quote and ledger amount contract. |

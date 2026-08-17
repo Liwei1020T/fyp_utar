@@ -36,6 +36,8 @@ class StringOut(BaseModel):
     model_name: str
     normalized_name: str
     price_rm: float | None = None
+    available_stock: int
+    availability_status: InventoryAvailability
     attack: float
     comfort: float
     control: float
@@ -293,6 +295,12 @@ def string_to_dto(item: StringItem) -> StringOut:
         model_name=item.model_name,
         normalized_name=item.normalized_name,
         price_rm=item.price_rm,
+        available_stock=item.available_stock,
+        availability_status=(
+            item.inventory.availability_status
+            if item.inventory
+            else inventory_availability(item)
+        ),
         attack=item.attack,
         comfort=item.comfort,
         control=item.control,
@@ -357,15 +365,11 @@ def inventory_string_to_dto(item: StringItem) -> AdminInventoryStringOut:
         stock_level=item.stock_level,
         current_stock=item.current_stock,
         reserved_stock=item.reserved_stock,
-        available_stock=item.available_stock,
         reorder_level=item.reorder_level,
         reorder_quantity=item.reorder_quantity,
         cost_price=item.cost_price,
         selling_price=item.selling_price,
         pricing_mode=item.inventory.pricing_mode if item.inventory else "price_pending",
-        availability_status=item.inventory.availability_status
-        if item.inventory
-        else inventory_availability(item),
         availability=inventory_availability(item),
         admin_note=item.admin_note,
     )

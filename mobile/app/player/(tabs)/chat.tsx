@@ -26,7 +26,11 @@ export default function PlayerChatThreadsScreen() {
   const bookings = useBookings();
   const conversations = useConversations();
   const setLiveConversations = useAppStore((state) => state.setLiveConversations);
+  const upsertLiveConversation = useAppStore(
+    (state) => state.upsertLiveConversation,
+  );
   const [isRefreshing, setIsRefreshing] = useState(Boolean(token));
+  const [isRequestingSupport, setIsRequestingSupport] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refreshConversations = useCallback(async () => {
@@ -50,7 +54,7 @@ export default function PlayerChatThreadsScreen() {
       setError(
         loadError instanceof BackendApiError
           ? loadError.message
-          : 'Failed to load booking support conversations.',
+          : 'Failed to load human support conversations.',
       );
     } finally {
       setIsRefreshing(false);
@@ -69,11 +73,39 @@ export default function PlayerChatThreadsScreen() {
 
   const playerConversations = conversations.filter((item) => item.playerId === user.id);
 
+  const openHumanSupport = async () => {
+    const latest = playerConversations[0];
+    if (latest) {
+      router.push(`/player/chat/${latest.id}`);
+      return;
+    }
+    if (!token) {
+      setError('Sign in again to contact human support.');
+      return;
+    }
+    setIsRequestingSupport(true);
+    setError(null);
+    try {
+      const response = await backendApi.requestGeneralSupport(token);
+      const mapped = mapBackendConversationToConversation(response, undefined);
+      upsertLiveConversation(mapped);
+      router.push(`/player/chat/${mapped.id}`);
+    } catch (supportError) {
+      setError(
+        supportError instanceof BackendApiError
+          ? supportError.message
+          : 'Failed to open human support.',
+      );
+    } finally {
+      setIsRequestingSupport(false);
+    }
+  };
+
   return (
     <AppScreen
       headerVariant="primary"
-      title="Booking support"
-      subtitle="Messages shared with the shop against your live bookings."
+      title="Human support"
+      subtitle="Message the shop with or without an existing booking."
       scrollable={false}
     >
       <FlatList
@@ -111,10 +143,10 @@ export default function PlayerChatThreadsScreen() {
                     Persisted support
                   </HeroText>
                   <HeroText className="mt-2 text-[26px] font-bold tracking-tight text-white">
-                    Keep every service question attached to its booking.
+                    Get help from the shop desk.
                   </HeroText>
                   <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-                    Messages are stored with the booking, so the player and shop desk see the same service history.
+                    Existing booking questions keep their order context. General questions stay in a separate support thread.
                   </HeroText>
                 </View>
                 <View className="h-12 w-12 items-center justify-center rounded-2xl bg-white/12">
@@ -122,17 +154,12 @@ export default function PlayerChatThreadsScreen() {
                 </View>
               </View>
               <AppButton
-                label={playerConversations.length > 0 ? 'Open latest thread' : 'No booking threads yet'}
+                label={playerConversations.length > 0 ? 'Open latest thread' : 'Contact human support'}
                 variant="secondary"
                 size="sm"
                 className="mt-6 self-start"
-                isDisabled={playerConversations.length === 0}
-                onPress={() => {
-                  const latest = playerConversations[0];
-                  if (latest) {
-                    router.push(`/player/chat/${latest.id}`);
-                  }
-                }}
+                isLoading={isRequestingSupport}
+                onPress={() => void openHumanSupport()}
               />
             </AppCard>
 
@@ -173,12 +200,12 @@ export default function PlayerChatThreadsScreen() {
         ListEmptyComponent={
           <AppCard variant="subtle" className="mb-4" padding="md">
             <HeroText className="text-base font-semibold text-neutral-900">
-              {isRefreshing ? 'Loading booking support...' : 'No booking threads yet'}
+              {isRefreshing ? 'Loading human support...' : 'No support threads yet'}
             </HeroText>
             <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
               {error
                 ? 'Retry to load your persisted support threads.'
-                : 'Request support from an eligible booking when you need the shop desk.'}
+                : 'Use Contact human support to start a conversation with the shop desk.'}
             </HeroText>
           </AppCard>
         }

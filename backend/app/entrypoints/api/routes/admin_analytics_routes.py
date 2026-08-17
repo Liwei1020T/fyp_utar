@@ -12,6 +12,8 @@ from app.adapters.persistence.sqlalchemy.models import BookingConversation
 from app.adapters.persistence.sqlalchemy.models import BookingFeedback
 from app.adapters.persistence.sqlalchemy.models import BookingUpdate
 from app.adapters.persistence.sqlalchemy.models import Payment
+from app.adapters.persistence.sqlalchemy.models import SupportConversation
+from app.adapters.persistence.sqlalchemy.models import SupportConversationMessage
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.dto.store import AnalyticsSummaryOut
@@ -39,6 +41,42 @@ def admin_analytics_summary(
     clock=Depends(get_clock),
     db: Session = Depends(get_db, scope="function"),
 ) -> AnalyticsSummaryOut:
+    booking_unread_chats = (
+        db.scalar(
+            select(func.count(func.distinct(BookingConversation.booking_id)))
+            .join(
+                BookingUpdate,
+                BookingUpdate.booking_id == BookingConversation.booking_id,
+            )
+            .where(
+                BookingUpdate.channel == "conversation",
+                BookingUpdate.author_role == "customer",
+                or_(
+                    BookingConversation.admin_last_read_at.is_(None),
+                    BookingUpdate.created_at > BookingConversation.admin_last_read_at,
+                ),
+            )
+        )
+        or 0
+    )
+    general_unread_chats = (
+        db.scalar(
+            select(func.count(func.distinct(SupportConversation.id)))
+            .join(
+                SupportConversationMessage,
+                SupportConversationMessage.conversation_id == SupportConversation.id,
+            )
+            .where(
+                SupportConversationMessage.author_role == "customer",
+                or_(
+                    SupportConversation.admin_last_read_at.is_(None),
+                    SupportConversationMessage.created_at
+                    > SupportConversation.admin_last_read_at,
+                ),
+            )
+        )
+        or 0
+    )
     summary = GetStoreAnalyticsUseCase(
         booking_repository=booking_repository,
         catalog_repository=catalog_repository,
@@ -57,22 +95,7 @@ def admin_analytics_summary(
             AnalyticsFeedback(booking_id=item.booking_id, rating=item.rating)
             for item in db.scalars(select(BookingFeedback))
         ],
-        unread_chats=db.scalar(
-            select(func.count(func.distinct(BookingConversation.booking_id)))
-            .join(
-                BookingUpdate,
-                BookingUpdate.booking_id == BookingConversation.booking_id,
-            )
-            .where(
-                BookingUpdate.channel == "conversation",
-                BookingUpdate.author_role == "customer",
-                or_(
-                    BookingConversation.admin_last_read_at.is_(None),
-                    BookingUpdate.created_at > BookingConversation.admin_last_read_at,
-                ),
-            )
-        )
-        or 0,
+        unread_chats=booking_unread_chats + general_unread_chats,
         store_timezone=get_settings().store_timezone,
     )
     return analytics_summary_to_dto(summary)
