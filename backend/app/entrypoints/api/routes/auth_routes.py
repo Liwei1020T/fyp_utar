@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.models import AccountDeletionRequest
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.adapters.services.openwa import send_openwa_text
 from app.config.settings import get_settings
 from app.dto.auth import AccountDeletionRequestOut
 from app.dto.auth import AccountDeletionRequestPayload
@@ -69,6 +71,24 @@ def _build_auth_response(user, token_service) -> AuthResponse:
         user_id=user.id,
         user=user_to_dto(user),
     )
+
+
+def _send_password_reset_whatsapp(
+    *,
+    endpoint: str,
+    api_key: str | None,
+    chat_id: str,
+    text: str,
+) -> None:
+    try:
+        send_openwa_text(
+            endpoint=endpoint,
+            api_key=api_key,
+            chat_id=chat_id,
+            text=text,
+        )
+    except (OSError, TypeError, ValueError):
+        pass
 
 
 def _validate_payload(model: type[BaseModel], payload: dict, **context):
@@ -137,11 +157,13 @@ def login(
 )
 def request_forgot_password_code(
     http_request: Request,
+    background_tasks: BackgroundTasks,
     payload: dict = Body(...),
     user_repository=Depends(get_user_repository),
     password_reset_repository=Depends(get_password_reset_repository),
     password_hasher: PasswordHasher = Depends(get_password_hasher),
     clock=Depends(get_clock),
+    db: Session = Depends(get_db, scope="function"),
 ) -> ForgotPasswordRequestResponse:
     request = _validate_payload(
         ForgotPasswordRequest,
@@ -150,7 +172,7 @@ def request_forgot_password_code(
     )
     _reset_request_limiter.check(_rate_limit_key(http_request, request.phone_number))
     settings = get_settings()
-    code = RequestPasswordResetUseCase(
+    result = RequestPasswordResetUseCase(
         user_repository=user_repository,
         password_reset_repository=password_reset_repository,
         password_hasher=password_hasher,
@@ -159,7 +181,32 @@ def request_forgot_password_code(
         dev_preview_enabled=settings.password_reset_dev_preview_enabled,
         is_dev_like=settings.is_dev_like,
     ).execute(phone_number=request.phone_number)
-    return ForgotPasswordRequestResponse(dev_code_preview=code)
+    db.commit()
+    if result is not None and settings.openwa_enabled:
+        phone_digits = "".join(
+            character for character in result.phone_number if character.isdigit()
+        )
+        background_tasks.add_task(
+            _send_password_reset_whatsapp,
+            endpoint=(
+                f"{settings.openwa_base_url.rstrip('/')}"
+                f"/sessions/{settings.openwa_session_id}/messages/send-text"
+            ),
+            api_key=(
+                settings.openwa_api_key.get_secret_value()
+                if settings.openwa_api_key is not None
+                else None
+            ),
+            chat_id=f"{phone_digits}@c.us",
+            text=(
+                f"Your StringSense verification code is {result.delivery_code}. "
+                f"It expires in {settings.password_reset_code_expire_minutes} "
+                "minutes. Do not share this code."
+            ),
+        )
+    return ForgotPasswordRequestResponse(
+        dev_code_preview=result.dev_code_preview if result is not None else None
+    )
 
 
 @router.post("/forgot-password/reset", response_model=MessageResponse)

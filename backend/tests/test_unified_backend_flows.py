@@ -4,6 +4,7 @@ from datetime import date
 from datetime import timedelta
 
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 from sqlalchemy import select
 
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
@@ -12,6 +13,7 @@ from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
+from app.entrypoints.api.routes import auth_routes
 from app.main import app
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
 
@@ -1164,6 +1166,14 @@ def test_admin_analytics_summary_and_popular_strings():
 
 def test_request_password_reset_is_generic_for_unknown_phone(monkeypatch):
     enable_password_reset_preview(monkeypatch)
+    settings = get_settings()
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    provider_calls: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        auth_routes,
+        "send_openwa_text",
+        lambda **kwargs: provider_calls.append(kwargs),
+    )
 
     response = client.post(
         "/api/auth/forgot-password/request-code",
@@ -1173,6 +1183,71 @@ def test_request_password_reset_is_generic_for_unknown_phone(monkeypatch):
     assert response.status_code == 200
     assert response.json()["message"] == "Verification code sent if the account exists"
     assert response.json()["dev_code_preview"] is None
+    assert provider_calls == []
+
+
+def test_password_reset_code_is_committed_before_whatsapp_delivery(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+    register_customer()
+    settings = get_settings()
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
+    monkeypatch.setattr(settings, "openwa_session_id", "session-1")
+    monkeypatch.setattr(settings, "openwa_api_key", SecretStr("openwa-test-key"))
+    provider_calls: list[dict[str, object]] = []
+
+    def fake_send_openwa_text(**kwargs) -> str:
+        with SessionLocal() as db:
+            reset_code = db.scalar(
+                select(PasswordResetCode).where(PasswordResetCode.used_at.is_(None))
+            )
+            assert reset_code is not None
+        provider_calls.append(kwargs)
+        return "wa-reset-message-1"
+
+    monkeypatch.setattr(auth_routes, "send_openwa_text", fake_send_openwa_text)
+    response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+
+    assert response.status_code == 200
+    verification_code = response.json()["dev_code_preview"]
+    assert verification_code is not None
+    assert response.json()["message"] == "Verification code sent if the account exists"
+    assert provider_calls == [
+        {
+            "endpoint": (
+                "http://openwa.test/api/sessions/session-1/messages/send-text"
+            ),
+            "api_key": "openwa-test-key",
+            "chat_id": "60123456789@c.us",
+            "text": (
+                f"Your StringSense verification code is {verification_code}. "
+                "It expires in 10 minutes. Do not share this code."
+            ),
+        }
+    ]
+
+
+def test_password_reset_stays_generic_when_whatsapp_delivery_fails(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+    register_customer()
+    settings = get_settings()
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+
+    def fail_send_openwa_text(**_kwargs) -> str:
+        raise OSError("provider unavailable")
+
+    monkeypatch.setattr(auth_routes, "send_openwa_text", fail_send_openwa_text)
+    response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Verification code sent if the account exists"
+    assert response.json()["dev_code_preview"] is not None
 
 
 def test_customer_can_reset_password_with_verification_code(monkeypatch):

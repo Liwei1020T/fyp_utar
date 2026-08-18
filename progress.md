@@ -2,6 +2,18 @@
 
 ## 2026-08-18
 
+- Started Phase 26 after the user explicitly requested WhatsApp delivery for
+  Forgot Password verification codes.
+- Security boundary: preserve generic anti-enumeration responses, persist before
+  network I/O, keep codes out of logs, and reuse the configured OpenWA session.
+- Added the shared OpenWA text sender and routed password-reset codes through it
+  after an explicit database commit and via a response background task.
+- Updated Forgot Password copy and current backend/runbook/API documentation.
+- Verification passed: full backend Ruff/format/Mypy, 153 tests with 2 expected
+  PostgreSQL-only skips, mobile lint/TypeScript, 10 mobile tests, and diff checks.
+- Phase 26 is code-complete; real-phone receipt remains pending until the
+  existing OpenWA session is connected by scanning its QR code.
+
 - Started Phase 25 after the user asked whether Forgot Password already uses
   WhatsApp, requested a Git commit, and asked what the service fee represents.
 - The commit scope is limited to the notification-test isolation fix, catalog

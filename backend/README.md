@@ -59,9 +59,11 @@ expose either through an `EXPO_PUBLIC_*` mobile variable.
 For an FYP-only WhatsApp channel, run the self-hosted OpenWA `v0.11.1`, create
 and connect one session in its dashboard, mint a session-scoped operator key,
 then set `OPENWA_ENABLED=true`. StringSense sends only the notification title
-and body to `POST /api/sessions/{sessionId}/messages/send-text`; the in-app
-notification remains the audit source of truth if OpenWA is unavailable. Player
-category preferences apply to both the in-app feed and OpenWA delivery.
+and body, or a time-limited password-reset code, to
+`POST /api/sessions/{sessionId}/messages/send-text`. The in-app notification
+remains the audit source of truth if OpenWA is unavailable. Player category
+preferences apply to both the in-app feed and OpenWA notification delivery;
+security codes are account messages and are not controlled by those preferences.
 
 ## Local Postgres
 

@@ -122,6 +122,10 @@ Deferred implementations remain in the repository and are disabled at their regi
 
 **Status:** complete
 
+### Phase 26 — Deliver password-reset codes through WhatsApp
+
+**Status:** complete
+
 ## Decisions
 
 - Keep the admin read-only summary; disable all admin detailed queries and writes.
@@ -161,6 +165,10 @@ Deferred implementations remain in the repository and are disabled at their regi
 - Commit only the scoped notification-test isolation, catalog-archive evidence,
   and planning records; exclude secrets, private backups, generated Graphify,
   Playwright state, and output artifacts.
+- Password-reset requests must keep a generic response for unknown accounts and
+  provider failures, persist the code before provider I/O, never log or expose
+  the code outside development preview, and use the existing session-scoped
+  OpenWA configuration.
 
 ## Errors Encountered
 

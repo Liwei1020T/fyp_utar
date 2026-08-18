@@ -22,6 +22,7 @@ os.environ.setdefault("SEED_ADMIN_PHONE_NUMBER", "+60190000000")
 os.environ.setdefault("SEED_ADMIN_PASSWORD", "admin1234")
 os.environ.setdefault("AI_INTERNAL_API_KEY", "test-ai-internal-key")
 os.environ.setdefault("UPLOAD_ROOT_PATH", "/tmp/stringsense_test_uploads")
+os.environ["OPENWA_ENABLED"] = "false"
 
 
 @pytest.fixture(autouse=True)

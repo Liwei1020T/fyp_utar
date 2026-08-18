@@ -156,8 +156,7 @@ shop verification. A payment-provider redirect/webhook requires a selected
 provider and credentials and must replace that manual verification boundary,
 not create a second source of truth.
 
-The password-reset APIs and verification-code rules are also implemented and
-tested, but no SMS or WhatsApp delivery provider is configured. With
-`PASSWORD_RESET_DEV_PREVIEW_ENABLED=false`, automatic code delivery remains an
-external integration boundary and is not represented as a completed production
-flow.
+The password-reset APIs and verification-code rules use the configured OpenWA
+session. Codes are committed before provider I/O, and provider failures retain
+the generic anti-enumeration response. A connected session and real-phone
+receipt are still required before claiming live external delivery.

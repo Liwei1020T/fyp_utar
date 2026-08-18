@@ -454,7 +454,9 @@ def test_admin_openwa_delivery_uses_player_phone_without_a_device_token(
         }
         return FakeResponse()
 
-    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(
+        "app.adapters.services.openwa.urllib_request.urlopen", fake_urlopen
+    )
     response = client.post(
         "/api/admin/notifications",
         headers=_headers(_admin_token()),
@@ -509,7 +511,9 @@ def test_admin_openwa_delivery_respects_player_notification_preferences(
     def fail_urlopen(*_args, **_kwargs):
         raise AssertionError("OpenWA must not run for a disabled category")
 
-    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fail_urlopen)
+    monkeypatch.setattr(
+        "app.adapters.services.openwa.urllib_request.urlopen", fail_urlopen
+    )
     response = client.post(
         "/api/admin/notifications",
         headers=_headers(_admin_token()),
@@ -663,7 +667,9 @@ def test_feedback_followups_send_once_on_day_7_and_day_10_then_stop(
         provider_calls.append(request)
         return FakeResponse()
 
-    monkeypatch.setattr(admin_engagement_routes.urllib_request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(
+        "app.adapters.services.openwa.urllib_request.urlopen", fake_urlopen
+    )
 
     assert admin_engagement_routes.run_due_feedback_followups(now=now) == {
         "created": 2,

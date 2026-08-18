@@ -69,11 +69,10 @@ cd backend
   configured with a non-empty username/password and a valid 9-to-15-digit
   companion phone number. Seed credentials belong in local process/env state,
   never in mobile source or committed documentation.
-- Password-reset code generation and verification are implemented, but there is
-  no SMS or WhatsApp delivery provider. Keep
-  `PASSWORD_RESET_DEV_PREVIEW_ENABLED=false` outside controlled local
-  development, and do not describe password reset as production self-service
-  until a provider and credentials are configured.
+- Password-reset codes use the configured OpenWA session and are committed
+  before provider I/O. Keep `PASSWORD_RESET_DEV_PREVIEW_ENABLED=false` outside
+  controlled local development. Do not claim live delivery until the OpenWA
+  session is connected and a real phone receipt has been verified.
 
 ## 5. Commerce Boundary
 

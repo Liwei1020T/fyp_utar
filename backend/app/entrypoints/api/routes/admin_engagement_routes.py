@@ -31,6 +31,7 @@ from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.adapters.services.openwa import send_openwa_text
 from app.config.settings import get_settings
 from app.domain.booking.policies import booking_order_code
 from app.dto.notifications import AdminDeviceTokenOut
@@ -233,29 +234,30 @@ def _prepare_notification_delivery(
 def _send_notification_to_provider(
     target: _NotificationDeliveryTarget,
 ) -> tuple[str, str | None]:
-    payload: dict[str, object]
     if target.provider == "openwa":
-        payload = {
-            "chatId": target.recipient,
-            "text": f"*{target.title}*\n{target.body}",
-        }
-    else:
-        payload = {
-            "to": target.recipient,
-            "title": target.title,
-            "body": target.body,
-            "data": {"route": target.route} if target.route else {},
-        }
+        try:
+            return (
+                "sent",
+                send_openwa_text(
+                    endpoint=target.endpoint,
+                    api_key=target.access_token,
+                    chat_id=target.recipient,
+                    text=f"*{target.title}*\n{target.body}",
+                ),
+            )
+        except (OSError, TypeError, ValueError) as exc:
+            return "failed", str(exc)[:500]
+
+    payload = {
+        "to": target.recipient,
+        "title": target.title,
+        "body": target.body,
+        "data": {"route": target.route} if target.route else {},
+    }
     body = json.dumps(payload).encode("utf-8")
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
     if target.access_token:
-        header = "X-API-Key" if target.provider == "openwa" else "Authorization"
-        value = (
-            target.access_token
-            if target.provider == "openwa"
-            else f"Bearer {target.access_token}"
-        )
-        headers[header] = value
+        headers["Authorization"] = f"Bearer {target.access_token}"
     request = urllib_request.Request(
         target.endpoint,
         data=body,
@@ -267,19 +269,11 @@ def _send_notification_to_provider(
             provider_response = json.loads(response.read().decode("utf-8"))
         if not isinstance(provider_response, dict):
             raise ValueError(f"{target.provider} returned an invalid response")
-        if target.provider == "openwa":
-            status = "sent"
-            provider_message = (
-                provider_response.get("messageId")
-                or provider_response.get("id")
-                or "OpenWA accepted"
-            )
-        else:
-            ticket = provider_response.get("data", {})
-            if not isinstance(ticket, dict):
-                raise ValueError("Expo returned an invalid delivery ticket")
-            status = "sent" if ticket.get("status") == "ok" else "failed"
-            provider_message = ticket.get("message") or ticket.get("id")
+        ticket = provider_response.get("data", {})
+        if not isinstance(ticket, dict):
+            raise ValueError("Expo returned an invalid delivery ticket")
+        status = "sent" if ticket.get("status") == "ok" else "failed"
+        provider_message = ticket.get("message") or ticket.get("id")
         return status, str(provider_message) if provider_message is not None else None
     except (OSError, TypeError, ValueError) as exc:
         return "failed", str(exc)[:500]

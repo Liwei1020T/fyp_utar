@@ -232,7 +232,7 @@ export default function ForgotPasswordScreen() {
                   value={value}
                   onChangeText={onChange}
                   error={resetErrors.verificationCode?.message}
-                  helperText="This can later be delivered through WhatsApp."
+                  helperText="We'll send the verification code to this WhatsApp number."
                   leftAdornment={<MessageSquareMore size={18} color="#64748B" />}
                 />
               )}

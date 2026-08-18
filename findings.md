@@ -1,5 +1,22 @@
 # Agent Scope Findings
 
+## WhatsApp password-reset delivery (2026-08-18)
+
+- Forgot Password now sends its six-digit code through the configured OpenWA
+  session; development preview remains separately gated.
+- Unknown phone numbers and provider failures retain the same generic response,
+  so the endpoint does not reveal whether an account exists.
+- Admin notifications already establish the required transaction pattern:
+  prepare the persisted record, commit it, and only then perform provider I/O.
+- The smallest safe integration is one shared stdlib OpenWA text sender plus an
+  internal reset result that carries the plaintext code only in process memory.
+- The route commits before scheduling provider I/O, and the regression test
+  proves the committed code is visible from a separate database session before
+  the OpenWA sender runs.
+- Automated verification is complete, but the current OpenWA session still
+  requires QR connection and a real-phone receipt before live delivery can be
+  claimed.
+
 ## Password delivery, service fee, and commit handoff (2026-08-18)
 
 - The user expects Forgot Password to use WhatsApp; verify the actual route and

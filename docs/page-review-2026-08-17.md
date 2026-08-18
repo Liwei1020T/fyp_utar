@@ -64,7 +64,7 @@ and replied to the same persisted thread. Screenshots are in
 | --- | --- | --- |
 | `/auth/login` | Pass | Valid player/admin routing, invalid-credential message, logout/session restore. |
 | `/auth/register` | Pass | Full form renders; mismatched confirmation is blocked before API submission. |
-| `/auth/forgot-password` | Pass (demo boundary) | Request, development preview code, reset, and return-to-login work. Automatic SMS/WhatsApp delivery is not implemented. |
+| `/auth/forgot-password` | Pass (live receipt pending) | Request, WhatsApp provider handoff, development preview, reset, and return-to-login are implemented. Automated tests prove persist-before-send and generic provider-failure handling; a real-phone receipt still requires a connected OpenWA session. |
 
 ## Player pages
 

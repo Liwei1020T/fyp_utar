@@ -102,10 +102,12 @@ Example forgot-password reset request:
 The backend owns code generation, expiry, attempt limits, one-time use, and the
 password update. Each request replaces the prior unused code for that phone
 number. A successful reset invalidates every bearer token issued before the
-password change. It does not currently send the code through SMS or WhatsApp.
+password change. When OpenWA is enabled, the backend commits the new code before
+sending it to the account's WhatsApp number. Unknown accounts and provider
+failures keep the same generic response so the endpoint does not reveal account
+existence.
 `PASSWORD_RESET_DEV_PREVIEW_ENABLED` is local-development support only; keep it
-disabled outside an explicitly controlled development session. Production
-self-service reset requires a selected delivery provider and credentials.
+disabled outside an explicitly controlled development session.
 
 ### Profile
 
