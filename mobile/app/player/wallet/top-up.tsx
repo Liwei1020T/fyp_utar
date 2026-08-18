@@ -7,33 +7,30 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
+import { QrTransferPanel } from '../../../components/payment/QrTransferPanel';
 import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
+import type { BackendUploadFile } from '../../../services/backendApi';
 import {
   mapBackendPaymentToPayment,
   mapBackendWallet,
 } from '../../../services/backendMappers';
 
 const amounts = ['20', '50', '80', '100'];
-const topUpMethods = [
-  { value: 'online_banking', label: 'Online banking' },
-  { value: 'card', label: 'Card' },
-  { value: 'e_wallet', label: 'E-wallet' },
-] as const;
-
 export default function WalletTopUpScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const upsertLivePayment = useAppStore((state) => state.upsertLivePayment);
   const setLiveWallet = useAppStore((state) => state.setLiveWallet);
+  const storeSettings = useAppStore((state) => state.storeSettings);
   const [amount, setAmount] = useState('50');
-  const [method, setMethod] =
-    useState<(typeof topUpMethods)[number]['value']>('online_banking');
+  const [method, setMethod] = useState<'qr_transfer' | 'cash'>('qr_transfer');
+  const [proof, setProof] = useState<BackendUploadFile | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,6 +44,14 @@ export default function WalletTopUpScreen() {
       setError('Enter an amount between RM 1 and RM 5,000.');
       return;
     }
+    if (method === 'qr_transfer' && !storeSettings?.paymentQrUrl) {
+      setError('The shop has not configured a payment QR yet.');
+      return;
+    }
+    if (method === 'qr_transfer' && !proof) {
+      setError('Choose the payment screenshot before submitting.');
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -54,6 +59,7 @@ export default function WalletTopUpScreen() {
       const response = await backendApi.requestWalletTopUp(token, {
         amount: numericAmount,
         method,
+        proof: method === 'qr_transfer' ? proof : null,
       });
       const payment = mapBackendPaymentToPayment(response);
       upsertLivePayment(payment);
@@ -75,14 +81,18 @@ export default function WalletTopUpScreen() {
     <AppScreen
       headerVariant="flow"
       title="Top up wallet"
-      subtitle="Create a persisted top-up request for shop verification."
+      subtitle="Top up by QR transfer or cash at the shop."
       showBackButton
       onBackPress={() => router.back()}
       footer={
         <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
           <AppButton
-            label="Request top-up"
+            label="Submit for review"
             isLoading={isSubmitting}
+            isDisabled={
+              method === 'qr_transfer' &&
+              (!storeSettings?.paymentQrUrl || !proof)
+            }
             onPress={() => void submitTopUp()}
           />
           <AppButton label="Back to wallet" variant="outline" onPress={() => router.back()} />
@@ -91,9 +101,32 @@ export default function WalletTopUpScreen() {
     >
       <AppCard variant="highlighted" padding="lg">
         <HeroText className="text-sm leading-6 text-neutral-600">
-          The requested amount stays pending until the shop verifies the external payment. Only then is wallet credit added.
+          {method === 'qr_transfer'
+            ? 'The requested amount stays pending until the shop verifies the QR transfer. Only then is wallet credit added.'
+            : 'Pay cash at the shop. The requested amount stays pending until the admin confirms receipt and credits your wallet.'}
         </HeroText>
       </AppCard>
+
+      <View
+        className="mt-6 flex-row gap-2"
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Top-up payment method"
+      >
+        <AppChip
+          label="QR transfer"
+          size="md"
+          variant={method === 'qr_transfer' ? 'primary' : 'neutral'}
+          onPress={() => setMethod('qr_transfer')}
+          accessibilityState={{ selected: method === 'qr_transfer' }}
+        />
+        <AppChip
+          label="Cash"
+          size="md"
+          variant={method === 'cash' ? 'primary' : 'neutral'}
+          onPress={() => setMethod('cash')}
+          accessibilityState={{ selected: method === 'cash' }}
+        />
+      </View>
 
       <View className="mt-6 flex-row flex-wrap gap-2">
         {amounts.map((value) => (
@@ -114,23 +147,15 @@ export default function WalletTopUpScreen() {
         keyboardType="numeric"
       />
 
-      <View className="mt-6">
-        <HeroText className="mb-3 text-sm font-semibold text-neutral-900">
-          Payment method
-        </HeroText>
-        <View className="flex-row flex-wrap gap-2">
-          {topUpMethods.map((item) => (
-            <AppChip
-              key={item.value}
-              label={item.label}
-              size="md"
-              variant={method === item.value ? 'primary' : 'neutral'}
-              onPress={() => setMethod(item.value)}
-              accessibilityState={{ selected: method === item.value }}
-            />
-          ))}
+      {method === 'qr_transfer' ? (
+        <View className="mt-6">
+          <QrTransferPanel
+            qrUrl={storeSettings?.paymentQrUrl}
+            proof={proof}
+            onProofChange={setProof}
+          />
         </View>
-      </View>
+      ) : null}
 
       {error ? (
         <HeroText className="mt-6 text-sm font-medium text-red-600">

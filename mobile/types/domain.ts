@@ -158,6 +158,8 @@ export type PaymentMethod =
   | 'card'
   | 'online_banking'
   | 'e_wallet'
+  | 'qr_transfer'
+  | 'cash'
   | 'wallet_balance';
 
 export interface BookingStatusEntry {
@@ -302,6 +304,7 @@ export interface Payment {
   createdAt: string;
   reference: string;
   note?: string;
+  proofUrl?: string;
 }
 
 export type ChatMessageRole = 'user' | 'ai' | 'admin' | 'system';
@@ -501,6 +504,7 @@ export interface StoreSettings {
   storeContact: string;
   supportText: string;
   paymentNotes: string;
+  paymentQrUrl?: string;
   bookingNotes: string;
   storePolicyText: string;
   address: string;

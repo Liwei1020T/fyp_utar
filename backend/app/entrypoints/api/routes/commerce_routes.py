@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from math import isfinite
 from typing import cast
+from typing import Literal
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import File
+from fastapi import Form
+from fastapi import UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,7 +20,6 @@ from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.models import WalletTransaction
 from app.adapters.persistence.sqlalchemy.models.common import generate_uuid
 from app.dto.commerce import AdminPaymentStatusPayload
-from app.dto.commerce import BookingPaymentPayload
 from app.dto.commerce import BookingPaymentQuoteOut
 from app.dto.commerce import PaymentOut
 from app.dto.commerce import PaymentMethod
@@ -23,7 +27,6 @@ from app.dto.commerce import PaymentStatus
 from app.dto.commerce import PaymentType
 from app.dto.commerce import WalletOut
 from app.dto.commerce import WalletDirection
-from app.dto.commerce import WalletTopUpPayload
 from app.dto.commerce import WalletTransactionOut
 from app.dto.commerce import WalletTransactionType
 from app.entrypoints.api.dependencies import CurrentUser
@@ -34,9 +37,29 @@ from app.shared.errors import BadRequestError
 from app.shared.errors import ConflictError
 from app.shared.errors import ForbiddenError
 from app.shared.errors import NotFoundError
+from app.shared.transaction_effects import register_created_file
+from app.shared.upload_storage import MAX_UPLOAD_BYTES
+from app.shared.upload_storage import PAYMENT_PROOF_SIGNED_MEDIA_URL_TTL
+from app.shared.upload_storage import build_signed_media_url
+from app.shared.upload_storage import delete_payment_proof
+from app.shared.upload_storage import save_payment_proof
 
 
 router = APIRouter(tags=["commerce"])
+
+
+async def _read_upload_bytes_limited(proof: UploadFile) -> bytes:
+    total_size = 0
+    chunks: list[bytes] = []
+    while True:
+        chunk = await proof.read(512 * 1024)
+        if not chunk:
+            break
+        total_size += len(chunk)
+        if total_size > MAX_UPLOAD_BYTES:
+            raise BadRequestError("Payment proof must be 5 MB or smaller")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def _payment_to_dto(payment: Payment) -> PaymentOut:
@@ -50,6 +73,14 @@ def _payment_to_dto(payment: Payment) -> PaymentOut:
         type=cast(PaymentType, payment.payment_type),
         reference=payment.reference,
         note=payment.note,
+        proof_url=(
+            build_signed_media_url(
+                payment.proof_path,
+                ttl=PAYMENT_PROOF_SIGNED_MEDIA_URL_TTL,
+            )
+            if payment.proof_path
+            else None
+        ),
         created_at=payment.created_at.isoformat(),
     )
 
@@ -173,12 +204,19 @@ def get_booking_payment_quote(
 
 
 @router.post("/payments/bookings/{booking_id}", response_model=PaymentOut)
-def create_booking_payment(
+async def create_booking_payment(
     booking_id: str,
-    payload: BookingPaymentPayload,
+    method: Literal["qr_transfer", "cash", "wallet_balance"] = Form(...),
+    expected_amount: float | None = Form(default=None),
+    proof: UploadFile | None = File(default=None),
     current_user: CurrentUser = Depends(get_current_customer),
     db: Session = Depends(get_db, scope="function"),
 ) -> PaymentOut:
+    if expected_amount is not None and (
+        not isfinite(expected_amount) or not 0 < expected_amount <= 100000
+    ):
+        raise BadRequestError("Expected amount must be between RM 0.01 and RM 100,000")
+
     booking = db.execute(
         select(Booking).where(Booking.id == booking_id).with_for_update()
     ).scalar_one_or_none()
@@ -197,28 +235,54 @@ def create_booking_payment(
         return _payment_to_dto(active_payment)
 
     amount = _booking_amount(booking) + _service_fee(db)
-    if payload.expected_amount is not None:
-        expected_amount = Decimal(str(payload.expected_amount)).quantize(
+    if expected_amount is not None:
+        expected_amount_decimal = Decimal(str(expected_amount)).quantize(
             Decimal("0.01")
         )
-        if expected_amount != amount:
+        if expected_amount_decimal != amount:
             raise ConflictError("Booking price changed; refresh the payment quote")
+
+    if method != "qr_transfer" and proof is not None:
+        raise BadRequestError(
+            f"{method.replace('_', ' ').title()} payments do not accept a proof image"
+        )
+
+    proof_path: str | None = None
+    if method == "qr_transfer":
+        settings = db.get(StoreSettings, "main")
+        if settings is None or not settings.payment_qr_path:
+            raise BadRequestError("QR payment is not configured by the shop")
+        if proof is None:
+            raise BadRequestError("Upload a payment proof screenshot")
+        proof_content = await _read_upload_bytes_limited(proof)
+        proof_path = save_payment_proof(
+            content=proof_content,
+            content_type=proof.content_type,
+            original_name=proof.filename,
+        )
+        register_created_file(db, proof_path, delete_payment_proof)
+
     status = "pending"
-    note = "Awaiting shop verification of the external payment."
+    note = (
+        "Awaiting shop verification of the QR transfer."
+        if method == "qr_transfer"
+        else "Awaiting cash payment confirmation at the shop."
+    )
     payment_id = generate_uuid()
     payment = Payment(
         id=payment_id,
         booking_id=booking.id,
         user_id=current_user.user_id,
-        method=payload.method,
+        method=method,
         status=status,
         amount=amount,
         payment_type="booking_payment",
         reference=f"PAY-{payment_id[:8].upper()}",
         note=note,
+        proof_path=proof_path,
     )
     db.add(payment)
-    if payload.method == "wallet_balance":
+    if method == "wallet_balance":
         db.execute(
             select(User.id).where(User.id == current_user.user_id).with_for_update()
         ).scalar_one()
@@ -277,21 +341,47 @@ def get_wallet(
 
 
 @router.post("/wallet/top-ups", response_model=PaymentOut)
-def request_wallet_top_up(
-    payload: WalletTopUpPayload,
+async def request_wallet_top_up(
+    amount: float = Form(...),
+    method: Literal["qr_transfer", "cash"] = Form(...),
+    proof: UploadFile | None = File(default=None),
     current_user: CurrentUser = Depends(get_current_customer),
     db: Session = Depends(get_db, scope="function"),
 ) -> PaymentOut:
+    if not isfinite(amount) or not 1 <= amount <= 5000:
+        raise BadRequestError("Enter an amount between RM 1 and RM 5,000")
+    if method == "cash" and proof is not None:
+        raise BadRequestError("Cash payments do not accept a proof image")
+
+    proof_path: str | None = None
+    if method == "qr_transfer":
+        settings = db.get(StoreSettings, "main")
+        if settings is None or not settings.payment_qr_path:
+            raise BadRequestError("QR payment is not configured by the shop")
+        if proof is None:
+            raise BadRequestError("Upload a payment proof screenshot")
+        proof_content = await _read_upload_bytes_limited(proof)
+        proof_path = save_payment_proof(
+            content=proof_content,
+            content_type=proof.content_type,
+            original_name=proof.filename,
+        )
+        register_created_file(db, proof_path, delete_payment_proof)
     payment_id = generate_uuid()
     payment = Payment(
         id=payment_id,
         user_id=current_user.user_id,
-        method=payload.method,
+        method=method,
         status="pending",
-        amount=Decimal(str(payload.amount)).quantize(Decimal("0.01")),
+        amount=Decimal(str(amount)).quantize(Decimal("0.01")),
         payment_type="wallet_top_up",
         reference=f"TOP-{payment_id[:8].upper()}",
-        note="Awaiting admin verification before wallet credit.",
+        note=(
+            "Awaiting admin verification before wallet credit."
+            if method == "qr_transfer"
+            else "Awaiting cash payment confirmation before wallet credit."
+        ),
+        proof_path=proof_path,
     )
     db.add(payment)
     db.flush()
@@ -324,6 +414,13 @@ def admin_update_payment(
         return _payment_to_dto(payment)
     if payment.status != "pending":
         raise ConflictError("Only pending payments can be updated")
+
+    if (
+        payload.status == "paid"
+        and payment.method == "qr_transfer"
+        and not payment.proof_path
+    ):
+        raise BadRequestError("Payment proof is required before approval")
 
     payment.status = payload.status
     if payload.status == "paid":

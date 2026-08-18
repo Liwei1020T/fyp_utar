@@ -24,6 +24,7 @@ just to find the right ownership boundary.
 | [docs/fyp1-scope.md](./fyp1-scope.md) | FYP1 included/deferred scope, recommendation positioning, and demo proof. | Changing visible demo scope or deciding whether a feature is FYP1 or FYP2. |
 | [docs/plans/mock-page-remediation.md](./plans/mock-page-remediation.md) | Current mock-data page inventory and external integration boundaries. | Checking whether a route still depends on mock or local business data. |
 | [docs/customer-admin-acceptance-2026-07-24.md](./customer-admin-acceptance-2026-07-24.md) | Current customer and administrator browser acceptance, cross-role persistence proof, and quality gates. | Reviewing which live reads and writes were exercised against PostgreSQL. |
+| [docs/qr-payment-acceptance-2026-08-18.md](./qr-payment-acceptance-2026-08-18.md) | QR-transfer implementation evidence, security boundaries, and unverified device/browser checks. | Reviewing the manual payment-proof flow. |
 | [docs/admin-acceptance-2026-07-23.md](./admin-acceptance-2026-07-23.md) | Historical administrator-only browser acceptance and restoration record. | Reviewing the earlier admin-specific acceptance run. |
 | [docs/codebase-map.md](./codebase-map.md) | This low-token source map. | Deciding which source files are worth opening. |
 
@@ -210,7 +211,7 @@ unified startup.
 | [backend/app/entrypoints/api/routes/admin_engagement_routes.py](../backend/app/entrypoints/api/routes/admin_engagement_routes.py) | Admin feedback export, device tokens, notification delivery, and resend. |
 | [backend/app/entrypoints/api/routes/admin_analytics_routes.py](../backend/app/entrypoints/api/routes/admin_analytics_routes.py) | Admin analytics summary and popular-string reporting. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
-| [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes/payments, wallet ledger, top-ups, and admin verification. |
+| [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes, QR/cash payments, payment proofs, wallet ledger/top-ups, and admin verification. |
 | [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
 | [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-linked and booking-free human-support lifecycle and messages. |
 | [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Server-validated standard racket catalogue, owned physical rackets, and completed-booking feedback. |
@@ -249,7 +250,7 @@ reuse seam.
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260817_0031`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260818_0032`. |
 | [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
 

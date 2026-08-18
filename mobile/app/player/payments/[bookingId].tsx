@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CreditCard, Landmark, Smartphone, Wallet } from 'lucide-react-native';
+import { Banknote, QrCode, Wallet } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { PaymentMethodCard } from '../../../components/payment/PaymentMethodCard';
+import { QrTransferPanel } from '../../../components/payment/QrTransferPanel';
 import {
   useAppStore,
   useBackendAccessToken,
@@ -17,8 +18,8 @@ import {
   useStrings,
   useWallets,
 } from '../../../store/appStore';
-import type { PaymentMethod } from '../../../types/domain';
 import type { BackendBookingPaymentQuote } from '../../../types/backend';
+import type { BackendUploadFile } from '../../../services/backendApi';
 import { formatCurrency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
@@ -27,32 +28,25 @@ import {
 } from '../../../services/backendMappers';
 
 const paymentOptions: {
-  method: PaymentMethod;
+  method: 'qr_transfer' | 'cash' | 'wallet_balance';
   title: string;
   description: string;
   badge: string;
   icon: React.ReactNode;
 }[] = [
   {
-    method: 'card',
-    title: 'Card',
-    description: 'Create a payment record for shop verification.',
-    badge: 'Fast',
-    icon: <CreditCard size={20} color="#2F64B6" />,
-  },
-  {
-    method: 'online_banking',
-    title: 'Online banking',
-    description: 'Submit an online-banking payment for shop verification.',
+    method: 'qr_transfer',
+    title: 'QR transfer',
+    description: 'Scan the shop QR and submit your transfer screenshot for review.',
     badge: 'Recommended',
-    icon: <Landmark size={20} color="#22766D" />,
+    icon: <QrCode size={20} color="#22766D" />,
   },
   {
-    method: 'e_wallet',
-    title: 'E-wallet',
-    description: 'Submit an external e-wallet payment for shop verification.',
-    badge: 'Mobile',
-    icon: <Smartphone size={20} color="#6550B8" />,
+    method: 'cash',
+    title: 'Cash',
+    description: 'Pay at the shop and wait for the admin to confirm receipt.',
+    badge: 'At shop',
+    icon: <Banknote size={20} color="#22766D" />,
   },
   {
     method: 'wallet_balance',
@@ -72,9 +66,13 @@ export default function PaymentScreen() {
   const payments = usePayments();
   const strings = useStrings();
   const wallets = useWallets();
+  const storeSettings = useAppStore((state) => state.storeSettings);
   const upsertLivePayment = useAppStore((state) => state.upsertLivePayment);
   const setLiveWallet = useAppStore((state) => state.setLiveWallet);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('online_banking');
+  const [selectedMethod, setSelectedMethod] = useState<
+    'qr_transfer' | 'cash' | 'wallet_balance'
+  >('qr_transfer');
+  const [proof, setProof] = useState<BackendUploadFile | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [quote, setQuote] = useState<BackendBookingPaymentQuote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
@@ -138,11 +136,15 @@ export default function PaymentScreen() {
     (quote != null &&
       totalAmount != null &&
       quote.wallet_balance >= totalAmount);
+  const hasQrTransferEvidence =
+    selectedMethod !== 'qr_transfer' ||
+    Boolean(storeSettings?.paymentQrUrl && proof);
   const canCheckout =
     Boolean(token && booking) &&
     totalAmount != null &&
     totalAmount > 0 &&
     hasSufficientWallet &&
+    hasQrTransferEvidence &&
     !activePayment;
   const stringFeeLabel =
     stringFee != null
@@ -160,13 +162,19 @@ export default function PaymentScreen() {
   } else if (!hasSufficientWallet) {
     checkoutRule =
       'Your persisted wallet balance is lower than this server quote. Top up or choose another method.';
+  } else if (activePayment) {
+    checkoutRule = `This booking already has a ${activePayment.status} payment record.`;
+  } else if (selectedMethod === 'qr_transfer' && !storeSettings?.paymentQrUrl) {
+    checkoutRule = 'The shop has not configured a payment QR yet.';
+  } else if (selectedMethod === 'qr_transfer' && !proof) {
+    checkoutRule = 'Upload the payment screenshot before submitting for review.';
   } else if (canCheckout) {
     checkoutRule =
       selectedMethod === 'wallet_balance'
         ? 'Wallet payment completes only when the server confirms sufficient persisted balance.'
-        : 'External payment methods remain pending until the shop verifies the actual transfer.';
-  } else if (activePayment) {
-    checkoutRule = `This booking already has a ${activePayment.status} payment record.`;
+        : selectedMethod === 'cash'
+          ? 'Cash payment stays pending until the shop confirms payment at the counter.'
+          : 'QR transfers remain pending until the shop verifies the payment screenshot.';
   }
 
   if (!booking) {
@@ -204,6 +212,7 @@ export default function PaymentScreen() {
         booking.id,
         selectedMethod,
         quote?.total_amount,
+        selectedMethod === 'qr_transfer' ? proof : null,
       );
       const payment = mapBackendPaymentToPayment(response);
       upsertLivePayment(payment);
@@ -232,7 +241,7 @@ export default function PaymentScreen() {
     <AppScreen
       headerVariant="flow"
       title="Payment"
-      subtitle="Persisted payment requests with shop verification and wallet balance checks."
+      subtitle="Pay by QR transfer, cash, or wallet balance."
       showBackButton
       onBackPress={() => router.back()}
     >
@@ -285,6 +294,15 @@ export default function PaymentScreen() {
             />
           ))}
         </View>
+        {selectedMethod === 'qr_transfer' ? (
+          <View className="mt-4">
+            <QrTransferPanel
+              qrUrl={storeSettings?.paymentQrUrl}
+              proof={proof}
+              onProofChange={setProof}
+            />
+          </View>
+        ) : null}
       </AppSection>
 
       <AppSection eyebrow="Rule" title="Checkout behavior">
@@ -305,7 +323,13 @@ export default function PaymentScreen() {
           />
         ) : null}
         <AppButton
-          label={selectedMethod === 'wallet_balance' ? 'Pay from wallet' : 'Submit payment for verification'}
+          label={
+            selectedMethod === 'wallet_balance'
+              ? 'Pay from wallet'
+              : selectedMethod === 'cash'
+                ? 'Submit cash payment request'
+                : 'Submit payment for verification'
+          }
           size="lg"
           isLoading={isProcessing}
           isDisabled={!canCheckout}

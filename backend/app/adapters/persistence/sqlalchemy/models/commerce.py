@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from sqlalchemy import CheckConstraint
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Numeric
@@ -18,6 +19,12 @@ from app.adapters.persistence.sqlalchemy.models.common import generate_uuid
 
 class Payment(Base):
     __tablename__ = "payments"
+    __table_args__ = (
+        CheckConstraint(
+            "method <> 'qr_transfer' OR proof_path IS NOT NULL",
+            name="ck_payments_qr_transfer_proof",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(
         SAString(36), primary_key=True, default=generate_uuid
@@ -43,6 +50,7 @@ class Payment(Base):
     payment_type: Mapped[str] = mapped_column(SAString(32), index=True)
     reference: Mapped[str] = mapped_column(SAString(80), unique=True, index=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    proof_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Search } from 'lucide-react-native';
-import { Alert, Platform, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert, Image, Modal, Platform, Pressable, View } from 'react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
@@ -10,7 +11,12 @@ import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { HeroText } from '../../components/ui/heroui';
 import { useAppStore, useBackendAccessToken, useCurrentUser, useStrings } from '../../store/appStore';
-import { BackendApiError, backendApi } from '../../services/backendApi';
+import {
+  BackendApiError,
+  backendApi,
+  resolveBackendMediaUrl,
+} from '../../services/backendApi';
+import type { BackendUploadFile } from '../../services/backendApi';
 
 function normalizeStorePolicyText(value: string) {
   if (/payment is completed|payment completes|full payment/i.test(value)) {
@@ -51,6 +57,7 @@ export default function AdminSettingsScreen() {
   const [notificationSettings, setNotificationSettings] = useState(
     settings?.notificationSettings ?? {},
   );
+  const [paymentQrUrl, setPaymentQrUrl] = useState(settings?.paymentQrUrl);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -58,6 +65,8 @@ export default function AdminSettingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isQrUpdating, setIsQrUpdating] = useState(false);
+  const [isQrPreviewOpen, setIsQrPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (!settings) {
@@ -70,6 +79,7 @@ export default function AdminSettingsScreen() {
     setBookingNotes(settings.bookingNotes);
     setPolicyText(normalizeStorePolicyText(settings.storePolicyText));
     setPaymentNotes(settings.paymentNotes);
+    setPaymentQrUrl(settings.paymentQrUrl);
     setTrendingStringIds(settings.trendingStringIds ?? []);
     setDefaultServicePrice(String(settings.defaultServicePrice ?? 0));
     setNotificationSettings(settings.notificationSettings ?? {});
@@ -135,6 +145,7 @@ export default function AdminSettingsScreen() {
           address: response.address,
           supportText: response.support_text,
           paymentNotes: response.payment_notes,
+          paymentQrUrl: resolveBackendMediaUrl(response.payment_qr_url),
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeStorePolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? [],
@@ -190,6 +201,7 @@ export default function AdminSettingsScreen() {
         address: response.address,
         supportText: response.support_text,
         paymentNotes: response.payment_notes,
+        paymentQrUrl: resolveBackendMediaUrl(response.payment_qr_url),
         bookingNotes: response.booking_notes,
         storePolicyText: normalizeStorePolicyText(response.store_policy_text),
         trendingStringIds: response.trending_string_ids ?? trendingStringIds,
@@ -207,6 +219,84 @@ export default function AdminSettingsScreen() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const uploadPaymentQr = async () => {
+    if (!token) {
+      setError('Your admin session expired. Sign in again before changing the payment QR.');
+      return;
+    }
+    setIsQrUpdating(true);
+    setError(null);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.9,
+        allowsEditing: false,
+      });
+      if (result.canceled || !result.assets[0]) {
+        return;
+      }
+      const asset = result.assets[0];
+      const photo: BackendUploadFile = {
+        uri: asset.uri,
+        name: asset.fileName ?? `payment-qr-${Date.now()}.png`,
+        type: asset.mimeType ?? 'image/png',
+      };
+      const response = await backendApi.adminUploadPaymentQr(token, photo);
+      const nextUrl = resolveBackendMediaUrl(response.payment_qr_url);
+      setPaymentQrUrl(nextUrl);
+      updateStoreSettings({ paymentQrUrl: nextUrl });
+      setSaveSuccessMessage('The payment QR is ready for new QR-transfer requests.');
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof BackendApiError
+          ? uploadError.message
+          : 'Failed to upload the payment QR.',
+      );
+    } finally {
+      setIsQrUpdating(false);
+    }
+  };
+
+  const removePaymentQr = async () => {
+    if (!token) {
+      setError('Your admin session expired. Sign in again before changing the payment QR.');
+      return;
+    }
+    setIsQrUpdating(true);
+    setError(null);
+    try {
+      const response = await backendApi.adminDeletePaymentQr(token);
+      const nextUrl = resolveBackendMediaUrl(response.payment_qr_url);
+      setPaymentQrUrl(nextUrl);
+      updateStoreSettings({ paymentQrUrl: nextUrl });
+      setSaveSuccessMessage('The payment QR was removed. Existing pending reviews are unchanged.');
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof BackendApiError
+          ? deleteError.message
+          : 'Failed to remove the payment QR.',
+      );
+    } finally {
+      setIsQrUpdating(false);
+    }
+  };
+
+  const confirmRemovePaymentQr = () => {
+    const message = 'Remove the QR? New QR-transfer requests will be unavailable until another QR is uploaded.';
+    if (Platform.OS === 'web') {
+      if (typeof globalThis.confirm !== 'function') {
+        setError('Confirmation is unavailable. The payment QR was not changed.');
+      } else if (globalThis.confirm(message)) {
+        void removePaymentQr();
+      }
+      return;
+    }
+    Alert.alert('Remove payment QR?', message, [
+      { text: 'Keep QR', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => void removePaymentQr() },
+    ]);
   };
 
   if (!user || user.role !== 'admin') {
@@ -257,6 +347,49 @@ export default function AdminSettingsScreen() {
         <AppInput label="Store name" value={storeName} onChangeText={setStoreName} />
         <AppInput label="Store contact" value={storeContact} onChangeText={setStoreContact} />
         <AppInput label="Address" value={address} onChangeText={setAddress} multiline inputClassName="min-h-24" />
+      </AppSection>
+
+      <AppSection eyebrow="Payments" title="Payment QR">
+        <HeroText className="text-sm leading-6 text-neutral-600">
+          Players use this QR for top-ups and booking payments. Upload a real shop QR before enabling QR-transfer requests.
+        </HeroText>
+        {paymentQrUrl ? (
+          <Pressable
+            className="mt-4 items-center rounded-[20px] border border-[#DCE6F7] bg-white p-4"
+            onPress={() => setIsQrPreviewOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Preview payment QR"
+          >
+            <Image source={{ uri: paymentQrUrl }} className="h-56 w-56" resizeMode="contain" />
+            <HeroText className="mt-2 text-xs font-semibold text-primary-700">
+              Tap to preview
+            </HeroText>
+          </Pressable>
+        ) : (
+          <View className="mt-4 rounded-[16px] border border-warning-100 bg-warning-50 px-3 py-3">
+            <HeroText className="text-sm font-semibold text-warning-700">
+              No payment QR configured
+            </HeroText>
+          </View>
+        )}
+        <View className="mt-3 flex-row gap-2">
+          <AppButton
+            label={paymentQrUrl ? 'Replace QR' : 'Upload QR'}
+            variant="outline"
+            className="flex-1"
+            isLoading={isQrUpdating}
+            onPress={() => void uploadPaymentQr()}
+          />
+          {paymentQrUrl ? (
+            <AppButton
+              label="Delete"
+              variant="danger"
+              className="flex-1"
+              isLoading={isQrUpdating}
+              onPress={confirmRemovePaymentQr}
+            />
+          ) : null}
+        </View>
       </AppSection>
 
       <AppSection eyebrow="Messaging" title="Support and policy copy">
@@ -432,6 +565,31 @@ export default function AdminSettingsScreen() {
           {error}
         </HeroText>
       ) : null}
+
+      <Modal
+        visible={isQrPreviewOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsQrPreviewOpen(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/80 p-6">
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setIsQrPreviewOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close QR preview"
+          />
+          {paymentQrUrl ? (
+            <Image source={{ uri: paymentQrUrl }} className="h-[80%] w-full" resizeMode="contain" />
+          ) : null}
+          <AppButton
+            label="Close preview"
+            variant="secondary"
+            className="mt-5"
+            onPress={() => setIsQrPreviewOpen(false)}
+          />
+        </View>
+      </Modal>
 
     </AppScreen>
   );

@@ -15,6 +15,7 @@ from app.domain.store.entities import PopularString
 from app.domain.store.entities import StoreBusinessHoursRecord
 from app.domain.store.entities import StoreSettingsRecord
 from app.shared.constants import STORE_ID
+from app.shared.upload_storage import build_signed_media_url
 
 
 class BusinessHoursDayPayload(BaseModel):
@@ -176,6 +177,7 @@ class StoreSettingsPayload(BaseModel):
 
 class StoreSettingsOut(StoreSettingsPayload):
     id: str = STORE_ID
+    payment_qr_url: str | None = None
     updated_at: str | None = None
 
 
@@ -230,6 +232,11 @@ def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
         store_contact=settings.store_contact,
         support_text=settings.support_text,
         payment_notes=settings.payment_notes,
+        payment_qr_url=(
+            build_signed_media_url(settings.payment_qr_path)
+            if settings.payment_qr_path
+            else None
+        ),
         booking_notes=settings.booking_notes,
         store_policy_text=settings.store_policy_text,
         address=settings.address,

@@ -614,12 +614,19 @@ export interface BackendPayment {
   id: string;
   booking_id: string | null;
   user_id: string;
-  method: 'card' | 'online_banking' | 'e_wallet' | 'wallet_balance';
+  method:
+    | 'card'
+    | 'online_banking'
+    | 'e_wallet'
+    | 'qr_transfer'
+    | 'cash'
+    | 'wallet_balance';
   status: 'pending' | 'paid' | 'failed' | 'cancelled';
   amount: number;
   type: 'booking_payment' | 'wallet_top_up';
   reference: string;
   note: string | null;
+  proof_url: string | null;
   created_at: string;
 }
 
@@ -675,6 +682,7 @@ export interface BackendStoreSettings {
   store_contact: string;
   support_text: string;
   payment_notes: string;
+  payment_qr_url: string | null;
   booking_notes: string;
   store_policy_text: string;
   address: string;

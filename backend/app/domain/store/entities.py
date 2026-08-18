@@ -35,6 +35,7 @@ class StoreSettingsRecord:
     store_contact: str
     support_text: str
     payment_notes: str
+    payment_qr_path: str | None
     booking_notes: str
     store_policy_text: str
     address: str

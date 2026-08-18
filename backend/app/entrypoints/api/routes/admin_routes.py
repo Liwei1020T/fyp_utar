@@ -72,8 +72,10 @@ from app.shared.transaction_effects import register_created_file
 from app.shared.transaction_effects import register_removed_file
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
 from app.shared.upload_storage import delete_booking_update_photo
+from app.shared.upload_storage import delete_payment_qr
 from app.shared.upload_storage import delete_string_catalog_image
 from app.shared.upload_storage import save_booking_update_photo
+from app.shared.upload_storage import save_payment_qr
 from app.shared.upload_storage import save_string_catalog_image
 from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
@@ -924,4 +926,45 @@ def admin_update_store_settings(
     settings = UpdateStoreSettingsUseCase(store_repository=store_repository).execute(
         payload.model_dump()
     )
+    return settings_to_dto(settings)
+
+
+@router.post("/store-settings/payment-qr", response_model=StoreSettingsOut)
+async def admin_upload_payment_qr(
+    photo: UploadFile = File(...),
+    _: CurrentUser = Depends(get_current_admin),
+    store_repository=Depends(get_store_repository),
+    db: Session = Depends(get_db, scope="function"),
+) -> StoreSettingsOut:
+    existing = GetStoreSettingsUseCase(store_repository=store_repository).execute()
+    content = await read_upload_bytes_limited(
+        photo,
+        oversize_message="Payment QR must be 5 MB or smaller",
+    )
+    image_path = save_payment_qr(
+        content=content,
+        content_type=photo.content_type,
+        original_name=photo.filename,
+    )
+    register_created_file(db, image_path, delete_payment_qr)
+    settings = UpdateStoreSettingsUseCase(store_repository=store_repository).execute(
+        {"payment_qr_path": image_path}
+    )
+    if existing.payment_qr_path:
+        register_removed_file(db, existing.payment_qr_path, delete_payment_qr)
+    return settings_to_dto(settings)
+
+
+@router.delete("/store-settings/payment-qr", response_model=StoreSettingsOut)
+def admin_delete_payment_qr(
+    _: CurrentUser = Depends(get_current_admin),
+    store_repository=Depends(get_store_repository),
+    db: Session = Depends(get_db, scope="function"),
+) -> StoreSettingsOut:
+    existing = GetStoreSettingsUseCase(store_repository=store_repository).execute()
+    settings = UpdateStoreSettingsUseCase(store_repository=store_repository).execute(
+        {"payment_qr_path": None}
+    )
+    if existing.payment_qr_path:
+        register_removed_file(db, existing.payment_qr_path, delete_payment_qr)
     return settings_to_dto(settings)

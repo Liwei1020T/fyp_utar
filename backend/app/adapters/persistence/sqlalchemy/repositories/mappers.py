@@ -332,6 +332,7 @@ def to_store_settings(settings: StoreSettings) -> StoreSettingsRecord:
         store_contact=settings.store_contact,
         support_text=settings.support_text,
         payment_notes=settings.payment_notes,
+        payment_qr_path=settings.payment_qr_path,
         booking_notes=settings.booking_notes,
         store_policy_text=settings.store_policy_text,
         address=settings.address,

@@ -37,6 +37,7 @@ The active migration sequence is:
 - [20260813_0029_feedback_provenance.py](../migrations/versions/20260813_0029_feedback_provenance.py)
 - [20260817_0030_general_support_conversations.py](../migrations/versions/20260817_0030_general_support_conversations.py)
 - [20260817_0031_clean_catalog_descriptions.py](../migrations/versions/20260817_0031_clean_catalog_descriptions.py)
+- [20260818_0032_qr_payment_proofs.py](../migrations/versions/20260818_0032_qr_payment_proofs.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -238,7 +239,8 @@ Stores the single-store weekly schedule plus special closed dates used to genera
 ### `store_settings`
 
 Stores the single-store support copy, policy text, contact details, booking
-notes, and persisted `trending_string_ids` used by the player home screen.
+notes, persisted `trending_string_ids` used by the player home screen, and the
+optional server-owned `payment_qr_path` used for manual QR transfers.
 
 ### `bookings`
 
@@ -316,10 +318,15 @@ Stores booking-payment and wallet-top-up records:
 - method and status
 - server-owned amount and unique reference
 - `booking_payment` or `wallet_top_up` type
+- optional immutable `proof_path` for new `qr_transfer` payments
 - audit timestamps and shop verification note
 
-External payment records remain `pending` until admin verification. Wallet
-booking payments may complete immediately after a server-side balance check.
+New external records use `qr_transfer` or `cash` and remain `pending` until
+admin verification. QR transfer requires an uploaded JPG/PNG/WEBP proof stored
+under the payment-proofs upload area; cash keeps `proof_path` null. Historical
+card, online-banking, and e-wallet rows remain readable as legacy records.
+Wallet booking payments may complete immediately after a server-side balance
+check.
 
 ### `wallet_transactions`
 

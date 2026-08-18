@@ -30,6 +30,7 @@ from app.entrypoints.api.routes import admin_engagement_routes
 
 
 client = TestClient(app)
+PNG_BYTES = b"\x89PNG\r\n\x1a\nqr-test"
 
 
 @dataclass(frozen=True)
@@ -149,10 +150,18 @@ def notification_activity() -> NotificationActivity:
     )
     assert chat_response.status_code == 200
 
+    qr_response = client.post(
+        "/api/admin/store-settings/payment-qr",
+        headers=_headers(admin_token),
+        files={"photo": ("shop-qr.png", PNG_BYTES, "image/png")},
+    )
+    assert qr_response.status_code == 200
+
     top_up_response = client.post(
         "/api/wallet/top-ups",
         headers=_headers(owner_token),
-        json={"amount": 50, "method": "online_banking"},
+        data={"amount": "50", "method": "qr_transfer"},
+        files={"proof": ("payment.png", PNG_BYTES, "image/png")},
     )
     assert top_up_response.status_code == 200
     verify_response = client.patch(

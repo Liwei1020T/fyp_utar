@@ -1627,10 +1627,18 @@ def test_notification_preferences_and_verified_wallet_payment_flow():
     assert update_preferences_response.status_code == 200
     assert update_preferences_response.json()["payment"] is False
 
+    qr_response = client.post(
+        "/api/admin/store-settings/payment-qr",
+        headers=headers(admin_token),
+        files={"photo": ("shop-qr.png", PNG_BYTES, "image/png")},
+    )
+    assert qr_response.status_code == 200
+
     top_up_response = client.post(
         "/api/wallet/top-ups",
         headers=headers(customer_token),
-        json={"amount": 500, "method": "online_banking"},
+        data={"amount": "500", "method": "qr_transfer"},
+        files={"proof": ("payment.png", PNG_BYTES, "image/png")},
     )
     assert top_up_response.status_code == 200
     assert top_up_response.json()["status"] == "pending"
@@ -1680,7 +1688,7 @@ def test_notification_preferences_and_verified_wallet_payment_flow():
     wallet_payment_response = client.post(
         f"/api/payments/bookings/{booking_response.json()['id']}",
         headers=headers(customer_token),
-        json={"method": "wallet_balance"},
+        data={"method": "wallet_balance"},
     )
     assert wallet_payment_response.status_code == 200
     assert wallet_payment_response.json()["status"] == "paid"

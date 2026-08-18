@@ -38,6 +38,9 @@ export function formatPaymentStatus(status: PaymentStatus) {
 }
 
 export function formatPaymentMethod(method: PaymentMethod) {
+  if (method === 'qr_transfer') {
+    return 'QR transfer';
+  }
   return formatLabel(method);
 }
 

@@ -22,6 +22,7 @@ class StoreSettings(Base):
     store_contact: Mapped[str] = mapped_column(SAString(120))
     support_text: Mapped[str] = mapped_column(Text)
     payment_notes: Mapped[str] = mapped_column(Text)
+    payment_qr_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     booking_notes: Mapped[str] = mapped_column(Text)
     store_policy_text: Mapped[str] = mapped_column(Text)
     address: Mapped[str] = mapped_column(Text)

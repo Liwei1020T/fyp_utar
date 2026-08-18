@@ -4,33 +4,20 @@ from typing import Literal
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Field
 
 
 PaymentMethod = Literal[
     "card",
     "online_banking",
     "e_wallet",
+    "qr_transfer",
+    "cash",
     "wallet_balance",
 ]
 PaymentStatus = Literal["pending", "paid", "failed", "cancelled"]
 PaymentType = Literal["booking_payment", "wallet_top_up"]
 WalletTransactionType = Literal["top_up", "booking_payment"]
 WalletDirection = Literal["credit", "debit"]
-
-
-class BookingPaymentPayload(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    method: PaymentMethod
-    expected_amount: float | None = Field(default=None, gt=0, le=100000)
-
-
-class WalletTopUpPayload(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    amount: float = Field(ge=1, le=5000)
-    method: Literal["card", "online_banking", "e_wallet"]
 
 
 class AdminPaymentStatusPayload(BaseModel):
@@ -49,6 +36,7 @@ class PaymentOut(BaseModel):
     type: PaymentType
     reference: str
     note: str | None
+    proof_url: str | None
     created_at: str
 
 

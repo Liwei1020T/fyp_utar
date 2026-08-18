@@ -77,9 +77,15 @@ cd backend
 
 ## 5. Commerce Boundary
 
-- External card, online-banking, and e-wallet requests remain `pending` until
-  an administrator verifies real receipt.
+- Admin uploads the active shop QR from Store Settings. New top-ups and external
+  booking payments use `qr_transfer` with a validated screenshot or `cash`
+  without a screenshot. Both remain `pending` until an administrator verifies
+  the transfer evidence or confirms cash receipt.
+- Historical card, online-banking, and e-wallet rows remain readable as legacy
+  records but are not accepted for new requests.
 - Wallet top-ups credit the append-only ledger exactly once after verification.
+- `wallet_balance` booking payments complete immediately after the server checks
+  the persisted balance and do not require a screenshot.
 - A future payment-provider webhook must replace manual verification for that
   provider; it must not create a second payment ledger.
 

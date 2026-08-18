@@ -10,6 +10,7 @@ import {
 import {
   backendApi,
   isBackendAuthError,
+  resolveBackendMediaUrl,
 } from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
@@ -130,6 +131,7 @@ export default function PlayerLayout() {
             address: storeSettings.address,
             supportText: storeSettings.support_text,
             paymentNotes: storeSettings.payment_notes,
+            paymentQrUrl: resolveBackendMediaUrl(storeSettings.payment_qr_url),
             bookingNotes: storeSettings.booking_notes,
             storePolicyText: storeSettings.store_policy_text,
             trendingStringIds: storeSettings.trending_string_ids ?? [],

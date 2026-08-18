@@ -126,14 +126,16 @@ export default function PaymentResultScreen() {
     : status === 'pending'
       ? {
           title: 'Verification pending',
-          body: 'The payment record is saved. The shop must verify the external transfer before it is marked paid.',
+          body: payment.method === 'cash'
+            ? 'The cash payment request is saved. Pay at the shop and wait for the admin to confirm receipt.'
+            : 'The payment record and screenshot are saved. The shop must verify the QR transfer before it is marked paid.',
           icon: <AlertTriangle size={36} color="#B45309" />,
           variant: 'highlighted' as const,
         }
     : status === 'failed'
       ? {
           title: 'Payment failed',
-          body: 'The shop could not verify this payment. You can retry using another method.',
+          body: 'The shop could not confirm this payment. Return to the booking and choose a payment method again.',
           icon: <AlertTriangle size={36} color="#B45309" />,
           variant: 'highlighted' as const,
         }

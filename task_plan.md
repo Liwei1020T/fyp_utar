@@ -90,6 +90,18 @@ Deferred implementations remain in the repository and are disabled at their regi
 
 **Status:** complete
 
+### Phase 18 — QR transfer and payment-proof implementation plan
+
+**Status:** complete
+
+### Phase 19 — QR transfer and payment-proof implementation
+
+**Status:** complete
+
+### Phase 20 — Cash payment option
+
+**Status:** complete
+
 ## Decisions
 
 - Keep the admin read-only summary; disable all admin detailed queries and writes.
@@ -106,6 +118,16 @@ Deferred implementations remain in the repository and are disabled at their regi
   player/admin chat UI.
 - Treat catalog source URLs and official-performance evidence as separate
   provenance layers; do not promote seeded feel values to official ratings.
+- Keep manual admin verification as the payment owner. Replace placeholder
+  external methods with one QR-transfer path and attach immutable evidence to
+  the existing payment record rather than creating a second ledger.
+- Let Admin Settings upload, preview, replace, and delete the active payment QR;
+  never seed or fabricate one.
+- Require explicit approval before migration `20260818_0032` or any runtime
+  implementation begins. Approval was received on 2026-08-18.
+- Reuse the existing pending/admin-review ledger for cash booking payments and
+  wallet top-ups. Cash needs no QR or screenshot, and wallet credit remains
+  blocked until admin approval.
 
 ## Errors Encountered
 
@@ -122,4 +144,13 @@ Deferred implementations remain in the repository and are disabled at their regi
 | Shell-local token assignment expanded before the curl header | 1 | Used direct command substitution from the task-owned temporary login response; token remained out of tool output. |
 | Planning completion checker reported `8/0` because the older inline phase format lacked supported headings | 1 | Converted the plan to the skill's supported phase-heading and status format. |
 | Expo Web dev server could not write the user-level `.expo/native-modules-cache` | 1 | Use the already validated production export and a task-owned stdlib SPA-rewrite server for direct route acceptance. |
+| Mobile test command `npm run test:run` did not exist | 1 | Read `package.json` and ran the repository-defined `npm test`; all 10 tests passed. |
+| Initial QR backend batch patch did not match the current upload-storage context | 1 | Split the backend changes into smaller file-scoped patches after rereading the exact function bodies. |
+| Mobile type patch used one incorrect workspace path | 1 | No files changed; rerun the same patch with the verified `/Volumes/TLW/Utar/FYP/UI/StringSence` root. |
+| Admin Settings QR patch included a stale context line | 1 | No files changed; split imports/state/handlers/render edits into smaller patches. |
+| Alembic migration smoke loaded a null-byte AppleDouble sidecar for the new revision | 1 | Identified `._20260818_0032_qr_payment_proofs.py` as task-created metadata; remove only that sidecar and retry. |
+| Targeted pytest selector referenced a non-existent notification test name | 1 | No tests ran; rerun the complete notification module and the actual unified-flow selector. |
+| Documentation batch patch used a stale API-contract context | 1 | No documentation files changed; patch each contract section against the exact current text. |
+| Playwright smoke could not launch because the local Chromium executable is not installed | 1 | Static Expo export passed; leave browser smoke `unverified` rather than downloading a browser during this task. |
+| Alembic heads was invoked from the repository root without backend config | 1 | The root command failed with missing `script_location`; the earlier backend-directory check already confirmed `20260818_0032 (head)`. |
 | Initial fixture recommendation cache was invalidated by later feedback creation | 1 | Regenerated the player's recommendation after all feedback writes; this is expected cache invalidation, not a page defect. |

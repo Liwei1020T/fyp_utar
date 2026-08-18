@@ -1,6 +1,66 @@
 # Agent Scope Simplification Progress
 
+## 2026-08-18
+
+- Started Phase 20 to add cash to both booking payment and wallet top-up.
+- Confirmed the existing payment ledger and admin decision path already cover
+  cash semantics, so no new database column or migration will be added.
+- Completed Phase 20 across backend, booking checkout, wallet top-up, payment
+  result, admin review copy, types, tests, and commerce documentation.
+- Validation passed: backend Ruff/format/Mypy and 151 tests with 2 environment
+  skips; mobile TypeScript/lint/10 tests; Expo Web export with 3,677 modules;
+  and `git diff --check`.
+- The first mobile test command used the absent `test:run` script; `npm test`
+  is the repository-defined command and passed.
+
+- Started Phase 19 implementation after explicit user approval.
+- Re-read the QR payment plan, current migration head, payment/store-settings
+  routes, upload storage, and existing test coverage before editing.
+- Phase 1 is in progress; no runtime code has been changed yet in this turn.
+- First combined backend patch was rejected by `apply_patch` because the upload
+  storage context differed; no partial patch was applied. Split edits are being
+  used for the retry.
+- First mobile patch was rejected before applying because one path contained a
+  typo; no mobile files changed.
+- First Admin Settings patch was rejected on a stale context line; no partial UI
+  change was applied.
+- Disposable Alembic smoke found a null-byte `._20260818_0032...py` AppleDouble
+  sidecar created beside the migration; it is not source code and will be
+  removed before retrying the migration.
+- One targeted pytest selector was stale and reported “not found”; no test was
+  executed by that command.
+- First documentation batch patch was rejected on an exact-text mismatch; no
+  docs were partially changed.
+- Static Expo export passed. Playwright smoke started/stopped the static server
+  correctly but could not launch because the local Chromium executable is not
+  installed; browser acceptance remains `unverified`.
+
+- Completed QR payment/proof implementation across backend and mobile.
+- Added migration `20260818_0032`, transaction-safe QR/proof storage, signed
+  media URLs, Admin Settings QR management, player QR/proof submission, and
+  admin evidence preview/approval guards.
+- Updated API/database/runbook/code-map documentation and added
+  `docs/qr-payment-acceptance-2026-08-18.md`.
+- Final checks: backend 150 passed/2 skipped, Ruff/format/mypy passed, mobile
+  TypeScript/lint/10 tests passed, Expo Web export passed with 3,657 modules,
+  and `git diff --check` passed.
+- Device and real-browser checks remain explicitly `unverified` because no
+  local Chromium executable or physical Expo Go run was available.
+- Code-simplifier pass kept the shared upload/storage contract, simplified media
+  download branching and mobile top-up form construction, restored existing
+  preset-chip UI, and tightened the Web confirmation fallback without changing
+  the payment contract.
+- Final root-level Alembic invocation was intentionally not repeated after it
+  lacked backend config; the backend-directory head check had already passed.
+
 ## 2026-08-17
+
+- Wrote the evidence-backed QR transfer and payment-proof implementation plan at
+  `docs/plans/qr-payment-proof-plan-2026-08-17.md`.
+- Incorporated the follow-up requirement that Admin Settings can upload,
+  preview, replace, and delete the active payment QR.
+- Initial planning kept the proposed migration pending explicit approval; that
+  approval was later received and implementation continued as `20260818_0032`.
 
 - Started a new full page-by-page review covering current authentication, player, and administrator routes.
 - Added isolated-fixture, per-role, cross-role, and final-matrix phases to the existing plan.

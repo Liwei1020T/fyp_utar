@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, Platform, View } from 'react-native';
+import { Alert, FlatList, Image, Modal, Platform, Pressable, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { AlertCircle, CheckCircle2, Clock3 } from 'lucide-react-native';
 import { AppCard } from '../../components/ui/AppCard';
@@ -43,6 +43,7 @@ export default function AdminPaymentsScreen() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [proofPreviewUrl, setProofPreviewUrl] = useState<string | null>(null);
 
   const refreshPayments = useCallback(async () => {
     if (!token) {
@@ -169,7 +170,7 @@ export default function AdminPaymentsScreen() {
       tone="admin"
       headerVariant="primary"
       title="Payments monitor"
-      subtitle="Verify pending external payments and wallet top-up requests."
+      subtitle="Review QR-transfer evidence and wallet top-up requests."
       showBackButton
       onBackPress={() => router.back()}
       scrollable={false}
@@ -194,6 +195,7 @@ export default function AdminPaymentsScreen() {
           const isPending = item.status === 'pending';
           const isTopUp = item.type === 'wallet_top_up';
           const isUpdating = updating?.paymentId === item.id;
+          const missingProof = item.method === 'qr_transfer' && !item.proofUrl;
 
           return (
             <AppCard variant="elevated" className="mb-4" padding="md">
@@ -233,6 +235,27 @@ export default function AdminPaymentsScreen() {
                   {formatDateTime(item.createdAt)}
                 </HeroText>
               </View>
+              {item.proofUrl ? (
+                <Pressable
+                  className="mt-3 rounded-[18px] border border-primary-100 bg-primary-50 p-3"
+                  onPress={() => setProofPreviewUrl(item.proofUrl ?? null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Preview payment evidence"
+                >
+                  <Image
+                    source={{ uri: item.proofUrl }}
+                    className="h-40 w-full rounded-[12px] bg-white"
+                    resizeMode="contain"
+                  />
+                  <HeroText className="mt-2 text-xs font-semibold text-primary-700">
+                    Tap to preview payment evidence
+                  </HeroText>
+                </Pressable>
+              ) : item.method === 'qr_transfer' ? (
+                <HeroText className="mt-3 text-xs font-semibold leading-5 text-warning-700">
+                  Payment evidence is missing. Do not approve this QR transfer.
+                </HeroText>
+              ) : null}
               {isPending ? (
                 <>
                   <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
@@ -246,7 +269,7 @@ export default function AdminPaymentsScreen() {
                       size="sm"
                       className="flex-1"
                       isLoading={isUpdating && updating.status === 'paid'}
-                      isDisabled={!token || updating !== null}
+                      isDisabled={!token || updating !== null || missingProof}
                       accessibilityHint={
                         isTopUp
                           ? 'Requires confirmation and then credits the customer wallet'
@@ -304,7 +327,7 @@ export default function AdminPaymentsScreen() {
                   </HeroText>
                   <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
                     {pendingCount > 0
-                      ? 'Confirm each decision after checking the payment evidence.'
+                      ? 'Confirm each decision after checking the transfer evidence or cash receipt.'
                       : 'All loaded payments have a final status.'}
                   </HeroText>
                 </View>
@@ -338,6 +361,30 @@ export default function AdminPaymentsScreen() {
           </AppCard>
         }
       />
+      <Modal
+        visible={proofPreviewUrl !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setProofPreviewUrl(null)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/80 p-6">
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setProofPreviewUrl(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Close payment evidence preview"
+          />
+          {proofPreviewUrl ? (
+            <Image source={{ uri: proofPreviewUrl }} className="h-[80%] w-full" resizeMode="contain" />
+          ) : null}
+          <AppButton
+            label="Close preview"
+            variant="secondary"
+            className="mt-5"
+            onPress={() => setProofPreviewUrl(null)}
+          />
+        </View>
+      </Modal>
     </AppScreen>
   );
 }

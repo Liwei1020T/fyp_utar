@@ -347,6 +347,7 @@ export const useAppStore = create<AppStoreState>((set) => ({
         storeContact: '',
         supportText: '',
         paymentNotes: '',
+        paymentQrUrl: undefined,
         bookingNotes: '',
         storePolicyText: '',
         address: '',

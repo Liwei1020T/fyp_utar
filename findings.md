@@ -1,5 +1,58 @@
 # Agent Scope Findings
 
+## Cash payment option (2026-08-18)
+
+- Cash can reuse the existing `payments.method`, `pending` status, admin review,
+  and exactly-once wallet-credit path; no schema migration is needed.
+- Only `qr_transfer` should require a configured QR and proof image. Cash must
+  accept neither as a prerequisite and remains pending until shop confirmation.
+- The smallest complete change touches the backend multipart method contract,
+  mobile booking/top-up choices, payment-result copy, and focused commerce tests.
+- Focused cash evidence confirms a booking cash request and top-up start pending
+  without proof, wallet balance stays unchanged, and admin approval credits the
+  top-up through the existing ledger exactly once.
+
+## QR transfer and payment-proof planning (2026-08-17)
+
+- The user selected a manual QR-transfer flow for both wallet top-up and booking
+  payment: preview/download QR, transfer externally, upload screenshot, then wait
+  for admin review.
+- Admin must manage the active QR from Store Settings, including upload,
+  preview, replacement, and deletion.
+- Existing commerce behavior already provides pending admin decisions, locked
+  terminal transitions, and exactly-once wallet credit; the change should extend
+  those records instead of adding another ledger.
+- Existing upload infrastructure already provides `expo-image-picker`,
+  multipart requests, JPG/PNG/WEBP magic-byte validation, a 5 MB limit, UUID
+  filenames, traversal protection, signed media URLs, and transaction-aware file
+  cleanup.
+- Current migration head was `20260817_0031`; the implementation revision is
+  `20260818_0032_qr_payment_proofs.py`.
+- The minimal contract stores one server-owned QR path on `store_settings` and
+  one immutable proof path on each external `payment`.
+- New writes should expose only the truthful `qr_transfer` method or
+  `wallet_balance`. Historical Card/Online banking/E-wallet rows must remain
+  unchanged because they have no screenshot and must not be misrepresented as
+  evidence-backed QR transfers.
+- The formal plan is
+  `docs/plans/qr-payment-proof-plan-2026-08-17.md`.
+- Store Settings mapping currently flows through `StoreSettingsRecord` and
+  `settings_to_dto`; adding `payment_qr_path` there keeps public/admin reads
+  consistent without bypassing the repository.
+- Existing multipart client helpers send the bearer token and preserve the
+  mobile/web file normalization path, so QR/proof uploads can reuse them.
+- Current media storage only allows `booking-updates` and `string-images`; the
+  QR/proof directories must be added to the same traversal-safe resolver before
+  any new file can be served.
+- Backend implementation now has proposed revision `20260818_0032`, QR/proof
+  columns, the `qr_transfer` evidence check, signed `payment_qr_url` and
+  `proof_url` fields, and multipart create routes.
+- Mobile implementation now has a shared QR/proof panel, admin QR controls, and
+  player/admin payment type/evidence fields; compile/type checks still remain.
+- Implementation is complete at migration head `20260818_0032`; the dated
+  acceptance record classifies local Chromium and physical Expo Go checks as
+  `unverified` rather than passing them by inference.
+
 ## Full Page Review (2026-08-17)
 
 - Review requested for every current page and its functional behavior.

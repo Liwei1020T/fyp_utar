@@ -121,6 +121,26 @@ async function buildImageUploadForm(input: {
   return formData;
 }
 
+async function buildPaymentForm(input: {
+  method: 'qr_transfer' | 'cash' | 'wallet_balance';
+  amount?: number;
+  expectedAmount?: number;
+  proof?: BackendUploadFile | null;
+}) {
+  const formData = new FormData();
+  formData.append('method', input.method);
+  if (input.amount != null) {
+    formData.append('amount', String(input.amount));
+  }
+  if (input.expectedAmount != null) {
+    formData.append('expected_amount', String(input.expectedAmount));
+  }
+  if (input.proof) {
+    formData.append('proof', await normalizeUploadFile(input.proof));
+  }
+  return formData;
+}
+
 export const backendApi = {
   baseUrl: API_BASE_URL,
   registerPlayer(payload: {
@@ -270,17 +290,16 @@ export const backendApi = {
   createBookingPayment(
     token: string,
     bookingId: string,
-    method: BackendPayment['method'],
+    method: 'qr_transfer' | 'cash' | 'wallet_balance',
     expectedAmount?: number,
+    proof?: BackendUploadFile | null,
   ) {
-    return requestJson<BackendPayment>(`/payments/bookings/${bookingId}`, {
-      method: 'POST',
-      body: {
-        method,
-        ...(expectedAmount != null ? { expected_amount: expectedAmount } : {}),
-      },
-      token,
-    });
+    return buildPaymentForm({ method, expectedAmount, proof }).then((formData) =>
+      requestFormJson<BackendPayment>(`/payments/bookings/${bookingId}`, {
+        formData,
+        token,
+      }),
+    );
   },
   fetchWallet(token: string) {
     return requestJson<BackendWallet>('/wallet', { token });
@@ -289,14 +308,16 @@ export const backendApi = {
     token: string,
     payload: {
       amount: number;
-      method: 'card' | 'online_banking' | 'e_wallet';
+      method: 'qr_transfer' | 'cash';
+      proof?: BackendUploadFile | null;
     },
   ) {
-    return requestJson<BackendPayment>('/wallet/top-ups', {
-      method: 'POST',
-      body: payload,
-      token,
-    });
+    return buildPaymentForm(payload).then((formData) =>
+      requestFormJson<BackendPayment>('/wallet/top-ups', {
+        formData,
+        token,
+      }),
+    );
   },
   adminListPayments(token: string) {
     return requestJson<BackendPayment[]>('/admin/payments', { token });
@@ -309,6 +330,20 @@ export const backendApi = {
     return requestJson<BackendPayment>(`/admin/payments/${paymentId}`, {
       method: 'PATCH',
       body: { status },
+      token,
+    });
+  },
+  adminUploadPaymentQr(token: string, photo: BackendUploadFile) {
+    return buildImageUploadForm({ photo }).then((formData) =>
+      requestFormJson<BackendStoreSettings>('/admin/store-settings/payment-qr', {
+        formData,
+        token,
+      }),
+    );
+  },
+  adminDeletePaymentQr(token: string) {
+    return requestJson<BackendStoreSettings>('/admin/store-settings/payment-qr', {
+      method: 'DELETE',
       token,
     });
   },

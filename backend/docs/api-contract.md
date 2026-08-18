@@ -248,12 +248,22 @@ records by `booking_id`, string, rating, or date, page them with `limit` and
 - `GET /api/admin/payments`
 - `PATCH /api/admin/payments/{payment_id}`
 
-External card, online-banking, and e-wallet records start as `pending`. The
-admin endpoint verifies them as `paid`, `failed`, or `cancelled`. Wallet top-up
+New external payment requests use `multipart/form-data` with either
+`method=qr_transfer` or `method=cash`. QR transfer requires a JPG/PNG/WEBP
+`proof` image up to 5 MB; cash requires neither QR configuration nor a proof.
+Both start as `pending`. The admin endpoint verifies them as `paid`, `failed`,
+or `cancelled`; QR responses include a short-lived `proof_url` for the
+authenticated owner or admin. Historical card, online-banking, and e-wallet
+records remain readable but are not accepted for new requests. Wallet top-up
 credit is written only when the admin verifies the associated payment.
 
-`wallet_balance` booking payments are server-validated against the persisted
-ledger and complete immediately only when sufficient balance exists.
+`POST /api/admin/store-settings/payment-qr` accepts a required `photo` image and
+returns the updated settings with `payment_qr_url`. The delete endpoint clears
+the active QR. New QR-transfer requests are rejected while no QR is configured.
+
+`wallet_balance` booking payments use the same multipart route without a proof,
+are server-validated against the persisted ledger, and complete immediately
+only when sufficient balance exists.
 
 The quote endpoint returns the server-owned current amount, wallet balance, and
 any active payment so checkout never trusts a stale catalog snapshot.
@@ -289,6 +299,8 @@ any active payment so checkout never trusts a stale catalog snapshot.
 - `GET /api/admin/service-queue`
 - `GET /api/admin/store-settings`
 - `PUT /api/admin/store-settings`
+- `POST /api/admin/store-settings/payment-qr`
+- `DELETE /api/admin/store-settings/payment-qr`
 - `GET /api/admin/analytics/summary`
 - `GET /api/admin/analytics/popular-strings`
 
@@ -391,8 +403,10 @@ Store-ops responses add:
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
 - single-store settings payloads for support/policy copy,
-  `default_service_price`, notification templates, and `trending_string_ids`;
-  player clients read this through `GET /api/store-settings`
+  `default_service_price`, notification templates, `trending_string_ids`, and
+  optional `payment_qr_url`; player clients read these through
+  `GET /api/store-settings`. QR upload/replace/delete is a separate admin
+  multipart operation so text settings remain JSON
 - analytics summary with store-local `today_bookings`, repeat customers,
   feedback completion, average service time, tension distribution, and popular
   string aggregates

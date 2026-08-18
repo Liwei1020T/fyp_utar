@@ -6,6 +6,7 @@ import { appChromeColors } from '../../components/ui/theme';
 import {
   backendApi,
   isBackendAuthError,
+  resolveBackendMediaUrl,
 } from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
@@ -130,6 +131,9 @@ export default function AdminLayout() {
             address: storeSettingsResult.value.address,
             supportText: storeSettingsResult.value.support_text,
             paymentNotes: storeSettingsResult.value.payment_notes,
+            paymentQrUrl: resolveBackendMediaUrl(
+              storeSettingsResult.value.payment_qr_url,
+            ),
             bookingNotes: storeSettingsResult.value.booking_notes,
             storePolicyText: storeSettingsResult.value.store_policy_text,
             trendingStringIds: storeSettingsResult.value.trending_string_ids ?? [],

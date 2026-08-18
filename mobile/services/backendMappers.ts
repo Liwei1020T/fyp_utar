@@ -995,6 +995,7 @@ export function mapBackendPaymentToPayment(
     createdAt: payment.created_at,
     reference: payment.reference,
     note: payment.note ?? undefined,
+    proofUrl: resolveBackendMediaUrl(payment.proof_url),
   };
 }
 
