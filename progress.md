@@ -2,6 +2,62 @@
 
 ## 2026-08-18
 
+- Started Phase 25 after the user asked whether Forgot Password already uses
+  WhatsApp, requested a Git commit, and asked what the service fee represents.
+- The commit scope is limited to the notification-test isolation fix, catalog
+  archive documentation, and current planning/evidence files. Runtime secrets,
+  private backups, generated graphs, browser state, and output stay excluded.
+- Verified Forgot Password has no OpenWA sender and that the service fee is the
+  admin-configured labor amount added to the string selling price; the current
+  RM0 value means it is waived.
+- Pre-commit checks passed: `git diff --check`, Ruff, 10 notification tests, and
+  6 system-cohort tests. Phase 25 is ready for the scoped commit.
+
+- Started Phase 23 after the user clarified that only the approved 12 strings
+  should remain in the runtime system while the other catalog data must remain
+  recoverable for future use.
+- The final implementation is runtime soft archival: preserve the original
+  33-string research/NLP sources and business history, verify a private backup,
+  then leave only the approved 12 catalog and inventory rows active.
+- Completed and checksum-recorded a private full PostgreSQL backup, then restored
+  it into a temporary database to prove recoverability before mutation.
+- Exported a 21-row catalog activation/inventory manifest and transactionally
+  archived all non-approved catalog/inventory rows. Active runtime string count
+  is now exactly 12; business and recommendation history were preserved.
+- Added `docs/catalog-runtime-archive-2026-08-18.md` with backup evidence,
+  privacy boundaries, and the controlled single-string restoration workflow.
+- Final verification passed: restored-backup evidence, both SHA-256 checks,
+  retained-backend health, 12 active strings, 12 active inventory rows, 21
+  archived rows in each table, six cohort tests, and `git diff --check`.
+
+- Started Phase 21 after the user requested completion of WhatsApp delivery,
+  synchronization of the retained database, and a current system string list.
+- Restored the existing plan and confirmed the implementation should reuse the
+  persisted-first OpenWA path and existing Alembic chain.
+- Current source worktree contains only unrelated/generated Graphify and local
+  browser-output changes; no QR/payment source diff is pending.
+- Started the retained PostgreSQL service without resetting its named volume;
+  health checks pass and the pre-upgrade revision is `20260813_0029`.
+- Upgraded the retained PostgreSQL database through revisions `0030`, `0031`,
+  and `0032`; current revision is `20260818_0032 (head)` and core catalog and
+  recommendation counts remain intact.
+- Began pulling pinned OpenWA `v0.11.1`; the first combined pull/run exceeded
+  the tool output window before container creation, so image acquisition and
+  container startup are now handled as separate resumable steps.
+- OpenWA `v0.11.1` is healthy on local-only port 2785 with a persistent volume.
+  Rotated the startup key after it appeared in logs and verified the revoked key
+  is rejected while the replacement key is accepted.
+- Created the dedicated `stringsense-fyp` OpenWA session; next step is a
+  session-scoped operator key, backend configuration, and QR pairing.
+- Configured the backend with a least-privilege session-scoped operator key and
+  generated the pairing QR. The session is healthy at `qr_ready` and awaits the
+  user's WhatsApp Linked Devices scan.
+- Fixed provider-test isolation with two explicit OpenWA-disable lines in the
+  Expo tests; Ruff and all 10 notification tests now pass.
+- Completed Phase 22 by querying the synchronized PostgreSQL database against
+  `config/approved_string_cohort_v1.csv`; all 12 approved strings exist and are
+  active.
+
 - Started Phase 20 to add cash to both booking payment and wallet top-up.
 - Confirmed the existing payment ledger and admin decision path already cover
   cash semantics, so no new database column or migration will be added.

@@ -1,5 +1,140 @@
 # Agent Scope Findings
 
+## Password delivery, service fee, and commit handoff (2026-08-18)
+
+- The user expects Forgot Password to use WhatsApp; verify the actual route and
+  provider call before describing it as complete.
+- `default_service_price` must be traced into the current quote/UI flow before
+  deciding whether RM0 is intentional or missing configuration.
+- Use a scoped Git commit and preserve unrelated/generated dirty-tree content.
+- Forgot Password is not currently delivered through WhatsApp. The request use
+  case generates and stores a six-digit code and only returns it when the
+  development preview is enabled; it has no OpenWA/provider dependency. The
+  mobile helper copy also says WhatsApp delivery can be added later.
+- `default_service_price` is the shop's stringing/service labor fee. Booking
+  payment quotes and writes use `string selling price + service fee`; the Admin
+  Settings field controls it. The retained database value is RM0, so the current
+  total charges only the string price.
+- Pre-commit verification passed: `git diff --check`, Ruff, 10 notification
+  tests, and 6 system-cohort tests.
+
+## Runtime catalog archival (2026-08-18)
+
+- The user superseded the earlier runtime-retention boundary: only the approved
+  12 strings should remain in the live system, while the other catalog material
+  must be recoverable later.
+- This does not authorize deletion of the original 33-string research source,
+  protected NLP workbooks, or run artifacts. The mutation target is the retained
+  PostgreSQL runtime database after a verified archive is created.
+- PostgreSQL has eight direct foreign keys to `strings`: seven catalog/cache
+  tables cascade on delete, while `bookings.string_id` is restrictive and may
+  block pruning if historical bookings reference non-approved strings.
+- Recommendation run items also carry string `catalog_id` values without a
+  foreign key, so dependency discovery cannot rely only on `pg_constraint`.
+- Runtime schema contains nine tables with a direct `catalog_id` or `string_id`
+  column, including both current `inventory_items` and legacy
+  `string_inventory_items`. Inventory movements depend on current inventory
+  rows indirectly through `inventory_id` and must be archived with them.
+- The 21 non-approved strings currently own 21 inventory rows, 22 inventory
+  movements, 21 metric rows, 82 tags, 21 official-performance rows, 273 matrix
+  rows, and 18 cache rows. The legacy inventory table has no matching rows.
+- Four non-approved strings are referenced by six historical bookings, and
+  non-approved IDs appear in 19 recommendation-run items. Physical deletion
+  would therefore either fail or damage retained business history unless the
+  design is broadened beyond catalog cleanup.
+- Startup seeding only runs when the `strings` table is empty. It already marks
+  non-cohort seed rows and inventory inactive/out-of-stock, so a soft archive
+  will not be silently reversed on normal backend restart.
+- The existing `is_active` and inventory availability fields are the minimal
+  reversible mechanism: archive all 21 in place, preserve their catalog and
+  history dependencies, and keep the approved cohort as the separate gate for
+  any future restoration.
+- The six dependent bookings are historical/current business records across
+  completed, ready-for-collection, and in-progress states; they must not be
+  deleted merely to reduce catalog row count.
+- Created a private custom-format PostgreSQL backup at
+  `backend/var/backups/stringsense-pre-12-only-20260818T142221.dump` plus SHA-256
+  sidecar. A full restore into a temporary database verified migration head
+  `20260818_0032`, 33 strings, and 377 bookings before the temporary database
+  was removed.
+- Created a 21-row pre-archive activation/inventory manifest at
+  `backend/var/backups/nonapproved-string-state-20260818T142221.csv` with its own
+  SHA-256 sidecar.
+- A single PostgreSQL transaction archived all 21 non-approved catalog and
+  inventory records. Database assertions passed: exactly 12 strings remain
+  active and no non-approved string or inventory row remains active.
+- Post-start verification passed: backend health is `ok`, the MacBERT artifact
+  still imports 108 rows, active strings/inventory are 12/12, archived
+  strings/inventory are 21/21, both recovery checksums validate, and
+  `git diff --check` is clean.
+
+## WhatsApp and database continuation (2026-08-18)
+
+- The latest requested boundary is live OpenWA delivery, retained-database
+  migration, and a database-backed list of the approved system strings.
+- Preserve the existing notification contract: persist the in-app delivery
+  first, then attempt OpenWA; a provider failure must not remove the record.
+- Do not reset the PostgreSQL volume. Inspect current revision and data before
+  applying the existing migration head.
+- The repository Compose file currently defines only PostgreSQL; OpenWA is not
+  a managed service in this workspace.
+- `backend/.env` currently contains no OpenWA settings, while `.env.example`
+  documents a disabled provider, base URL, session ID, and server-side API key.
+- The current branch includes commit `6a303ce` for QR/cash payments and the
+  Alembic source head is `20260818_0032`.
+- Official OpenWA `v0.11.1` is the current release. Its documented API matches
+  the existing StringSense endpoint and `X-API-Key` contract: create a session,
+  start it, fetch the QR, then send text through
+  `/api/sessions/{sessionId}/messages/send-text`.
+- OpenWA session data and API keys must live in a persistent `/app/data` volume;
+  do not use a volume-reset troubleshooting path because it would remove the
+  linked WhatsApp profile and credentials.
+- Official first boot generates a cryptographically random admin API key and
+  stores it at `/app/data/.api-key`; this avoids hard-coding a development key.
+  A least-privilege session-scoped operator key can then be minted through
+  `POST /api/auth/api-keys` for StringSense.
+- OpenWA `v0.11.1` now runs healthy as `stringsense-openwa`, bound only to
+  `127.0.0.1:2785`, with `stringsense_openwa_data` mounted at `/app/data`.
+- The first boot key that appeared in startup output was rotated immediately.
+  The orphan intermediate key and exposed default key are revoked; the persisted
+  replacement admin key validates with HTTP 200 and the exposed key returns 401.
+- Created a dedicated OpenWA session named `stringsense-fyp` with UUID
+  `763e6069-c658-4510-8040-d358976f8162` and default auto-reconnect behavior.
+- Created and validated a session-scoped operator key for the StringSense
+  backend, enabled OpenWA in ignored `backend/.env`, and kept the env file at
+  mode 600. The session started successfully and reached `qr_ready`.
+- Pairing remains user-authorized: nine polls stayed at `qr_ready`; no connected
+  state or real-phone receipt is claimed until the QR is scanned.
+- Enabling OpenWA exposed an environment-dependent test isolation gap: the two
+  Expo-specific tests enabled Expo but did not disable OpenWA. The minimal fix
+  mirrors existing OpenWA tests by explicitly selecting only the provider under
+  test; runtime code is unchanged.
+- The focused notification module passes again: Ruff passed and all 10 tests
+  passed with live OpenWA enabled in the local environment.
+- The synchronized database contains all 12 approved cohort IDs, every one
+  active, with gauges ranging from 0.63 mm to 0.70 mm. These are the system
+  strings to report; the other retained rows are historical and hidden by the
+  approved-cohort boundary.
+- Docker Engine `29.3.1` is healthy. The retained
+  `stringsence_stringsense_postgres_data` volume exists, and the stopped
+  `stringsense-postgres` container is attached to it. Ports 2785 and 55432 were
+  free before startup.
+- PostgreSQL restarted healthy on port 55432 using the same named volume. The
+  retained database is currently at `20260813_0029`; source head is
+  `20260818_0032`, so three approved revisions remain to synchronize.
+- The retained database contains 33 historical string rows and 24 rows marked
+  active before migration. Runtime exposure must still be intersected with the
+  approved 12-string cohort; `is_active` alone is not the system boundary.
+- Revisions `0030` and `0032` add booking-free support and QR-proof schema.
+  Revision `0031` only normalizes duplicated punctuation in catalog description
+  text; it does not delete string rows or business records.
+- Retained PostgreSQL synchronization completed successfully at
+  `20260818_0032 (head)`. All 33 historical string rows and 24 active flags are
+  preserved; `support_conversations`, `payments.proof_path`, and
+  `store_settings.payment_qr_path` are present.
+- The recommendation matrix remains populated with 537 rows across 33 retained
+  catalog IDs; runtime still filters this history to the approved cohort.
+
 ## Cash payment option (2026-08-18)
 
 - Cash can reuse the existing `payments.method`, `pending` status, admin review,

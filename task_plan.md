@@ -102,6 +102,26 @@ Deferred implementations remain in the repository and are disabled at their regi
 
 **Status:** complete
 
+### Phase 21 — WhatsApp live delivery and database synchronization
+
+**Status:** in_progress
+
+### Phase 22 — Current system string inventory
+
+**Status:** complete
+
+### Phase 23 — Archive non-approved runtime strings
+
+**Status:** complete
+
+### Phase 24 — Restrict active runtime database to approved cohort
+
+**Status:** complete
+
+### Phase 25 — Clarify password delivery, service fee, and commit handoff
+
+**Status:** complete
+
 ## Decisions
 
 - Keep the admin read-only summary; disable all admin detailed queries and writes.
@@ -128,6 +148,19 @@ Deferred implementations remain in the repository and are disabled at their regi
 - Reuse the existing pending/admin-review ledger for cash booking payments and
   wallet top-ups. Cash needs no QR or screenshot, and wallet credit remains
   blocked until admin approval.
+- Reuse the existing OpenWA notification provider and persisted-first delivery
+  contract; do not add Expo Push or a second WhatsApp integration.
+- Upgrade the retained PostgreSQL database through the existing Alembic chain
+  without resetting its volume, then list the approved runtime string cohort
+  from the synchronized database.
+- Preserve the original 33-string source and protected NLP artifacts, create a
+  verified versioned PostgreSQL backup, then use existing active/availability
+  fields to archive non-approved runtime strings without breaking history.
+- Do not prune any non-approved row that is referenced by user/business history
+  until the dependency is understood and included in the recovery design.
+- Commit only the scoped notification-test isolation, catalog-archive evidence,
+  and planning records; exclude secrets, private backups, generated Graphify,
+  Playwright state, and output artifacts.
 
 ## Errors Encountered
 
@@ -154,3 +187,15 @@ Deferred implementations remain in the repository and are disabled at their regi
 | Playwright smoke could not launch because the local Chromium executable is not installed | 1 | Static Expo export passed; leave browser smoke `unverified` rather than downloading a browser during this task. |
 | Alembic heads was invoked from the repository root without backend config | 1 | The root command failed with missing `script_location`; the earlier backend-directory check already confirmed `20260818_0032 (head)`. |
 | Initial fixture recommendation cache was invalidated by later feedback creation | 1 | Regenerated the player's recommendation after all feedback writes; this is expected cache invalidation, not a page defect. |
+| Phase 21 planning patch assumed the wrong `findings.md` title | 1 | The patch was rejected atomically; reread the file headings and split the update against exact context. |
+| Pre-upgrade string detail SQL used stale `brand` and `model` columns | 1 | The count query succeeded and the detail query was read-only; inspected the ORM and switched to `brand_code`, `model_name`, and `display_name`. |
+| Migration inspection used an incorrect guessed filename for revision `0031` | 1 | No mutation occurred; located the revision by ID and read `20260817_0031_clean_catalog_descriptions.py`. |
+| Initial OpenWA `docker run` did not finish pulling within the 30-second tool window | 1 | No container or complete image exists; split image pull from container creation and keep the returned Docker session ID for polling. |
+| Process inspection with `ps` was denied by the macOS sandbox | 1 | Docker state checks were sufficient; do not treat the denied process query as evidence about the pull. |
+| Second OpenWA container creation raced with the first pull/run and hit a name conflict | 1 | Preserved the already-created target container; it was healthy and attached to the intended persistent volume. |
+| First admin-key rotation validated a POST-only endpoint with GET and exited after creating an orphan key | 1 | Inspected OpenAPI, revoked the orphan, created a fresh admin key, validated with POST, replaced the persisted key file, and revoked the exposed default key. |
+| WhatsApp session poll used zsh read-only variable `status` | 1 | The command stopped before changing state; renamed it to `session_state` and resumed polling. |
+| Notification tests inherited live `OPENWA_ENABLED=true` and routed an Expo test to OpenWA | 1 | Made both Expo-specific tests explicitly disable OpenWA, matching the existing OpenWA tests that explicitly disable Expo. |
+| Initial non-approved dependency count assumed `bookings.catalog_id` | 1 | The read-only query failed without mutation; introspection showed the real column is `bookings.string_id`, so counts will use actual constraints and table columns. |
+| Revised dependency count included nonexistent `recommendation_logs.catalog_id` | 1 | ORM inspection confirmed catalog IDs live in `recommendation_run_items`, not the legacy JSON log table; removed that union branch before retrying. |
+| Scoped `git add` could not create `.git/index.lock` under the read-only sandbox | 1 | No files were staged; retry the same five explicit paths with authorized Git index access. |

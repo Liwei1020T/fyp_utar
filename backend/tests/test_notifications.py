@@ -333,6 +333,7 @@ def test_admin_push_delivery_returns_persisted_outcome_and_resends_once(
 
     settings = get_settings()
     monkeypatch.setattr(settings, "expo_push_enabled", True)
+    monkeypatch.setattr(settings, "openwa_enabled", False)
     monkeypatch.setattr(settings, "expo_push_endpoint", "https://expo.test/send")
     monkeypatch.setattr(
         settings,
@@ -551,6 +552,7 @@ def test_admin_push_delivery_skips_provider_when_initial_commit_fails(
 
     settings = get_settings()
     monkeypatch.setattr(settings, "expo_push_enabled", True)
+    monkeypatch.setattr(settings, "openwa_enabled", False)
     monkeypatch.setattr(settings, "expo_push_endpoint", "https://expo.test/send")
     provider_calls: list[object] = []
 
