@@ -59,10 +59,11 @@ test('raw Pressable controls declare an accessibility role', async () => {
 });
 
 test('shared controls and catalog preserve recoverable UX states', async () => {
-  const [button, input, header, catalog] = await Promise.all(
+  const [button, input, screen, header, catalog] = await Promise.all(
     [
       'components/ui/AppButton.tsx',
       'components/ui/AppInput.tsx',
+      'components/shared/AppScreen.tsx',
       'components/shared/AppPageHeader.tsx',
       'app/player/(tabs)/strings.tsx',
     ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
@@ -70,7 +71,9 @@ test('shared controls and catalog preserve recoverable UX states', async () => {
 
   assert.match(button, /busy: isLoading/);
   assert.match(input, /accessibilityLiveRegion=\{error \? 'polite' : 'none'\}/);
+  assert.match(screen, /subtitle=\{subtitle\}/);
   assert.match(header, /accessibilityRole="header"/);
+  assert.match(header, /\{subtitle \? \(/);
   assert.match(catalog, /label="Clear filters"/);
   assert.doesNotMatch(catalog, />\s*View All\s*</);
 });

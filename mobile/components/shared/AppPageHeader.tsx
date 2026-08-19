@@ -9,6 +9,7 @@ export type AppHeaderVariant = 'primary' | 'secondary' | 'flow';
 
 interface AppPageHeaderProps {
   title?: string;
+  subtitle?: string;
   headerRight?: React.ReactNode;
   variant?: AppHeaderVariant;
   compact?: boolean;
@@ -51,6 +52,7 @@ const minHeights: Record<AppHeaderVariant, number> = {
 
 export function AppPageHeader({
   title,
+  subtitle,
   headerRight,
   variant = 'primary',
   compact = false,
@@ -58,7 +60,7 @@ export function AppPageHeader({
   onBackPress,
   backAccessibilityLabel = 'Go back',
 }: AppPageHeaderProps) {
-  if (!title && !headerRight && !showBackButton) {
+  if (!title && !subtitle && !headerRight && !showBackButton) {
     return null;
   }
 
@@ -123,6 +125,17 @@ export function AppPageHeader({
                 numberOfLines={2}
               >
                 {title}
+              </HeroText>
+            ) : null}
+            {subtitle ? (
+              <HeroText
+                className={cn(
+                  'mt-1 text-[13px] leading-[18px]',
+                  variant === 'flow' ? 'text-secondary-100' : 'text-slate-600',
+                )}
+                numberOfLines={compact ? 1 : 2}
+              >
+                {subtitle}
               </HeroText>
             ) : null}
           </View>
