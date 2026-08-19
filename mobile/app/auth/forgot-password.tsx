@@ -118,7 +118,7 @@ export default function ForgotPasswordScreen() {
       });
 
       router.replace(
-        `/auth/login?role=player&identifier=${encodeURIComponent(
+        `/auth/login?identifier=${encodeURIComponent(
           data.phoneNumber,
         )}`,
       );
@@ -133,23 +133,22 @@ export default function ForgotPasswordScreen() {
 
   return (
     <AuthShell
-      eyebrow="Player recovery"
       title={stage === 'request' ? 'Reset your password' : 'Enter your verification code'}
-      subtitle={
-        stage === 'request'
-          ? 'Request a 6-digit code for your phone-based player account.'
-          : 'Use the code you received and set a new password.'
-      }
       onBack={() => {
         if (router.canGoBack()) {
           router.back();
         } else {
-          router.replace('/auth/welcome');
+          router.replace('/auth/login');
         }
       }}
       footer={
         <View className="items-center">
-          <Pressable onPress={() => router.replace('/auth/login?role=player')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to player login"
+            className="min-h-11 justify-center"
+            onPress={() => router.replace('/auth/login')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               Back to login
             </HeroText>
@@ -233,7 +232,7 @@ export default function ForgotPasswordScreen() {
                   value={value}
                   onChangeText={onChange}
                   error={resetErrors.verificationCode?.message}
-                  helperText="This can later be delivered through WhatsApp."
+                  helperText="We'll send the verification code to this WhatsApp number."
                   leftAdornment={<MessageSquareMore size={18} color="#64748B" />}
                 />
               )}

@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Redirect, useSegments } from 'expo-router';
 import { View } from 'react-native';
 import { RoleGuard } from '../../components/roles/RoleGuard';
 import { useAppStore, useBackendAccessToken, useCurrentUser } from '../../store/appStore';
@@ -7,35 +6,32 @@ import { appChromeColors } from '../../components/ui/theme';
 import {
   backendApi,
   isBackendAuthError,
+  resolveBackendMediaUrl,
 } from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
+  mapBackendConversationToConversation,
   mapBackendInventoryStringToStringItem,
+  mapBackendPaymentToPayment,
   mapBackendUserToAdminProfile,
 } from '../../services/backendMappers';
 
-const DEFERRED_ADMIN_SEGMENTS = new Set([
-  'analytics',
-  'chat',
-  'payments',
-  'service-queue',
-]);
-
 export default function AdminLayout() {
-  const segments = useSegments();
   const hasHydrated = useAppStore((state) => state.hasHydrated);
   const token = useBackendAccessToken();
   const user = useCurrentUser();
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const logout = useAppStore((state) => state.logout);
   const setBackendAdminSession = useAppStore(
     (state) => state.setBackendAdminSession,
   );
   const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const setLiveConversations = useAppStore((state) => state.setLiveConversations);
+  const setLivePayments = useAppStore((state) => state.setLivePayments);
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
+  const updateStoreSettings = useAppStore((state) => state.updateStoreSettings);
 
   useEffect(() => {
-    if (!hasHydrated || sessionSource !== 'backend' || !token || user?.role !== 'admin') {
+    if (!hasHydrated || !token || user?.role !== 'admin') {
       return;
     }
 
@@ -43,13 +39,26 @@ export default function AdminLayout() {
 
     const hydrate = async () => {
       try {
-        const [currentUserResult, inventoryResult, bookingsResult] = await Promise.allSettled([
+        const [
+          currentUserResult,
+          inventoryResult,
+          bookingsResult,
+          paymentsResult,
+          conversationsResult,
+          storeSettingsResult,
+        ] = await Promise.allSettled([
           backendApi.fetchCurrentUser(token),
           backendApi.adminListInventoryStrings(token),
           backendApi.adminListBookings(token),
+          backendApi.adminListPayments(token),
+          backendApi.adminListConversations(token),
+          backendApi.adminFetchStoreSettings(token),
         ]);
 
-        if (cancelled) {
+        if (
+          cancelled ||
+          useAppStore.getState().backendAccessToken !== token
+        ) {
           return;
         }
 
@@ -68,20 +77,20 @@ export default function AdminLayout() {
           admin,
         });
 
-        let liveStrings = useAppStore.getState().liveStrings;
         if (inventoryResult.status === 'fulfilled') {
-          liveStrings = inventoryResult.value.items.map(mapBackendInventoryStringToStringItem);
-          setLiveStrings(liveStrings);
+          setLiveStrings(
+            inventoryResult.value.items.map(
+              mapBackendInventoryStringToStringItem,
+            ),
+          );
         } else {
           console.warn('Failed to hydrate live admin inventory', inventoryResult.reason);
         }
 
+        let liveBookings = useAppStore.getState().liveBookings;
         if (bookingsResult.status === 'fulfilled') {
-          const priceByStringId = new Map(
-            liveStrings.map((item) => [item.id, item.price]),
-          );
-          const liveBookings = bookingsResult.value.items.map((item) =>
-            mapBackendBookingToBooking(item, priceByStringId, admin.id),
+          liveBookings = bookingsResult.value.items.map((item) =>
+            mapBackendBookingToBooking(item, admin.id),
           );
           setLiveBookings(liveBookings);
         } else {
@@ -90,6 +99,54 @@ export default function AdminLayout() {
             return;
           }
           console.warn('Failed to hydrate live admin bookings', bookingsResult.reason);
+        }
+
+        if (paymentsResult.status === 'fulfilled') {
+          setLivePayments(paymentsResult.value.map(mapBackendPaymentToPayment));
+        } else {
+          console.warn('Failed to hydrate live payments', paymentsResult.reason);
+        }
+
+        if (conversationsResult.status === 'fulfilled') {
+          setLiveConversations(
+            conversationsResult.value.map((item) =>
+              mapBackendConversationToConversation(
+                item,
+                liveBookings.find((booking) => booking.id === item.booking_id),
+                admin.id,
+              ),
+            ),
+          );
+        } else {
+          console.warn(
+            'Failed to hydrate live conversations',
+            conversationsResult.reason,
+          );
+        }
+
+        if (storeSettingsResult.status === 'fulfilled') {
+          updateStoreSettings({
+            storeName: storeSettingsResult.value.store_name,
+            storeContact: storeSettingsResult.value.store_contact,
+            address: storeSettingsResult.value.address,
+            supportText: storeSettingsResult.value.support_text,
+            paymentNotes: storeSettingsResult.value.payment_notes,
+            paymentQrUrl: resolveBackendMediaUrl(
+              storeSettingsResult.value.payment_qr_url,
+            ),
+            bookingNotes: storeSettingsResult.value.booking_notes,
+            storePolicyText: storeSettingsResult.value.store_policy_text,
+            trendingStringIds: storeSettingsResult.value.trending_string_ids ?? [],
+            defaultServicePrice:
+              storeSettingsResult.value.default_service_price,
+            notificationSettings:
+              storeSettingsResult.value.notification_settings,
+          });
+        } else {
+          console.warn(
+            'Failed to hydrate live store settings',
+            storeSettingsResult.reason,
+          );
         }
       } catch (error) {
         if (isBackendAuthError(error)) {
@@ -108,20 +165,18 @@ export default function AdminLayout() {
   }, [
     hasHydrated,
     logout,
-    sessionSource,
     setBackendAdminSession,
     setLiveBookings,
+    setLiveConversations,
+    setLivePayments,
     setLiveStrings,
     token,
+    updateStoreSettings,
     user?.role,
   ]);
 
   if (!hasHydrated) {
     return <View style={{ flex: 1, backgroundColor: appChromeColors.page }} />;
-  }
-
-  if (segments.some((segment) => DEFERRED_ADMIN_SEGMENTS.has(segment))) {
-    return <Redirect href="/admin" />;
   }
 
   return <RoleGuard role="admin" />;

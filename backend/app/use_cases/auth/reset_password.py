@@ -24,19 +24,19 @@ class ResetPasswordUseCase:
         phone_number: str,
         verification_code: str,
         new_password: str,
-    ) -> None:
+    ) -> str | None:
         reset_code = self.password_reset_repository.get_latest_active_code(phone_number)
         if reset_code is None:
-            raise BadRequestError("Invalid or expired verification code")
+            return "Invalid or expired verification code"
 
         now = self.clock.now()
         expires_at = reset_code.expires_at
         if expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         if expires_at <= now:
-            raise BadRequestError("Invalid or expired verification code")
+            return "Invalid or expired verification code"
         if reset_code.attempt_count >= self.max_attempts:
-            raise BadRequestError("Verification code attempt limit exceeded")
+            return "Verification code attempt limit exceeded"
         if not self.password_hasher.verify_password(
             verification_code,
             reset_code.code_hash,
@@ -45,7 +45,7 @@ class ResetPasswordUseCase:
                 reset_code.id,
                 reset_code.attempt_count + 1,
             )
-            raise BadRequestError("Invalid or expired verification code")
+            return "Invalid or expired verification code"
 
         user = self.user_repository.update_password(
             reset_code.user_id,
@@ -54,3 +54,4 @@ class ResetPasswordUseCase:
         if user is None:
             raise BadRequestError("Invalid or expired verification code")
         self.password_reset_repository.mark_used(reset_code.id, now)
+        return None

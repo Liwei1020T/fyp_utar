@@ -21,7 +21,10 @@ ALLOWED_IMAGE_CONTENT_TYPES = {
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 BOOKING_UPDATES_DIR = "booking-updates"
 STRING_IMAGES_DIR = "string-images"
+PAYMENT_QR_DIR = "payment-qr"
+PAYMENT_PROOFS_DIR = "payment-proofs"
 SIGNED_MEDIA_URL_TTL = timedelta(hours=12)
+PAYMENT_PROOF_SIGNED_MEDIA_URL_TTL = timedelta(minutes=15)
 
 
 def _detect_image_extension(content: bytes) -> str | None:
@@ -101,19 +104,28 @@ def resolve_upload_media_path(relative_path: str) -> Path | None:
         return None
 
     top_level = relative_to_root.parts[0]
-    if top_level not in {BOOKING_UPDATES_DIR, STRING_IMAGES_DIR}:
+    if top_level not in {
+        BOOKING_UPDATES_DIR,
+        STRING_IMAGES_DIR,
+        PAYMENT_QR_DIR,
+        PAYMENT_PROOFS_DIR,
+    }:
         return None
 
     return destination
 
 
-def build_signed_media_url(relative_path: str) -> str:
+def build_signed_media_url(
+    relative_path: str,
+    *,
+    ttl: timedelta = SIGNED_MEDIA_URL_TTL,
+) -> str:
     if "://" in relative_path or relative_path.startswith("/"):
         return relative_path
     if resolve_upload_media_path(relative_path) is None:
         return relative_path
 
-    expires_at = int((datetime.now(UTC) + SIGNED_MEDIA_URL_TTL).timestamp())
+    expires_at = int((datetime.now(UTC) + ttl).timestamp())
     payload = f"{relative_path}:{expires_at}".encode("utf-8")
     secret = get_settings().jwt_secret_key or ""
     signature = hmac.new(
@@ -214,6 +226,92 @@ def delete_string_catalog_image(relative_path: str | None) -> None:
     if destination is None:
         return
 
+    try:
+        destination.unlink(missing_ok=True)
+    except OSError:
+        return
+
+
+def _save_payment_image(
+    *,
+    content: bytes,
+    content_type: str | None,
+    original_name: str | None,
+    directory: str,
+    empty_message: str,
+    invalid_type_message: str,
+) -> str:
+    extension = _validate_image_payload(
+        content=content,
+        content_type=content_type,
+        empty_message=empty_message,
+        oversize_message="Payment image must be 5 MB or smaller",
+        invalid_type_message=invalid_type_message,
+    )
+    safe_stem = Path(original_name or "payment-image").stem[:60] or "payment-image"
+    relative_path = Path(directory) / f"{uuid4().hex}-{safe_stem}{extension}"
+    destination = get_settings().upload_root_path / relative_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(content)
+    return relative_path.as_posix()
+
+
+def save_payment_qr(
+    *,
+    content: bytes,
+    content_type: str | None,
+    original_name: str | None,
+) -> str:
+    return _save_payment_image(
+        content=content,
+        content_type=content_type,
+        original_name=original_name,
+        directory=PAYMENT_QR_DIR,
+        empty_message="Payment QR image is empty",
+        invalid_type_message="Payment QR must be a valid JPG, PNG, or WEBP image",
+    )
+
+
+def delete_payment_qr(relative_path: str | None) -> None:
+    if not relative_path:
+        return
+    destination = _resolve_upload_destination(
+        relative_path,
+        expected_directory=PAYMENT_QR_DIR,
+    )
+    if destination is None:
+        return
+    try:
+        destination.unlink(missing_ok=True)
+    except OSError:
+        return
+
+
+def save_payment_proof(
+    *,
+    content: bytes,
+    content_type: str | None,
+    original_name: str | None,
+) -> str:
+    return _save_payment_image(
+        content=content,
+        content_type=content_type,
+        original_name=original_name,
+        directory=PAYMENT_PROOFS_DIR,
+        empty_message="Payment proof image is empty",
+        invalid_type_message="Payment proof must be a valid JPG, PNG, or WEBP image",
+    )
+
+
+def delete_payment_proof(relative_path: str | None) -> None:
+    if not relative_path:
+        return
+    destination = _resolve_upload_destination(
+        relative_path,
+        expected_directory=PAYMENT_PROOFS_DIR,
+    )
+    if destination is None:
+        return
     try:
         destination.unlink(missing_ok=True)
     except OSError:

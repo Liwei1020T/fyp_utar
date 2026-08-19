@@ -3,9 +3,23 @@ export type UserRole = 'player' | 'admin';
 export type SkillLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'Competitive';
 export type PlayingStyle = 'Attacking' | 'Balanced' | 'Control' | 'Defensive';
 export type PlayFrequency = 'Social' | 'Weekly' | 'Tournament';
-export type BudgetRange = 'Below RM30' | 'RM30–RM50' | 'RM50+';
-export type PreferredFeel = 'Soft' | 'Balanced' | 'Crisp' | 'Hard';
-export type PriorityKey = 'power' | 'control' | 'durability' | 'comfort' | 'sound';
+export type PreferredFeel = 'Soft' | 'Medium' | 'Hard';
+export type PreferredGauge = 'No preference' | 'Thin' | 'Medium' | 'Thick';
+export type RecentGoal =
+  | 'Balanced setup'
+  | 'More power'
+  | 'Better control'
+  | 'More durability'
+  | 'More comfort'
+  | 'Hold tension longer'
+  | 'Better value';
+export type PriorityKey =
+  | 'power'
+  | 'control'
+  | 'durability'
+  | 'comfort'
+  | 'sound'
+  | 'value';
 export type AdvancedPreferenceKey =
   | 'elasticity'
   | 'tensionRetention'
@@ -27,26 +41,18 @@ export interface PlayerProfile extends UserIdentity {
   skillLevel: SkillLevel;
   playingStyle: PlayingStyle;
   playFrequency: PlayFrequency;
-  budgetRange: BudgetRange;
   preferredFeel: PreferredFeel;
+  preferredGauge: PreferredGauge;
   preferredTension: number;
   priorities: Record<PriorityKey, number>;
   advancedPreferences: Record<AdvancedPreferenceKey, number>;
   homeVenue: string;
   preferredAdminId: string;
-  recentGoal: string;
+  recentGoal: RecentGoal;
 }
 
 export interface AdminProfile extends UserIdentity {
   role: 'admin';
-  businessName: string;
-  city: string;
-  branchCode: string;
-  averageTurnaroundHours: number;
-  queueCapacity: number;
-  rating: number;
-  specialties: string[];
-  escalationEmail: string;
 }
 
 export type AppUser = PlayerProfile | AdminProfile;
@@ -66,6 +72,7 @@ export interface StringCatalogRecord {
   brand: string;
   modelName: string;
   localizedName?: string;
+  isHybrid: boolean;
   gaugeMinMm: number | null;
   gaugeMaxMm: number | null;
   material: string;
@@ -137,14 +144,22 @@ export type BookingStatus =
   | 'in_progress'
   | 'ready_for_collection'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'rejected';
 
-export type PaymentStatus = 'unpaid' | 'paid' | 'failed' | 'cancelled';
+export type PaymentStatus =
+  | 'unpaid'
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'cancelled';
 
 export type PaymentMethod =
   | 'card'
   | 'online_banking'
   | 'e_wallet'
+  | 'qr_transfer'
+  | 'cash'
   | 'wallet_balance';
 
 export interface BookingStatusEntry {
@@ -180,12 +195,15 @@ export interface Booking {
   racketBrand: string;
   racketModel: string;
   requestedTension: number;
+  customerName?: string;
+  customerPhone?: string;
   dropOffDate: string;
   dropOffTime: string;
   expectedCompletionAt?: string;
   collectionAt?: string;
   createdAt: string;
   notes?: string;
+  serviceMethod: 'counter_dropoff' | 'pickup_request';
   cancellationReason?: string;
   completionSummary?: string;
   serviceFee: number;
@@ -208,7 +226,7 @@ export interface RecommendationMatch {
   stringName: string;
   brand: string;
   modelName: string;
-  price: number;
+  price: number | null;
   matchScore: number;
   reasons: string[];
   aspectScores: Record<string, number>;
@@ -217,6 +235,7 @@ export interface RecommendationMatch {
   fitAngle?: string;
   tradeOffSummary?: string;
   algorithmVersion?: string;
+  runId?: string | null;
   generatedAt?: string | null;
   suggestedTensionRange: string;
 }
@@ -224,9 +243,8 @@ export interface RecommendationMatch {
 export interface RecommendationScoreBreakdown {
   preferenceMatch?: number;
   ruleFit?: number;
-  budgetFit?: number;
+  valueForMoney?: number;
   nlpReviewScore?: number;
-  confidenceScore?: number;
   finalScore?: number;
 }
 
@@ -234,8 +252,7 @@ export interface RecommendationRationalePayload {
   score_breakdown?: {
     preference_match?: number;
     rule_fit?: number;
-    budget_fit?: number;
-    confidence_score?: number;
+    value_for_money?: number;
     nlp_review_score?: number;
     final_score?: number;
   };
@@ -252,10 +269,7 @@ export interface RecommendationRationalePayload {
     source?: string;
     official_score?: number | null;
     nlp_review_score?: number | null;
-    nlp_confidence?: number | null;
     nlp_influence?: number | null;
-    fusion_confidence?: number | null;
-    review_count_snapshot?: number | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
@@ -268,15 +282,7 @@ export interface RecommendationRationalePayload {
     raw_score?: number | null;
     preference_weight?: number | null;
   }>;
-  budget?: {
-    price_rm?: number | null;
-    budget_tier?: 'below_30' | 'between_30_50' | 'above_50';
-    item_price_tier?: 'low' | 'mid' | 'high' | 'unknown';
-    budget_tier_bounds_rm?: {
-      min_rm?: number;
-      max_rm?: number;
-    };
-  };
+  price_rm?: number | null;
   rule_events?: Array<{
     rule?: string;
     delta?: number;
@@ -298,6 +304,7 @@ export interface Payment {
   createdAt: string;
   reference: string;
   note?: string;
+  proofUrl?: string;
 }
 
 export type ChatMessageRole = 'user' | 'ai' | 'admin' | 'system';
@@ -351,19 +358,53 @@ export interface NotificationItem {
   route: string;
 }
 
+export type FeedbackSentimentTag =
+  | 'crisp_feel'
+  | 'good_communication'
+  | 'fast_turnaround'
+  | 'would_book_again';
+
+export interface BookingFeedback {
+  id: string;
+  bookingId: string;
+  userId: string;
+  rating: number;
+  recommendationRelevance?: number;
+  stringSatisfaction?: number;
+  tensionSatisfaction?: number;
+  comfort?: number;
+  control?: number;
+  repulsion?: number;
+  durability?: number;
+  durabilityAvailableAt?: string;
+  canRateDurability: boolean;
+  durabilityRatedAt?: string;
+  structuredFieldConfirmedAt: Record<string, string>;
+  wouldUseAgain?: boolean;
+  comment?: string;
+  stringFeedback?: string;
+  serviceFeedback?: string;
+  sentimentTags: FeedbackSentimentTag[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface RacketStringLog {
   bookingId: string;
   stringId: string;
+  stringName?: string;
   tension: number;
   installedAt: string;
   feelRating: number;
   durabilityNote: string;
+  feedback?: BookingFeedback;
 }
 
 export interface RacketPassport {
   id: string;
   playerId: string;
   nickname: string;
+  modelKey: string | null;
   brand: string;
   model: string;
   weightClass: string;
@@ -418,6 +459,11 @@ export interface AdminAnalyticsSummary {
   lowStockCount: number;
   unreadChats: number;
   todayRevenue: number;
+  repeatCustomerCount: number;
+  pendingFeedbackCount: number;
+  averageFeedbackScore?: number;
+  averageCompletionHours?: number;
+  tensionDistribution: Record<string, number>;
   busySlots: string[];
   popularStringIds: string[];
   workloadMix: Array<{ label: string; value: number }>;
@@ -450,18 +496,24 @@ export interface NotificationPreferences {
   service: boolean;
   chat: boolean;
   recommendation: boolean;
+  system: boolean;
 }
 
-export interface AdminSettings {
-  adminId: string;
+export interface StoreSettings {
   storeName: string;
   storeContact: string;
   supportText: string;
   paymentNotes: string;
+  paymentQrUrl?: string;
   bookingNotes: string;
   storePolicyText: string;
   address: string;
   trendingStringIds: string[];
+  defaultServicePrice: number;
+  notificationSettings: Record<
+    string,
+    { enabled?: boolean; title?: string; body?: string }
+  >;
 }
 
 export interface BookingDraft {
@@ -472,6 +524,8 @@ export interface BookingDraft {
   racketModel: string;
   requestedTension: number;
   notes: string;
+  serviceMethod: 'counter_dropoff' | 'pickup_request';
+  slotId: string;
   dropOffDate: string;
   dropOffTime: string;
   photoUri?: string;

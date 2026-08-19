@@ -2,19 +2,19 @@ import type { BookingStatus, PaymentStatus } from '../../types/domain';
 import type { AppChipVariant } from './AppChip';
 
 export const appChromeColors = {
-  page: '#F6F8FC',
-  pageAuth: '#F6F8FC',
-  pageAdmin: '#F6F8FC',
-  surface: '#FFFFFF',
-  surfaceElevated: '#FFFFFF',
-  surfaceMuted: '#F8FBFF',
+  page: '#F3F6FA',
+  pageAuth: '#F4F6F9',
+  pageAdmin: '#F1F4F8',
+  surface: '#FCFDFE',
+  surfaceElevated: '#FCFDFE',
+  surfaceMuted: '#F3F6FA',
   surfaceTint: '#EEF4FF',
-  hero: '#163B7A',
-  heroDeep: '#102F63',
+  hero: '#102F63',
+  heroDeep: '#091D3E',
   heroForeground: '#FFFFFF',
   heroMuted: '#D6E4FF',
-  tabBar: 'rgba(255, 255, 255, 0.96)',
-  tabBarBorder: 'rgba(220, 230, 247, 0.92)',
+  tabBar: '#0D1B34',
+  tabBarActive: '#F8FAFD',
   primary: '#2563EB',
   primaryPressed: '#1D4ED8',
   primarySoft: '#DBEAFE',
@@ -39,16 +39,17 @@ export const appChromeColors = {
   textMuted: '#94A3B8',
   textOnDark: '#FFFFFF',
   textOnDarkSecondary: '#D6E4FF',
-  border: '#DCE6F7',
-  borderSoft: '#E8EEF8',
+  border: '#DCE3EC',
+  borderSoft: '#E7ECF2',
   divider: '#E2E8F0',
-  inactive: '#94A3B8',
 } as const;
 
 export const appLayoutMetrics = {
-  contentMaxWidth: 820,
+  contentMaxWidth: 960,
   pagePadding: 16,
-  headerTopSpacing: 8,
+  tabletPagePadding: 24,
+  desktopPagePadding: 32,
+  headerTopSpacing: 10,
   sectionGap: 24,
 } as const;
 
@@ -95,6 +96,7 @@ export function getBookingStatusVariant(status: BookingStatus): AppChipVariant {
     case 'confirmed':
       return 'primary';
     case 'cancelled':
+    case 'rejected':
       return 'danger';
     default:
       return 'neutral';

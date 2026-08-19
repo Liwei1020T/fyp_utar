@@ -39,6 +39,12 @@ class Booking(Base):
         ForeignKey("strings.catalog_id"),
         index=True,
     )
+    racket_id: Mapped[str | None] = mapped_column(
+        SAString(36),
+        ForeignKey("rackets.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     racket_brand: Mapped[str | None] = mapped_column(SAString(100), nullable=True)
     racket_model: Mapped[str | None] = mapped_column(SAString(100), nullable=True)
     requested_tension: Mapped[float | None] = mapped_column(
@@ -58,6 +64,9 @@ class Booking(Base):
         nullable=True,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    service_method: Mapped[str] = mapped_column(
+        SAString(30), default="counter_dropoff", server_default="counter_dropoff"
+    )
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     completion_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
@@ -134,6 +143,11 @@ class BookingUpdate(Base):
         index=True,
     )
     author_role: Mapped[str] = mapped_column(SAString(20))
+    channel: Mapped[str] = mapped_column(
+        SAString(20),
+        default="service",
+        server_default="service",
+    )
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_original_name: Mapped[str | None] = mapped_column(

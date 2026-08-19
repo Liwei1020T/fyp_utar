@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   AlertTriangle,
   CheckCircle2,
   Gauge,
-  ShieldCheck,
+  SendHorizontal,
   Sparkles,
   Target,
   WalletCards,
   type LucideIcon,
 } from 'lucide-react-native';
 import { HeroText } from '../../../../components/ui/heroui';
+import { AgentAnswerCard } from '../../../../components/agent/AgentAnswerCard';
 import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
 import { AppChip } from '../../../../components/ui/AppChip';
+import { AppInput } from '../../../../components/ui/AppInput';
 import { AppScreen } from '../../../../components/shared/AppScreen';
 import { AppSection } from '../../../../components/shared/AppSection';
 import {
@@ -24,8 +26,10 @@ import {
   useStrings,
 } from '../../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../../services/backendApi';
-import { getStringById } from '../../../../services/mockAppService';
 import type {
+  BackendAgentAction,
+  BackendAgentMessage,
+  BackendAgentResponse,
   BackendRecommendationRationale,
   BackendRecommendationResult,
 } from '../../../../types/backend';
@@ -37,13 +41,6 @@ function formatScore(value?: number) {
     return '-';
   }
   return `${Math.round(value * 100)}%`;
-}
-
-function formatCurrency(value?: number | null) {
-  if (value == null) {
-    return 'Price pending';
-  }
-  return `RM${value.toFixed(0)}`;
 }
 
 function humanizeFeature(value: string) {
@@ -62,104 +59,32 @@ function clampPercent(value?: number | null) {
 
 function toFeatureCopy(featureKey?: string, displayLabel?: string) {
   const label = displayLabel ?? humanizeFeature(featureKey ?? 'review support');
-  const normalized = (featureKey ?? displayLabel ?? '').toLowerCase();
-
-  if (normalized.includes('sound')) {
-    return {
-      title: 'Hitting sound support',
-      body: 'Players mention a cleaner impact sound, which supports the feel profile behind this pick.',
-    };
-  }
-
-  if (normalized.includes('tension')) {
-    return {
-      title: 'Tension retention support',
-      body: 'Reviews support its ability to hold play feel across more sessions.',
-    };
-  }
-
-  if (normalized.includes('durability')) {
-    return {
-      title: 'Durability support',
-      body: 'Community signals point to reliable lifespan for frequent play.',
-    };
-  }
 
   return {
-    title: `${label} support`,
-    body: 'Community feedback strengthens confidence in this part of the recommendation.',
+    title: `${label} review signal`,
+    body: `The imported review matrix contains a review-derived score for ${label.toLowerCase()}.`,
   };
 }
 
-function getBudgetCopy(
-  rationale: BackendRecommendationRationale | null,
-  fallbackPrice?: number | null,
-) {
-  const price = rationale?.budget?.price_rm ?? fallbackPrice;
-  const budgetTier = rationale?.budget?.budget_tier;
-  const minimum = rationale?.budget?.budget_tier_bounds_rm?.min_rm;
-  const maximum = rationale?.budget?.budget_tier_bounds_rm?.max_rm;
+function buildMatchReasons(reasons: string[]) {
+  const icons = [Sparkles, Target, Gauge];
+  const savedReasons = reasons.filter((reason) => reason.trim().length > 0).slice(0, 3);
 
-  if (price == null || budgetTier == null) {
-    return 'Price fit against your saved budget tier.';
+  if (savedReasons.length === 0) {
+    return [
+      {
+        title: 'Scorer reason unavailable',
+        body: 'No saved scorer reason was returned for this recommendation.',
+        Icon: AlertTriangle,
+      },
+    ];
   }
 
-  if (minimum == null || maximum == null) {
-    return `${formatCurrency(price)} is scored against your saved budget tier.`;
-  }
-
-  return `${formatCurrency(price)} is scored against your RM${minimum.toFixed(0)}-RM${maximum.toFixed(0)} tier.`;
-}
-
-function buildRecommendationSummary({
-  playingStyle,
-  skillLevel,
-  priorities,
-}: {
-  playingStyle: string;
-  skillLevel: string;
-  priorities: string[];
-}) {
-  const priorityCopy = priorities.length > 0
-    ? priorities.slice(0, 2).join(' and ').toLowerCase()
-    : 'your strongest preferences';
-
-  return `A strong fit for your ${playingStyle.toLowerCase()} game and ${skillLevel.toLowerCase()} level, with the clearest advantage in ${priorityCopy}.`;
-}
-
-function buildMatchReasons({
-  suggestedTensionRange,
-  preferredTension,
-  playFrequency,
-  topPriorityLabels,
-}: {
-  suggestedTensionRange: string;
-  preferredTension: number;
-  playFrequency: string;
-  topPriorityLabels: string[];
-}) {
-  const firstPriority = topPriorityLabels[0]?.toLowerCase() ?? 'feel';
-  const playsOften = playFrequency === 'Tournament' || playFrequency === 'Weekly';
-
-  return [
-    {
-      title: 'Matches your feel priority',
-      body: `Its strongest profile supports ${firstPriority}, one of the main things you rated highly.`,
-      Icon: Sparkles,
-    },
-    {
-      title: 'Fits your tension setup',
-      body: `${preferredTension} lbs sits comfortably inside the ${suggestedTensionRange} window.`,
-      Icon: Gauge,
-    },
-    {
-      title: 'Ready for your play rhythm',
-      body: playsOften
-        ? 'Durability support makes it a safer choice for frequent sessions.'
-        : 'It gives you enough reliability without pushing you into an overly stiff setup.',
-      Icon: ShieldCheck,
-    },
-  ];
+  return savedReasons.map((reason, index) => ({
+    title: `Scorer reason ${index + 1}`,
+    body: reason,
+    Icon: icons[index] ?? Sparkles,
+  }));
 }
 
 function MatchReasonCard({
@@ -267,61 +192,45 @@ function ReviewStrength({
 }
 
 function getReviewStrengths(rationale: BackendRecommendationRationale | null) {
-  const evidence = rationale?.feature_evidence ?? [];
-  const preferredKeys = ['hitting_sound', 'tension_retention', 'durability'];
-
-  const fromEvidence = preferredKeys
-    .map((key) => evidence.find((entry) => entry.feature_key === key))
-    .filter(Boolean)
+  return (rationale?.feature_evidence ?? [])
+    .filter((entry) => entry.nlp_review_score != null)
+    .sort(
+      (left, right) =>
+        (right.nlp_review_score ?? 0) - (left.nlp_review_score ?? 0),
+    )
+    .slice(0, 3)
     .map((entry) => {
-      const copy = toFeatureCopy(entry?.feature_key, entry?.display_label);
+      const copy = toFeatureCopy(entry.feature_key, entry.display_label);
       return {
         ...copy,
-        score: entry?.nlp_review_score ?? entry?.effective_score ?? null,
+        score: entry.nlp_review_score,
       };
     });
-
-  if (fromEvidence.length >= 3) {
-    return fromEvidence.slice(0, 3);
-  }
-
-  const fallback = [
-    {
-      title: 'Hitting sound support',
-      body: 'Community feedback supports a satisfying impact feel.',
-      score: rationale?.nlp_review_scores?.hitting_sound ?? null,
-    },
-    {
-      title: 'Tension retention support',
-      body: 'Review signals help confirm the string can hold its feel longer.',
-      score: rationale?.nlp_review_scores?.tension_retention ?? null,
-    },
-    {
-      title: 'Durability support',
-      body: 'Players give useful confidence that it can handle regular play.',
-      score: rationale?.nlp_review_scores?.durability ?? null,
-    },
-  ];
-
-  return [...fromEvidence, ...fallback].slice(0, 3);
 }
 
 export default function RecommendationExplanationScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; runId?: string }>();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const strings = useStrings();
   const liveResults = useLiveRecommendationResults();
   const [backendDetail, setBackendDetail] = useState<BackendRecommendationResult | null>(null);
+  const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [agentResponse, setAgentResponse] = useState<BackendAgentResponse | null>(null);
+  const [agentHistory, setAgentHistory] = useState<BackendAgentMessage[]>([]);
+  const [agentDraft, setAgentDraft] = useState('');
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const [isAgentLoading, setIsAgentLoading] = useState(false);
+  const requestedExplanationKey = useRef<string | null>(null);
 
-  const stringItem =
-    strings.find((item) => item.id === params.id) ?? getStringById(params.id);
+  const stringItem = strings.find((item) => item.id === params.id);
   const liveResult = liveResults.find(
     (item) => item.catalogId === params.id || item.stringId === params.id || item.id === params.id,
   );
   const detailResult = backendDetail ?? null;
+  const runId = params.runId ?? liveResult?.runId ?? detailRunId;
   const rationale = detailResult?.rationale_payload ?? liveResult?.rationalePayload ?? null;
   const scoreBreakdown =
     liveResult?.scoreBreakdown ??
@@ -329,7 +238,7 @@ export default function RecommendationExplanationScreen() {
       ? {
           preferenceMatch: detailResult.score_breakdown.preference_match,
           ruleFit: detailResult.score_breakdown.rule_fit,
-          budgetFit: detailResult.score_breakdown.budget_fit,
+          valueForMoney: detailResult.score_breakdown.value_for_money,
           nlpReviewScore: detailResult.score_breakdown.nlp_review_score,
           finalScore: detailResult.score_breakdown.final_score,
         }
@@ -354,12 +263,12 @@ export default function RecommendationExplanationScreen() {
     rationale?.top_reasons?.[0] ??
     liveResult?.reasons[0] ??
     detailResult?.reasons?.[0] ??
-    'It lines up well with the way you play and the feel you prefer.';
+    'No saved scorer reason is available.';
   const bestReason = compactSentence(strongestReason);
   const tradeOff =
     rationale?.trade_off_summary ??
     liveResult?.tradeOffSummary ??
-    'String movement control is the area to watch if you prefer a locked-in string bed.';
+    'No evidence-backed trade-off was recorded.';
   const reviewStrengths = getReviewStrengths(rationale);
 
   useEffect(() => {
@@ -377,6 +286,7 @@ export default function RecommendationExplanationScreen() {
         const response = await backendApi.fetchRecommendationDetail(accessToken, 'me', catalogId);
         if (isMounted) {
           setBackendDetail(response.result);
+          setDetailRunId(response.run_id ?? null);
         }
       } catch (error) {
         if (!isMounted) {
@@ -397,25 +307,116 @@ export default function RecommendationExplanationScreen() {
     };
   }, [params.id, token]);
 
+  const askAgent = useCallback(
+    async (rawQuestion: string) => {
+      const question = rawQuestion.trim();
+      if (!token || !params.id || !runId || !question || isAgentLoading) {
+        return;
+      }
+      setAgentError(null);
+      setIsAgentLoading(true);
+      try {
+        const response = await backendApi.queryAgent(token, {
+          message: question,
+          context: {
+            surface: 'recommendation_explanation',
+            run_id: runId,
+            catalog_id: params.id,
+          },
+          conversation_history: agentHistory.slice(-12),
+        });
+        setAgentResponse(response);
+        setAgentHistory((current) => [
+          ...current,
+          { role: 'user' as const, content: question },
+          { role: 'assistant' as const, content: response.answer },
+        ].slice(-12));
+        setAgentDraft('');
+      } catch (error) {
+        setAgentError(
+          error instanceof BackendApiError
+            ? error.message
+            : 'The dynamic explanation is temporarily unavailable.',
+        );
+      } finally {
+        setIsAgentLoading(false);
+      }
+    }, [agentHistory, isAgentLoading, params.id, runId, token],
+  );
+
+  const handleAgentAction = (action: BackendAgentAction) => {
+    if (action.action === 'open_string' && action.parameters.catalog_id) {
+      router.push(`/player/strings/${action.parameters.catalog_id}`);
+      return;
+    }
+
+    /* Deferred FYP scope; re-enable with ACTIVE_AGENT_ACTIONS.
+    if (action.action === 'open_booking' && action.parameters.booking_id) {
+      router.push(`/player/bookings/${action.parameters.booking_id}`);
+      return;
+    }
+    if (
+      action.action === 'open_recommendation' &&
+      action.parameters.catalog_id &&
+      action.parameters.run_id
+    ) {
+      router.push(
+        `/player/recommend/explain/${action.parameters.catalog_id}?runId=${action.parameters.run_id}`,
+      );
+      return;
+    }
+    if (action.action !== 'request_human_handoff') {
+      return;
+    }
+    const bookingId = action.parameters.booking_id;
+    if (!bookingId || !token) {
+      router.push('/player/chat');
+      return;
+    }
+    setAgentError(null);
+    try {
+      const conversation = await backendApi.requestBookingSupport(token, bookingId);
+      router.push(`/player/chat/${conversation.id}`);
+    } catch (error) {
+      setAgentError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Unable to request human support.',
+      );
+    }
+    */
+  };
+
+  useEffect(() => {
+    if (!runId || !params.id) {
+      return;
+    }
+    const key = `${runId}:${params.id}`;
+    if (requestedExplanationKey.current === key) {
+      return;
+    }
+    requestedExplanationKey.current = key;
+    void askAgent(
+      'Briefly explain why this string suits me, its main strengths, and one trade-off. Use simple language and do not mention algorithms.',
+    );
+  }, [askAgent, params.id, runId]);
+
   if (!user || user.role !== 'player') {
     return null;
   }
 
-  const preferredTension = user.preferredTension;
-  const playFrequency = user.playFrequency;
-  const matchReasons = buildMatchReasons({
-    suggestedTensionRange,
-    preferredTension,
-    playFrequency,
-    topPriorityLabels,
-  });
-  const recommendationSummary = buildRecommendationSummary({
-    playingStyle: user.playingStyle,
-    skillLevel: user.skillLevel,
-    priorities: topPriorityLabels,
-  });
+  const savedReasons =
+    rationale?.top_reasons ?? liveResult?.reasons ?? detailResult?.reasons ?? [];
+  const matchReasons = buildMatchReasons(savedReasons);
+  const recommendationSummary = isAgentLoading
+    ? 'Building a grounded explanation from this exact recommendation run...'
+    : rationale?.primary_fit_angle
+      ? `Saved scorer fit angle: ${compactSentence(rationale.primary_fit_angle)}.`
+      : 'No generated explanation is available; the saved scorer evidence remains below.';
   const stringId = stringItem?.id ?? params.id;
-  const canBook = Boolean(stringItem);
+  const canBook = Boolean(
+    stringItem && stringItem.availability !== 'out_of_stock',
+  );
 
   if (!stringItem && !detailResult) {
     return (
@@ -437,7 +438,7 @@ export default function RecommendationExplanationScreen() {
     <AppScreen
       headerVariant="secondary"
       title="Recommendation detail"
-      subtitle="A quick read on fit, confidence, and the main compromise."
+      subtitle="A grounded explanation of fit, evidence, and the main compromise."
       showBackButton
       onBackPress={() => router.back()}
       contentContainerClassName="pt-3"
@@ -463,9 +464,9 @@ export default function RecommendationExplanationScreen() {
         </View>
 
         <View className="mt-4 flex-row flex-wrap gap-2">
-          <AppChip label={rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Profile match'} variant="accent" />
+          <AppChip label={rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Fit angle unavailable'} variant="accent" />
           <AppChip label={suggestedTensionRange} variant="info" />
-          <AppChip label={topPriorityLabels[0] ?? 'Balanced feel'} variant="secondary" />
+          <AppChip label={topPriorityLabels[0] ?? 'No saved priority'} variant="secondary" />
         </View>
 
         <HeroText className="mt-4 text-sm leading-6 text-primary-100">
@@ -483,7 +484,7 @@ export default function RecommendationExplanationScreen() {
 
         <View className="mt-5 gap-3">
           <AppButton
-            label="Book this string"
+            label={canBook ? 'Book this string' : 'Currently out of stock'}
             className="border-white bg-white"
             textClassName="text-primary-700 font-bold"
             isDisabled={!canBook}
@@ -506,6 +507,51 @@ export default function RecommendationExplanationScreen() {
           </HeroText>
         </View>
       ) : null}
+
+      <AppSection title="AI explanation" variant="compact">
+        {agentResponse ? (
+          <AgentAnswerCard
+            response={agentResponse}
+            onQuestion={(question) => void askAgent(question)}
+            onAction={(action) => void handleAgentAction(action)}
+          />
+        ) : (
+          <AppCard variant="subtle" padding="md">
+            <HeroText className="text-sm leading-6 text-neutral-600">
+              {isAgentLoading
+                ? 'Retrieving this run’s saved rationale and evidence...'
+                : agentError ?? 'This recommendation does not have an exact run ID to explain.'}
+            </HeroText>
+          </AppCard>
+        )}
+
+        {agentError && agentResponse ? (
+          <View className="mt-3 rounded-[18px] border border-warning-100 bg-warning-50 px-4 py-3">
+            <HeroText className="text-xs leading-5 text-warning-700">{agentError}</HeroText>
+          </View>
+        ) : null}
+
+        {runId ? (
+          <View className="mt-4">
+            <AppInput
+              className="mb-2"
+              placeholder="Ask a follow-up about this result..."
+              accessibilityLabel="Question about this recommendation"
+              value={agentDraft}
+              onChangeText={setAgentDraft}
+              multiline
+              isDisabled={isAgentLoading}
+            />
+            <AppButton
+              label="Ask about this result"
+              isLoading={isAgentLoading}
+              isDisabled={!agentDraft.trim()}
+              leadingIcon={<SendHorizontal size={16} color="white" />}
+              onPress={() => void askAgent(agentDraft)}
+            />
+          </View>
+        ) : null}
+      </AppSection>
 
       <AppSection title="Why this matches you" variant="compact">
         <View className="gap-3">
@@ -541,9 +587,9 @@ export default function RecommendationExplanationScreen() {
               tone="warning"
             />
             <ScoreBlock
-              label="Budget"
-              value={scoreBreakdown.budgetFit}
-              note={getBudgetCopy(rationale, detailResult?.price_rm ?? stringItem?.price)}
+              label="Value"
+              value={scoreBreakdown.valueForMoney}
+              note="Review-derived value for money, weighted by your saved preference."
               tone="neutral"
             />
           </View>
@@ -559,10 +605,14 @@ export default function RecommendationExplanationScreen() {
               </View>
               <View className="flex-1">
                 <HeroText className="text-sm font-bold tracking-tight text-neutral-950">
-                  Community signals add confidence
+                  {reviewStrengths.length > 0
+                    ? 'Review-derived signals are present'
+                    : 'No review-derived support recorded'}
                 </HeroText>
                 <HeroText className="mt-1 text-[13px] leading-5 text-neutral-600">
-                  Reviews reinforce the strengths below, so the fit is not based only on specs.
+                  {reviewStrengths.length > 0
+                    ? 'The entries below come directly from NLP review scores in the saved rationale.'
+                    : 'The saved rationale did not include an NLP review score for this item.'}
                 </HeroText>
               </View>
             </View>
@@ -593,7 +643,9 @@ export default function RecommendationExplanationScreen() {
                 {compactSentence(tradeOff)}.
               </HeroText>
               <HeroText className="mt-2 text-[13px] leading-5 text-neutral-500">
-                Choose it if the strengths above matter more to you than this compromise.
+                {rationale?.trade_off_summary || liveResult?.tradeOffSummary
+                  ? 'Use this saved trade-off together with the score breakdown before booking.'
+                  : 'No additional trade-off claim has been inferred by the app.'}
               </HeroText>
             </View>
           </View>

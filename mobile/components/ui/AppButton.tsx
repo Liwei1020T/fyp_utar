@@ -1,7 +1,6 @@
 import React from 'react';
-import { View } from 'react-native';
-import { HeroButton, HeroButtonProps } from './heroui';
-import { cn } from './heroui';
+import { View, type AccessibilityState } from 'react-native';
+import { HeroButton, type HeroButtonProps, cn } from './heroui';
 import type { ButtonVariant } from 'heroui-native';
 
 export type AppButtonVariant =
@@ -35,8 +34,16 @@ export function AppButton({
   leadingIcon,
   trailingIcon,
   isLoading = false,
+  accessibilityLabel,
+  accessibilityState,
+  isDisabled,
   ...props
 }: AppButtonProps) {
+  const resolvedAccessibilityState = accessibilityState as
+    | AccessibilityState
+    | undefined;
+  const disabled =
+    isLoading || Boolean(isDisabled) || Boolean(resolvedAccessibilityState?.disabled);
   const nativeVariantMap: Record<AppButtonVariant, ButtonVariant> = {
     primary: 'primary',
     secondary: 'secondary',
@@ -49,14 +56,14 @@ export function AppButton({
   };
 
   const variantStyles = {
-    primary: 'bg-primary-600 border-primary-600 shadow-soft active:bg-primary-700',
+    primary: 'bg-primary-600 border-primary-600 active:bg-primary-700',
     secondary: 'bg-white border-primary-200',
     accent: 'bg-accent-100 border-accent-200',
     outline: 'bg-white border-primary-200',
     ghost: 'bg-transparent border-transparent',
     danger: 'bg-danger border-danger',
     success: 'bg-success-600 border-success-600',
-    dark: 'bg-secondary-600 border-secondary-600 shadow-soft',
+    dark: 'bg-secondary-600 border-secondary-600',
   };
 
   const textStyles = {
@@ -71,20 +78,9 @@ export function AppButton({
   };
 
   const sizeStyles = {
-    sm: 'h-10 px-4 py-2 rounded-lg',
-    md: 'h-[50px] px-5 py-2.5 rounded-lg',
-    lg: 'h-[56px] px-6 py-3 rounded-lg',
-  };
-
-  const trailingIslandStyles = {
-    primary: 'bg-white/14',
-    secondary: 'bg-primary-50',
-    accent: 'bg-accent-200/80',
-    outline: 'bg-slate-100',
-    ghost: 'bg-slate-100',
-    danger: 'bg-white/14',
-    success: 'bg-white/14',
-    dark: 'bg-white/10',
+    sm: 'h-11 px-4 py-2 rounded-[14px]',
+    md: 'h-[50px] px-5 py-2.5 rounded-[14px]',
+    lg: 'h-[56px] px-6 py-3 rounded-[16px]',
   };
 
   const content = children ?? (
@@ -92,33 +88,31 @@ export function AppButton({
       {leadingIcon ? <View className="shrink-0">{leadingIcon}</View> : null}
       {label ? (
         <HeroButton.Label className={cn(textStyles[variant], textClassName)}>
-          {isLoading ? 'Loading...' : label}
+          {isLoading ? `${label}…` : label}
         </HeroButton.Label>
       ) : null}
-      {trailingIcon ? (
-        <View
-          className={cn(
-            'ml-1 h-8 w-8 items-center justify-center rounded-full',
-            trailingIslandStyles[variant]
-          )}
-        >
-          {trailingIcon}
-        </View>
-      ) : null}
+      {trailingIcon ? <View className="ml-1 shrink-0">{trailingIcon}</View> : null}
     </View>
   );
 
   return (
     <HeroButton
+      {...props}
+      feedbackVariant="none"
       variant={nativeVariantMap[variant]}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{
+        ...resolvedAccessibilityState,
+        busy: isLoading,
+        disabled,
+      }}
       className={cn(
         'items-center justify-center border disabled:opacity-60',
         variantStyles[variant],
         sizeStyles[size],
         className
       )}
-      {...props}
-      isDisabled={isLoading || props.isDisabled}
+      isDisabled={disabled}
     >
       {content}
     </HeroButton>

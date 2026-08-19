@@ -3,25 +3,22 @@ import '../global.css';
 import { Component, useEffect, type ReactNode } from 'react';
 import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { appChromeColors } from '../components/ui/theme';
-import {
-  useAppStore,
-  useBackendAccessToken,
-} from '../store/appStore';
+import { useAppStore } from '../store/appStore';
 import {
   backendApi,
   isBackendAuthError,
+  setBackendSessionExpiredHandler,
 } from '../services/backendApi';
 import {
   mapBackendUserToAdminProfile,
   mapBackendUserToPlayerProfile,
 } from '../services/backendMappers';
-
-const queryClient = new QueryClient();
+import { loadBackendAccessToken } from '../services/backendSessionStorage';
+import { shouldExpireBackendSession } from '../services/backendSessionPolicy';
 
 class RootErrorBoundary extends Component<
   { children: ReactNode },
@@ -64,8 +61,6 @@ class RootErrorBoundary extends Component<
 
 function BackendSessionBootstrap() {
   const hasHydrated = useAppStore((state) => state.hasHydrated);
-  const sessionSource = useAppStore((state) => state.sessionSource);
-  const token = useBackendAccessToken();
   const markHydrated = useAppStore((state) => state.markHydrated);
   const logout = useAppStore((state) => state.logout);
   const setBackendPlayerSession = useAppStore(
@@ -75,13 +70,23 @@ function BackendSessionBootstrap() {
     (state) => state.setBackendAdminSession,
   );
 
+  useEffect(
+    () =>
+      setBackendSessionExpiredHandler((expiredToken) => {
+        if (
+          shouldExpireBackendSession(
+            useAppStore.getState().backendAccessToken,
+            expiredToken,
+          )
+        ) {
+          logout();
+        }
+      }),
+    [logout],
+  );
+
   useEffect(() => {
     if (hasHydrated) {
-      return;
-    }
-
-    if (sessionSource !== 'backend' || !token) {
-      markHydrated();
       return;
     }
 
@@ -89,6 +94,10 @@ function BackendSessionBootstrap() {
 
     const bootstrapSession = async () => {
       try {
+        const token = await loadBackendAccessToken();
+        if (!token) {
+          return;
+        }
         const currentUser = await backendApi.fetchCurrentUser(token);
 
         if (cancelled) {
@@ -103,7 +112,7 @@ function BackendSessionBootstrap() {
           return;
         }
 
-        const profile = await backendApi.fetchProfile(token).catch(() => null);
+        const profile = await backendApi.fetchProfile(token);
 
         if (cancelled) {
           return;
@@ -140,10 +149,8 @@ function BackendSessionBootstrap() {
     hasHydrated,
     logout,
     markHydrated,
-    sessionSource,
     setBackendAdminSession,
     setBackendPlayerSession,
-    token,
   ]);
 
   return null;
@@ -154,18 +161,16 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: appChromeColors.page }}>
       <View style={{ flex: 1, backgroundColor: appChromeColors.page }}>
         <RootErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <HeroUINativeProvider>
-              <BackendSessionBootstrap />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: appChromeColors.page },
-                }}
-              />
-              <StatusBar style="dark" />
-            </HeroUINativeProvider>
-          </QueryClientProvider>
+          <HeroUINativeProvider>
+            <BackendSessionBootstrap />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: appChromeColors.page },
+              }}
+            />
+            <StatusBar style="dark" />
+          </HeroUINativeProvider>
         </RootErrorBoundary>
       </View>
     </GestureHandlerRootView>

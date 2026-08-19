@@ -36,6 +36,7 @@ class BookingRecord:
     user_id: str
     string_id: str
     string_name: str
+    racket_id: str | None
     customer_phone_number: str | None
     customer_username: str | None
     racket_brand: str | None
@@ -45,6 +46,7 @@ class BookingRecord:
     expected_completion_datetime: datetime | None
     collection_datetime: datetime | None
     notes: str | None
+    service_method: str
     cancellation_reason: str | None
     completion_summary: str | None
     status: str

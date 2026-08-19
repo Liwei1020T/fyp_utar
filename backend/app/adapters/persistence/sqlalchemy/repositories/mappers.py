@@ -77,6 +77,7 @@ def to_user_account(user: User) -> UserAccount:
         username=user.username,
         phone_number=user.phone_number,
         password_hash=user.password_hash,
+        auth_version=user.auth_version,
         role=user.role,
         auth_provider=user.auth_provider,
         external_auth_id=user.external_auth_id,
@@ -104,11 +105,10 @@ def to_profile(profile: Profile) -> PlayerProfile:
         user_id=profile.user_id,
         skill_level=profile.skill_level,
         playing_style=profile.playing_style,
-        budget_tier=profile.budget_tier,
         preferred_tension=number_to_float(profile.preferred_tension),
-        game_type=profile.game_type,
         frequency_per_week=profile.frequency_per_week,
         preferred_feel=profile.preferred_feel,
+        preferred_gauge=profile.preferred_gauge,
         recent_goal=profile.recent_goal,
         pref_attack=profile.pref_attack,
         pref_comfort=profile.pref_comfort,
@@ -255,6 +255,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         user_id=booking.user_id,
         string_id=booking.string_id,
         string_name=string_name,
+        racket_id=booking.racket_id,
         customer_phone_number=booking.user.phone_number if booking.user else None,
         customer_username=booking.user.username if booking.user else None,
         racket_brand=booking.racket_brand,
@@ -264,6 +265,7 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         expected_completion_datetime=booking.expected_completion_datetime,
         collection_datetime=booking.collection_datetime,
         notes=booking.notes,
+        service_method=booking.service_method,
         cancellation_reason=booking.cancellation_reason,
         completion_summary=booking.completion_summary,
         status=booking.status,
@@ -330,10 +332,13 @@ def to_store_settings(settings: StoreSettings) -> StoreSettingsRecord:
         store_contact=settings.store_contact,
         support_text=settings.support_text,
         payment_notes=settings.payment_notes,
+        payment_qr_path=settings.payment_qr_path,
         booking_notes=settings.booking_notes,
         store_policy_text=settings.store_policy_text,
         address=settings.address,
         trending_string_ids=list(settings.trending_string_ids or []),
+        default_service_price=float(settings.default_service_price),
+        notification_settings=dict(settings.notification_settings or {}),
         updated_at=settings.updated_at.isoformat() if settings.updated_at else None,
     )
 
@@ -358,8 +363,6 @@ def to_recommendation_run(item: RecommendationRun) -> RecommendationRunRecord:
         phone_number=item.user.phone_number if item.user else None,
         username=item.user.username if item.user else None,
         algorithm_version=item.algorithm_version,
-        matrix_version=item.matrix_version,
-        feature_source_version=item.feature_source_version,
         request_snapshot=dict(item.request_snapshot or {}),
         profile_snapshot=dict(item.profile_snapshot or {}),
         generated_at=item.generated_at,
@@ -377,8 +380,7 @@ def to_recommendation_run_item(
         final_score=number_to_float(item.final_score) or 0.0,
         preference_match_score=number_to_float(item.preference_match_score),
         rule_fit_score=number_to_float(item.rule_fit_score),
-        budget_fit_score=number_to_float(item.budget_fit_score),
-        confidence_score=number_to_float(item.confidence_score),
+        value_for_money_score=number_to_float(item.value_for_money_score),
         nlp_review_score=number_to_float(item.nlp_review_score),
         score_breakdown=dict(item.score_breakdown or {}),
         rationale=dict(item.rationale or {}),
@@ -388,20 +390,19 @@ def to_recommendation_run_item(
 def _collapsed_aspect_scores(
     entries: list[StringRecommendationMatrix],
 ) -> dict[str, float]:
-    selected: dict[str, tuple[int, float, float]] = {}
+    selected: dict[str, tuple[int, float]] = {}
     for entry in entries:
         if entry.normalized_score is None:
             continue
         feature_key = domain_feature_key(entry.feature_key)
         priority = SOURCE_LAYER_PRIORITY.get(entry.source_layer, 99)
-        confidence = float(entry.confidence or 0)
         score = float(entry.normalized_score)
         current = selected.get(feature_key)
-        current_key = (priority, -confidence, -score)
-        if current is None or current_key < (current[0], -current[1], -current[2]):
-            selected[feature_key] = (priority, confidence, score)
+        current_key = (priority, -score)
+        if current is None or current_key < (current[0], -current[1]):
+            selected[feature_key] = (priority, score)
     return {
-        feature_key: round(score, 4) for feature_key, (_, _, score) in selected.items()
+        feature_key: round(score, 4) for feature_key, (_, score) in selected.items()
     }
 
 
@@ -427,11 +428,6 @@ def to_recommendation_matrix_entry(
         source_layer=entry.source_layer,
         raw_value=number_to_float(entry.raw_value),
         normalized_score=number_to_float(entry.normalized_score),
-        confidence=number_to_float(entry.confidence),
         evidence_note=entry.evidence_note,
-        source_ref=entry.source_ref,
-        source_version=entry.source_version,
-        source_generated_at=entry.source_generated_at,
-        review_count_snapshot=entry.review_count_snapshot,
         updated_at=entry.updated_at,
     )

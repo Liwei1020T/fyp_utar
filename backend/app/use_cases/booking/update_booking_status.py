@@ -5,6 +5,7 @@ from datetime import datetime
 
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.policies import validate_status_transition
+from app.domain.booking.policies import validate_terminal_status_note
 from app.ports.repositories.booking_repository import BookingRepository
 from app.shared.errors import NotFoundError
 
@@ -23,18 +24,20 @@ class UpdateBookingStatusUseCase:
         changed_by_user_id: str | None,
         note: str | None,
     ) -> BookingRecord:
-        booking = self.booking_repository.get_by_id(booking_id)
+        booking = self.booking_repository.get_by_id_for_update(booking_id)
         if booking is None:
             raise NotFoundError("Booking not found")
 
+        normalized_note = note.strip() if note else None
         status_changed = next_status != booking.status
         if status_changed:
             validate_status_transition(booking.status, next_status)
+            validate_terminal_status_note(next_status, normalized_note)
         return self.booking_repository.update_status(
             booking_id=booking_id,
             next_status=next_status,
             expected_completion_datetime=expected_completion_datetime,
             update_expected_completion_datetime=update_expected_completion_datetime,
             changed_by_user_id=changed_by_user_id,
-            note=note.strip() if note else None,
+            note=normalized_note,
         )

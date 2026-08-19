@@ -1076,7 +1076,7 @@ def upgrade() -> None:
         if fk.get("referred_table")
         in {"string_catalog_items", "string_catalog_items_legacy"}
     ]
-    with op.batch_alter_table("bookings", recreate="always") as batch_op:
+    with op.batch_alter_table("bookings") as batch_op:
         for constraint_name in booking_fks:
             if constraint_name:
                 batch_op.drop_constraint(constraint_name, type_="foreignkey")

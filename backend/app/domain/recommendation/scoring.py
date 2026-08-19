@@ -6,12 +6,19 @@ from dataclasses import dataclass
 
 from app.domain.catalog.entities import StringItem
 from app.domain.recommendation.entities import RecommendationCandidateModel
+from app.domain.recommendation.entities import CollaborativeEvidence
+from app.domain.recommendation.entities import CommunityFeatureAggregate
+from app.domain.recommendation.entities import CommunitySnapshot
 from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
+from app.domain.recommendation.entities import RacketRecommendationContext
+from app.domain.recommendation.learning_signals import CF_POLICY_VERSION
+from app.domain.recommendation.learning_signals import CF_SHRINKAGE_K
+from app.domain.recommendation.learning_signals import cf_weight_for_support
 
 
-ALGORITHM_VERSION = "fyp1_similarity_confidence_rule_budget_tier_v5"
+ALGORITHM_VERSION = "fyp1_similarity_preferences_community_racket_cf_v11"
 PREFERENCE_SOURCE_LAYER = "profile"
 
 CORE_RECOMMENDATION_FEATURES = (
@@ -23,9 +30,9 @@ CORE_RECOMMENDATION_FEATURES = (
     "elasticity",
     "tension_retention",
     "string_movement",
+    "value_for_money",
 )
 SUPPORT_FEATURES = (
-    "value_for_money",
     "stability_score",
     "beginner_fit_score",
     "attacking_fit_score",
@@ -43,6 +50,7 @@ FEATURE_LABELS = {
     "elasticity": "elastic rebound",
     "tension_retention": "tension retention",
     "string_movement": "string movement control",
+    "value_for_money": "value for money",
 }
 
 FEATURE_PRIORS = {
@@ -54,33 +62,14 @@ FEATURE_PRIORS = {
     "elasticity": 0.55,
     "tension_retention": 0.54,
     "string_movement": 0.53,
+    "value_for_money": 0.55,
 }
 
 FINAL_SCORE_WEIGHTS = {
-    "preference_match": 0.60,
+    "preference_match": 0.75,
     "rule_fit": 0.15,
-    "budget_fit": 0.15,
-    "confidence_score": 0.10,
 }
-
-BUDGET_TIER_TO_BOUNDS = {
-    "below_30": {"min_rm": 0.0, "max_rm": 30.0},
-    "between_30_50": {"min_rm": 30.0, "max_rm": 50.0},
-    "above_50": {"min_rm": 50.0, "max_rm": 999.0},
-}
-
-BUDGET_TIER_FIT_SCORES = {
-    "below_30": {"low": 1.00, "mid": 0.58, "high": 0.25, "unknown": 0.45},
-    "between_30_50": {"low": 0.78, "mid": 1.00, "high": 0.56, "unknown": 0.45},
-    "above_50": {"low": 0.60, "mid": 0.80, "high": 1.00, "unknown": 0.45},
-}
-
-PRICE_TIER_LABELS = {
-    "low": "low-price tier",
-    "mid": "mid-price tier",
-    "high": "high-price tier",
-    "unknown": "unknown-price tier",
-}
+FINAL_SCORE_WEIGHT_TOTAL = sum(FINAL_SCORE_WEIGHTS.values())
 
 
 @dataclass(frozen=True)
@@ -91,7 +80,15 @@ class ScoredRecommendation:
 
 
 class Fyp1ContentRecommendationScorer:
-    """FYP1 scorer: rule-enhanced, confidence-aware, content-based, explainable."""
+    """FYP1 scorer: rule-enhanced, content-based, and explainable."""
+
+    def __init__(self, *, preference_weight_exponent: float = 1.0) -> None:
+        if (
+            not math.isfinite(preference_weight_exponent)
+            or preference_weight_exponent <= 0
+        ):
+            raise ValueError("preference_weight_exponent must be positive and finite")
+        self.preference_weight_exponent = preference_weight_exponent
 
     def build_preference_vector(
         self,
@@ -108,13 +105,21 @@ class Fyp1ContentRecommendationScorer:
             "elasticity": float(request.pref_elasticity),
             "tension_retention": float(request.pref_tension_retention),
             "string_movement": float(request.pref_string_movement),
+            "value_for_money": float(request.pref_value_for_money),
         }
-        total_weight = sum(raw_scores.values()) or 1.0
+        adjusted_scores = {
+            feature_key: raw_score**self.preference_weight_exponent
+            for feature_key, raw_score in raw_scores.items()
+        }
+        total_weight = sum(adjusted_scores.values()) or 1.0
         return [
             {
                 "feature_key": feature_key,
                 "raw_score": raw_score,
-                "preference_weight": round(raw_score / total_weight, 4),
+                "preference_weight": round(
+                    adjusted_scores[feature_key] / total_weight,
+                    4,
+                ),
                 "preferred_min": None,
                 "preferred_max": None,
             }
@@ -127,6 +132,9 @@ class Fyp1ContentRecommendationScorer:
         candidates: list[RecommendationCandidateModel],
         request: RecommendationRequestModel,
         top_n: int,
+        community_snapshot: CommunitySnapshot | None = None,
+        cf_evidence: CollaborativeEvidence | None = None,
+        racket_context: RacketRecommendationContext | None = None,
     ) -> list[ScoredRecommendation]:
         preference_vector_rows = self.build_preference_vector(
             user_id=request.user_id or "",
@@ -137,6 +145,16 @@ class Fyp1ContentRecommendationScorer:
         for candidate in candidates:
             effective_scores, feature_sources, feature_meta = _effective_item_features(
                 candidate
+            )
+            effective_scores, feature_sources, feature_meta = _apply_community(
+                effective_scores=effective_scores,
+                feature_sources=feature_sources,
+                feature_meta=feature_meta,
+                aggregates=(
+                    community_snapshot.by_catalog.get(candidate.item.id, {})
+                    if community_snapshot is not None
+                    else {}
+                ),
             )
             feature_evidence = _build_feature_evidence(
                 effective_scores=effective_scores,
@@ -153,43 +171,36 @@ class Fyp1ContentRecommendationScorer:
                 feature_evidence=feature_evidence,
                 preference_rows=preference_vector_rows,
             )
-            item_price_tier = _item_price_tier(candidate.item.price_rm)
-            budget_fit = _budget_fit_score(candidate.item.price_rm, request.budget_tier)
             rule_fit, rule_reasons, rule_events = _rule_fit_score(
                 item=candidate.item,
                 effective_scores=effective_scores,
-                auxiliary_scores=auxiliary_scores,
                 request=request,
             )
-            confidence_score = _confidence_score(
-                feature_evidence=feature_evidence,
-                feature_sources=feature_sources,
-            )
-            final_score = round(
+            base_score = round(
                 clamp01(
                     (preference_match * FINAL_SCORE_WEIGHTS["preference_match"])
                     + (rule_fit * FINAL_SCORE_WEIGHTS["rule_fit"])
-                    + (budget_fit * FINAL_SCORE_WEIGHTS["budget_fit"])
-                    + (confidence_score * FINAL_SCORE_WEIGHTS["confidence_score"])
-                ),
+                )
+                / FINAL_SCORE_WEIGHT_TOTAL,
                 4,
+            )
+            final_score, cf_payload = _apply_cf(
+                base_score=base_score,
+                evidence=cf_evidence,
+                catalog_id=candidate.item.id,
             )
 
             reasons = _build_reasons(
-                item=candidate.item,
                 request=request,
                 effective_scores=effective_scores,
                 preference_rows=preference_vector_rows,
-                budget_fit=budget_fit,
-                item_price_tier=item_price_tier,
-                confidence_score=confidence_score,
                 rule_reasons=rule_reasons,
             )
             breakdown = {
                 "preference_match": round(preference_match, 4),
                 "rule_fit": round(rule_fit, 4),
-                "budget_fit": round(budget_fit, 4),
-                "confidence_score": round(confidence_score, 4),
+                "value_for_money": round(effective_scores["value_for_money"], 4),
+                "base_score": base_score,
                 "final_score": final_score,
             }
             if nlp_review_score is not None:
@@ -197,25 +208,36 @@ class Fyp1ContentRecommendationScorer:
 
             fit_angle = _primary_fit_angle(
                 effective_scores,
-                auxiliary_scores,
                 request,
-                budget_fit=budget_fit,
-                confidence_score=confidence_score,
             )
-            matrix_version = _candidate_matrix_version(candidate)
-            feature_source_version = _candidate_feature_source_version(candidate)
             rationale_payload = {
                 "catalog_id": candidate.item.id,
                 "display_name": candidate.item.display_name,
                 "brand": candidate.item.brand,
                 "model_name": candidate.item.model_name,
-                "matrix_version": matrix_version,
-                "feature_source_version": feature_source_version,
-                "review_count_snapshot": candidate.item.review_count,
-                "algorithm_family": (
-                    "rule_enhanced_confidence_aware_content_based_official_nlp_budget_tier"
+                "algorithm_family": "community_calibrated_racket_cf",
+                "collaborative_filtering_used": cf_payload.get("mode") == "enabled",
+                "community_calibration_used": any(
+                    (_to_float(row.get("community_weight")) or 0) > 0
+                    for row in feature_evidence
                 ),
-                "collaborative_filtering_used": False,
+                "community_snapshot_version": (
+                    community_snapshot.snapshot_version
+                    if community_snapshot is not None
+                    else None
+                ),
+                "racket_context": (
+                    {
+                        "racket_id": racket_context.racket_id,
+                        "brand": racket_context.brand,
+                        "model": racket_context.model,
+                        "normalized_model_key": racket_context.model_key,
+                        "target_tension": racket_context.target_tension,
+                    }
+                    if racket_context is not None
+                    else None
+                ),
+                "cf_shadow": cf_payload,
                 "primary_fit_angle": fit_angle,
                 "trade_off_summary": _trade_off_summary(
                     effective_scores,
@@ -258,23 +280,16 @@ class Fyp1ContentRecommendationScorer:
                     ]
                 ),
                 "nlp_review_summary": _nlp_review_summary(feature_evidence),
-                "budget": {
-                    "price_rm": candidate.item.price_rm,
-                    "budget_tier": request.budget_tier,
-                    "item_price_tier": item_price_tier,
-                    "budget_tier_bounds_rm": BUDGET_TIER_TO_BOUNDS.get(
-                        request.budget_tier,
-                        BUDGET_TIER_TO_BOUNDS["between_30_50"],
-                    ),
-                },
+                "price_rm": candidate.item.price_rm,
                 "rule_events": rule_events,
                 "profile_context": {
                     "skill_level": request.skill_level,
                     "playing_style": request.playing_style,
-                    "budget_tier": request.budget_tier,
                     "preferred_tension": request.preferred_tension,
-                    "game_type": request.game_type,
                     "frequency_per_week": request.frequency_per_week,
+                    "preferred_feel": request.preferred_feel,
+                    "preferred_gauge": request.preferred_gauge,
+                    "recent_goal": request.recent_goal,
                 },
             }
             result = RecommendationResultModel(
@@ -303,14 +318,16 @@ class Fyp1ContentRecommendationScorer:
                         "catalog_id": candidate.item.id,
                         "preference_match_score": breakdown["preference_match"],
                         "rule_fit_score": breakdown["rule_fit"],
-                        "budget_fit_score": breakdown["budget_fit"],
-                        "confidence_score": breakdown["confidence_score"],
+                        "value_for_money_score": breakdown["value_for_money"],
                         "nlp_review_score": breakdown.get("nlp_review_score"),
+                        "collaborative_score": (
+                            cf_evidence.score_by_catalog.get(candidate.item.id)
+                            if cf_evidence is not None
+                            else None
+                        ),
                         "final_score": final_score,
                         "rank_position": 0,
                         "rationale": rationale_payload,
-                        "matrix_version": matrix_version,
-                        "feature_source_version": feature_source_version,
                     },
                     preference_vector_rows=preference_vector_rows,
                 )
@@ -320,9 +337,6 @@ class Fyp1ContentRecommendationScorer:
             scored,
             key=lambda item: (
                 -item.result.score,
-                item.result.price_rm
-                if item.result.price_rm is not None
-                else float("inf"),
                 item.result.brand,
                 item.result.model_name or item.result.string_name,
             ),
@@ -365,26 +379,6 @@ def _effective_item_features(
         for feature_key in CORE_RECOMMENDATION_FEATURES
     }
 
-    official_coverage = len(official_scores) / len(CORE_RECOMMENDATION_FEATURES)
-    nlp_coverage = sum(
-        1 for value in nlp_feature_signals.values() if value is not None
-    ) / len(CORE_RECOMMENDATION_FEATURES)
-    nlp_support_count = sum(
-        1
-        for feature_key in SUPPORT_FEATURES
-        if (signal := nlp_scores.get(feature_key)) is not None
-        and _signal_score(signal) is not None
-    )
-
-    official_confidence_global = clamp01(0.62 + (official_coverage * 0.28))
-    review_count_confidence = _review_count_confidence(candidate.item.review_count)
-    nlp_confidence_global = clamp01(
-        0.18
-        + (nlp_coverage * 0.35)
-        + (min(nlp_support_count, 3) / 3 * 0.12)
-        + (review_count_confidence * 0.20)
-    )
-
     effective: dict[str, float] = {}
     sources: dict[str, str] = {}
     feature_meta: dict[str, dict[str, object]] = {}
@@ -394,67 +388,117 @@ def _effective_item_features(
         official_value = official_scores.get(feature_key)
         nlp_signal = nlp_feature_signals.get(feature_key)
         nlp_value = _signal_score(nlp_signal) if nlp_signal is not None else None
-        nlp_feature_confidence = (
-            _signal_confidence(nlp_signal) if nlp_signal is not None else None
-        )
-
         nlp_influence = 0.0
-        source_confidence = 0.16
         fused_base = prior_score
 
         if official_value is not None and nlp_value is not None:
             source = "official_performance+nlp_review"
-            official_confidence = official_confidence_global
-            nlp_confidence = clamp01(
-                0.18
-                + ((nlp_feature_confidence or nlp_confidence_global) * 0.62)
-                + (review_count_confidence * 0.10)
-            )
-            weight_total = max(official_confidence + nlp_confidence, 1e-6)
-            fused_base = (
-                (official_value * official_confidence) + (nlp_value * nlp_confidence)
-            ) / weight_total
-            source_confidence = clamp01(min(0.95, 0.45 + (weight_total / 2)))
-            nlp_influence = clamp01(nlp_confidence / weight_total)
+            fused_base = (official_value + nlp_value) / 2
+            nlp_influence = 0.5
         elif official_value is not None:
             source = "official_performance"
             fused_base = official_value
-            source_confidence = clamp01(official_confidence_global * 0.95)
         elif nlp_value is not None:
             source = "nlp_review"
             fused_base = nlp_value
-            nlp_confidence = clamp01(
-                0.14
-                + ((nlp_feature_confidence or nlp_confidence_global) * 0.58)
-                + (review_count_confidence * 0.12)
-            )
-            source_confidence = clamp01(nlp_confidence * 0.78)
             nlp_influence = 1.0
         else:
             source = "prior_fallback"
 
-        effective_score = clamp01(
-            (fused_base * source_confidence) + (prior_score * (1 - source_confidence))
-        )
-        missing_data_penalty = round((1 - source_confidence) * 0.12, 4)
-
-        effective[feature_key] = effective_score
+        effective[feature_key] = clamp01(fused_base)
         sources[feature_key] = source
         feature_meta[feature_key] = {
             "official_score": official_value,
             "nlp_review_score": nlp_value,
-            "nlp_confidence": nlp_feature_confidence,
             "nlp_influence": nlp_influence,
-            "fusion_confidence": source_confidence,
             "prior_score": prior_score,
-            "missing_data_penalty": missing_data_penalty,
-            "source_version": _signal_source_version(nlp_signal),
-            "source_ref": _signal_source_ref(nlp_signal),
-            "review_count_snapshot": _signal_review_count_snapshot(nlp_signal)
-            or candidate.item.review_count,
         }
 
     return effective, sources, feature_meta
+
+
+def _apply_community(
+    *,
+    effective_scores: dict[str, float],
+    feature_sources: dict[str, str],
+    feature_meta: dict[str, dict[str, object]],
+    aggregates: Mapping[str, CommunityFeatureAggregate],
+) -> tuple[dict[str, float], dict[str, str], dict[str, dict[str, object]]]:
+    calibrated = dict(effective_scores)
+    sources = dict(feature_sources)
+    meta = {feature: dict(values) for feature, values in feature_meta.items()}
+    for feature, aggregate in aggregates.items():
+        if feature not in calibrated or aggregate.weight <= 0:
+            continue
+        baseline = calibrated[feature]
+        calibrated[feature] = clamp01(
+            baseline * (1 - aggregate.weight)
+            + aggregate.normalized_score * aggregate.weight
+        )
+        sources[feature] = f"{sources[feature]}+community_signal"
+        meta[feature].update(
+            {
+                "baseline_score": baseline,
+                "community_score": aggregate.normalized_score,
+                "community_distinct_users": aggregate.distinct_users,
+                "community_booking_count": aggregate.booking_count,
+                "community_confidence": aggregate.confidence,
+                "community_weight": aggregate.weight,
+                "community_evidence_scope": aggregate.evidence_scope,
+                "community_racket_model_key": aggregate.racket_model_key,
+                "community_source_version": aggregate.source_version,
+            }
+        )
+    return calibrated, sources, meta
+
+
+def _apply_cf(
+    *,
+    base_score: float,
+    evidence: CollaborativeEvidence | None,
+    catalog_id: str,
+) -> tuple[float, dict[str, object]]:
+    if evidence is None:
+        return base_score, {
+            "mode": "unavailable",
+            "raw_cf_score": None,
+            "cf_weight": 0.0,
+            "base_score": base_score,
+            "final_score": base_score,
+            "fallback_reason": "not_calculated",
+        }
+    raw_cf_score = evidence.score_by_catalog.get(catalog_id)
+    supporting_users = evidence.supporting_users_by_catalog.get(catalog_id, 0)
+    cf_weight = cf_weight_for_support(supporting_users)
+    final_score = base_score
+    if raw_cf_score is not None and cf_weight > 0:
+        final_score = round(
+            clamp01(base_score * (1 - cf_weight) + raw_cf_score * cf_weight),
+            4,
+        )
+    fallback_reason = evidence.fallback_reason
+    if raw_cf_score is None:
+        fallback_reason = fallback_reason or "no_candidate_support"
+    elif cf_weight == 0:
+        fallback_reason = "insufficient_distinct_supporting_users"
+    return final_score, {
+        "mode": "enabled" if cf_weight > 0 else "fallback",
+        "raw_cf_score": raw_cf_score,
+        "cf_confidence": round(
+            supporting_users / (supporting_users + CF_SHRINKAGE_K), 4
+        )
+        if supporting_users
+        else 0.0,
+        "cf_weight": cf_weight,
+        "distinct_supporting_users": supporting_users,
+        "eligible_peer_count": evidence.eligible_peer_count,
+        "eligible_interaction_count": evidence.eligible_interaction_count,
+        "base_score": base_score,
+        "final_score": final_score,
+        "fallback_reason": fallback_reason,
+        "policy_version": CF_POLICY_VERSION,
+        "source_version": evidence.source_version,
+    }
 
 
 def _official_feature_scores(item: StringItem) -> dict[str, float]:
@@ -539,25 +583,17 @@ def _build_feature_evidence(
             )
             if _to_float(meta.get("nlp_review_score")) is not None
             else None,
-            "nlp_confidence": round(
-                _to_float(meta.get("nlp_confidence")) or 0.0,
-                4,
-            )
-            if _to_float(meta.get("nlp_confidence")) is not None
-            else None,
             "nlp_influence": round(_to_float(meta.get("nlp_influence")) or 0.0, 4),
-            "fusion_confidence": round(
-                _to_float(meta.get("fusion_confidence")) or 0.0,
-                4,
-            ),
             "prior_score": round(_to_float(meta.get("prior_score")) or 0.0, 4),
-            "missing_data_penalty": round(
-                _to_float(meta.get("missing_data_penalty")) or 0.0,
-                4,
-            ),
-            "source_version": meta.get("source_version"),
-            "source_ref": meta.get("source_ref"),
-            "review_count_snapshot": meta.get("review_count_snapshot"),
+            "baseline_score": _to_float(meta.get("baseline_score")),
+            "community_score": _to_float(meta.get("community_score")),
+            "community_distinct_users": meta.get("community_distinct_users"),
+            "community_booking_count": meta.get("community_booking_count"),
+            "community_confidence": _to_float(meta.get("community_confidence")),
+            "community_weight": _to_float(meta.get("community_weight")) or 0.0,
+            "community_evidence_scope": meta.get("community_evidence_scope"),
+            "community_racket_model_key": meta.get("community_racket_model_key"),
+            "community_source_version": meta.get("community_source_version"),
         }
         rows.append(row)
 
@@ -566,66 +602,11 @@ def _build_feature_evidence(
             -(
                 (_to_float(row.get("preference_weight")) or 0)
                 * (_to_float(row.get("effective_score")) or 0)
-                * max(_to_float(row.get("fusion_confidence")) or 0, 0.3)
             ),
             -(_to_float(row.get("effective_score")) or 0),
         )
     )
     return rows
-
-
-def _confidence_score(
-    *,
-    feature_evidence: list[dict[str, object]],
-    feature_sources: dict[str, str],
-) -> float:
-    if not feature_evidence:
-        return 0.3
-
-    coverage_ratio = _feature_coverage(feature_sources)
-    average_fusion_confidence = sum(
-        (_to_float(row.get("fusion_confidence")) or 0) for row in feature_evidence
-    ) / len(feature_evidence)
-    strong_support_ratio = sum(
-        1
-        for row in feature_evidence
-        if (_to_float(row.get("fusion_confidence")) or 0) >= 0.7
-    ) / len(feature_evidence)
-    nlp_signal_ratio = sum(
-        1 for row in feature_evidence if (_to_float(row.get("nlp_influence")) or 0) > 0
-    ) / len(feature_evidence)
-    fallback_ratio = sum(
-        1 for source in feature_sources.values() if source == "prior_fallback"
-    ) / len(feature_sources)
-
-    has_official = any(
-        source in {"official_performance", "official_performance+nlp_review"}
-        for source in feature_sources.values()
-    )
-    has_nlp = any(
-        source in {"nlp_review", "official_performance+nlp_review"}
-        for source in feature_sources.values()
-    )
-    source_blend_bonus = 0.05 if has_official and has_nlp else 0.0
-
-    score = (
-        (coverage_ratio * 0.38)
-        + (average_fusion_confidence * 0.28)
-        + (strong_support_ratio * 0.18)
-        + (nlp_signal_ratio * 0.16)
-        + source_blend_bonus
-        - (fallback_ratio * 0.22)
-    )
-    return clamp01(score)
-
-
-def _feature_coverage(feature_sources: dict[str, str]) -> float:
-    if not feature_sources:
-        return 0.0
-    covered = sum(
-        1 for source in feature_sources.values() if source != "prior_fallback"
-    )
-    return covered / len(feature_sources)
 
 
 def _nlp_review_alignment_score(
@@ -756,30 +737,10 @@ def _preference_match_score(
     return clamp01((shape_similarity * 0.75) + (top_alignment * 0.25))
 
 
-def _budget_fit_score(price_rm: float | None, budget_tier: str) -> float:
-    item_tier = _item_price_tier(price_rm)
-    tier_scores = BUDGET_TIER_FIT_SCORES.get(
-        budget_tier,
-        BUDGET_TIER_FIT_SCORES["between_30_50"],
-    )
-    return clamp01(tier_scores.get(item_tier, tier_scores["unknown"]))
-
-
-def _item_price_tier(price_rm: float | None) -> str:
-    if price_rm is None:
-        return "unknown"
-    if price_rm < 30:
-        return "low"
-    if price_rm <= 50:
-        return "mid"
-    return "high"
-
-
 def _rule_fit_score(
     *,
     item: StringItem,
     effective_scores: dict[str, float],
-    auxiliary_scores: dict[str, float],
     request: RecommendationRequestModel,
 ) -> tuple[float, list[str], list[dict[str, object]]]:
     score = 0.55
@@ -800,15 +761,56 @@ def _rule_fit_score(
     elasticity = effective_scores["elasticity"]
     tension_retention = effective_scores["tension_retention"]
     string_movement = effective_scores["string_movement"]
-    value_for_money = auxiliary_scores.get("value_for_money", 0.5)
+    gauge_category = _gauge_category(gauge)
+    requested_gauge = (
+        "thick"
+        if request.preferred_tension >= 27 or request.frequency_per_week >= 3
+        else "thin"
+        if request.skill_level == "beginner"
+        else None
+    )
+    if requested_gauge == gauge_category:
+        apply(
+            0.07,
+            f"matches the {requested_gauge} gauge suggested by your setup",
+            f"setup_{requested_gauge}_gauge_bonus",
+        )
+    elif requested_gauge is not None:
+        apply(
+            -0.04,
+            f"uses {gauge_category} gauge instead of the suggested {requested_gauge} gauge",
+            f"setup_{requested_gauge}_gauge_penalty",
+        )
+
+    if request.preferred_gauge != "no_preference":
+        if request.preferred_gauge == gauge_category:
+            apply(
+                0.12,
+                f"matches your preferred {gauge_category} gauge",
+                "preferred_gauge_bonus",
+            )
+        else:
+            apply(
+                -0.07,
+                f"does not exactly match your preferred {request.preferred_gauge} gauge",
+                "preferred_gauge_penalty",
+            )
+
+    feel_category = _feel_category(item)
+    if request.preferred_feel == feel_category:
+        apply(
+            0.10,
+            f"matches your preferred {feel_category} impact feel",
+            "preferred_feel_bonus",
+        )
+    else:
+        apply(
+            -0.05,
+            f"has a {feel_category} feel instead of your preferred {request.preferred_feel} feel",
+            "preferred_feel_penalty",
+        )
 
     if request.skill_level == "beginner":
-        if gauge <= 0.63:
-            apply(
-                -0.10,
-                "penalizes ultra-thin gauge for beginner consistency",
-                "beginner_ultra_thin_penalty",
-            )
         if ((comfort + durability) / 2) >= 0.65:
             apply(
                 0.06,
@@ -898,32 +900,63 @@ def _rule_fit_score(
                 "balanced_all_round_bonus",
             )
 
-    if request.budget_tier == "below_30":
-        if value_for_money >= 0.70:
+    goal_feature = {
+        "power": "repulsion",
+        "control": "control",
+        "durability": "durability",
+        "comfort": "comfort",
+        "tension_retention": "tension_retention",
+        "value_for_money": "value_for_money",
+    }.get(request.recent_goal)
+    if goal_feature is not None:
+        goal_score = effective_scores[goal_feature]
+        goal_delta = max(-0.05, min(0.10, (goal_score - 0.55) * 0.3))
+        goal_fit = goal_delta >= 0
+        apply(
+            goal_delta,
+            (
+                f"supports your recent {request.recent_goal.replace('_', ' ')} goal"
+                if goal_fit
+                else f"is weaker for your recent {request.recent_goal.replace('_', ' ')} goal"
+            ),
+            f"recent_goal_{request.recent_goal}_{'bonus' if goal_fit else 'penalty'}",
+        )
+    elif request.recent_goal == "balanced":
+        balanced_score = sum(effective_scores.values()) / len(effective_scores)
+        if balanced_score >= 0.64:
             apply(
-                0.05,
-                "rewards stronger value-for-money for budget-sensitive preference",
-                "below_30_value_bonus",
-            )
-        elif value_for_money <= 0.45:
-            apply(
-                -0.06,
-                "penalizes weak value-for-money for budget-sensitive preference",
-                "below_30_value_penalty",
+                0.04,
+                "supports your recent balanced setup goal",
+                "recent_goal_balanced_bonus",
             )
 
     return score, reasons, events
 
 
+def _gauge_category(gauge_mm: float) -> str:
+    if gauge_mm <= 0.64:
+        return "thin"
+    if gauge_mm <= 0.67:
+        return "medium"
+    return "thick"
+
+
+def _feel_category(item: StringItem) -> str:
+    feel = item.official_performance.feel if item.official_performance else None
+    if feel is None:
+        return "medium"
+    if feel <= 4:
+        return "soft"
+    if feel <= 6.5:
+        return "medium"
+    return "hard"
+
+
 def _build_reasons(
     *,
-    item: StringItem,
     request: RecommendationRequestModel,
     effective_scores: dict[str, float],
     preference_rows: list[dict[str, float | str | None]],
-    budget_fit: float,
-    item_price_tier: str,
-    confidence_score: float,
     rule_reasons: list[str],
 ) -> list[str]:
     reasons: list[str] = []
@@ -934,20 +967,7 @@ def _build_reasons(
     ):
         reasons.append(f"matches your {label} priority")
 
-    tier_label = PRICE_TIER_LABELS.get(item_price_tier, PRICE_TIER_LABELS["unknown"])
-    if budget_fit >= 0.9 and item.price_rm is not None:
-        reasons.append(f"{tier_label} strongly fits your budget tier")
-    elif budget_fit >= 0.7 and item.price_rm is not None:
-        reasons.append(f"{tier_label} is acceptable for your budget tier")
-    elif item.price_rm is not None:
-        reasons.append(f"{tier_label} is a budget trade-off")
-
     reasons.extend(rule_reasons)
-
-    if confidence_score >= 0.75:
-        reasons.append("supported by stronger official and review evidence")
-    elif confidence_score <= 0.45:
-        reasons.append("uses partial evidence, suitable as an exploratory option")
 
     if request.playing_style == "attacking" and effective_scores["repulsion"] >= 0.75:
         reasons.append("strong repulsion response for attacking rallies")
@@ -977,20 +997,13 @@ def _top_weighted_preference_reasons(
 
 def _primary_fit_angle(
     effective_scores: dict[str, float],
-    auxiliary_scores: dict[str, float],
     request: RecommendationRequestModel,
-    *,
-    budget_fit: float,
-    confidence_score: float,
 ) -> str:
     if (
-        request.budget_tier == "below_30"
-        and budget_fit >= 0.9
-        and auxiliary_scores.get("value_for_money", 0.5) >= 0.7
+        request.recent_goal == "value_for_money"
+        and effective_scores["value_for_money"] >= 0.7
     ):
-        return "Budget-safe pick"
-    if confidence_score <= 0.45:
-        return "Exploratory pick"
+        return "Value pick"
     if request.playing_style == "attacking" and effective_scores["repulsion"] >= 0.7:
         return "Attack pick"
     if (
@@ -1007,6 +1020,7 @@ def _primary_fit_angle(
             ("Tension-safe pick", effective_scores["tension_retention"]),
             ("Stable-bed pick", effective_scores["string_movement"]),
             ("Sound pick", effective_scores["sound"]),
+            ("Value pick", effective_scores["value_for_money"]),
             ("All-round pick", sum(effective_scores.values()) / len(effective_scores)),
         ),
         key=lambda item: item[1],
@@ -1024,16 +1038,10 @@ def _trade_off_summary(
         (
             ("preference match", breakdown["preference_match"]),
             ("rule fit", breakdown["rule_fit"]),
-            ("budget fit", breakdown["budget_fit"]),
-            ("confidence", breakdown.get("confidence_score", 0.5)),
         ),
         key=lambda item: item[1],
     )[0]
 
-    if weakest_component == "budget fit":
-        return "Budget tier alignment is the main trade-off for this option."
-    if weakest_component == "confidence":
-        return "Evidence confidence is lower because feature support is sparse."
     if weakest_component == "rule fit":
         return (
             "Domain-rule support is moderate here for your "
@@ -1056,62 +1064,11 @@ def _unique(values: list[str]) -> list[str]:
     return ordered
 
 
-def _candidate_matrix_version(candidate: RecommendationCandidateModel) -> str | None:
-    for source_layer in ("nlp_review", "hybrid_derived", "community_signal"):
-        source_map = candidate.matrix_by_source.get(source_layer, {})
-        for value in source_map.values():
-            source_version = _signal_source_version(value)
-            if source_version:
-                return source_version
-    return None
-
-
-def _candidate_feature_source_version(
-    candidate: RecommendationCandidateModel,
-) -> str | None:
-    source_map = candidate.matrix_by_source.get("nlp_review", {})
-    for value in source_map.values():
-        source_version = _signal_source_version(value)
-        if source_version:
-            return source_version
-    return _candidate_matrix_version(candidate)
-
-
 def _signal_score(value: object) -> float | None:
     if isinstance(value, RecommendationFeatureSignalModel):
         return clamp01(value.normalized_score)
     score = _to_float(value)
     return clamp01(score) if score is not None else None
-
-
-def _signal_confidence(value: object) -> float | None:
-    if isinstance(value, RecommendationFeatureSignalModel):
-        return clamp01(value.confidence) if value.confidence is not None else None
-    return None
-
-
-def _signal_source_version(value: object) -> str | None:
-    if isinstance(value, RecommendationFeatureSignalModel):
-        return value.source_version
-    return None
-
-
-def _signal_source_ref(value: object) -> str | None:
-    if isinstance(value, RecommendationFeatureSignalModel):
-        return value.source_ref
-    return None
-
-
-def _signal_review_count_snapshot(value: object) -> int | None:
-    if isinstance(value, RecommendationFeatureSignalModel):
-        return value.review_count_snapshot
-    return None
-
-
-def _review_count_confidence(review_count: int) -> float:
-    if review_count <= 0:
-        return 0.0
-    return clamp01(math.log1p(review_count) / math.log1p(1000))
 
 
 def _to_float(value: object) -> float | None:

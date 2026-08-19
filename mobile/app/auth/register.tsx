@@ -79,7 +79,7 @@ export default function RegisterScreen() {
         player: mapBackendUserToPlayerProfile(auth.user, null),
       });
 
-      router.replace('/player/profile/edit');
+      router.replace('/player/profile/edit?onboarding=1');
     } catch (error) {
       setFormError(
         error instanceof BackendApiError
@@ -91,19 +91,22 @@ export default function RegisterScreen() {
 
   return (
     <AuthShell
-      eyebrow="New player"
       title="Create your account"
-      subtitle="Set up a player login and continue straight into your profile."
       onBack={() => {
         if (router.canGoBack()) {
           router.back();
         } else {
-          router.replace('/auth/welcome');
+          router.replace('/auth/login');
         }
       }}
       footer={
         <View className="items-center">
-          <Pressable onPress={() => router.push('/auth/login')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log in to an existing account"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/auth/login')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               Already have an account? Log in
             </HeroText>

@@ -97,8 +97,6 @@ export default function AdminRecommendationRunsScreen() {
         run.phone_number,
         run.username,
         run.algorithm_version,
-        run.matrix_version,
-        run.feature_source_version,
         topLabel,
       ]
         .filter(Boolean)
@@ -151,7 +149,7 @@ export default function AdminRecommendationRunsScreen() {
             <AppInput
               variant="minimal"
               className="mb-0"
-              placeholder="Search phone, algorithm, matrix version, or top result..."
+              placeholder="Search runs, phone, or algorithm..."
               value={search}
               onChangeText={setSearch}
               leftAdornment={<Search size={18} color="#94A3B8" strokeWidth={2.5} />}
@@ -184,7 +182,12 @@ export default function AdminRecommendationRunsScreen() {
                   </View>
 
                   <View className="flex-row flex-wrap gap-2">
-                    <AppChip label={item.algorithm_version} variant="primary" size="sm" />
+                    <AppChip
+                      label={item.algorithm_version}
+                      variant="primary"
+                      size="sm"
+                      className="max-w-full"
+                    />
                     <AppChip
                       label={`${item.items.length} result${item.items.length === 1 ? '' : 's'}`}
                       variant="neutral"
@@ -204,14 +207,9 @@ export default function AdminRecommendationRunsScreen() {
                     </HeroText>
                   </View>
 
-                  <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1">
-                    <HeroText className="text-[12px] font-medium text-neutral-500">
-                      Phone: {item.phone_number || 'Unavailable'}
-                    </HeroText>
-                    <HeroText className="text-[12px] font-medium text-neutral-500">
-                      Matrix: {item.matrix_version || 'Unavailable'}
-                    </HeroText>
-                  </View>
+                  <HeroText className="text-[12px] font-medium text-neutral-500">
+                    Phone: {item.phone_number || 'Unavailable'}
+                  </HeroText>
                 </View>
               </AppCard>
             </View>

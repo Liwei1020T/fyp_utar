@@ -1,0 +1,114 @@
+- generic [ref=f3e159]:
+  - generic [ref=f3e165]:
+    - generic [ref=f3e169]:
+      - generic [ref=f3e170]: Welcome back, Aiman
+      - generic [ref=f3e171]: Recommendations, bookings, and service updates in one place.
+    - generic [ref=f3e180]:
+      - generic [ref=f3e184]:
+        - generic [ref=f3e186]:
+          - generic [ref=f3e187] [cursor=pointer]: Smart advisor
+          - generic [ref=f3e189]: Find your ideal setup
+          - generic [ref=f3e190]: Get a string and tension suggestion based on how you play.
+        - generic [ref=f3e195]:
+          - generic [ref=f3e196]:
+            - generic [ref=f3e197]: Tension
+            - generic [ref=f3e198]: 27 lbs
+          - generic [ref=f3e199]:
+            - generic [ref=f3e200]: Bookings
+            - generic [ref=f3e201]: 8 logged
+        - button "Generate setup" [ref=f3e202] [cursor=pointer]
+      - generic [ref=f3e208]:
+        - generic [ref=f3e209]:
+          - generic [ref=f3e210]:
+            - generic [ref=f3e211]: Trending Strings
+            - generic [ref=f3e212]: Popular setups players are browsing this week.
+          - generic [ref=f3e213] [cursor=pointer]: See all
+        - generic [ref=f3e218]:
+          - generic [ref=f3e220] [cursor=pointer]:
+            - generic [ref=f3e221]:
+              - generic [ref=f3e222]:
+                - generic [ref=f3e223]: Yonex
+                - generic [ref=f3e225]: 0.65 mm
+              - generic "Yonex BG66 ULTIMAX product photo" [ref=f3e228]:
+                - img "Yonex BG66 ULTIMAX product photo" [ref=f3e230]
+            - generic [ref=f3e231]:
+              - generic [ref=f3e232]: BG66 ULTIMAX
+              - generic [ref=f3e233]: Yonex
+              - generic [ref=f3e234]:
+                - generic [ref=f3e235]: Repulsion
+                - generic [ref=f3e236]: RM 48.00
+          - generic [ref=f3e238] [cursor=pointer]:
+            - generic [ref=f3e239]:
+              - generic [ref=f3e240]:
+                - generic [ref=f3e241]: Yonex
+                - generic [ref=f3e243]: 0.63 mm
+              - generic "Yonex EXBOLT 63 product photo" [ref=f3e246]:
+                - img "Yonex EXBOLT 63 product photo" [ref=f3e248]
+            - generic [ref=f3e249]:
+              - generic [ref=f3e250]: EXBOLT 63
+              - generic [ref=f3e251]: Yonex
+              - generic [ref=f3e252]:
+                - generic [ref=f3e253]: Repulsion
+                - generic [ref=f3e254]: RM 76.00
+          - generic [ref=f3e256] [cursor=pointer]:
+            - generic [ref=f3e257]:
+              - generic [ref=f3e258]:
+                - generic [ref=f3e259]: Gosen
+                - generic [ref=f3e261]: 0.65 mm
+              - generic "Gosen RYZONIC 65 product photo" [ref=f3e264]:
+                - img "Gosen RYZONIC 65 product photo" [ref=f3e266]
+            - generic [ref=f3e267]:
+              - generic [ref=f3e268]: RYZONIC 65
+              - generic [ref=f3e269]: Gosen
+              - generic [ref=f3e270]:
+                - generic [ref=f3e271]: Repulsion
+                - generic [ref=f3e272]: RM 40.00
+          - generic [ref=f3e274] [cursor=pointer]:
+            - generic [ref=f3e275]:
+              - generic [ref=f3e276]:
+                - generic [ref=f3e277]: Victor
+                - generic [ref=f3e279]: 0.66 mm
+              - generic "Victor VBS-66 NANO product photo" [ref=f3e282]:
+                - img "Victor VBS-66 NANO product photo" [ref=f3e284]
+            - generic [ref=f3e285]:
+              - generic [ref=f3e286]: VBS-66 NANO
+              - generic [ref=f3e287]: Victor
+              - generic [ref=f3e288]:
+                - generic [ref=f3e289]: Repulsion
+                - generic [ref=f3e290]: RM 43.00
+      - generic [ref=f3e291]:
+        - generic [ref=f3e293]:
+          - generic [ref=f3e294]: Quick Actions
+          - generic [ref=f3e295]: Jump into the tasks you use most.
+        - generic [ref=f3e297]:
+          - generic [ref=f3e298] [cursor=pointer]: Get recommendation
+          - generic [ref=f3e306] [cursor=pointer]: Book restring
+          - generic [ref=f3e316] [cursor=pointer]: Browse strings
+          - generic [ref=f3e325] [cursor=pointer]: Track service
+      - generic [ref=f3e333]:
+        - generic [ref=f3e335]:
+          - generic [ref=f3e336]: Latest Booking
+          - generic [ref=f3e337]: Your current restring progress at a glance.
+        - generic [ref=f3e341]:
+          - generic [ref=f3e342]:
+            - generic [ref=f3e347]:
+              - generic [ref=f3e348]: Yonex Astrox 88D Pro
+              - generic [ref=f3e349]: RYZONIC 65 • Gosen • 27 lbs
+            - generic [ref=f3e350] [cursor=pointer]: In Progress
+          - generic [ref=f3e353]:
+            - generic [ref=f3e354]:
+              - generic [ref=f3e355]: Expected ready
+              - generic [ref=f3e356]: Thu, 7 May
+            - generic [ref=f3e357]:
+              - generic [ref=f3e358]: Price status
+              - generic [ref=f3e359]: Vendor quote
+          - generic [ref=f3e360]:
+            - generic [ref=f3e361]: Next step
+            - generic [ref=f3e362]: "Next: Waiting for stringing completion."
+          - button "Open Booking" [ref=f3e363] [cursor=pointer]
+  - tablist [ref=f3e370]:
+    - tab "Home" [selected] [ref=f3e372] [cursor=pointer]
+    - tab "Strings" [ref=f3e386] [cursor=pointer]
+    - tab "RECO" [ref=f3e396] [cursor=pointer]
+    - tab "Bookings" [ref=f3e410] [cursor=pointer]
+    - tab "Profile" [ref=f3e422] [cursor=pointer]

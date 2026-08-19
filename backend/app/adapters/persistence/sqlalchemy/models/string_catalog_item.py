@@ -323,15 +323,7 @@ class StringRecommendationMatrix(Base):
         nullable=True,
         index=True,
     )
-    confidence: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     evidence_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    source_ref: Mapped[str | None] = mapped_column(Text, nullable=True)
-    source_version: Mapped[str | None] = mapped_column(SAString(80), nullable=True)
-    source_generated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    review_count_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -412,7 +404,7 @@ class RecommendationScoreCache(Base):
         Numeric(6, 4),
         nullable=True,
     )
-    confidence_score: Mapped[float | None] = mapped_column(
+    value_for_money_score: Mapped[float | None] = mapped_column(
         Numeric(6, 4),
         nullable=True,
     )
@@ -423,11 +415,6 @@ class RecommendationScoreCache(Base):
     final_score: Mapped[float] = mapped_column(Numeric(6, 4))
     rank_position: Mapped[int] = mapped_column(Integer)
     rationale: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
-    matrix_version: Mapped[str | None] = mapped_column(SAString(80), nullable=True)
-    feature_source_version: Mapped[str | None] = mapped_column(
-        SAString(80),
-        nullable=True,
-    )
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

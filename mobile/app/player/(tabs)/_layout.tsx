@@ -1,10 +1,9 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Calendar, Home, List, MessageSquareText, User, Zap } from 'lucide-react-native';
-import { View } from 'react-native';
-import { HeroText, cn } from '../../../components/ui/heroui';
-import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
+import { Calendar, Home, List, User, Zap } from 'lucide-react-native';
+import { Platform, View } from 'react-native';
+import { appChromeColors } from '../../../components/ui/theme';
 
 function StandardTabIcon({
   icon: Icon,
@@ -18,12 +17,7 @@ function StandardTabIcon({
   focused: boolean;
 }) {
   return (
-    <View
-      className={cn(
-        'h-10 w-10 items-center justify-center rounded-lg',
-        focused ? 'bg-primary-50' : 'bg-transparent'
-      )}
-    >
+    <View className="h-8 w-8 items-center justify-center">
       <Icon size={size} color={color} strokeWidth={focused ? 2.1 : 1.9} />
     </View>
   );
@@ -31,7 +25,8 @@ function StandardTabIcon({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 68 + Math.max(insets.bottom, 10);
+  const bottomSpacing = Math.max(insets.bottom, 10);
+  const tabBarHeight = 66 + bottomSpacing;
 
   return (
     <Tabs
@@ -41,35 +36,41 @@ export default function TabsLayout() {
           backgroundColor: appChromeColors.page,
         },
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: appChromeColors.primary,
-        tabBarInactiveTintColor: appChromeColors.inactive,
+        tabBarActiveTintColor: appChromeColors.heroDeep,
+        tabBarInactiveTintColor: '#C7D1E0',
+        tabBarActiveBackgroundColor: appChromeColors.tabBarActive,
         tabBarStyle: {
           backgroundColor: appChromeColors.tabBar,
-          borderWidth: 1,
-          borderColor: appChromeColors.tabBarBorder,
-          borderTopWidth: 1,
+          borderTopWidth: 0,
           height: tabBarHeight,
-          paddingBottom: Math.max(insets.bottom, 10),
-          paddingTop: 10,
-          position: 'absolute',
-          left: appLayoutMetrics.pagePadding,
-          right: appLayoutMetrics.pagePadding,
-          bottom: Math.max(insets.bottom, 10),
-          borderRadius: 8,
-          shadowColor: '#14181F',
-          shadowOpacity: 0.08,
-          shadowOffset: { width: 0, height: 10 },
-          shadowRadius: 20,
-          elevation: 10,
+          paddingBottom: bottomSpacing,
+          paddingTop: 8,
+          paddingHorizontal: 2,
+          marginHorizontal: 12,
+          marginBottom: bottomSpacing,
+          borderRadius: 22,
+          ...(Platform.OS === 'web'
+            ? { boxShadow: '0 14px 32px rgba(9, 29, 62, 0.22)' }
+            : {
+                shadowColor: '#091D3E',
+                shadowOpacity: 0.2,
+                shadowOffset: { width: 0, height: 10 },
+                shadowRadius: 20,
+                elevation: 12,
+              }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '700',
-          marginTop: 2,
+          fontWeight: '600',
+          marginTop: 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 2,
+          minHeight: 48,
+          marginHorizontal: 0,
+          marginVertical: 1,
+          borderRadius: 15,
+          overflow: 'hidden',
         },
       }}
     >
@@ -94,29 +95,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="recommend"
         options={{
-          title: 'Recommend',
-          tabBarIcon: () => (
-            <View
-              className="-mt-5 h-[60px] w-[60px] items-center justify-center rounded-lg border-[5px] bg-primary-100 p-1 shadow-glow"
-              style={{ borderColor: appChromeColors.page }}
-            >
-              <View className="h-full w-full items-center justify-center rounded-lg bg-primary-600">
-                <Zap size={26} color="white" strokeWidth={1.7} />
-              </View>
-            </View>
-          ),
-          tabBarLabel: ({ color, focused }) => (
-            <HeroText
-              style={{
-                color,
-                fontSize: 10,
-                fontWeight: '800',
-                marginTop: 8,
-                letterSpacing: 0,
-              }}
-            >
-              {focused ? 'AI RECO' : 'RECO'}
-            </HeroText>
+          title: 'Advisor',
+          tabBarAccessibilityLabel: 'Recommendation advisor',
+          tabBarIcon: ({ color, size, focused }) => (
+            <StandardTabIcon icon={Zap} color={color} size={size} focused={focused} />
           ),
         }}
       />
@@ -134,9 +116,6 @@ export default function TabsLayout() {
         options={{
           href: null,
           title: 'Chat',
-          tabBarIcon: ({ color, size, focused }) => (
-            <StandardTabIcon icon={MessageSquareText} color={color} size={size} focused={focused} />
-          ),
         }}
       />
       <Tabs.Screen

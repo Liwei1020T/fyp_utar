@@ -19,7 +19,7 @@ export function RoleGuard({ role }: RoleGuardProps) {
   }
 
   if (!user) {
-    return <Redirect href="/auth/welcome" />;
+    return <Redirect href="/auth/login" />;
   }
 
   if (user.role !== role) {

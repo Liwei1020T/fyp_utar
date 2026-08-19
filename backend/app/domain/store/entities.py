@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
+from typing import TYPE_CHECKING
 
-from app.domain.booking.entities import BookingRecord
+if TYPE_CHECKING:
+    from app.domain.booking.entities import BookingRecord
 
 
 @dataclass(frozen=True)
@@ -32,10 +35,13 @@ class StoreSettingsRecord:
     store_contact: str
     support_text: str
     payment_notes: str
+    payment_qr_path: str | None
     booking_notes: str
     store_policy_text: str
     address: str
     trending_string_ids: list[str]
+    default_service_price: float
+    notification_settings: dict[str, object]
     updated_at: str | None
 
 
@@ -49,6 +55,12 @@ class BookingSlot:
     available_spots: int
     label: str
     day_label: str
+
+
+@dataclass(frozen=True)
+class BookedSlot:
+    drop_off_datetime: datetime
+    status: str
 
 
 @dataclass(frozen=True)
@@ -85,6 +97,7 @@ class AnalyticsWorkloadEntry:
 @dataclass(frozen=True)
 class AnalyticsSummary:
     weekly_bookings: int
+    today_bookings: int
     pending_payment_count: int
     awaiting_dropoff_count: int
     in_progress_count: int
@@ -93,6 +106,11 @@ class AnalyticsSummary:
     low_stock_count: int
     unread_chats: int
     today_revenue: float
+    repeat_customer_count: int
+    pending_feedback_count: int
+    average_feedback_score: float | None
+    average_completion_hours: float | None
+    tension_distribution: dict[str, int]
     busy_slots: list[str]
     popular_string_ids: list[str]
     workload_mix: list[AnalyticsWorkloadEntry]

@@ -6,11 +6,8 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
-from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from app.adapters.persistence.sqlalchemy.models import Booking
-from app.adapters.persistence.sqlalchemy.models import User
 from app.config.settings import get_settings
 
 
@@ -33,7 +30,6 @@ def test_catalog_normalization_migration_preserves_existing_booking(
 
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("APP_ENV", "testing")
-    monkeypatch.setenv("AUTO_CREATE_SCHEMA", "false")
     get_settings.cache_clear()
 
     config = make_alembic_config(database_url)
@@ -167,7 +163,6 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
 
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("APP_ENV", "testing")
-    monkeypatch.setenv("AUTO_CREATE_SCHEMA", "false")
     get_settings.cache_clear()
 
     config = make_alembic_config(database_url)
@@ -190,29 +185,33 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .one()
         )
 
-    with Session(engine) as session:
-        session.add(
-            User(
-                id="user-1",
-                username="drift-user",
-                phone_number="+60123335555",
-                password_hash="hashed",
-                role="customer",
-                auth_provider="local",
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO users (
+                    id, username, phone_number, password_hash, role, auth_provider
+                ) VALUES (
+                    'user-1', 'drift-user', '+60123335555',
+                    'hashed', 'customer', 'local'
+                )
+                """
             )
         )
-        session.add(
-            Booking(
-                id="booking-1",
-                user_id="user-1",
-                string_id=existing_string["catalog_id"],
-                racket_brand="Yonex",
-                racket_model="Astrox 88D",
-                requested_tension=25,
-                status="awaiting_dropoff",
-            )
+        connection.execute(
+            text(
+                """
+                INSERT INTO bookings (
+                    id, user_id, string_id, racket_brand, racket_model,
+                    requested_tension, status
+                ) VALUES (
+                    'booking-1', 'user-1', :string_id, 'Yonex',
+                    'Astrox 88D', 25, 'awaiting_dropoff'
+                )
+                """
+            ),
+            {"string_id": existing_string["catalog_id"]},
         )
-        session.commit()
 
     with engine.begin() as connection:
         connection.execute(
@@ -306,7 +305,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260423_0018"
+        assert version_row["version_num"] == "20260818_0032"
 
         repaired_row = (
             connection.execute(
@@ -331,3 +330,64 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
         assert repaired_row["collection_datetime"] is None
         assert repaired_row["cancellation_reason"] is None
         assert repaired_row["completion_summary"] is None
+
+
+def test_latest_migrations_adopt_preexisting_schema_drift(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    db_path = tmp_path / "auto-created-schema-drift.sqlite"
+    database_url = f"sqlite+pysqlite:///{db_path}"
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("APP_ENV", "testing")
+    get_settings.cache_clear()
+
+    config = make_alembic_config(database_url)
+    command.upgrade(config, "20260423_0018")
+
+    from app.adapters.persistence.sqlalchemy import models  # noqa: F401
+    from app.adapters.persistence.sqlalchemy.base import Base
+
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+
+    inspector = inspect(engine)
+    assert "payments" in inspector.get_table_names()
+    assert "notification_preferences" not in {
+        item["name"] for item in inspector.get_columns("profiles")
+    }
+    assert "racket_id" not in {
+        item["name"] for item in inspector.get_columns("bookings")
+    }
+    assert "channel" not in {
+        item["name"] for item in inspector.get_columns("booking_updates")
+    }
+
+    command.upgrade(config, "head")
+
+    inspector = inspect(engine)
+    assert "notification_preferences" in {
+        item["name"] for item in inspector.get_columns("profiles")
+    }
+    assert "racket_id" in {item["name"] for item in inspector.get_columns("bookings")}
+    assert "channel" in {
+        item["name"] for item in inspector.get_columns("booking_updates")
+    }
+
+    with engine.begin() as connection:
+        version = connection.execute(
+            text("SELECT version_num FROM alembic_version")
+        ).scalar_one()
+    assert version == "20260818_0032"
+
+    matrix_columns = {
+        item["name"] for item in inspector.get_columns("string_recommendation_matrix")
+    }
+    assert {
+        "confidence",
+        "source_ref",
+        "source_version",
+        "source_generated_at",
+        "review_count_snapshot",
+    }.isdisjoint(matrix_columns)

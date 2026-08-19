@@ -57,3 +57,13 @@ class ConflictError(AppError):
             code="conflict",
             details=details,
         )
+
+
+class TooManyRequestsError(AppError):
+    def __init__(self, message: str = "Too many attempts; try again later") -> None:
+        super().__init__(message, status_code=429, code="rate_limited")
+
+
+class ServiceUnavailableError(AppError):
+    def __init__(self, message: str = "Service temporarily unavailable") -> None:
+        super().__init__(message, status_code=503, code="service_unavailable")

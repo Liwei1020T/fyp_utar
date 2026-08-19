@@ -17,6 +17,7 @@ def get_media_file(
     media_path: str,
     exp: int = Query(..., ge=0),
     sig: str = Query(..., min_length=64, max_length=128),
+    download: bool = Query(default=False),
 ) -> FileResponse:
     if not verify_signed_media_request(media_path, exp=exp, sig=sig):
         raise NotFoundError("Media not found")
@@ -25,4 +26,15 @@ def get_media_file(
     if destination is None or not destination.is_file():
         raise NotFoundError("Media not found")
 
-    return FileResponse(destination)
+    filename = None
+    if download:
+        suffix = (
+            destination.suffix
+            if destination.suffix in {".jpg", ".png", ".webp"}
+            else ".bin"
+        )
+        if media_path.startswith("payment-qr/"):
+            filename = f"payment-qr{suffix}"
+        elif media_path.startswith("payment-proofs/"):
+            filename = f"payment-proof{suffix}"
+    return FileResponse(destination, filename=filename)

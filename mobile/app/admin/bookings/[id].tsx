@@ -29,7 +29,7 @@ import {
   useCurrentUser,
   useStrings,
 } from '../../../store/appStore';
-import type { Booking, BookingStatus, BookingUpdate, PlayerProfile } from '../../../types/domain';
+import type { Booking, BookingStatus, BookingUpdate } from '../../../types/domain';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
@@ -39,13 +39,13 @@ import {
   formatLocalDateInputValue,
   formatLocalTimeValue,
 } from '../../../lib/formatters';
-import { getStringById, getUserById } from '../../../services/mockAppService';
 import {
   BackendApiError,
   backendApi,
   type BackendBookingPhotoType,
 } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
+import type { BackendAdminFeedback } from '../../../types/backend';
 
 const WORKFLOW_STATUSES = [
   'awaiting_dropoff',
@@ -63,6 +63,7 @@ const WORKFLOW_TRANSITIONS: Partial<Record<BookingStatus, BookingStatus[]>> = {
   ready_for_collection: ['completed'],
   completed: [],
   cancelled: [],
+  rejected: [],
 };
 
 const PHOTO_TYPE_OPTIONS: {
@@ -144,6 +145,10 @@ function getStatusHeroCopy(status: BookingStatus) {
       return 'Stringing is complete and ready for pickup handoff.';
     case 'completed':
       return 'Order is finished and handed over to the player.';
+    case 'cancelled':
+      return 'Booking was cancelled before the service journey finished.';
+    case 'rejected':
+      return 'The shop declined this booking; review the recorded reason.';
     default:
       return 'Review this booking and keep the workflow moving.';
   }
@@ -320,8 +325,7 @@ export default function AdminBookingDetailScreen() {
   const user = useCurrentUser();
   const bookings = useBookings();
   const strings = useStrings();
-  const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const booking = bookings.find((item) => item.id === params.id);
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
   const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
@@ -341,6 +345,7 @@ export default function AdminBookingDetailScreen() {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
   const [previewUpdate, setPreviewUpdate] = useState<BookingUpdate | null>(null);
+  const [feedback, setFeedback] = useState<BackendAdminFeedback | null>(null);
 
   useEffect(() => {
     if (booking) {
@@ -372,14 +377,7 @@ export default function AdminBookingDetailScreen() {
         if (cancelled) {
           return;
         }
-        const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-        const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId, user.id);
-        const currentBookings = useAppStore.getState().liveBookings;
-        setLiveBookings(
-          currentBookings.some((item) => item.id === mapped.id)
-            ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-            : [mapped, ...currentBookings],
-        );
+        upsertLiveBooking(mapBackendBookingToBooking(freshBooking, user.id));
       } catch (loadError) {
         console.warn('Failed to refresh live admin booking detail', loadError);
       }
@@ -390,7 +388,28 @@ export default function AdminBookingDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id, setLiveBookings, strings, token, user?.id, user?.role]);
+  }, [params.id, token, upsertLiveBooking, user?.id, user?.role]);
+
+  useEffect(() => {
+    if (!token || user?.role !== 'admin' || !params.id) return;
+    let cancelled = false;
+    void backendApi
+      .adminListFeedback(token, {
+        booking_id: params.id,
+        limit: 1,
+      })
+      .then((response) => {
+        if (!cancelled) {
+          setFeedback(response.items[0] ?? null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setFeedback(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id, token, user?.role]);
 
   const sortedUpdates = useMemo(
     () => [...(booking?.updates ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
@@ -398,7 +417,7 @@ export default function AdminBookingDetailScreen() {
   );
 
   const expectedCompletionDateOptions = useMemo(() => {
-    const options: Array<{ value: string; label: string }> = [];
+    const options: { value: string; label: string }[] = [];
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
@@ -437,8 +456,7 @@ export default function AdminBookingDetailScreen() {
     return null;
   }
 
-  const player = getUserById(booking.playerId) as PlayerProfile | undefined;
-  const stringItem = getStringById(booking.stringId);
+  const stringItem = strings.find((item) => item.id === booking.stringId);
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const priceState = getPriceStateLabel(booking);
   const workflowCTA = getWorkflowActionLabel(status);
@@ -507,9 +525,7 @@ export default function AdminBookingDetailScreen() {
     }
 
     if (!token || user?.role !== 'admin') {
-      updateBookingStatus(booking.id, status, {
-        expectedCompletionAt: expectedCompletion.value,
-      });
+      setError('Your admin session expired. Sign in again before updating the workflow.');
       return;
     }
 
@@ -521,11 +537,7 @@ export default function AdminBookingDetailScreen() {
           ? expectedCompletion.value
           : undefined,
       });
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
-      setLiveBookings(
-        bookings.map((item) => (item.id === mapped.id ? mapped : item)),
-      );
+      upsertLiveBooking(mapBackendBookingToBooking(updated, user.id));
     } catch (saveError) {
       const message = saveError instanceof BackendApiError
         ? saveError.message
@@ -629,11 +641,7 @@ export default function AdminBookingDetailScreen() {
         : await backendApi.adminAddBookingUpdate(token, booking.id, {
             comment: updateComment,
           });
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
-      setLiveBookings(
-        bookings.map((item) => (item.id === mapped.id ? mapped : item)),
-      );
+      upsertLiveBooking(mapBackendBookingToBooking(updated, user.id));
       setUpdateComment('');
       setUpdatePhoto(null);
       setUpdatePhotoType('racket');
@@ -750,6 +758,32 @@ export default function AdminBookingDetailScreen() {
       </AppSection>
 
       <AppSection
+        eyebrow="Feedback"
+        title={feedback ? `Player satisfaction ${feedback.rating}/5` : 'Feedback status'}
+        variant="compact"
+      >
+        <AppCard variant={feedback ? 'highlighted' : 'subtle'} padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-700">
+            {feedback
+              ? feedback.comment ??
+                feedback.string_feedback ??
+                feedback.service_feedback ??
+                'Structured ratings submitted without a written comment.'
+              : booking.status === 'completed'
+                ? 'Feedback is still pending for this completed booking.'
+                : 'Feedback becomes available after completion.'}
+          </HeroText>
+          {feedback ? (
+            <HeroText className="mt-2 text-xs text-neutral-500">
+              String {feedback.string_satisfaction ?? '—'}/5 • Tension{' '}
+              {feedback.tension_satisfaction ?? '—'}/5 • Control{' '}
+              {feedback.control ?? '—'}/5
+            </HeroText>
+          ) : null}
+        </AppCard>
+      </AppSection>
+
+      <AppSection
         eyebrow="Workflow"
         title="Service actions"
         subtitle="Move the booking through the shop workflow."
@@ -776,6 +810,7 @@ export default function AdminBookingDetailScreen() {
                         label={formatBookingStatus(item)}
                         variant={isCurrent || isSelected ? getBookingStatusVariant(item) : 'neutral'}
                         size="sm"
+                        style={{ pointerEvents: 'none' }}
                       />
                       {isCurrent ? <CheckCircle2 size={15} color="#2F64B6" /> : null}
                     </View>
@@ -911,12 +946,26 @@ export default function AdminBookingDetailScreen() {
         <AppCard variant="elevated" padding="md">
           <View className="gap-3.5">
             <SummaryRow label="Order ID" value={orderCode} />
-            <SummaryRow label="Player" value={player?.name ?? 'Walk-in player'} />
+            <SummaryRow
+              label="Player"
+              value={booking.customerName ?? 'Walk-in player'}
+            />
             <SummaryRow
               label="Contact"
-              value={player?.phone ?? player?.email ?? 'No contact provided'}
+              value={
+                booking.customerPhone
+                ?? 'No contact provided'
+              }
             />
             <SummaryRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
+            <SummaryRow
+              label="Service method"
+              value={
+                booking.serviceMethod === 'pickup_request'
+                  ? 'Pickup requested'
+                  : 'Counter drop-off'
+              }
+            />
             <SummaryRow
               label="String"
               value={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'String to confirm'}

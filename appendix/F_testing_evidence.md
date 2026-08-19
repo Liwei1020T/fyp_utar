@@ -1,6 +1,8 @@
 # Appendix F: Testing Evidence
 
-The backend test suite verifies core FYP1 flows using FastAPI `TestClient` and database fixtures.
+The backend test suite verifies the FYP1 core and the current persisted FYP2
+modules using FastAPI `TestClient`, database fixtures, and one optional real
+PostgreSQL concurrency test.
 
 Source files:
 
@@ -9,6 +11,11 @@ Source files:
 - `backend/tests/test_booking_policies.py`
 - `backend/tests/test_recommendation_matrix_import.py`
 - `backend/tests/test_sqlalchemy_repositories.py`
+- `backend/tests/test_booking_conversations.py`
+- `backend/tests/test_commerce_quote.py`
+- `backend/tests/test_notifications.py`
+- `backend/tests/test_rackets_feedback.py`
+- `backend/tests/test_store_analytics.py`
 
 ## Recommended Test Evidence Table
 
@@ -23,6 +30,12 @@ Source files:
 | Admin can persist catalog editor fields and string image | `test_admin_can_persist_catalog_editor_fields_and_string_image` | Product image upload and admin catalog editing. |
 | Booking policy validation | `test_booking_policies.py` | Invalid status transitions and terminal-status note rules. |
 | Recommendation matrix import | `test_recommendation_matrix_import.py` | Import of NLP/review feature matrix into backend feature store. |
+| Booking support lifecycle and authorization | `test_booking_conversations.py` | Thread ownership, admin role, messages, read state, resolve/close lifecycle, and closed-thread guards. |
+| Payment quote ownership | `test_commerce_quote.py` | Server-owned booking amount and active-ledger quote behavior. |
+| Notification ownership/preferences/read state | `test_notifications.py` | Owned event derivation, category filtering, persistent reads, and foreign-ID rejection. |
+| Racket Passport and feedback | `test_rackets_feedback.py` | Physical-racket ownership/snapshots plus one feedback record per completed owned booking. |
+| Persisted analytics | `test_store_analytics.py` | Payment-backed revenue/workload and store-local day boundaries. |
+| Notification and wallet payment flow | `test_notification_preferences_and_verified_wallet_payment_flow` | Admin verification, one-time wallet credit, balance-backed booking payment, and preference persistence. |
 
 ## Suggested Validation Commands
 
@@ -40,11 +53,15 @@ For mobile validation:
 cd mobile
 nvm use
 npx tsc --noEmit
+npm run lint -- --max-warnings=0
+npx expo export --platform web --output-dir /tmp/stringsense-web-export
 ```
 
 ## Report Notes
 
-- Testing evidence should focus on implemented FYP1 scope only.
-- Do not claim automated tests for FYP2 deferred features such as chat, wallet, payment, or notifications unless those features are explicitly tested and included in scope.
+- Label evidence as FYP1 or current FYP2 scope. Do not backdate current
+  chat/wallet/payment/notification tests as proof that those features belonged
+  to the original FYP1 deliverable.
 - If screenshots are used as UI evidence, pair them with at least one test table to show functional validation beyond visual output.
-
+- Current customer and administrator browser coverage is recorded in
+  `docs/customer-admin-acceptance-2026-07-24.md`.

@@ -29,7 +29,7 @@ class SqlAlchemyStoreRepository:
         assert record is not None
         record.days_json = days
         record.special_closed_dates = special_closed_dates
-        self.db.commit()
+        self.db.flush()
         self.db.refresh(record)
         return to_business_hours(record)
 
@@ -45,6 +45,6 @@ class SqlAlchemyStoreRepository:
         assert record is not None
         for field, value in values.items():
             setattr(record, field, value)
-        self.db.commit()
+        self.db.flush()
         self.db.refresh(record)
         return to_store_settings(record)

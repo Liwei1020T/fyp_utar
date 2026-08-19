@@ -11,26 +11,30 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 ## Project Context
 
 - Primary users: badminton players booking stringing services, and one shop admin managing operations.
-- Product shape: one codebase inside the unified StringSence workspace, two role-based experiences, premium mobile UI, with a hybrid data layer.
-- Current runtime split: FYP1 player/admin core flows may use the Python backend, while deferred FYP2 domains remain hidden, local, or mock-first.
+- Product shape: one codebase inside the unified StringSence workspace, two role-based experiences, premium mobile UI, with an API-only runtime data layer.
+- Current runtime: authenticated pages use the Python backend or backend-derived records across every route; there is no local mock session or seeded runtime fallback.
 - Non-goals: backend implementation, multi-store architecture, or inventing new tooling that does not exist in the repo.
 
 ## Canonical Commands
 
-- Required Node line: `20.x`
-- Pinned project version in `.nvmrc`: `20.19.0`
+- Required Node line: `24.x` LTS
+- Pinned project version in `.nvmrc`: `24.18.0`
 - Setup: `nvm use` then `npm install`
 - Run web: `npm run web`
 - Run iOS: `npm run ios`
 - Run Android: `npm run android`
+- Lint: `npm run lint -- --max-warnings=0`
 - Typecheck: `npx tsc --noEmit`
-  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `20.19.0`.
+- Focused tests: `npm test`
+  Prefer running this after `nvm use` so it uses the `.nvmrc`-pinned Node `24.18.0`.
 
 ## Validation Reality
 
-- There is no `npm run build`, `npm run lint`, or `npm test` script in this repo today. Do not invent them.
+- There is no `npm run build` script. Focused policy tests use Node's built-in test runner through `npm test`.
 - For UI or flow changes, use the smallest truthful validation available:
-  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `20.19.0` when possible
+  - `npm run lint -- --max-warnings=0`
+  - `npx tsc --noEmit` under the `.nvmrc`-pinned Node `24.18.0`
+  - `npm test` for pure session and contract policies
   - `npm run web` for runtime smoke validation
   - targeted manual route checks for touched flows
 - If a check cannot be run, mark it `unverified` and explain why.
@@ -38,27 +42,27 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 ## Architecture Map
 
 - App shell: `app/_layout.tsx`
-  Owns global providers, `global.css`, HeroUI Native, React Query, and the root Expo Router stack.
+  Owns global providers, `global.css`, HeroUI Native, native secure-session bootstrap, and the root Expo Router stack.
 - Root redirect: `app/index.tsx`
-  Sends users to `/auth/welcome`, `/player`, or `/admin` based on session state.
+  Sends unauthenticated users to `/auth/login` and authenticated users to `/player` or `/admin` based on session state.
 - Access control: `app/auth/_layout.tsx`, `app/player/_layout.tsx`, `app/admin/_layout.tsx`, `components/roles/RoleGuard.tsx`
   Auth screens reject logged-in users; player and admin route groups are role-guarded.
 - Player workspace: `app/player/(tabs)` plus detail flows under `app/player/**`
-  Covers the live FYP1 recommendation, catalog, booking, tracking, and profile flow. Payment, chat, wallet, rackets, notifications, QR check-in, and feedback route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
+  Covers recommendation, catalog, booking, tracking, profile, booking support, payment, wallet, racket history, notifications, check-in, and feedback.
 - Admin workspace: `app/admin/(tabs)` plus operations screens under `app/admin/**`
-  Covers the live FYP1 dashboard, bookings, recommendation run audit, inventory, business hours, check-in, and limited settings flow. Chat, analytics, payments, and service queue route files may remain for FYP2, but backend sessions redirect those deferred routes away from the live demo.
+  Covers dashboard, read-only operations-summary Admin AI, bookings, recommendation audit, inventory, business hours, check-in, support chat, analytics, payments, service queue, and settings.
 - UI system: `components/ui/**`, `components/shared/**`
   `AppScreen`, `AppSection`, `AppButton`, `AppCard`, `AppChip`, `AppInput`, `AppIconButton`, and `theme.ts` define the shared look and layout behavior.
 - Admin inventory components: `components/admin/inventory/**`
   Shared thumbnail cards and preview cards for the admin inventory workbench and detail editor live here.
 - State and mutation boundary: `store/appStore.ts`
-  Mutable runtime source of truth for session, bookings, payments, chat, notifications, wallet, rackets, admin settings, and drafts.
-- Read helpers: `services/mockAppService.ts`, `services/backendApi.ts`, `services/backendMappers.ts`
-  Mock lookups stay available, while the player core flow can map live backend data into the app domain.
+  In-memory source of truth for the authenticated session, API response snapshots, admin/store snapshots, compare selection, and booking drafts.
+- API and mapping helpers: `services/backendClient.ts`, `services/backendApi.ts`, `services/backendMappers.ts`
+  The client owns fetch, timeout, error, and 401 handling; the API facade owns endpoint calls; mappers translate live DTOs into the app domain. Missing sessions or failed API requests must fail closed.
+- Session storage: `services/backendSessionStorage.ts`
+  Native bearer tokens use Expo SecureStore. Web bearer tokens use current-tab session storage so refresh and deep links work without creating a long-lived browser login. Both are revalidated through `/auth/me`.
 - Data contracts: `types/domain.ts`
   Canonical shared domain model. For inventory work, treat `StringItem.catalog` as master string data and `StringItem.inventory` as vendor-specific shop data; legacy top-level fields remain compatibility mirrors for older screens.
-- Seed data: `mocks/**`
-  Mock datasets for all feature domains.
 - Deep-dive reference: `docs/frontend-architecture.md`
   Update this doc when major structure or data-flow assumptions change.
 
@@ -71,7 +75,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Admin core journey:
   auth -> operations dashboard -> counter check-in/bookings/inventory/recommendation runs -> booking, inventory, or recommendation detail -> operational updates
 - Shared state mutation hotspots:
-  `submitBookingPayment`, `updateBookingStatus`, `appendChatMessage`, `requestAdminSupport`, `topUpWallet`, `updateBusinessHours`, `updateStringItem`
+  `updateBusinessHours`, `updateStringItem`, `updateStoreSettings`, and the live-data snapshot setters
 
 ## Structure Rules
 
@@ -86,8 +90,8 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
    For inventory changes, preserve the separation between `catalog` master data and `inventory` shop data instead of flattening new admin logic into ad-hoc screen state.
 5. Keep mutable business behavior in the store, not scattered across screens.
    Screens may derive display state, but durable mutations should live in `store/appStore.ts`.
-6. Treat the player core flow as hybrid.
-   Player auth, profile, strings, recommendation, bookings, booking photos/comments, and FYP1 admin booking, recommendation audit, inventory, business-hours, and limited store-settings operations may use the live backend, while FYP2 player/admin domains stay mocked or hidden.
+6. Keep runtime data API-only.
+   Pages must use backend DTOs, persisted booking history, or persisted commerce records. Never add seeded records or local success fallbacks to runtime routes.
 
 ## Runtime and Styling Constraints
 
@@ -135,7 +139,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
   - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone
 - Start the sibling backend in `../backend` when testing live player flows
 - Create a player through `/auth/register` or use an existing local backend player account for the player flow
-- Use `+60190000000` / `admin1234` for the seeded backend admin flow when `SEED_ADMIN_ENABLED=true`
+- Never bundle or document fixed admin credentials in the app. Admin accounts must be configured explicitly with backend `SEED_ADMIN_*` environment values.
 
 ## Maintenance Rule
 

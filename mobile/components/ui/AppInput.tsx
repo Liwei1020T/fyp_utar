@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform, TextInput, type TextInputProps, View } from 'react-native';
-import { HeroText } from './heroui';
-import { cn } from './heroui';
+import { HeroText , cn } from './heroui';
 import { appChromeColors } from './theme';
 
 interface AppInputProps extends TextInputProps {
@@ -35,6 +34,12 @@ export function AppInput({
   const isMinimal = variant === 'minimal';
   const [isFocused, setIsFocused] = React.useState(false);
   const focusBorder = isFocused ? 'border-primary-600' : 'border-[#DCE6F7]';
+  const inputAccessibilityLabel = props.accessibilityLabel ?? label ?? props.placeholder;
+  const inputAccessibilityHint = props.accessibilityHint ?? error ?? helperText;
+  const inputAccessibilityState = {
+    ...props.accessibilityState,
+    disabled: isDisabled || props.editable === false || props.accessibilityState?.disabled,
+  };
   const webInputReset =
     Platform.OS === 'web'
       ? ({ outlineStyle: 'none', boxShadow: 'none', borderWidth: 0 } as any)
@@ -45,7 +50,7 @@ export function AppInput({
       <View className={cn('mb-4', className)}>
         <View
           className={cn(
-            'h-11 flex-row items-center gap-3 rounded-xl border bg-white px-4 shadow-sm',
+          'h-12 flex-row items-center gap-3 rounded-[14px] border bg-white px-4',
             error ? 'border-danger/30' : focusBorder,
             containerClassName,
             innerContainerClassName
@@ -54,6 +59,9 @@ export function AppInput({
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
           <TextInput
             {...props}
+            accessibilityHint={inputAccessibilityHint}
+            accessibilityLabel={inputAccessibilityLabel}
+            accessibilityState={inputAccessibilityState}
             className={cn(
               'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
               props.multiline ? 'min-h-24 py-3' : '',
@@ -87,14 +95,14 @@ export function AppInput({
       )}
       <View
         className={cn(
-          'rounded-xl border bg-white shadow-soft',
+          'rounded-[14px] border bg-white',
           error ? 'border-danger/30' : focusBorder,
           containerClassName
         )}
       >
         <View
           className={cn(
-            'min-h-[52px] flex-row items-center gap-3 rounded-xl px-4 py-1',
+            'min-h-[52px] flex-row items-center gap-3 rounded-[14px] px-4 py-1',
             error ? 'bg-danger/5' : 'bg-field-background',
             innerContainerClassName
           )}
@@ -102,6 +110,9 @@ export function AppInput({
           {leftAdornment ? <View className="shrink-0">{leftAdornment}</View> : null}
           <TextInput
             {...props}
+            accessibilityHint={inputAccessibilityHint}
+            accessibilityLabel={inputAccessibilityLabel}
+            accessibilityState={inputAccessibilityState}
             className={cn(
               'h-full flex-1 border-0 bg-transparent px-0 text-base text-foreground',
               props.multiline ? 'min-h-24 py-3' : '',
@@ -125,6 +136,7 @@ export function AppInput({
       </View>
       {(error || helperText) && (
         <HeroText
+          accessibilityLiveRegion={error ? 'polite' : 'none'}
           className={cn(
             'mt-2 ml-1 text-xs leading-5',
             error ? 'text-danger' : 'text-muted'

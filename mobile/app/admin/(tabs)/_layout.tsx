@@ -2,9 +2,8 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarChart3, Boxes, CalendarRange, LayoutDashboard, MessageCircleMore } from 'lucide-react-native';
-import { View } from 'react-native';
-import { HeroText, cn } from '../../../components/ui/heroui';
-import { appChromeColors, appLayoutMetrics } from '../../../components/ui/theme';
+import { Platform, View } from 'react-native';
+import { appChromeColors } from '../../../components/ui/theme';
 
 function AdminTabIcon({
   icon: Icon,
@@ -18,12 +17,7 @@ function AdminTabIcon({
   focused: boolean;
 }) {
   return (
-    <View
-      className={cn(
-        'h-10 w-10 items-center justify-center rounded-lg',
-        focused ? 'bg-secondary-50' : 'bg-transparent'
-      )}
-    >
+    <View className="h-8 w-8 items-center justify-center">
       <Icon size={size} color={color} strokeWidth={focused ? 2.1 : 1.9} />
     </View>
   );
@@ -31,39 +25,52 @@ function AdminTabIcon({
 
 export default function AdminTabsLayout() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 68 + Math.max(insets.bottom, 10);
+  const bottomSpacing = Math.max(insets.bottom, 10);
+  const tabBarHeight = 66 + bottomSpacing;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: appChromeColors.pageAdmin },
+        sceneStyle: {
+          backgroundColor: appChromeColors.pageAdmin,
+        },
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: appChromeColors.primary,
-        tabBarInactiveTintColor: appChromeColors.inactive,
+        tabBarActiveTintColor: appChromeColors.heroDeep,
+        tabBarInactiveTintColor: '#C7D1E0',
+        tabBarActiveBackgroundColor: appChromeColors.tabBarActive,
         tabBarStyle: {
           backgroundColor: appChromeColors.tabBar,
-          borderWidth: 1,
-          borderColor: appChromeColors.tabBarBorder,
+          borderTopWidth: 0,
           height: tabBarHeight,
-          paddingBottom: Math.max(insets.bottom, 10),
-          paddingTop: 10,
-          position: 'absolute',
-          left: appLayoutMetrics.pagePadding,
-          right: appLayoutMetrics.pagePadding,
-          bottom: Math.max(insets.bottom, 10),
-          borderRadius: 8,
-          shadowColor: '#14181F',
-          shadowOpacity: 0.08,
-          shadowOffset: { width: 0, height: 10 },
-          shadowRadius: 20,
-          elevation: 10,
+          paddingBottom: bottomSpacing,
+          paddingTop: 8,
+          paddingHorizontal: 2,
+          marginHorizontal: 12,
+          marginBottom: bottomSpacing,
+          borderRadius: 22,
+          ...(Platform.OS === 'web'
+            ? { boxShadow: '0 14px 32px rgba(9, 29, 62, 0.22)' }
+            : {
+                shadowColor: '#091D3E',
+                shadowOpacity: 0.2,
+                shadowOffset: { width: 0, height: 10 },
+                shadowRadius: 20,
+                elevation: 12,
+              }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '700',
-          marginTop: 2,
+          fontWeight: '600',
+          marginTop: 0,
+        },
+        tabBarItemStyle: {
+          minHeight: 48,
+          marginHorizontal: 0,
+          marginVertical: 1,
+          borderRadius: 15,
+          overflow: 'hidden',
         },
       }}
     >
@@ -97,7 +104,6 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          href: null,
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
             <AdminTabIcon icon={MessageCircleMore} color={color} size={size} focused={focused} />
@@ -107,7 +113,6 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="analytics"
         options={{
-          href: null,
           title: 'Analytics',
           tabBarIcon: ({ color, size, focused }) => (
             <AdminTabIcon icon={BarChart3} color={color} size={size} focused={focused} />

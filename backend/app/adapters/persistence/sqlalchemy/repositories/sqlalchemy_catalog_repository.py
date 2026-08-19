@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Collection
 from collections.abc import Mapping
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any
 from typing import cast
 
@@ -29,7 +31,6 @@ from app.adapters.persistence.sqlalchemy.repositories.mappers import (
     to_recommendation_matrix_entry,
 )
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
-from app.config.settings import get_settings
 from app.domain.catalog.entities import InventoryMovementRecord
 from app.domain.catalog.entities import RecommendationMatrixImportReport
 from app.domain.catalog.entities import RecommendationMatrixInspectionRecord
@@ -44,11 +45,20 @@ from app.shared.pagination import Page
 
 
 class SqlAlchemyCatalogRepository:
-    def __init__(self, db: Session) -> None:
+    def __init__(
+        self,
+        db: Session,
+        approved_catalog_ids: Collection[str] | None = None,
+    ) -> None:
         self.db = db
+        self.approved_catalog_ids = (
+            frozenset(approved_catalog_ids)
+            if approved_catalog_ids is not None
+            else None
+        )
 
     def _base_query(self):
-        return select(StringCatalogItem).options(
+        query = select(StringCatalogItem).options(
             selectinload(StringCatalogItem.brand_ref),
             selectinload(StringCatalogItem.metrics),
             selectinload(StringCatalogItem.tags),
@@ -60,6 +70,11 @@ class SqlAlchemyCatalogRepository:
                 StringRecommendationMatrix.feature_definition
             ),
         )
+        if self.approved_catalog_ids is not None:
+            query = query.where(
+                StringCatalogItem.catalog_id.in_(self.approved_catalog_ids)
+            )
+        return query
 
     def _apply_string_filters(
         self,
@@ -74,6 +89,10 @@ class SqlAlchemyCatalogRepository:
         is_hybrid: bool | None = None,
         search: str | None = None,
     ):
+        if self.approved_catalog_ids is not None:
+            count_query = count_query.where(
+                StringCatalogItem.catalog_id.in_(self.approved_catalog_ids)
+            )
         if is_active is True:
             query = query.join(StringCatalogItem.inventory_item).where(
                 and_(
@@ -322,19 +341,20 @@ class SqlAlchemyCatalogRepository:
             for entry in matrix_values
         ]
         self.db.add(item)
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(item.catalog_id, include_inactive=True)  # type: ignore[return-value]
 
     def update(self, string_id: str, values: dict[str, object]) -> StringItem:
         item = self.db.get(StringCatalogItem, string_id)
         assert item is not None
-        for field, value in self._mapping(values["catalog"]).items():
-            setattr(item, field, value)
+        self._apply_catalog_values(
+            item,
+            self._mapping(values.get("catalog") or {}),
+        )
         inventory_values = self._mapping(values.get("inventory") or {})
-        if inventory_values and item.inventory_item is not None:
-            for field, value in inventory_values.items():
-                setattr(item.inventory_item, field, value)
-        self.db.commit()
+        if inventory_values:
+            self._apply_inventory_values(item, inventory_values)
+        self.db.flush()
         return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     def deactivate(self, string_id: str) -> StringItem:
@@ -343,14 +363,36 @@ class SqlAlchemyCatalogRepository:
         item.is_active = False
         if item.inventory_item is not None:
             item.inventory_item.is_active = False
-        self.db.commit()
+        self.db.flush()
         return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     def update_inventory(self, string_id: str, values: dict[str, object]) -> StringItem:
         item = self.db.get(StringCatalogItem, string_id)
         assert item is not None
-        inventory = item.inventory_item
-        assert inventory is not None
+        self._apply_inventory_values(item, values)
+        self.db.flush()
+        return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
+
+    @staticmethod
+    def _apply_catalog_values(
+        item: StringCatalogItem,
+        values: Mapping[str, object],
+    ) -> None:
+        for field, value in values.items():
+            setattr(item, field, value)
+
+    def _apply_inventory_values(
+        self,
+        item: StringCatalogItem,
+        values: Mapping[str, object],
+    ) -> None:
+        inventory = self.db.execute(
+            select(StringInventoryItem)
+            .where(StringInventoryItem.catalog_id == item.catalog_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        ).scalar_one()
+        previous_available_stock = inventory.available_stock
 
         if "price_rm" in values:
             inventory.selling_price = cast(float | None, values["price_rm"])
@@ -368,7 +410,6 @@ class SqlAlchemyCatalogRepository:
             inventory.reorder_quantity = int(cast(int, values["reorder_quantity"]))
         if "is_active" in values:
             inventory.is_active = bool(values["is_active"])
-            item.is_active = bool(values["is_active"])
 
         current_stock = inventory.current_stock
         reserved_stock = inventory.reserved_stock
@@ -410,17 +451,13 @@ class SqlAlchemyCatalogRepository:
 
         note = values.get("admin_note")
         movement_type = values.get("movement_type") or "ADJUSTMENT"
-        has_stock_change = (
-            "stock_level" in values
-            or "current_stock" in values
-            or "reserved_stock" in values
-        )
-        if note is not None or has_stock_change:
+        available_stock_delta = inventory.available_stock - previous_available_stock
+        if note is not None or available_stock_delta != 0:
             self.db.add(
                 InventoryMovement(
                     inventory_id=inventory.inventory_id,
                     movement_type=str(movement_type),
-                    quantity=inventory.available_stock,
+                    quantity=available_stock_delta,
                     reference_type=values.get("reference_type"),
                     reference_id=values.get("reference_id"),
                     note=str(note).strip()
@@ -429,13 +466,15 @@ class SqlAlchemyCatalogRepository:
                 )
             )
 
-        self.db.commit()
-        return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
-
     def get_official_performance(
         self,
         string_id: str,
     ) -> OfficialPerformanceRecord | None:
+        if (
+            self.approved_catalog_ids is not None
+            and string_id not in self.approved_catalog_ids
+        ):
+            return None
         item = self.db.get(StringOfficialPerformance, string_id)
         return to_official_performance(item)
 
@@ -446,16 +485,46 @@ class SqlAlchemyCatalogRepository:
     ) -> OfficialPerformanceRecord:
         item = self.db.get(StringOfficialPerformance, string_id)
         assert item is not None
-        for field, value in values.items():
-            setattr(item, field, value)
-        parent = self.db.get(StringCatalogItem, string_id)
-        assert parent is not None
-        if "status" in values:
-            parent.official_performance_status = str(values["status"])
-        self.db.commit()
+        self._apply_official_performance_values(item, values)
+        self.db.flush()
         refreshed = self.db.get(StringOfficialPerformance, string_id)
         assert refreshed is not None
         return to_official_performance(refreshed)  # type: ignore[return-value]
+
+    def _apply_official_performance_values(
+        self,
+        item: StringOfficialPerformance,
+        values: Mapping[str, object],
+    ) -> None:
+        for field, value in values.items():
+            setattr(item, field, value)
+        parent = item.catalog_item
+        assert parent is not None
+        if "status" in values:
+            parent.official_performance_status = str(values["status"])
+
+    def update_editor(
+        self,
+        string_id: str,
+        *,
+        catalog_values: dict[str, object],
+        inventory_values: dict[str, object],
+        official_performance_values: dict[str, object],
+    ) -> StringItem:
+        item = self.db.get(StringCatalogItem, string_id)
+        assert item is not None
+        self._apply_catalog_values(item, catalog_values)
+        if inventory_values:
+            self._apply_inventory_values(item, inventory_values)
+        if official_performance_values:
+            official = item.official_performance
+            assert official is not None
+            self._apply_official_performance_values(
+                official,
+                official_performance_values,
+            )
+        self.db.flush()
+        return self.get_by_id(string_id, include_inactive=True)  # type: ignore[return-value]
 
     def list_inventory_movements(
         self,
@@ -464,6 +533,11 @@ class SqlAlchemyCatalogRepository:
         limit: int | None,
         offset: int,
     ) -> Page[InventoryMovementRecord]:
+        if (
+            self.approved_catalog_ids is not None
+            and string_id not in self.approved_catalog_ids
+        ):
+            return Page(items=[], total=0, limit=limit, offset=offset)
         inventory = self.db.execute(
             select(StringInventoryItem).where(
                 StringInventoryItem.catalog_id == string_id
@@ -530,12 +604,15 @@ class SqlAlchemyCatalogRepository:
             ],
         )
 
-    def import_recommendation_matrix(self) -> RecommendationMatrixImportReport:
+    def import_recommendation_matrix(
+        self,
+        source_path: Path,
+    ) -> RecommendationMatrixImportReport:
         report = import_recommendation_matrix_csv(
             self.db,
-            get_settings().recommendation_matrix_path,
+            source_path,
         )
-        self.db.commit()
+        self.db.flush()
         return report
 
     def list_active_catalog(self) -> list[StringItem]:

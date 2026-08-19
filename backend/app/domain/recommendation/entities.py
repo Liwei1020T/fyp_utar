@@ -13,10 +13,11 @@ class RecommendationRequestModel:
     user_id: str | None
     skill_level: str
     playing_style: str
-    budget_tier: str
     preferred_tension: float
-    game_type: str
     frequency_per_week: int
+    preferred_feel: str
+    preferred_gauge: str
+    recent_goal: str
     pref_attack: int
     pref_comfort: int
     pref_control: int
@@ -49,6 +50,7 @@ class RecommendationResultModel:
 class RecommendationResponseModel:
     algorithm_version: str
     results: list[RecommendationResultModel]
+    run_id: str | None = None
     generated_at: datetime | None = None
 
 
@@ -56,6 +58,7 @@ class RecommendationResponseModel:
 class RecommendationDetailModel:
     algorithm_version: str
     result: RecommendationResultModel
+    run_id: str | None = None
     generated_at: datetime | None = None
 
 
@@ -74,12 +77,8 @@ class UserPreferenceVectorEntry:
 @dataclass(frozen=True)
 class RecommendationFeatureSignalModel:
     normalized_score: float
-    confidence: float | None = None
     raw_value: float | None = None
     evidence_note: str | None = None
-    source_ref: str | None = None
-    source_version: str | None = None
-    review_count_snapshot: int | None = None
 
 
 @dataclass(frozen=True)
@@ -92,20 +91,78 @@ class RecommendationCandidateModel:
 
 
 @dataclass(frozen=True)
+class RacketRecommendationContext:
+    racket_id: str
+    brand: str
+    model: str
+    model_key: str | None
+    target_tension: float
+
+
+@dataclass(frozen=True)
+class CommunityFeedbackRow:
+    feedback_id: str
+    user_id: str
+    catalog_id: str
+    racket_model_key: str | None
+    ratings: Mapping[str, int | None]
+    confirmed_at: Mapping[str, str]
+    durability_rated_at: datetime | None
+    completed_at: datetime | None
+
+
+@dataclass(frozen=True)
+class CommunityFeatureAggregate:
+    normalized_score: float
+    distinct_users: int
+    booking_count: int
+    confidence: float
+    weight: float
+    evidence_scope: str
+    racket_model_key: str | None
+    source_version: str
+
+
+@dataclass(frozen=True)
+class CommunitySnapshot:
+    by_catalog: Mapping[str, Mapping[str, CommunityFeatureAggregate]]
+    snapshot_version: str
+
+
+@dataclass(frozen=True)
+class RecommendationInteraction:
+    booking_id: str
+    user_id: str
+    catalog_id: str
+    racket_id: str | None
+    racket_model_key: str
+    requested_tension: float | None
+    completed_at: datetime
+    preference_vector: tuple[int | None, ...]
+
+
+@dataclass(frozen=True)
+class CollaborativeEvidence:
+    score_by_catalog: Mapping[str, float]
+    supporting_users_by_catalog: Mapping[str, int]
+    source_version: str
+    eligible_interaction_count: int
+    eligible_peer_count: int
+    fallback_reason: str | None
+
+
+@dataclass(frozen=True)
 class CachedRecommendationRecord:
     user_id: str
     catalog_id: str
     algorithm_version: str
     preference_match_score: float | None
     rule_fit_score: float | None
-    budget_fit_score: float | None
-    confidence_score: float | None
+    value_for_money_score: float | None
     nlp_review_score: float | None
     final_score: float
     rank_position: int
     rationale: dict[str, Any]
-    matrix_version: str | None
-    feature_source_version: str | None
     generated_at: datetime | None
 
 
@@ -129,8 +186,7 @@ class RecommendationRunItemRecord:
     final_score: float
     preference_match_score: float | None
     rule_fit_score: float | None
-    budget_fit_score: float | None
-    confidence_score: float | None
+    value_for_money_score: float | None
     nlp_review_score: float | None
     score_breakdown: dict[str, Any]
     rationale: dict[str, Any]
@@ -143,8 +199,6 @@ class RecommendationRunRecord:
     phone_number: str | None
     username: str | None
     algorithm_version: str
-    matrix_version: str | None
-    feature_source_version: str | None
     request_snapshot: dict[str, Any]
     profile_snapshot: dict[str, Any]
     generated_at: datetime | None

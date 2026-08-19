@@ -18,6 +18,7 @@ class JwtTokenService:
         subject: str,
         role: str,
         phone_number: str,
+        auth_version: int,
     ) -> str:
         settings = get_settings()
         now = datetime.now(timezone.utc)
@@ -25,6 +26,7 @@ class JwtTokenService:
             "sub": subject,
             "role": role,
             "phone_number": phone_number,
+            "auth_version": auth_version,
             "type": "access",
             "iss": settings.jwt_issuer,
             "iat": now,
@@ -54,8 +56,14 @@ class JwtTokenService:
         subject = payload.get("sub")
         role = payload.get("role")
         phone_number = payload.get("phone_number")
-        if not all(
-            isinstance(value, str) and value for value in (subject, role, phone_number)
+        auth_version = payload.get("auth_version")
+        if (
+            not all(
+                isinstance(value, str) and value
+                for value in (subject, role, phone_number)
+            )
+            or type(auth_version) is not int
+            or auth_version < 0
         ):
             return None
         assert isinstance(subject, str)
@@ -66,4 +74,5 @@ class JwtTokenService:
             user_id=subject,
             role=role,
             phone_number=phone_number,
+            auth_version=auth_version,
         )

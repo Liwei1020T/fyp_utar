@@ -6,6 +6,7 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import approved_catalog_ids
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_booking_repository import (
     SqlAlchemyBookingRepository,
 )
@@ -31,16 +32,12 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_user_repository
     SqlAlchemyUserRepository,
 )
 from app.adapters.persistence.sqlalchemy.session import get_db
-from app.adapters.services.ai.rag_adapter import RagAdapter
-from app.adapters.services.ai.recommendation_engine_adapter import (
-    RecommendationEngineAdapter,
-)
-from app.adapters.services.ai.review_analysis_adapter import ReviewAnalysisAdapter
 from app.adapters.services.security.jwt_token_service import JwtTokenService
 from app.adapters.services.security.pbkdf2_password_hasher import (
     Pbkdf2PasswordHasher,
 )
 from app.adapters.services.system_clock import SystemClock
+from app.config.settings import get_settings
 from app.domain.auth.entities import UserRole
 from app.shared.errors import ForbiddenError
 from app.shared.errors import UnauthorizedError
@@ -58,9 +55,6 @@ security = HTTPBearer(auto_error=False)
 _password_hasher = Pbkdf2PasswordHasher()
 _token_service = JwtTokenService()
 _clock = SystemClock()
-_recommendation_engine = RecommendationEngineAdapter()
-_review_analysis_service = ReviewAnalysisAdapter()
-_rag_service = RagAdapter()
 
 
 def get_password_hasher() -> Pbkdf2PasswordHasher:
@@ -75,60 +69,58 @@ def get_clock() -> SystemClock:
     return _clock
 
 
-def get_recommendation_engine() -> RecommendationEngineAdapter:
-    return _recommendation_engine
-
-
-def get_review_analysis_service() -> ReviewAnalysisAdapter:
-    return _review_analysis_service
-
-
-def get_rag_service() -> RagAdapter:
-    return _rag_service
-
-
-def get_user_repository(db: Session = Depends(get_db)) -> SqlAlchemyUserRepository:
+def get_user_repository(
+    db: Session = Depends(get_db, scope="function"),
+) -> SqlAlchemyUserRepository:
     return SqlAlchemyUserRepository(db)
 
 
 def get_password_reset_repository(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyPasswordResetRepository:
     return SqlAlchemyPasswordResetRepository(db)
 
 
 def get_profile_repository(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyProfileRepository:
     return SqlAlchemyProfileRepository(db)
 
 
 def get_catalog_repository(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyCatalogRepository:
-    return SqlAlchemyCatalogRepository(db)
+    return SqlAlchemyCatalogRepository(
+        db,
+        approved_catalog_ids(get_settings().approved_string_cohort_path),
+    )
 
 
 def get_booking_repository(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyBookingRepository:
     return SqlAlchemyBookingRepository(db)
 
 
-def get_store_repository(db: Session = Depends(get_db)) -> SqlAlchemyStoreRepository:
+def get_store_repository(
+    db: Session = Depends(get_db, scope="function"),
+) -> SqlAlchemyStoreRepository:
     return SqlAlchemyStoreRepository(db)
 
 
 def get_recommendation_log_repository(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyRecommendationLogRepository:
     return SqlAlchemyRecommendationLogRepository(db)
 
 
 def get_recommendation_repository(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
 ) -> SqlAlchemyRecommendationRepository:
-    return SqlAlchemyRecommendationRepository(db)
+    return SqlAlchemyRecommendationRepository(
+        db,
+        approved_catalog_ids(get_settings().approved_string_cohort_path),
+    )
 
 
 def get_current_user(
@@ -146,7 +138,11 @@ def get_current_user(
         raise UnauthorizedError("Invalid access token")
     if not user.is_active:
         raise UnauthorizedError("Invalid access token")
-    if user.role != payload.role or user.phone_number != payload.phone_number:
+    if (
+        user.role != payload.role
+        or user.phone_number != payload.phone_number
+        or user.auth_version != payload.auth_version
+    ):
         raise UnauthorizedError("Invalid access token")
     return CurrentUser(
         sub=user.id,
@@ -164,7 +160,7 @@ def require_roles(user: CurrentUser, *roles: UserRole) -> CurrentUser:
 
 
 def get_current_customer(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-    return require_roles(user, UserRole.CUSTOMER, UserRole.ADMIN)
+    return require_roles(user, UserRole.CUSTOMER)
 
 
 def get_current_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:

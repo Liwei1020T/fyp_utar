@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+from datetime import time
 from typing import Literal
 
 from pydantic import BaseModel
@@ -13,6 +15,7 @@ from app.domain.store.entities import PopularString
 from app.domain.store.entities import StoreBusinessHoursRecord
 from app.domain.store.entities import StoreSettingsRecord
 from app.shared.constants import STORE_ID
+from app.shared.upload_storage import build_signed_media_url
 
 
 class BusinessHoursDayPayload(BaseModel):
@@ -37,10 +40,22 @@ class BusinessHoursDayPayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_day_window(self) -> "BusinessHoursDayPayload":
-        if self.open_time >= self.close_time:
+        try:
+            open_time = time.fromisoformat(self.open_time)
+            close_time = time.fromisoformat(self.close_time)
+            break_start = (
+                time.fromisoformat(self.break_start) if self.break_start else None
+            )
+            break_end = time.fromisoformat(self.break_end) if self.break_end else None
+        except ValueError as error:
+            raise ValueError("Business hours must use valid 24-hour times") from error
+        if open_time >= close_time:
             raise ValueError("open_time must be earlier than close_time")
-        if self.break_start and self.break_end and self.break_start >= self.break_end:
-            raise ValueError("break_start must be earlier than break_end")
+        if (break_start is None) != (break_end is None):
+            raise ValueError("break_start and break_end must be provided together")
+        if break_start is not None and break_end is not None:
+            if not open_time < break_start < break_end < close_time:
+                raise ValueError("Break must be fully inside the opening window")
         return self
 
 
@@ -52,8 +67,28 @@ class StoreBusinessHoursPayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_unique_days(self) -> "StoreBusinessHoursPayload":
-        if len({day.day for day in self.days}) != len(self.days):
+        weekdays = {
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        }
+        submitted_days = {day.day for day in self.days}
+        if len(submitted_days) != len(self.days):
             raise ValueError("Each weekday may only appear once")
+        if submitted_days != weekdays:
+            raise ValueError("Business hours must include all seven weekdays")
+        try:
+            parsed_closed_dates = [
+                date.fromisoformat(value) for value in self.special_closed_dates
+            ]
+        except ValueError as error:
+            raise ValueError("special_closed_dates must use YYYY-MM-DD") from error
+        if len(set(parsed_closed_dates)) != len(parsed_closed_dates):
+            raise ValueError("special_closed_dates must not contain duplicates")
         return self
 
 
@@ -74,7 +109,7 @@ class BookingSlotOut(BaseModel):
 
 
 class CheckInLookupOut(BaseModel):
-    matched_by: Literal["booking_id", "check_in_reference"]
+    matched_by: Literal["booking_id", "check_in_reference", "qr_token"]
     booking: dict[str, object]
 
 
@@ -90,6 +125,13 @@ class CheckInPayload(BaseModel):
         if bool(self.booking_id) == bool(self.reference):
             raise ValueError("Provide exactly one of booking_id or reference")
         return self
+
+
+class SecureCheckInPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    token: str = Field(min_length=16, max_length=255)
+    note: str | None = Field(default=None, max_length=500)
 
 
 class ServiceQueueItemOut(BaseModel):
@@ -119,6 +161,8 @@ class StoreSettingsPayload(BaseModel):
     store_policy_text: str = Field(min_length=1, max_length=2000)
     address: str = Field(min_length=1, max_length=500)
     trending_string_ids: list[str] = Field(default_factory=list, max_length=5)
+    default_service_price: float = Field(default=0, ge=0, le=1000)
+    notification_settings: dict[str, object] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_trending_string_ids(self) -> "StoreSettingsPayload":
@@ -133,6 +177,7 @@ class StoreSettingsPayload(BaseModel):
 
 class StoreSettingsOut(StoreSettingsPayload):
     id: str = STORE_ID
+    payment_qr_url: str | None = None
     updated_at: str | None = None
 
 
@@ -143,6 +188,7 @@ class AnalyticsWorkloadEntryOut(BaseModel):
 
 class AnalyticsSummaryOut(BaseModel):
     weekly_bookings: int
+    today_bookings: int
     pending_payment_count: int
     awaiting_dropoff_count: int
     in_progress_count: int
@@ -151,6 +197,11 @@ class AnalyticsSummaryOut(BaseModel):
     low_stock_count: int
     unread_chats: int
     today_revenue: float
+    repeat_customer_count: int
+    pending_feedback_count: int
+    average_feedback_score: float | None
+    average_completion_hours: float | None
+    tension_distribution: dict[str, int]
     busy_slots: list[str]
     popular_string_ids: list[str]
     workload_mix: list[AnalyticsWorkloadEntryOut]
@@ -181,10 +232,17 @@ def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
         store_contact=settings.store_contact,
         support_text=settings.support_text,
         payment_notes=settings.payment_notes,
+        payment_qr_url=(
+            build_signed_media_url(settings.payment_qr_path)
+            if settings.payment_qr_path
+            else None
+        ),
         booking_notes=settings.booking_notes,
         store_policy_text=settings.store_policy_text,
         address=settings.address,
         trending_string_ids=settings.trending_string_ids,
+        default_service_price=settings.default_service_price,
+        notification_settings=settings.notification_settings,
         updated_at=settings.updated_at,
     )
 
@@ -196,6 +254,7 @@ def slot_to_dto(slot: BookingSlot) -> BookingSlotOut:
 def analytics_summary_to_dto(summary: AnalyticsSummary) -> AnalyticsSummaryOut:
     return AnalyticsSummaryOut(
         weekly_bookings=summary.weekly_bookings,
+        today_bookings=summary.today_bookings,
         pending_payment_count=summary.pending_payment_count,
         awaiting_dropoff_count=summary.awaiting_dropoff_count,
         in_progress_count=summary.in_progress_count,
@@ -204,6 +263,11 @@ def analytics_summary_to_dto(summary: AnalyticsSummary) -> AnalyticsSummaryOut:
         low_stock_count=summary.low_stock_count,
         unread_chats=summary.unread_chats,
         today_revenue=summary.today_revenue,
+        repeat_customer_count=summary.repeat_customer_count,
+        pending_feedback_count=summary.pending_feedback_count,
+        average_feedback_score=summary.average_feedback_score,
+        average_completion_hours=summary.average_completion_hours,
+        tension_distribution=summary.tension_distribution,
         busy_slots=summary.busy_slots,
         popular_string_ids=summary.popular_string_ids,
         workload_mix=[

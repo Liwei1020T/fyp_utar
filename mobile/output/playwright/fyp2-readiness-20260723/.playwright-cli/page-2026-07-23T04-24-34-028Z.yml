@@ -1,0 +1,133 @@
+- generic [ref=e828]:
+  - generic [ref=e831]:
+    - button "Go back" [ref=e832] [cursor=pointer]
+    - generic [ref=e835]:
+      - generic [ref=e836]: Booking ORD-2AD07
+      - generic [ref=e837]: Update service status and admin notes.
+  - generic [ref=e840]:
+    - generic [ref=e846]:
+      - generic [ref=e847]:
+        - generic [ref=e848]:
+          - generic [ref=e849]: Current status
+          - generic [ref=e850] [cursor=pointer]: Awaiting Dropoff
+        - generic [ref=e852]: Awaiting Dropoff
+        - generic [ref=e853]: Waiting for counter check-in before stringing starts.
+      - generic [ref=e854]:
+        - generic [ref=e855]: "Drop-off: 2026-07-24 · 12:00"
+        - generic [ref=e861]: Yonex Astrox 88D Pro
+        - generic [ref=e867]: Li-Ning N63 · 22 lbs
+        - generic [ref=e872]: RM 48.00
+        - generic [ref=e877]: "Expected completion: Not set"
+    - generic [ref=e883]:
+      - generic [ref=e885]:
+        - generic [ref=e886]: Workflow
+        - generic [ref=e887]: Service actions
+        - generic [ref=e888]: Move the booking through the shop workflow.
+      - generic [ref=e890]:
+        - generic [ref=e891]:
+          - generic [ref=e895]:
+            - generic [ref=e896]: Awaiting Dropoff
+            - generic [ref=e901]: Current workflow state
+          - button "In Progress Tap to select" [ref=e904] [cursor=pointer]:
+            - generic [ref=e905]:
+              - generic [ref=e906]: In Progress
+              - generic [ref=e909]: Tap to select
+          - generic [ref=e913]:
+            - generic [ref=e914]: Ready For Collection
+            - generic [ref=e917]: Complete the previous step first
+          - generic [ref=e921]:
+            - generic [ref=e922]: Completed
+            - generic [ref=e925]: Complete the previous step first
+        - generic [ref=e926]:
+          - generic [ref=e927]: Expected completion
+          - generic [ref=e928]: Set when the racket should be ready for collection.
+          - generic [ref=e929]:
+            - button "Date" [ref=e930] [cursor=pointer]:
+              - generic [ref=e932]:
+                - generic [ref=e933]: Date
+                - generic [ref=e934]: Sat, 25 Jul
+            - button "Time" [ref=e937] [cursor=pointer]:
+              - generic [ref=e939]:
+                - generic [ref=e940]: Time
+                - generic [ref=e941]: Select time
+          - generic [ref=e1067]:
+            - button "10:00" [ref=e1068] [cursor=pointer]
+            - button "10:30" [ref=e1070] [cursor=pointer]
+            - button "11:00" [ref=e1072] [cursor=pointer]
+            - button "11:30" [ref=e1074] [cursor=pointer]
+            - button "12:00" [ref=e1076] [cursor=pointer]
+            - button "12:30" [ref=e1078] [cursor=pointer]
+            - button "13:00" [ref=e1080] [cursor=pointer]
+            - button "13:30" [ref=e1082] [cursor=pointer]
+            - button "14:00" [ref=e1084] [cursor=pointer]
+            - button "14:30" [ref=e1086] [cursor=pointer]
+            - button "15:00" [ref=e1088] [cursor=pointer]
+            - button "15:30" [ref=e1090] [cursor=pointer]
+            - button "16:00" [ref=e1092] [cursor=pointer]
+            - button "16:30" [ref=e1094] [cursor=pointer]
+            - button "17:00" [ref=e1096] [cursor=pointer]
+            - button "17:30" [ref=e1098] [cursor=pointer]
+            - button "18:00" [ref=e1100] [cursor=pointer]
+            - button "18:30" [ref=e1102] [cursor=pointer]
+            - button "19:00" [ref=e1104] [cursor=pointer]
+            - button "19:30" [ref=e1106] [cursor=pointer]
+            - button "20:00" [ref=e1108] [cursor=pointer]
+            - button "20:30" [ref=e1110] [cursor=pointer]
+            - button "21:00" [ref=e1112] [cursor=pointer]
+          - button "Clear expected completion" [ref=e1115] [cursor=pointer]
+        - button "Save expected completion" [ref=e1117] [cursor=pointer]
+    - generic [ref=e946]:
+      - generic [ref=e948]:
+        - generic [ref=e949]: Booking summary
+        - generic [ref=e950]: Counter-ready details
+        - generic [ref=e951]: Everything staff need at a glance.
+      - generic [ref=e956]:
+        - generic [ref=e957]:
+          - generic [ref=e958]: Order ID
+          - generic [ref=e959]: ORD-2AD07
+        - generic [ref=e960]:
+          - generic [ref=e961]: Player
+          - generic [ref=e962]: Aiman Faris
+        - generic [ref=e963]:
+          - generic [ref=e964]: Contact
+          - generic [ref=e965]: "+60123456789"
+        - generic [ref=e966]:
+          - generic [ref=e967]: Racket
+          - generic [ref=e968]: Yonex Astrox 88D Pro
+        - generic [ref=e969]:
+          - generic [ref=e970]: String
+          - generic [ref=e971]: Li-Ning N63
+        - generic [ref=e972]:
+          - generic [ref=e973]: Tension
+          - generic [ref=e974]: 22 lbs
+        - generic [ref=e975]:
+          - generic [ref=e976]: Drop-off
+          - generic [ref=e977]: Fri, 24 Jul · 12:00
+        - generic [ref=e978]:
+          - generic [ref=e979]: Expected ready
+          - generic [ref=e980]: Not set
+        - generic [ref=e981]:
+          - generic [ref=e982]: Price state
+          - generic [ref=e983]: RM 48.00
+        - generic [ref=e984]:
+          - generic [ref=e985]: Service note
+          - generic [ref=e986]: FYP2 readiness browser acceptance
+    - generic [ref=e987]:
+      - generic [ref=e989]:
+        - generic [ref=e990]: Admin updates
+        - generic [ref=e991]: Service log
+        - generic [ref=e992]: Track progress notes and photos in one feed.
+      - generic [ref=e1009]:
+        - generic [ref=e1010]: No admin updates yet
+        - generic [ref=e1011]: Use the composer below to log condition notes, service progress, or collection instructions.
+    - generic [ref=e1012]:
+      - generic [ref=e1014]:
+        - generic [ref=e1015]: Add update
+        - generic [ref=e1016]: Log a note or photo
+        - generic [ref=e1017]: Keep the service record current while the racket moves through the bench.
+      - generic [ref=e1021]:
+        - generic [ref=e1022]:
+          - generic [ref=e1023]: Comment
+          - textbox "Add service notes, frame condition, or collection instructions..." [ref=e1026]
+        - button "Attach photo" [ref=e1028] [cursor=pointer]
+        - button "Save update" [ref=e1035] [cursor=pointer]

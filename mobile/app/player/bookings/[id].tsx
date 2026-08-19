@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Platform, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -11,24 +11,27 @@ import {
   useAppStore,
   useBackendAccessToken,
   useBookings,
+  useConversations,
+  usePayments,
   useStrings,
 } from '../../../store/appStore';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
   formatDateTime,
 } from '../../../lib/formatters';
-import { getInventoryPriceLabel } from '../../../lib/inventory';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
-import { backendApi } from '../../../services/backendApi';
-import { mapBackendBookingToBooking } from '../../../services/backendMappers';
+import { BackendApiError, backendApi } from '../../../services/backendApi';
+import {
+  mapBackendBookingToBooking,
+  mapBackendConversationToConversation,
+} from '../../../services/backendMappers';
 import type { Booking, BookingStatus } from '../../../types/domain';
 
-const TRACKING_STAGES: Array<{
+const TRACKING_STAGES: {
   key: 'confirmed' | 'dropoff' | 'in_progress' | 'ready_for_collection' | 'completed';
   label: string;
-}> = [
+}[] = [
   { key: 'confirmed', label: 'Booking confirmed' },
   { key: 'dropoff', label: 'Drop-off scheduled' },
   { key: 'in_progress', label: 'In progress' },
@@ -51,6 +54,7 @@ function getCurrentStageKey(status: BookingStatus) {
     case 'completed':
       return 'completed';
     case 'cancelled':
+    case 'rejected':
     default:
       return 'confirmed';
   }
@@ -60,7 +64,7 @@ function getStageState(stageKey: (typeof TRACKING_STAGES)[number]['key'], bookin
   const currentIndex = TRACKING_STAGES.findIndex((stage) => stage.key === getCurrentStageKey(booking.status));
   const stageIndex = TRACKING_STAGES.findIndex((stage) => stage.key === stageKey);
 
-  if (booking.status === 'cancelled') {
+  if (booking.status === 'cancelled' || booking.status === 'rejected') {
     return 'upcoming' as const;
   }
 
@@ -135,6 +139,9 @@ function getNextStepLabel(status: BookingStatus) {
     case 'completed':
       return 'Service completed';
     case 'cancelled':
+      return 'Booking cancelled';
+    case 'rejected':
+      return 'Booking declined by shop';
     default:
       return 'Booking closed';
   }
@@ -166,6 +173,7 @@ function getHeroStatusChipClasses(status: BookingStatus) {
         textClassName: 'text-white font-semibold text-xs',
       };
     case 'cancelled':
+    case 'rejected':
       return {
         className: 'self-start border-red-200/35 bg-red-300/18',
         textClassName: 'text-white font-semibold text-xs',
@@ -233,13 +241,30 @@ export default function PlayerBookingDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; photoUpload?: string }>();
   const bookings = useBookings();
+  const conversations = useConversations();
+  const payments = usePayments();
   const strings = useStrings();
   const token = useBackendAccessToken();
-  const sessionSource = useAppStore((state) => state.sessionSource);
-  const adminSettings = useAppStore((state) => state.adminSettings);
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const storeSettings = useAppStore((state) => state.storeSettings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
+  const upsertLiveConversation = useAppStore(
+    (state) => state.upsertLiveConversation,
+  );
+  const [isRequestingSupport, setIsRequestingSupport] = useState(false);
+  const [supportError, setSupportError] = useState<string | null>(null);
+  const [hasFeedback, setHasFeedback] = useState<boolean | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
   const booking = bookings.find((item) => item.id === params.id);
   const showPhotoUploadWarning = params.photoUpload === 'failed';
+  const activePayment = payments.find(
+    (item) =>
+      item.bookingId === booking?.id &&
+      (item.status === 'pending' || item.status === 'paid'),
+  );
+  const supportConversation = conversations.find(
+    (item) => item.bookingId === booking?.id,
+  );
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -255,37 +280,7 @@ export default function PlayerBookingDetailScreen() {
         if (cancelled) {
           return;
         }
-        const priceByStringId = new Map<string, number>();
-        strings.forEach((item) => {
-          const priceMeta = getInventoryPriceLabel(item);
-          const priceValue =
-            item.inventory.price ?? (item.price > 0 ? item.price : null);
-
-          if (priceMeta.hasPrice && priceValue != null) {
-            priceByStringId.set(item.id, priceValue);
-          }
-        });
-        const mapped = mapBackendBookingToBooking(freshBooking, priceByStringId);
-        const currentBookings = useAppStore.getState().liveBookings;
-        const existingBooking = currentBookings.find((item) => item.id === mapped.id);
-        const keepQuotePendingState =
-          existingBooking?.paymentStatus === 'unpaid' &&
-          existingBooking.totalAmount <= 0 &&
-          mapped.totalAmount <= 0;
-
-        if (existingBooking && keepQuotePendingState) {
-          mapped.paymentStatus = existingBooking.paymentStatus;
-          mapped.stringFee = existingBooking.stringFee;
-          mapped.totalAmount = existingBooking.totalAmount;
-          mapped.amountPaid = existingBooking.amountPaid;
-          mapped.paymentRuleNote = existingBooking.paymentRuleNote;
-        }
-
-        setLiveBookings(
-          currentBookings.some((item) => item.id === mapped.id)
-            ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-            : [mapped, ...currentBookings],
-        );
+        upsertLiveBooking(mapBackendBookingToBooking(freshBooking));
       } catch (error) {
         console.warn('Failed to refresh live player booking detail', error);
       }
@@ -296,7 +291,36 @@ export default function PlayerBookingDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [params.id, setLiveBookings, strings, token]);
+  }, [params.id, token, upsertLiveBooking]);
+
+  useEffect(() => {
+    if (!token || booking?.status !== 'completed') {
+      setHasFeedback(null);
+      return;
+    }
+
+    let cancelled = false;
+    void backendApi
+      .fetchBookingFeedback(token, booking.id)
+      .then((feedback) => {
+        if (!cancelled) {
+          setHasFeedback(feedback !== null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setHasFeedback(
+            error instanceof BackendApiError && error.statusCode === 404
+              ? false
+              : null,
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [booking?.id, booking?.status, token]);
 
   if (!booking) {
     return (
@@ -315,24 +339,62 @@ export default function PlayerBookingDetailScreen() {
     );
   }
 
-  const stringItem =
-    strings.find((item) => item.id === booking.stringId) ??
-    getStringById(booking.stringId);
-  const admin = getAdminById(booking.adminId);
-  const currentStoreSettings =
-    (sessionSource === 'backend'
-      ? adminSettings.find((item) => item.adminId === 'main') ??
-        adminSettings.find((item) => item.adminId === booking.adminId)
-      : adminSettings.find((item) => item.adminId === booking.adminId) ??
-        adminSettings.find((item) => item.adminId === 'main'));
+  const canCancel = booking.status === 'awaiting_dropoff';
+  const cancelBooking = () => {
+    if (!token || !canCancel) {
+      return;
+    }
+    const performCancellation = () => {
+      setIsCancelling(true);
+      setCancelError(null);
+      void backendApi
+        .cancelBooking(
+          token,
+          booking.id,
+          'Cancelled by player before drop-off.',
+        )
+        .then((response) => {
+          upsertLiveBooking(mapBackendBookingToBooking(response));
+        })
+        .catch((error: unknown) => {
+          setCancelError(
+            error instanceof BackendApiError
+              ? error.message
+              : 'Failed to cancel this booking.',
+          );
+        })
+        .finally(() => setIsCancelling(false));
+    };
+    const confirmationMessage =
+      'Cancellation is available only before the racket is checked in.';
+    if (Platform.OS === 'web') {
+      if (globalThis.confirm?.(`Cancel booking?\n\n${confirmationMessage}`)) {
+        performCancellation();
+      }
+      return;
+    }
+    Alert.alert(
+      'Cancel booking?',
+      confirmationMessage,
+      [
+        { text: 'Keep booking', style: 'cancel' },
+        {
+          text: 'Cancel booking',
+          style: 'destructive',
+          onPress: performCancellation,
+        },
+      ],
+    );
+  };
+
+  const stringItem = strings.find((item) => item.id === booking.stringId);
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
     : 'Custom string selection';
-  const storeName = normalizeStoreText(currentStoreSettings?.storeName);
-  const storeAddress = normalizeStoreText(currentStoreSettings?.address);
+  const storeName = normalizeStoreText(storeSettings?.storeName);
+  const storeAddress = normalizeStoreText(storeSettings?.address);
   const vendorLabel =
     storeName ||
-    admin?.businessName ||
     'Assigned shop';
   const shopAddress =
     storeAddress ||
@@ -340,6 +402,37 @@ export default function PlayerBookingDetailScreen() {
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const latestUpdate = getLatestUpdate(booking);
   const heroStatusChip = getHeroStatusChipClasses(booking.status);
+  const canCheckIn =
+    booking.status === 'confirmed' || booking.status === 'awaiting_dropoff';
+  const canOpenFeedback = booking.status === 'completed';
+
+  const openSupportConversation = async () => {
+    if (supportConversation) {
+      router.push(`/player/chat/${supportConversation.id}`);
+      return;
+    }
+    if (!token) {
+      setSupportError('Your player session expired. Sign in again to open support.');
+      return;
+    }
+
+    setIsRequestingSupport(true);
+    setSupportError(null);
+    try {
+      const response = await backendApi.requestBookingSupport(token, booking.id);
+      const conversation = mapBackendConversationToConversation(response, booking);
+      upsertLiveConversation(conversation);
+      router.push(`/player/chat/${conversation.id}`);
+    } catch (error) {
+      setSupportError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Failed to open booking support.',
+      );
+    } finally {
+      setIsRequestingSupport(false);
+    }
+  };
 
   return (
     <AppScreen
@@ -410,6 +503,14 @@ export default function PlayerBookingDetailScreen() {
               </View>
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow label="Racket" value={`${booking.racketBrand} ${booking.racketModel}`} />
+              <DetailRow
+                label="Service method"
+                value={
+                  booking.serviceMethod === 'pickup_request'
+                    ? 'Pickup requested'
+                    : 'Counter drop-off'
+                }
+              />
               <View className="h-px bg-[#EEF3F8]" />
               <DetailRow
                 label="String"
@@ -522,6 +623,68 @@ export default function PlayerBookingDetailScreen() {
         </AppCard>
 
         <View className="pt-1">
+          {booking.totalAmount > 0 && activePayment?.status !== 'paid' ? (
+            <AppButton
+              label={
+                activePayment?.status === 'pending'
+                  ? 'Payment awaiting verification'
+                  : 'Pay booking'
+              }
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              isDisabled={activePayment?.status === 'pending'}
+              onPress={() => router.push(`/player/payments/${booking.id}`)}
+            />
+          ) : null}
+          {canCheckIn ? (
+            <AppButton
+              label="Show check-in reference"
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              onPress={() =>
+                router.push(`/player/check-in?bookingId=${booking.id}`)
+              }
+            />
+          ) : null}
+          <AppButton
+            label="Message shop"
+            variant="outline"
+            size="lg"
+            className="mb-3"
+            isLoading={isRequestingSupport}
+            onPress={() => void openSupportConversation()}
+          />
+          {supportError ? (
+            <HeroText className="mb-3 text-sm font-medium text-red-600">
+              {supportError}
+            </HeroText>
+          ) : null}
+          {canOpenFeedback ? (
+            <AppButton
+              label={hasFeedback ? 'View service feedback' : 'Leave service feedback'}
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              onPress={() => router.push(`/player/feedback/${booking.id}`)}
+            />
+          ) : null}
+          {canCancel ? (
+            <AppButton
+              label="Cancel booking"
+              variant="outline"
+              size="lg"
+              className="mb-3"
+              isLoading={isCancelling}
+              onPress={cancelBooking}
+            />
+          ) : null}
+          {cancelError ? (
+            <HeroText className="mb-3 text-sm font-medium text-red-600">
+              {cancelError}
+            </HeroText>
+          ) : null}
           <AppButton
             label="View tracking"
             variant="primary"

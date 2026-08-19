@@ -1,12 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { HeroText, cn } from '../ui/heroui';
 import { AppIconButton } from '../ui/AppIconButton';
 import { appChromeColors, appLayoutMetrics } from '../ui/theme';
 
 export type AppHeaderVariant = 'primary' | 'secondary' | 'flow';
-type AppScreenTone = 'default' | 'auth' | 'player' | 'admin';
 
 interface AppPageHeaderProps {
   title?: string;
@@ -17,40 +16,32 @@ interface AppPageHeaderProps {
   showBackButton?: boolean;
   onBackPress?: () => void;
   backAccessibilityLabel?: string;
-  tone?: AppScreenTone;
 }
 
 const appHeaderMetrics = {
-  primaryMinHeight: 88,
-  secondaryMinHeight: 72,
+  primaryMinHeight: 84,
+  secondaryMinHeight: 68,
   flowMinHeight: 76,
 } as const;
 
-const baseContainerStyles =
-  'w-full self-center overflow-hidden border shadow-soft';
+const baseContainerStyles = 'w-full self-center overflow-hidden border';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[20px] border-[#DCE6F7] bg-white',
-  secondary: 'rounded-[18px] border-[#DCE6F7] bg-white',
-  flow: 'rounded-[18px] border-[#DCE6F7] bg-white',
+  primary: 'rounded-[28px] border-[#D6E4FF] bg-[#EAF2FF] shadow-subtle',
+  secondary: 'rounded-[22px] border-[#DCE3EC] bg-white shadow-subtle',
+  flow: 'rounded-[24px] border-[#163B7A] bg-[#102F63] shadow-float',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
   primary: 'px-5 py-4',
   secondary: 'px-4 py-3',
-  flow: 'px-4 py-3',
+  flow: 'px-4 py-4',
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[20px] font-bold tracking-normal text-slate-900',
+  primary: 'text-[27px] font-bold leading-[32px] tracking-tight text-slate-900',
   secondary: 'text-[17px] font-semibold tracking-normal text-slate-900',
-  flow: 'text-[17px] font-semibold tracking-normal text-slate-900',
-};
-
-const subtitleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[14px] leading-[20px] tracking-normal text-slate-600',
-  secondary: 'text-[12px] leading-[18px] tracking-normal text-slate-600',
-  flow: 'text-[12px] leading-[18px] tracking-normal text-slate-600',
+  flow: 'text-[20px] font-bold leading-6 tracking-tight text-white',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {
@@ -68,14 +59,21 @@ export function AppPageHeader({
   showBackButton = false,
   onBackPress,
   backAccessibilityLabel = 'Go back',
-  tone = 'default',
 }: AppPageHeaderProps) {
-  if (!title && !headerRight && !showBackButton) {
+  if (!title && !subtitle && !headerRight && !showBackButton) {
     return null;
   }
 
   return (
-    <View className="px-4" style={{ paddingTop: appLayoutMetrics.headerTopSpacing }}>
+    <View
+      className="px-4"
+      style={{
+        paddingTop: Math.max(appLayoutMetrics.headerTopSpacing - 2, 0),
+        maxWidth: appLayoutMetrics.contentMaxWidth,
+        width: '100%',
+        alignSelf: 'center',
+      }}
+    >
       <View
         className={cn(baseContainerStyles, variantStyles[variant])}
         style={{
@@ -83,35 +81,59 @@ export function AppPageHeader({
           minHeight: compact ? Math.max(minHeights[variant] - 12, 56) : minHeights[variant],
         }}
       >
+        {variant === 'flow' ? (
+          <Image
+            source={require('../../assets/ui/header-string-weave.png')}
+            resizeMode="cover"
+            className="absolute inset-0 h-full w-full opacity-70"
+          />
+        ) : null}
+
         <View
           className={cn(
             'flex-row items-center gap-3',
             contentStyles[variant],
-            compact && variant === 'primary' ? 'px-4 py-3' : undefined,
-            compact && variant !== 'primary' ? 'px-3.5 py-2.5' : undefined
+            compact && variant === 'primary' ? 'py-3.5' : undefined,
+            compact && variant === 'secondary' ? 'py-2.5' : undefined
           )}
         >
           {showBackButton ? (
             <AppIconButton
-              icon={<ChevronLeft size={18} color={appChromeColors.primary} />}
+              icon={
+                <ChevronLeft
+                  size={18}
+                  color={variant === 'flow' ? '#FFFFFF' : appChromeColors.primary}
+                />
+              }
               accessibilityLabel={backAccessibilityLabel}
               onPress={onBackPress}
               variant="header"
               size="md"
-              className={cn(variant === 'flow' ? 'bg-primary-50' : undefined)}
+              className={cn(
+                variant === 'flow'
+                  ? 'border-white/20 bg-white/10'
+                  : 'border-primary-100 bg-primary-50'
+              )}
             />
           ) : null}
 
           <View className="min-w-0 flex-1">
             {title ? (
-              <HeroText className={titleStyles[variant]} numberOfLines={1}>
+              <HeroText
+                accessibilityRole="header"
+                className={titleStyles[variant]}
+                numberOfLines={2}
+              >
                 {title}
               </HeroText>
             ) : null}
             {subtitle ? (
               <HeroText
-                className={cn(subtitleStyles[variant], title ? 'mt-1' : undefined)}
-                numberOfLines={2}
+                className={cn(
+                  'mt-1 text-[13px] leading-[18px]',
+                  variant === 'flow' ? 'text-secondary-100' : 'text-slate-600',
+                )}
+                numberOfLines={compact ? 1 : 2}
               >
                 {subtitle}
               </HeroText>
@@ -120,17 +142,6 @@ export function AppPageHeader({
 
           {headerRight ? <View className="shrink-0">{headerRight}</View> : null}
         </View>
-        {variant === 'flow' ? (
-          <View
-            className="mx-4 mb-3 h-px"
-            style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)' }}
-          >
-            <View
-              className="h-full w-12"
-              style={{ backgroundColor: appChromeColors.primary }}
-            />
-          </View>
-        ) : null}
       </View>
     </View>
   );

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Protocol
 
 from app.domain.catalog.entities import InventoryMovementRecord
@@ -55,6 +56,15 @@ class CatalogRepository(Protocol):
         self, string_id: str, values: dict[str, object]
     ) -> StringItem: ...
 
+    def update_editor(
+        self,
+        string_id: str,
+        *,
+        catalog_values: dict[str, object],
+        inventory_values: dict[str, object],
+        official_performance_values: dict[str, object],
+    ) -> StringItem: ...
+
     def get_official_performance(
         self,
         string_id: str,
@@ -79,6 +89,9 @@ class CatalogRepository(Protocol):
         string_id: str,
     ) -> RecommendationMatrixInspectionRecord | None: ...
 
-    def import_recommendation_matrix(self) -> RecommendationMatrixImportReport: ...
+    def import_recommendation_matrix(
+        self,
+        source_path: Path,
+    ) -> RecommendationMatrixImportReport: ...
 
     def list_active_catalog(self) -> list[StringItem]: ...

@@ -27,7 +27,9 @@ class ConfirmCheckInUseCase:
             booking_id=booking_id,
             reference=reference,
         )
-        booking = lookup.booking
+        booking = self.booking_repository.get_by_id_for_update(lookup.booking.id)
+        if booking is None:
+            raise ConflictError("Booking is no longer available")
         if booking.status != BookingStatus.AWAITING_DROPOFF.value:
             raise ConflictError("Only awaiting drop-off bookings can be checked in")
         next_status = BookingStatus.IN_PROGRESS.value

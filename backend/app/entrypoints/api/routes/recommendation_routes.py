@@ -55,7 +55,11 @@ def recommend_for_profile(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
-    ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
+    ).execute_profile(
+        user_id=current_user.user_id,
+        top_n=payload.top_n,
+        racket_id=payload.racket_id,
+    )
     return recommendation_response_to_dto(result)
 
 
@@ -71,7 +75,11 @@ def generate_recommendations(
         profile_repository=profile_repository,
         recommendation_repository=recommendation_repository,
         recommendation_log_repository=recommendation_log_repository,
-    ).execute_profile(user_id=current_user.user_id, top_n=payload.top_n)
+    ).execute_profile(
+        user_id=current_user.user_id,
+        top_n=payload.top_n,
+        racket_id=payload.racket_id,
+    )
     return recommendation_response_to_dto(result)
 
 
@@ -110,6 +118,7 @@ def get_cached_recommendation_detail(
     return recommendation_detail_to_dto(
         algorithm_version=result.algorithm_version,
         result=result.result,
+        run_id=result.run_id,
         generated_at=result.generated_at,
     )
 
@@ -117,8 +126,6 @@ def get_cached_recommendation_detail(
 def _authorized_target_user_id(current_user: CurrentUser, user_id: str) -> str:
     if user_id == "me":
         return current_user.user_id
-    if current_user.role == "admin":
-        return user_id
     if user_id != current_user.user_id:
         raise ForbiddenError("Cannot access another user's recommendations")
     return user_id

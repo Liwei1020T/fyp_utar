@@ -2,16 +2,20 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal
+from typing import cast
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
+from app.config.settings import get_settings
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.entities import BookingStatusHistoryEntry
 from app.domain.booking.entities import BookingUpdateEntry
 from app.domain.booking.enums import BookingStatus
+from app.domain.store.policies import booking_check_in_reference
+from app.domain.store.policies import booking_slot_id_for_stored_datetime
 from app.shared.upload_storage import build_signed_media_url
 from app.shared.serialization import isoformat_or_none
 
@@ -24,12 +28,23 @@ class CreateBookingPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     string_id: str
+    racket_id: str | None = Field(default=None, max_length=36)
     racket_brand: str | None = None
     racket_model: str | None = None
     requested_tension: float | None = Field(default=None, ge=16, le=35)
+    slot_id: str | None = Field(
+        default=None,
+        pattern=r"^slot-\d{4}-\d{2}-\d{2}-\d{2}:\d{2}$",
+    )
     drop_off_datetime: datetime | None = None
-    expected_completion_datetime: datetime | None = None
     notes: str | None = None
+    service_method: Literal["counter_dropoff", "pickup_request"] = "counter_dropoff"
+
+    @model_validator(mode="after")
+    def validate_single_slot_input(self) -> "CreateBookingPayload":
+        if self.slot_id is not None and self.drop_off_datetime is not None:
+            raise ValueError("Provide slot_id or drop_off_datetime, not both")
+        return self
 
 
 class UpdateBookingStatusPayload(BaseModel):
@@ -41,14 +56,17 @@ class UpdateBookingStatusPayload(BaseModel):
     expected_completion_datetime: datetime | None = None
     note: str | None = Field(default=None, max_length=500)
 
-    @model_validator(mode="after")
-    def validate_terminal_note(self) -> "UpdateBookingStatusPayload":
-        if self.status in {
-            BookingStatus.CANCELLED.value,
-            BookingStatus.REJECTED.value,
-        } and not (self.note and self.note.strip()):
-            raise ValueError("note is required when cancelling or rejecting a booking")
-        return self
+
+class CancelBookingPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class CheckInTokenOut(BaseModel):
+    token: str
+    expires_at: str
+    status: Literal["active", "used", "expired", "revoked"]
 
 
 class BookingStatusHistoryOut(BaseModel):
@@ -80,18 +98,24 @@ class BookingOut(BaseModel):
     user_id: str
     string_id: str
     string_name: str
+    racket_id: str | None = None
     customer_phone_number: str | None = None
     customer_username: str | None = None
     racket_brand: str | None = None
     racket_model: str | None = None
     requested_tension: float | None = None
+    slot_id: str | None = None
     drop_off_datetime: str | None = None
     expected_completion_datetime: str | None = None
     collection_datetime: str | None = None
     notes: str | None = None
+    service_method: Literal["counter_dropoff", "pickup_request"]
+    cancellation_reason: str | None = None
+    completion_summary: str | None = None
     status: str
     created_at: str | None = None
     updated_at: str | None = None
+    check_in_reference: str
     latest_admin_note: str | None = None
     status_history: list[BookingStatusHistoryOut] | None = None
     updates: list[BookingUpdateOut] | None = None
@@ -138,20 +162,36 @@ def booking_to_dto(
         user_id=booking.user_id,
         string_id=booking.string_id,
         string_name=booking.string_name,
+        racket_id=booking.racket_id,
         customer_phone_number=booking.customer_phone_number if include_user else None,
         customer_username=booking.customer_username if include_user else None,
         racket_brand=booking.racket_brand,
         racket_model=booking.racket_model,
         requested_tension=booking.requested_tension,
+        slot_id=(
+            booking_slot_id_for_stored_datetime(
+                booking.drop_off_datetime,
+                get_settings().store_timezone,
+            )
+            if booking.drop_off_datetime is not None
+            else None
+        ),
         drop_off_datetime=isoformat_or_none(booking.drop_off_datetime),
         expected_completion_datetime=isoformat_or_none(
             booking.expected_completion_datetime
         ),
         collection_datetime=isoformat_or_none(booking.collection_datetime),
         notes=booking.notes,
+        service_method=cast(
+            Literal["counter_dropoff", "pickup_request"],
+            booking.service_method,
+        ),
+        cancellation_reason=booking.cancellation_reason,
+        completion_summary=booking.completion_summary,
         status=booking.status,
         created_at=isoformat_or_none(booking.created_at),
         updated_at=isoformat_or_none(booking.updated_at),
+        check_in_reference=booking_check_in_reference(booking.id),
         latest_admin_note=booking.latest_admin_note,
         status_history=[
             booking_history_to_dto(entry) for entry in booking.status_history

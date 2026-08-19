@@ -14,22 +14,32 @@ from app.ports.repositories.recommendation_repository import RecommendationRepos
 @dataclass
 class UpsertMyProfileUseCase:
     profile_repository: ProfileRepository
-    recommendation_repository: RecommendationRepository | None = None
+    recommendation_repository: RecommendationRepository
     scorer: Fyp1ContentRecommendationScorer = field(
         default_factory=Fyp1ContentRecommendationScorer
     )
 
-    def execute(self, profile: PlayerProfile) -> PlayerProfile:
-        saved = self.profile_repository.upsert(profile)
-        if self.recommendation_repository is not None and _is_complete(saved):
+    def execute(
+        self,
+        profile: PlayerProfile,
+        *,
+        username: str | None = None,
+    ) -> PlayerProfile:
+        saved = self.profile_repository.upsert(
+            profile,
+            username=username,
+        )
+        self.recommendation_repository.clear_score_cache(user_id=saved.user_id)
+        if _is_complete(saved):
             request = RecommendationRequestModel(
                 user_id=saved.user_id,
                 skill_level=saved.skill_level or "",
                 playing_style=saved.playing_style or "",
-                budget_tier=saved.budget_tier or "between_30_50",
                 preferred_tension=saved.preferred_tension or 0,
-                game_type=saved.game_type or "",
                 frequency_per_week=saved.frequency_per_week or 0,
+                preferred_feel=saved.preferred_feel or "medium",
+                preferred_gauge=saved.preferred_gauge or "no_preference",
+                recent_goal=saved.recent_goal or "balanced",
                 pref_attack=saved.pref_attack or 0,
                 pref_comfort=saved.pref_comfort or 0,
                 pref_control=saved.pref_control or 0,
@@ -58,10 +68,11 @@ def _is_complete(profile: PlayerProfile) -> bool:
         for value in (
             profile.skill_level,
             profile.playing_style,
-            profile.budget_tier,
             profile.preferred_tension,
-            profile.game_type,
             profile.frequency_per_week,
+            profile.preferred_feel,
+            profile.preferred_gauge,
+            profile.recent_goal,
             profile.pref_attack,
             profile.pref_comfort,
             profile.pref_control,

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, ScrollView, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CalendarDays, Search } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -8,9 +8,8 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
-import { useBookings, useCurrentUser } from '../../../store/appStore';
-import { getStringById } from '../../../services/mockAppService';
-import type { Booking, BookingStatus } from '../../../types/domain';
+import { useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
+import type { AdminProfile, Booking, BookingStatus } from '../../../types/domain';
 import {
   formatBookingOrderCode,
   formatBookingStatus,
@@ -36,6 +35,7 @@ const STATUS_PRIORITY: Record<BookingStatus, number> = {
   ready_for_collection: 2,
   completed: 3,
   cancelled: 5,
+  rejected: 5,
 };
 
 function getAdminActionLabel(status: BookingStatus) {
@@ -49,6 +49,7 @@ function getAdminActionLabel(status: BookingStatus) {
       return 'Action: Prepare for collection';
     case 'completed':
     case 'cancelled':
+    case 'rejected':
       return 'Action: No further action';
     case 'pending':
     case 'pending_payment':
@@ -74,6 +75,12 @@ function getQueueMetaLabel(booking: Booking) {
   return 'Queue open';
 }
 
+function getPriceLabel(booking: Booking) {
+  return booking.totalAmount > 0
+    ? formatCurrency(booking.totalAmount)
+    : 'Quote pending';
+}
+
 function compareBookings(a: Booking, b: Booking) {
   const priorityDelta = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
 
@@ -86,16 +93,14 @@ function compareBookings(a: Booking, b: Booking) {
 
 function AdminQueueCard({
   booking,
+  stringLabel,
   onPress,
 }: {
   booking: Booking;
+  stringLabel: string;
   onPress: () => void;
 }) {
-  const stringItem = getStringById(booking.stringId);
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
-  const stringLabel = stringItem
-    ? `${stringItem.brand} ${stringItem.model}`
-    : 'Selected string';
   const stringSpec = `${stringLabel} · ${booking.requestedTension} lbs`;
 
   return (
@@ -125,7 +130,7 @@ function AdminQueueCard({
             </HeroText>
             <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
               <HeroText className="text-[12px] font-semibold text-neutral-800">
-                {formatCurrency(booking.totalAmount)}
+                {getPriceLabel(booking)}
               </HeroText>
               <HeroText className="text-[11px] font-semibold text-neutral-300">
                 ·
@@ -157,16 +162,22 @@ function AdminQueueCard({
 }
 
 export default function AdminBookingsScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
-  const bookings = useBookings();
-  const bottomContentInset = useBottomContentInset(16);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
 
   if (!user || user.role !== 'admin') {
     return null;
   }
+
+  return <AdminBookingsContent user={user} />;
+}
+
+function AdminBookingsContent({ user }: { user: AdminProfile }) {
+  const router = useRouter();
+  const bookings = useBookings();
+  const strings = useStrings();
+  const bottomContentInset = useBottomContentInset(16);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
 
   const adminBookings = useMemo(
     () => bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled'),
@@ -188,7 +199,7 @@ export default function AdminBookingsScreen() {
           return true;
         }
 
-        const stringItem = getStringById(item.stringId);
+        const stringItem = strings.find((entry) => entry.id === item.stringId);
         const haystack = [
           item.id,
           item.orderCode,
@@ -205,10 +216,12 @@ export default function AdminBookingsScreen() {
         return haystack.includes(normalizedSearch);
       })
       .sort(compareBookings);
-  }, [adminBookings, filter, search]);
+  }, [adminBookings, filter, search, strings]);
 
   const today = formatLocalDateInputValue(new Date());
-  const todayCount = adminBookings.filter((item) => formatLocalDateInputValue(item.createdAt) === today).length;
+  const todayCount = adminBookings.filter(
+    (item) => item.dropOffDate === today,
+  ).length;
   const inProgressCount = adminBookings.filter((item) => item.status === 'in_progress').length;
   const readyCount = adminBookings.filter((item) => item.status === 'ready_for_collection').length;
 
@@ -245,11 +258,7 @@ export default function AdminBookingsScreen() {
               inputClassName="text-[15px] font-medium"
             />
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, paddingRight: 4 }}
-            >
+            <View className="flex-row flex-wrap gap-2">
               {FILTER_OPTIONS.map((option) => (
                 <AppChip
                   key={option.value}
@@ -259,7 +268,7 @@ export default function AdminBookingsScreen() {
                   onPress={() => setFilter(option.value)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -272,12 +281,20 @@ export default function AdminBookingsScreen() {
             </HeroText>
           </AppCard>
         }
-        renderItem={({ item }) => (
-          <AdminQueueCard
-            booking={item}
-            onPress={() => router.push(`/admin/bookings/${item.id}`)}
-          />
-        )}
+        renderItem={({ item }) => {
+          const stringItem = strings.find((entry) => entry.id === item.stringId);
+          return (
+            <AdminQueueCard
+              booking={item}
+              stringLabel={
+                stringItem
+                  ? `${stringItem.brand} ${stringItem.model}`
+                  : 'Selected string'
+              }
+              onPress={() => router.push(`/admin/bookings/${item.id}`)}
+            />
+          );
+        }}
       />
     </AppScreen>
   );

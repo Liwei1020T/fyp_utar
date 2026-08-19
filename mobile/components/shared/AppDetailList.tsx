@@ -1,8 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { AppCard, type AppCardVariant } from '../ui/AppCard';
-import { HeroText } from '../ui/heroui';
-import { cn } from '../ui/heroui';
+import { HeroText , cn } from '../ui/heroui';
 
 interface AppDetailListItem {
   label: string;

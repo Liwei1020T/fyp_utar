@@ -1,10 +1,8 @@
 import React from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { AppScreen } from '../../../components/shared/AppScreen';
@@ -13,11 +11,11 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
+  useRackets,
   useStrings,
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../../services/backendMappers';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
 
@@ -29,12 +27,12 @@ export default function BookingSummaryScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookingDraft = useAppStore((state) => state.bookingDraft);
-  const sessionSource = useAppStore((state) => state.sessionSource);
-  const adminSettings = useAppStore((state) => state.adminSettings);
+  const storeSettings = useAppStore((state) => state.storeSettings);
   const clearBookingDraft = useAppStore((state) => state.clearBookingDraft);
-  const prependLiveBooking = useAppStore((state) => state.prependLiveBooking);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const token = useBackendAccessToken();
   const strings = useStrings();
+  const rackets = useRackets();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -55,19 +53,14 @@ export default function BookingSummaryScreen() {
     );
   }
 
-  const stringItem =
-    strings.find((item) => item.id === bookingDraft.stringId) ??
-    getStringById(bookingDraft.stringId);
-  const admin = getAdminById(bookingDraft.adminId);
-  const currentStoreSettings =
-    (sessionSource === 'backend'
-      ? adminSettings.find((item) => item.adminId === 'main') ??
-        adminSettings.find((item) => item.adminId === bookingDraft.adminId)
-      : adminSettings.find((item) => item.adminId === bookingDraft.adminId) ??
-        adminSettings.find((item) => item.adminId === 'main'));
+  const stringItem = strings.find(
+    (item) => item.id === bookingDraft.stringId,
+  );
+  const selectedRacket = bookingDraft.racketId
+    ? rackets.find((item) => item.id === bookingDraft.racketId)
+    : undefined;
   const vendorLabel =
-    normalizeStoreText(currentStoreSettings?.storeName) ||
-    admin?.businessName ||
+    normalizeStoreText(storeSettings?.storeName) ||
     'Assigned shop';
   const stringLabel = stringItem
     ? `${stringItem.brand} ${stringItem.model}`
@@ -81,12 +74,12 @@ export default function BookingSummaryScreen() {
         hasPrice: false,
       };
   const stringFee = stringPriceMeta.hasPrice ? stringPrice ?? 0 : null;
-  const serviceFee = 0;
+  const serviceFee = storeSettings?.defaultServicePrice ?? 0;
   const totalPayable = stringFee != null ? stringFee + serviceFee : null;
 
   const handleProceed = async () => {
     if (!token) {
-      setSubmitError('Live backend login is required to confirm an FYP1 booking.');
+      setSubmitError('Your player session expired. Sign in again to confirm this booking.');
       return;
     }
 
@@ -96,11 +89,13 @@ export default function BookingSummaryScreen() {
       let photoUploadFailed = false;
       let booking = await backendApi.createBooking(token, {
         string_id: bookingDraft.stringId,
+        racket_id: bookingDraft.racketId ?? undefined,
         racket_brand: bookingDraft.racketBrand,
         racket_model: bookingDraft.racketModel,
         requested_tension: bookingDraft.requestedTension,
-        drop_off_datetime: `${bookingDraft.dropOffDate}T${bookingDraft.dropOffTime}:00`,
+        slot_id: bookingDraft.slotId,
         notes: bookingDraft.notes || undefined,
+        service_method: bookingDraft.serviceMethod,
       });
 
       if (bookingDraft.photoUri) {
@@ -117,22 +112,9 @@ export default function BookingSummaryScreen() {
         }
       }
 
-      const priceByStringId = new Map<string, number>();
-      if (stringFee != null) {
-        priceByStringId.set(bookingDraft.stringId, stringFee);
-      }
+      const mappedBooking = mapBackendBookingToBooking(booking);
 
-      const mappedBooking = mapBackendBookingToBooking(booking, priceByStringId);
-      if (stringFee == null) {
-        mappedBooking.paymentStatus = 'unpaid';
-        mappedBooking.stringFee = 0;
-        mappedBooking.totalAmount = 0;
-        mappedBooking.amountPaid = 0;
-        mappedBooking.paymentRuleNote =
-          'Final string quote is pending. Payment unlocks after shop confirms the amount.';
-      }
-
-      prependLiveBooking(mappedBooking);
+      upsertLiveBooking(mappedBooking);
       clearBookingDraft();
       router.replace(
         `/player/bookings/${booking.id}${photoUploadFailed ? '?photoUpload=failed' : ''}`,
@@ -168,6 +150,11 @@ export default function BookingSummaryScreen() {
             <HeroText className="text-sm leading-6 text-neutral-500">
               {bookingDraft.racketBrand} {bookingDraft.racketModel} at {bookingDraft.requestedTension} lbs
             </HeroText>
+            {selectedRacket ? (
+              <HeroText className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-700">
+                Saved passport: {selectedRacket.nickname}
+              </HeroText>
+            ) : null}
           </View>
         </AppCard>
       </AppSection>
@@ -176,12 +163,21 @@ export default function BookingSummaryScreen() {
         <AppDetailList
           items={[
             {
+              label: 'Service method',
+              value:
+                bookingDraft.serviceMethod === 'pickup_request'
+                  ? 'Pickup requested'
+                  : 'Counter drop-off',
+            },
+            {
               label: 'String',
               value: stringLabel,
             },
             {
               label: 'Racket',
-              value: `${bookingDraft.racketBrand} ${bookingDraft.racketModel}`,
+              value: selectedRacket
+                ? `${selectedRacket.nickname} · ${bookingDraft.racketBrand} ${bookingDraft.racketModel}`
+                : `${bookingDraft.racketBrand} ${bookingDraft.racketModel}`,
             },
             {
               label: 'Requested tension',
@@ -242,9 +238,9 @@ export default function BookingSummaryScreen() {
           <HeroText className="text-sm leading-6 text-neutral-600">
             {token
               ? stringFee != null
-                ? 'This FYP1 flow confirms the booking directly with the live backend. Payment remains deferred to FYP2.'
-                : 'This FYP1 flow confirms the booking directly with the live backend. Final string quote is confirmed at shop.'
-              : 'Live backend login is required to confirm an FYP1 booking.'}
+                ? 'The booking is saved to the live backend. Continue from its booking detail to submit payment.'
+                : 'The booking is saved to the live backend. Payment unlocks after the shop confirms the final string quote.'
+              : 'Sign in to confirm this booking with the shop.'}
           </HeroText>
         </AppCard>
       </AppSection>
@@ -268,7 +264,15 @@ export default function BookingSummaryScreen() {
           label="Edit booking"
           variant="outline"
           size="lg"
-          onPress={() => router.push(`/player/bookings/new?stringId=${bookingDraft.stringId}`)}
+          onPress={() =>
+            router.push(
+              `/player/bookings/new?stringId=${bookingDraft.stringId}${
+                bookingDraft.racketId
+                  ? `&racketId=${bookingDraft.racketId}`
+                  : ''
+              }`,
+            )
+          }
         />
       </View>
     </AppScreen>

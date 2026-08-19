@@ -1,64 +1,150 @@
-import React from 'react';
-import { Pressable, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import QRCode from 'react-native-qrcode-svg';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
-import { AppChip } from '../../components/ui/AppChip';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
-import { useBookings, useCurrentUser } from '../../store/appStore';
+import {
+  useBackendAccessToken,
+  useBookings,
+  useCurrentUser,
+} from '../../store/appStore';
+import { formatBookingOrderCode } from '../../lib/formatters';
+import { BackendApiError, backendApi } from '../../services/backendApi';
+import type { BackendCheckInToken } from '../../types/backend';
 
 export default function PlayerCheckInScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ bookingId?: string }>();
   const user = useCurrentUser();
   const bookings = useBookings();
+  const token = useBackendAccessToken();
+  const [checkInToken, setCheckInToken] =
+    useState<BackendCheckInToken | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
+
+  const eligibleBookings =
+    user?.role === 'player'
+      ? bookings.filter(
+          (item) =>
+            item.playerId === user.id &&
+            (item.status === 'awaiting_dropoff' ||
+              item.status === 'confirmed'),
+        )
+      : [];
+  const checkInBooking = params.bookingId
+    ? eligibleBookings.find((item) => item.id === params.bookingId)
+    : eligibleBookings[0];
+  const refreshToken = useCallback(async () => {
+    if (!token || !checkInBooking) {
+      setCheckInToken(null);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      setCheckInToken(
+        await backendApi.createCheckInToken(token, checkInBooking.id),
+      );
+      setNow(Date.now());
+    } catch (loadError) {
+      setCheckInToken(null);
+      setError(
+        loadError instanceof BackendApiError
+          ? loadError.message
+          : 'Failed to generate a secure check-in QR.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [checkInBooking, token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshToken();
+    }, [refreshToken]),
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!user || user.role !== 'player') {
     return null;
   }
 
-  const latestBooking = bookings.find((item) => item.playerId === user.id);
+  const secondsRemaining = checkInToken
+    ? Math.max(
+        0,
+        Math.floor(
+          (new Date(checkInToken.expires_at).getTime() - now) / 1000,
+        ),
+      )
+    : 0;
+  const isExpired = checkInToken !== null && secondsRemaining === 0;
 
   return (
     <AppScreen
       headerVariant="flow"
-      title="QR check-in"
-      subtitle="Show your booking token and drop-off instructions at the counter."
+      title="Counter check-in"
+      subtitle="Show the secure, short-lived QR for your next racket drop-off."
       showBackButton
       onBackPress={() => router.back()}
     >
-      <AppCard variant="dark" className="rounded-[32px]" padding="lg">
-        <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
-          Booking token
-        </HeroText>
-        <HeroText className="mt-2 text-[28px] font-bold tracking-tight text-white">
-          {latestBooking?.bookingToken ?? 'DROP-OFF-DEMO'}
-        </HeroText>
-        <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-          Counter staff can use this token or the booking reference during manual or QR-based check-in.
-        </HeroText>
-      </AppCard>
-
-      <AppSection eyebrow="Visual token" title="Demo QR placeholder">
-        <AppCard variant="elevated" padding="lg">
-          <View className="flex-row flex-wrap justify-center gap-2">
-            {Array.from({ length: 36 }).map((_, index) => (
-              <View
-                key={index}
-                className={`h-6 w-6 rounded-sm ${index % 3 === 0 || index % 5 === 0 ? 'bg-neutral-950' : 'bg-neutral-100'}`}
-              />
-            ))}
-          </View>
+      {checkInBooking ? (
+        <AppCard variant="dark" className="rounded-[32px]" padding="lg">
+          <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
+            Secure booking QR
+          </HeroText>
+          {checkInToken && !isExpired ? (
+            <View className="mt-5 items-center rounded-[24px] bg-white p-5">
+              <QRCode value={checkInToken.token} size={220} />
+            </View>
+          ) : null}
+          <HeroText className="mt-2 text-sm leading-6 text-primary-100">
+            Booking {checkInBooking.orderCode ?? formatBookingOrderCode(checkInBooking.id)} •{' '}
+            {checkInBooking.dropOffDate} at {checkInBooking.dropOffTime}
+          </HeroText>
+          <HeroText className="mt-2 text-sm font-semibold text-white">
+            {isLoading
+              ? 'Generating secure QR…'
+              : checkInToken
+                ? isExpired
+                  ? 'Expired — refresh before scanning'
+                  : `Expires in ${Math.floor(secondsRemaining / 60)}:${String(
+                      secondsRemaining % 60,
+                    ).padStart(2, '0')}`
+                : error ?? 'Secure QR unavailable'}
+          </HeroText>
+          <AppButton
+            label={isExpired ? 'Refresh expired QR' : 'Refresh QR'}
+            variant="outline"
+            className="mt-5"
+            isLoading={isLoading}
+            onPress={() => void refreshToken()}
+          />
         </AppCard>
-      </AppSection>
+      ) : (
+        <AppCard variant="subtle" padding="lg">
+          <HeroText className="text-lg font-bold text-neutral-900">
+            No booking is ready for check-in.
+          </HeroText>
+          <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
+            A live reference appears here after a booking reaches the awaiting drop-off stage.
+          </HeroText>
+        </AppCard>
+      )}
 
       <AppSection eyebrow="Instructions" title="What happens on arrival">
         <View className="gap-3">
           {[
-            'Show the booking token or QR placeholder to the service desk.',
+            'Show the QR to the service desk; it expires after 10 minutes.',
             'Admin confirms racket model, string choice, and requested tension.',
             'Service status moves from awaiting drop-off to in progress once the admin accepts the racket.',
           ].map((item) => (

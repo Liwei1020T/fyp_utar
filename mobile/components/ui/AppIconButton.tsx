@@ -32,21 +32,22 @@ export function AppIconButton({
   };
 
   const variantStyles = {
-    surface: 'border-[#DCE6F7] bg-white shadow-soft',
-    auth: 'border-[#DCE6F7] bg-white',
-    primary: 'border-primary-600 bg-primary-600 shadow-soft',
+    surface: 'border-[#D8E0EA] bg-white',
+    auth: 'border-[#D8E0EA] bg-white',
+    primary: 'border-primary-600 bg-primary-600',
     ghost: 'border-transparent bg-transparent',
-    header: 'border-[#DCE6F7] bg-white shadow-none',
+    header: 'border-[#D8E0EA] bg-white shadow-none',
   };
 
   const sizeStyles = {
-    md: 'h-10 w-10 rounded-xl',
-    lg: 'h-11 w-11 rounded-xl',
+    md: 'h-11 w-11 rounded-[14px]',
+    lg: 'h-12 w-12 rounded-[16px]',
   };
 
   return (
     <HeroButton
       {...props}
+      feedbackVariant="none"
       variant={nativeVariantMap[variant]}
       isIconOnly
       accessibilityRole="button"

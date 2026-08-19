@@ -19,10 +19,11 @@
 - Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
 - Mobile Expo Go smoke: start backend with `--host 0.0.0.0`, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
 - Backend setup: `cd backend && uv sync --extra dev`
-- Backend migrations: `cd backend && ./.venv/bin/alembic upgrade head`
+- Backend migrations: `cd backend && ./scripts/alembic upgrade head`
 - Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
-- NLP notebook setup: `cd ml/nlp-workbench-latest && python3 -m pip install -r requirements.txt`
-- NLP notebook run: `cd ml/nlp-workbench-latest && jupyter lab`
+- NLP setup: `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`
+- NLP fast validation: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests`
+- NLP reproducibility run: `cd ml/nlp-workbench-latest && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 
 ## Architecture Map
 
@@ -35,15 +36,20 @@
   - `backend/`: FastAPI + SQLAlchemy backend plus in-process AI logic
   - `ml/nlp-workbench-latest/`: canonical notebook, datasets, and generated recommendation artifacts
   - `docs/`: workspace-level orientation docs
+  - `config/approved_string_cohort_v1.csv`: the 12-string system catalog boundary shared by backend runtime and BERT preparation
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
+  - recommendation learning loop: completed booking feedback -> bounded v10 community calibration; exact-racket interaction history -> gated v11 CF with exact v10 fallback below three independent supporters
+  - FYP-scoped player Agent: four-question guided selection, exact-run explanation, and verified in-stock alternatives -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V11 remains the only ranking owner
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
-  - NLP artifact handoff: default runtime workbook in `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`
+  - admin Agent operations: one read-only current-operations summary; detailed tools and write handlers remain preserved but inactive
+  - NLP artifact handoff: independent 12-string MacBERT workbook in `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`; legacy V9 remains separate
   - AI-service compatibility artifact handoff: `ml/nlp-workbench-latest/output/` -> backend `AI_*_PATH` config
 - State/data boundaries:
-  - `backend/` owns runtime data, auth, bookings, and recommendation logs
-  - `mobile/` stays hybrid: live FYP1 player/admin core flow plus hidden/mock-first FYP2 domains
+  - `backend/` owns runtime data, auth, bookings, notification preferences, commerce ledgers, and recommendation logs
+  - `mobile/` is API-only at runtime: every route page uses backend or backend-derived records and no seeded mock session exists
   - `ml/nlp-workbench-latest/` is offline experimentation and artifact generation, not a public service
+  - catalog, inventory, booking selection, and recommendation APIs expose only the 12 approved cohort IDs; other persisted strings remain hidden for historical-reference integrity
 
 ## Change Rules
 
@@ -73,7 +79,7 @@
 - Backend:
   - `cd backend && cp .env.example .env`
   - `cd backend && rtk uv sync --extra dev`
-  - `cd backend && rtk ./.venv/bin/alembic upgrade head`
+  - `cd backend && rtk ./scripts/alembic upgrade head`
   - Browser-only local run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
   - Expo Go phone run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload`
 - Mobile:
@@ -83,6 +89,8 @@
   - Expo Go: run `rtk ifconfig en0`, copy the `inet` Wi-Fi IP, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
   - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone; those point to the phone, not the Mac.
 - NLP:
-  - `cd ml/nlp-workbench-latest && python3 -m pip install -r requirements.txt`
-  - Run the latest notebook top-to-bottom to populate `ml/nlp-workbench-latest/output/`
-  - Unified backend default matrix source uses `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+  - `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`
+  - Run `.venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`; do not reuse run IDs.
+  - Generated files stay under `output/runs/<run-id>/` with `promotion.status=not_promoted`.
+  - Never open `data/archive_latest.zip`; use only the extracted JSON input.
+  - Do not overwrite `data/*_latest.csv`, `output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`, or `output/latest_macbert_review_matrix_system12.xlsx` without a separate approved promotion task.

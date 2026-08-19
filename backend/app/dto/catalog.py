@@ -36,6 +36,8 @@ class StringOut(BaseModel):
     model_name: str
     normalized_name: str
     price_rm: float | None = None
+    available_stock: int
+    availability_status: InventoryAvailability
     attack: float
     comfort: float
     control: float
@@ -138,9 +140,7 @@ class RecommendationMatrixEntryOut(BaseModel):
     source_layer: str
     raw_value: float | None = None
     normalized_score: float | None = None
-    confidence: float | None = None
     evidence_note: str | None = None
-    source_ref: str | None = None
     updated_at: str | None = None
 
 
@@ -265,6 +265,27 @@ class OfficialPerformancePayload(BaseModel):
     status: str | None = Field(default=None, max_length=40)
 
 
+class StringEditorUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    catalog: StringWritePayload | None = None
+    inventory: InventoryUpdatePayload | None = None
+    official_performance: OfficialPerformancePayload | None = None
+
+    @model_validator(mode="after")
+    def validate_at_least_one_section(self) -> "StringEditorUpdatePayload":
+        if not any(
+            section is not None
+            for section in (
+                self.catalog,
+                self.inventory,
+                self.official_performance,
+            )
+        ):
+            raise ValueError("At least one editor section must be provided")
+        return self
+
+
 def string_to_dto(item: StringItem) -> StringOut:
     return StringOut(
         id=item.id,
@@ -274,6 +295,12 @@ def string_to_dto(item: StringItem) -> StringOut:
         model_name=item.model_name,
         normalized_name=item.normalized_name,
         price_rm=item.price_rm,
+        available_stock=item.available_stock,
+        availability_status=(
+            item.inventory.availability_status
+            if item.inventory
+            else inventory_availability(item)
+        ),
         attack=item.attack,
         comfort=item.comfort,
         control=item.control,
@@ -338,15 +365,11 @@ def inventory_string_to_dto(item: StringItem) -> AdminInventoryStringOut:
         stock_level=item.stock_level,
         current_stock=item.current_stock,
         reserved_stock=item.reserved_stock,
-        available_stock=item.available_stock,
         reorder_level=item.reorder_level,
         reorder_quantity=item.reorder_quantity,
         cost_price=item.cost_price,
         selling_price=item.selling_price,
         pricing_mode=item.inventory.pricing_mode if item.inventory else "price_pending",
-        availability_status=item.inventory.availability_status
-        if item.inventory
-        else inventory_availability(item),
         availability=inventory_availability(item),
         admin_note=item.admin_note,
     )
@@ -399,9 +422,7 @@ def recommendation_matrix_entry_to_dto(
         source_layer=item.source_layer,
         raw_value=item.raw_value,
         normalized_score=item.normalized_score,
-        confidence=item.confidence,
         evidence_note=item.evidence_note,
-        source_ref=item.source_ref,
         updated_at=isoformat_or_none(item.updated_at),
     )
 

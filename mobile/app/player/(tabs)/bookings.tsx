@@ -1,22 +1,25 @@
 import * as React from 'react';
 import { useMemo, useState } from 'react';
-import { FlatList, View, ScrollView } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, ChevronLeft, Info } from 'lucide-react-native';
+import { Search, Info } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
+import { AppButton } from '../../../components/ui/AppButton';
 import { AppChip } from '../../../components/ui/AppChip';
-import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
-import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { BookingCard } from '../../../components/booking/BookingCard';
-import { useAppStore, useBookings, useCurrentUser } from '../../../store/appStore';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
-import type { BookingStatus } from '../../../types/domain';
+import {
+  useAppStore,
+  useBookings,
+  useCurrentUser,
+  useStrings,
+} from '../../../store/appStore';
+import type { BookingStatus, PlayerProfile } from '../../../types/domain';
 import { formatBookingOrderCode, formatBookingStatus } from '../../../lib/formatters';
 
-const filters: Array<BookingStatus | 'all'> = [
+const filters: (BookingStatus | 'all')[] = [
   'all',
   'awaiting_dropoff',
   'in_progress',
@@ -29,18 +32,23 @@ function normalizeStoreText(value: unknown) {
 }
 
 export default function BookingsListScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
-  const bookings = useBookings();
-  const sessionSource = useAppStore((state) => state.sessionSource);
-  const adminSettings = useAppStore((state) => state.adminSettings);
-  const bottomContentInset = useBottomContentInset(24);
-  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
-  const [search, setSearch] = useState('');
 
   if (!user || user.role !== 'player') {
     return null;
   }
+
+  return <BookingsListContent user={user} />;
+}
+
+function BookingsListContent({ user }: { user: PlayerProfile }) {
+  const router = useRouter();
+  const bookings = useBookings();
+  const strings = useStrings();
+  const storeSettings = useAppStore((state) => state.storeSettings);
+  const bottomContentInset = useBottomContentInset(24);
+  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
+  const [search, setSearch] = useState('');
 
   const filteredBookings = useMemo(
     () =>
@@ -49,15 +57,13 @@ export default function BookingsListScreen() {
           return false;
         }
 
-        // Apply status filter
         const matchesFilter = filter === 'all' || item.status === filter;
 
-        // Apply search
         const matchesSearch =
           `${item.id} ${item.orderCode ?? formatBookingOrderCode(item.id)} ${item.racketBrand} ${item.racketModel}`
             .toLowerCase()
             .includes(search.toLowerCase());
-        
+
         return matchesFilter && matchesSearch;
       }),
     [bookings, filter, search, user.id]
@@ -107,12 +113,7 @@ export default function BookingsListScreen() {
               inputClassName="text-[15px] font-medium"
             />
 
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              className="-mx-5 px-5"
-              contentContainerStyle={{ gap: 8, paddingRight: 40 }}
-            >
+            <View className="flex-row flex-wrap gap-2">
               {filters.map((item) => (
                 <AppChip
                   key={item}
@@ -122,21 +123,13 @@ export default function BookingsListScreen() {
                   onPress={() => setFilter(item)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </View>
         }
         renderItem={({ item }) => {
-          const stringItem = getStringById(item.stringId);
-          const admin = getAdminById(item.adminId);
-          const currentStoreSettings =
-            (sessionSource === 'backend'
-              ? adminSettings.find((settings) => settings.adminId === 'main') ??
-                adminSettings.find((settings) => settings.adminId === item.adminId)
-              : adminSettings.find((settings) => settings.adminId === item.adminId) ??
-                adminSettings.find((settings) => settings.adminId === 'main'));
+          const stringItem = strings.find((entry) => entry.id === item.stringId);
           const adminLabel =
-            normalizeStoreText(currentStoreSettings?.storeName) ||
-            admin?.businessName ||
+            normalizeStoreText(storeSettings?.storeName) ||
             'Assigned shop';
 
           return (
@@ -156,6 +149,11 @@ export default function BookingsListScreen() {
             <HeroText className="mt-2 text-center text-sm leading-6 text-neutral-500">
               Adjust your filters or start a new booking.
             </HeroText>
+            <AppButton
+              label="Start a booking"
+              className="mt-5"
+              onPress={() => router.push('/player/bookings/new')}
+            />
           </AppCard>
         }
       />

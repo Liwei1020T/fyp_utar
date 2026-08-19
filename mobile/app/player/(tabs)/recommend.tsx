@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Info, WandSparkles } from 'lucide-react-native';
@@ -12,15 +12,15 @@ import {
   useAppStore,
   useBackendAccessToken,
   useCurrentUser,
+  useRackets,
   useStrings,
 } from '../../../store/appStore';
-import { formatPlayFrequency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   mapBackendStringToStringItem,
   mapRecommendationResponse,
-  deriveAdvancedPreferences,
 } from '../../../services/backendMappers';
+import type { PlayerProfile } from '../../../types/domain';
 
 const priorityLabels = [
   { key: 'power', title: 'Power and rebound' },
@@ -28,35 +28,39 @@ const priorityLabels = [
   { key: 'durability', title: 'Durability' },
   { key: 'comfort', title: 'Comfort' },
   { key: 'sound', title: 'Hitting sound' },
+  { key: 'value', title: 'Value for money' },
 ] as const;
-
-function clampPreference(value: number) {
-  return Math.max(1, Math.min(10, Math.round(value)));
-}
-
-const styleOptions = [
-  { value: 'Attacking', label: 'Attacking' },
-  { value: 'Balanced', label: 'Balanced' },
-  { value: 'Control', label: 'Control / Defensive' },
-] as const;
-
-const skillOptions = ['Beginner', 'Intermediate', 'Advanced'] as const;
 
 export default function RecommendationInputScreen() {
-  const router = useRouter();
   const user = useCurrentUser();
+
+  if (!user || user.role !== 'player') {
+    return null;
+  }
+
+  return <RecommendationInputContent user={user} />;
+}
+
+function RecommendationInputContent({ user }: { user: PlayerProfile }) {
+  const router = useRouter();
   const token = useBackendAccessToken();
   const strings = useStrings();
+  const rackets = useRackets();
   const setLiveStrings = useAppStore((state) => state.setLiveStrings);
   const setLiveRecommendationResults = useAppStore(
     (state) => state.setLiveRecommendationResults,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedRacketId, setSelectedRacketId] = useState<string | null>(
+    rackets[0]?.id ?? null,
+  );
 
-  if (!user || user.role !== 'player') {
-    return null;
-  }
+  useEffect(() => {
+    if (selectedRacketId == null && rackets[0]) {
+      setSelectedRacketId(rackets[0].id);
+    }
+  }, [rackets, selectedRacketId]);
 
   const normalizedPlayingStyle =
     user.playingStyle === 'Attacking' || user.playingStyle === 'Balanced'
@@ -66,8 +70,7 @@ export default function RecommendationInputScreen() {
     user.skillLevel === 'Beginner' || user.skillLevel === 'Intermediate'
       ? user.skillLevel
       : 'Advanced';
-  const savedBudgetRange = user.budgetRange ?? 'RM30–RM50';
-  const savedPreferredFeel = user.preferredFeel ?? 'Balanced';
+  const savedPreferredFeel = user.preferredFeel ?? 'Medium';
 
   const playingStyle = normalizedPlayingStyle;
   const skillLevel = normalizedSkillLevel;
@@ -83,7 +86,7 @@ export default function RecommendationInputScreen() {
     setSubmitError(null);
 
     if (!token) {
-      router.push('/player/results');
+      setSubmitError('Your player session expired. Sign in again to generate recommendations.');
       return;
     }
 
@@ -98,7 +101,11 @@ export default function RecommendationInputScreen() {
       if (strings.length === 0) {
         setLiveStrings(availableStrings);
       }
-      const response = await backendApi.generateRecommendations(token, 3);
+      const response = await backendApi.generateRecommendations(
+        token,
+        3,
+        selectedRacketId ?? undefined,
+      );
       setLiveRecommendationResults(
         mapRecommendationResponse(response, availableStrings),
       );
@@ -121,28 +128,6 @@ export default function RecommendationInputScreen() {
       .map(([key]) => priorityLabels.find((p) => p.key === key)?.title.split(' ')[0])
       .join(', ');
   }, [priorities]);
-  const advancedPreferences = useMemo(
-    () => {
-      const savedAdvanced =
-        user.advancedPreferences ?? deriveAdvancedPreferences(priorities);
-      return [
-        {
-          label: 'Elasticity',
-          value: clampPreference(savedAdvanced.elasticity),
-        },
-        {
-          label: 'Tension retention',
-          value: clampPreference(savedAdvanced.tensionRetention),
-        },
-        {
-          label: 'String movement',
-          value: clampPreference(savedAdvanced.stringMovement),
-        },
-      ];
-    },
-    [priorities, user.advancedPreferences],
-  );
-
   return (
     <AppScreen
       headerVariant="flow"
@@ -150,6 +135,26 @@ export default function RecommendationInputScreen() {
       subtitle="Generate a backend-scored shortlist from your saved player profile."
       showBackButton={router.canGoBack()}
       onBackPress={() => router.back()}
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Generate recommendation"
+            size="lg"
+            onPress={handleGenerate}
+            isLoading={isGenerating}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile and advanced preferences"
+            className="min-h-11 items-center justify-center"
+            onPress={() => router.push('/player/profile/edit')}
+          >
+            <HeroText className="text-xs font-bold uppercase tracking-widest text-primary-700">
+              Edit profile and advanced preferences
+            </HeroText>
+          </Pressable>
+        </View>
+      }
     >
       <AppCard variant="dark" className="rounded-[24px]" padding="md">
         <View className="flex-row items-center justify-between gap-4">
@@ -200,8 +205,8 @@ export default function RecommendationInputScreen() {
               <HeroText className="text-sm font-medium text-primary-600">{topThreePriorities}</HeroText>
             </View>
             <View className="w-1/2 mt-1 pr-2">
-              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Budget</HeroText>
-              <HeroText className="text-sm font-medium text-neutral-800">{savedBudgetRange}</HeroText>
+              <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Gauge</HeroText>
+              <HeroText className="text-sm font-medium text-neutral-800">{user.preferredGauge}</HeroText>
             </View>
             <View className="w-1/2 mt-1">
               <HeroText className="text-[10px] font-bold uppercase text-neutral-400">Feel</HeroText>
@@ -211,84 +216,27 @@ export default function RecommendationInputScreen() {
         </AppCard>
       </AppSection>
 
-      <AppSection eyebrow="Context" title="Saved Player Context">
-        <AppCard variant="elevated" padding="md" className="gap-4">
-          <View>
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Playing style</HeroText>
-            <View className="mt-2 flex-row flex-wrap gap-2">
-              {styleOptions.map((style) => (
+      <AppSection title="Racket context">
+        <AppCard variant="subtle" padding="sm">
+          {rackets.length > 0 ? (
+            <View className="flex-row flex-wrap gap-2">
+              {rackets.map((racket) => (
                 <AppChip
-                  key={style.value}
-                  label={style.label}
-                  size="sm"
-                  variant={playingStyle === style.value ? 'primary' : 'neutral'}
+                  key={racket.id}
+                  label={`${racket.brand} ${racket.model}`}
+                  variant={selectedRacketId === racket.id ? 'primary' : 'neutral'}
+                  accessibilityState={{ selected: selectedRacketId === racket.id }}
+                  onPress={() => setSelectedRacketId(racket.id)}
                 />
               ))}
             </View>
-          </View>
-
-          <View>
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Skill level</HeroText>
-            <View className="mt-2 flex-row flex-wrap gap-2">
-              {skillOptions.map((level) => (
-                <AppChip
-                  key={level}
-                  label={level}
-                  size="sm"
-                  variant={skillLevel === level ? 'primary' : 'neutral'}
-                />
-              ))}
-            </View>
-          </View>
-
-          <View className="flex-row items-center justify-between">
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Play frequency</HeroText>
-            <AppChip label={formatPlayFrequency(user.playFrequency)} size="sm" variant="secondary" />
-          </View>
+          ) : (
+            <HeroText className="text-sm leading-5 text-neutral-600">
+              No saved racket is available. This run will use your profile only;
+              save a racket to enable racket-conditioned evidence.
+            </HeroText>
+          )}
         </AppCard>
-      </AppSection>
-
-      <AppSection eyebrow="Matrix input" title="Saved Priority Weights">
-        <View className="gap-3">
-          {priorityLabels.map((item) => (
-            <AppCard key={item.key} variant="elevated" padding="sm" className="px-4 py-3">
-              <View className="flex-row items-center justify-between">
-                <HeroText className="text-sm font-bold text-neutral-900">
-                  {item.title}
-                </HeroText>
-                <HeroText className="text-sm font-black text-primary-600">
-                  {priorities[item.key]}/10
-                </HeroText>
-              </View>
-              <View className="mt-3">
-                <View className="h-2 overflow-hidden rounded-full bg-neutral-100">
-                  <View
-                    className="h-full rounded-full bg-primary-600"
-                    style={{ width: `${Math.max(10, priorities[item.key] * 10)}%` }}
-                  />
-                </View>
-              </View>
-            </AppCard>
-          ))}
-          <AppCard variant="subtle" padding="md" className="rounded-[24px]">
-            <HeroText className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-              Advanced preferences
-            </HeroText>
-            <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-              These editable inputs are also sent to the FYP1 scorer, so
-              elasticity, tension retention, and string movement are not ignored.
-            </HeroText>
-            <View className="mt-4 flex-row flex-wrap gap-2">
-              {advancedPreferences.map((item) => (
-                <AppChip
-                  key={item.label}
-                  label={`${item.label} ${item.value}/10`}
-                  variant="neutral"
-                />
-              ))}
-            </View>
-          </AppCard>
-        </View>
       </AppSection>
 
       <AppSection>
@@ -296,7 +244,10 @@ export default function RecommendationInputScreen() {
           <View className="flex-row items-center gap-2">
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
-              FYP1 uses rule-enhanced content-based recommendation: preference match, official/NLP feature fusion, rule fit, and budget fit. No collaborative filtering is used yet.
+              Recommendations combine your preferences with verified string
+              evidence and local structured feedback. Collaborative racket–string
+              evidence is applied only when at least three independent users support
+              the same exact racket model and string; sparse cases keep the base score.
             </HeroText>
           </View>
         </AppCard>
@@ -310,19 +261,6 @@ export default function RecommendationInputScreen() {
         </AppCard>
       ) : null}
 
-      <View className="mt-8 mb-6">
-        <AppButton
-          label="Generate recommendation"
-          size="lg"
-          onPress={handleGenerate}
-          isLoading={isGenerating}
-        />
-        <Pressable className="mt-4 items-center" onPress={() => router.push('/player/profile/edit')}>
-          <HeroText className="text-xs font-bold text-primary-700 uppercase tracking-widest">
-            Edit profile and advanced preferences
-          </HeroText>
-        </Pressable>
-      </View>
     </AppScreen>
   );
 }

@@ -21,22 +21,152 @@ export interface BackendMessageResponse {
   message: string;
 }
 
+export type BackendAgentSurface =
+  | 'chatbot'
+  | 'recommendation_explanation'
+  | 'admin_assistant';
+
+export interface BackendAgentMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface BackendAgentQuery {
+  message: string;
+  context: {
+    surface: BackendAgentSurface;
+    run_id?: string | null;
+    catalog_id?: string | null;
+    booking_id?: string | null;
+  };
+  conversation_history?: BackendAgentMessage[];
+}
+
+export interface BackendAgentSource {
+  source_type: string;
+  source_id: string;
+  label: string;
+  version?: string | null;
+}
+
+export interface BackendAgentAction {
+  action:
+    | 'open_string'
+    | 'open_recommendation'
+    | 'open_booking'
+    | 'request_human_handoff'
+    | 'open_admin_booking'
+    | 'open_admin_inventory'
+    | 'open_admin_conversation'
+    | 'open_admin_payments'
+    | 'update_booking_status'
+    | 'update_inventory_stock'
+    | 'send_admin_message';
+  label: string;
+  parameters: Record<string, string>;
+}
+
+export interface BackendAgentResponse {
+  answer: string;
+  summary: string;
+  evidence: string[];
+  sources: BackendAgentSource[];
+  evidence_status: 'complete' | 'partial' | 'insufficient_evidence';
+  suggested_questions: string[];
+  suggested_actions: BackendAgentAction[];
+  handoff?: {
+    recommended: boolean;
+    reason?: string | null;
+    booking_id?: string | null;
+  } | null;
+  model: string;
+  response_id?: string | null;
+}
+
+export interface BackendNotificationPreferences {
+  booking: boolean;
+  payment: boolean;
+  service: boolean;
+  chat: boolean;
+  recommendation: boolean;
+  system: boolean;
+}
+
+export interface BackendNotificationPreferencesPayload {
+  booking?: boolean;
+  payment?: boolean;
+  service?: boolean;
+  chat?: boolean;
+  recommendation?: boolean;
+  system?: boolean;
+}
+
+export interface BackendPrivacySettings {
+  analytics_consent: boolean;
+  personalization_consent: boolean;
+  marketing_consent: boolean;
+}
+
+export interface BackendDeviceToken {
+  id: string;
+  user_id: string;
+  token_preview: string;
+  platform: 'ios' | 'android' | 'web';
+  device_name: string | null;
+  enabled: boolean;
+  last_seen_at: string;
+}
+
+export type BackendNotificationCategory =
+  | 'booking'
+  | 'payment'
+  | 'service'
+  | 'chat'
+  | 'recommendation'
+  | 'system';
+
+export interface BackendNotification {
+  id: string;
+  user_id: string;
+  category: BackendNotificationCategory;
+  title: string;
+  body: string;
+  created_at: string;
+  read: boolean;
+  route: string;
+}
+
+export interface BackendMarkNotificationsReadPayload {
+  event_ids: string[];
+}
+
+export interface BackendMarkNotificationsReadResponse {
+  marked_count: number;
+  marked_read_ids: string[];
+}
+
 export interface BackendForgotPasswordRequestResponse
   extends BackendMessageResponse {
   dev_code_preview: string | null;
 }
 
-export type BackendBudgetTier = 'below_30' | 'between_30_50' | 'above_50';
-
 export interface BackendProfile {
+  username: string;
   skill_level: string | null;
   playing_style: string | null;
-  budget_tier: BackendBudgetTier | null;
   preferred_tension: number | null;
-  game_type: string | null;
   frequency_per_week: number | null;
-  preferred_feel: 'soft' | 'balanced' | 'crisp' | 'hard' | null;
-  recent_goal: string | null;
+  preferred_feel: 'soft' | 'medium' | 'hard' | null;
+  preferred_gauge: 'no_preference' | 'thin' | 'medium' | 'thick' | null;
+  recent_goal:
+    | 'balanced'
+    | 'power'
+    | 'control'
+    | 'durability'
+    | 'comfort'
+    | 'tension_retention'
+    | 'value_for_money'
+    | null;
   pref_attack: number | null;
   pref_comfort: number | null;
   pref_control: number | null;
@@ -83,6 +213,8 @@ export interface BackendString {
   model_name: string;
   normalized_name: string;
   price_rm: number | null;
+  available_stock: number;
+  availability_status: BackendInventoryAvailability;
   series_key: string | null;
   series_label: string | null;
   is_hybrid: boolean;
@@ -214,6 +346,12 @@ export interface BackendInventoryUpdatePayload {
   reference_id?: string | null;
 }
 
+export interface BackendStringEditorUpdatePayload {
+  catalog?: BackendStringWritePayload;
+  inventory?: BackendInventoryUpdatePayload;
+  official_performance?: BackendOfficialPerformancePayload;
+}
+
 export interface BackendStoreBusinessHoursDay {
   day:
     | 'Monday'
@@ -280,39 +418,246 @@ export interface BackendBookingUpdate {
 
 export interface BackendBooking {
   id: string;
-  order_code?: string | null;
+  order_code: string;
   user_id: string;
   string_id: string;
   string_name: string;
+  racket_id: string | null;
   customer_phone_number: string | null;
   customer_username: string | null;
   racket_brand: string | null;
   racket_model: string | null;
   requested_tension: number | null;
+  slot_id: string | null;
   drop_off_datetime: string | null;
   expected_completion_datetime: string | null;
   collection_datetime: string | null;
   notes: string | null;
+  service_method: 'counter_dropoff' | 'pickup_request';
   cancellation_reason: string | null;
   completion_summary: string | null;
   status: string;
   created_at: string | null;
   updated_at: string | null;
-  check_in_reference?: string | null;
+  check_in_reference: string;
   latest_admin_note: string | null;
   status_history: BackendBookingStatusHistory[] | null;
   updates: BackendBookingUpdate[] | null;
 }
 
+export type BackendConversationState =
+  | 'waiting_admin'
+  | 'admin_joined'
+  | 'resolved'
+  | 'closed';
+
+export interface BackendSendConversationMessagePayload {
+  body: string;
+}
+
+export interface BackendBookingConversationMessage {
+  id: string;
+  author_user_id: string;
+  author_role: string;
+  body: string;
+  created_at: string | null;
+}
+
+export interface BackendBookingConversation {
+  id: string;
+  booking_id: string | null;
+  player_id: string;
+  state: BackendConversationState;
+  support_requested_at: string;
+  player_last_read_at: string | null;
+  admin_last_read_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  messages: BackendBookingConversationMessage[];
+}
+
+export interface BackendCreateRacketPayload {
+  nickname: string;
+  model_key?: string | null;
+  brand: string;
+  model: string;
+  weight_class?: string | null;
+  balance_point?: string | null;
+  grip_size?: string | null;
+  preferred_use?: string | null;
+  notes?: string | null;
+}
+
+export interface BackendUpdateRacketPayload {
+  nickname?: string;
+  model_key?: string | null;
+  brand?: string;
+  model?: string;
+  weight_class?: string | null;
+  balance_point?: string | null;
+  grip_size?: string | null;
+  preferred_use?: string | null;
+  notes?: string | null;
+}
+
+export interface BackendRacket {
+  id: string;
+  user_id: string;
+  nickname: string;
+  model_key: string | null;
+  brand: string;
+  model: string;
+  weight_class: string | null;
+  balance_point: string | null;
+  grip_size: string | null;
+  preferred_use: string | null;
+  notes: string | null;
+  service_count?: number;
+  current_string_id?: string | null;
+  current_tension?: number | null;
+  last_serviced_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendRacketModelOption {
+  key: string;
+  brand: string;
+  model: string;
+}
+
+export type BackendFeedbackSentimentTag =
+  | 'crisp_feel'
+  | 'good_communication'
+  | 'fast_turnaround'
+  | 'would_book_again';
+
+export interface BackendCreateFeedbackPayload {
+  rating: number;
+  recommendation_relevance?: number | null;
+  string_satisfaction?: number | null;
+  tension_satisfaction?: number | null;
+  comfort?: number | null;
+  control?: number | null;
+  repulsion?: number | null;
+  durability?: number | null;
+  would_use_again?: boolean | null;
+  comment?: string | null;
+  string_feedback?: string | null;
+  service_feedback?: string | null;
+  sentiment_tags?: BackendFeedbackSentimentTag[];
+}
+
+export type BackendUpdateFeedbackPayload = Partial<BackendCreateFeedbackPayload>;
+
+export interface BackendFeedbackEligibility {
+  durability_available_at: string | null;
+  can_rate_durability: boolean;
+}
+
+export interface BackendFeedback {
+  id: string;
+  booking_id: string;
+  user_id: string;
+  rating: number;
+  recommendation_relevance: number | null;
+  string_satisfaction: number | null;
+  tension_satisfaction: number | null;
+  comfort: number | null;
+  control: number | null;
+  repulsion: number | null;
+  durability: number | null;
+  durability_available_at: string | null;
+  can_rate_durability: boolean;
+  durability_rated_at: string | null;
+  structured_field_confirmed_at: Record<string, string>;
+  would_use_again: boolean | null;
+  comment: string | null;
+  string_feedback: string | null;
+  service_feedback: string | null;
+  sentiment_tags: BackendFeedbackSentimentTag[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendRacketServiceHistory {
+  booking_id: string;
+  string_id: string;
+  string_name: string;
+  requested_tension: number | null;
+  serviced_at: string;
+  feedback: BackendFeedback | null;
+}
+
+export interface BackendRacketDetail extends BackendRacket {
+  service_history: BackendRacketServiceHistory[];
+}
+
 export interface BackendCheckInLookupResponse {
-  matched_by: 'booking_id' | 'check_in_reference';
+  matched_by: 'booking_id' | 'check_in_reference' | 'qr_token';
   booking: BackendBooking;
+}
+
+export interface BackendCheckInToken {
+  token: string;
+  expires_at: string;
+  status: 'active' | 'used' | 'expired' | 'revoked';
 }
 
 export interface BackendCheckInRequest {
   booking_id?: string | null;
   reference?: string | null;
   note?: string | null;
+}
+
+export interface BackendPayment {
+  id: string;
+  booking_id: string | null;
+  user_id: string;
+  method:
+    | 'card'
+    | 'online_banking'
+    | 'e_wallet'
+    | 'qr_transfer'
+    | 'cash'
+    | 'wallet_balance';
+  status: 'pending' | 'paid' | 'failed' | 'cancelled';
+  amount: number;
+  type: 'booking_payment' | 'wallet_top_up';
+  reference: string;
+  note: string | null;
+  proof_url: string | null;
+  created_at: string;
+}
+
+export interface BackendBookingPaymentQuote {
+  booking_id: string;
+  string_fee: number;
+  service_fee: number;
+  total_amount: number;
+  wallet_balance: number;
+  active_payment: BackendPayment | null;
+}
+
+export interface BackendWalletTransaction {
+  id: string;
+  user_id: string;
+  type: 'top_up' | 'booking_payment';
+  direction: 'credit' | 'debit';
+  status: 'completed';
+  amount: number;
+  description: string;
+  created_at: string;
+  related_booking_id: string | null;
+  method_label: string | null;
+}
+
+export interface BackendWallet {
+  user_id: string;
+  available_balance: number;
+  pending_top_up: number;
+  lifetime_top_ups: number;
+  transactions: BackendWalletTransaction[];
 }
 
 export interface BackendServiceQueueItem {
@@ -337,10 +682,16 @@ export interface BackendStoreSettings {
   store_contact: string;
   support_text: string;
   payment_notes: string;
+  payment_qr_url: string | null;
   booking_notes: string;
   store_policy_text: string;
   address: string;
   trending_string_ids: string[];
+  default_service_price: number;
+  notification_settings: Record<
+    string,
+    { enabled?: boolean; title?: string; body?: string }
+  >;
   updated_at: string | null;
 }
 
@@ -353,6 +704,11 @@ export interface BackendStoreSettingsPayload {
   store_policy_text: string;
   address: string;
   trending_string_ids: string[];
+  default_service_price: number;
+  notification_settings: Record<
+    string,
+    { enabled?: boolean; title?: string; body?: string }
+  >;
 }
 
 export interface BackendAnalyticsWorkloadEntry {
@@ -362,6 +718,7 @@ export interface BackendAnalyticsWorkloadEntry {
 
 export interface BackendAnalyticsSummary {
   weekly_bookings: number;
+  today_bookings: number;
   pending_payment_count: number;
   awaiting_dropoff_count: number;
   in_progress_count: number;
@@ -370,9 +727,71 @@ export interface BackendAnalyticsSummary {
   low_stock_count: number;
   unread_chats: number;
   today_revenue: number;
+  repeat_customer_count: number;
+  pending_feedback_count: number;
+  average_feedback_score: number | null;
+  average_completion_hours: number | null;
+  tension_distribution: Record<string, number>;
   busy_slots: string[];
   popular_string_ids: string[];
   workload_mix: BackendAnalyticsWorkloadEntry[];
+}
+
+export interface BackendAdminFeedback extends BackendFeedback {
+  order_code: string;
+  string_id: string;
+  string_name: string;
+  customer_username: string;
+  customer_phone_number: string;
+}
+
+export interface BackendCommunityFeatureSummary {
+  score: number;
+  distinct_users: number;
+  booking_count: number;
+  confidence: number;
+  weight: number;
+  evidence_scope: 'global_string' | 'exact_racket_model';
+  source_version: string;
+}
+
+export interface BackendCommunityStringSummary {
+  string_id: string;
+  features: Record<string, BackendCommunityFeatureSummary>;
+}
+
+export interface BackendCommunitySummary {
+  policy_version: string;
+  snapshot_version: string;
+  racket_model_key: string | null;
+  strings: BackendCommunityStringSummary[];
+}
+
+export interface BackendAdminCommunitySummary {
+  global: BackendCommunitySummary;
+  racket_contexts: BackendCommunitySummary[];
+}
+
+export interface BackendAdminNotification {
+  id: string;
+  user_id: string;
+  customer_username: string;
+  customer_phone_number: string;
+  token_preview: string | null;
+  category: BackendNotificationCategory;
+  title: string;
+  body: string;
+  route: string | null;
+  status: string;
+  provider_message: string | null;
+  attempts: number;
+  created_at: string;
+  last_attempt_at: string | null;
+}
+
+export interface BackendAdminDeviceToken extends BackendDeviceToken {
+  customer_username: string;
+  customer_phone_number: string;
 }
 
 export interface BackendPopularString {
@@ -407,12 +826,14 @@ export interface BackendRecommendationResult {
 export interface BackendRecommendationResponse {
   algorithm_version: string;
   results: BackendRecommendationResult[];
+  run_id?: string | null;
   generated_at?: string | null;
 }
 
 export interface BackendRecommendationDetailResponse {
   algorithm_version: string;
   result: BackendRecommendationResult;
+  run_id?: string | null;
   generated_at?: string | null;
 }
 
@@ -423,8 +844,7 @@ export interface BackendRecommendationRunItem {
   final_score: number;
   preference_match_score?: number | null;
   rule_fit_score?: number | null;
-  budget_fit_score?: number | null;
-  confidence_score?: number | null;
+  value_for_money_score?: number | null;
   nlp_review_score?: number | null;
   score_breakdown: Record<string, unknown>;
   rationale: Record<string, unknown>;
@@ -436,8 +856,6 @@ export interface BackendRecommendationRun {
   phone_number?: string | null;
   username?: string | null;
   algorithm_version: string;
-  matrix_version?: string | null;
-  feature_source_version?: string | null;
   request_snapshot: Record<string, unknown>;
   profile_snapshot: Record<string, unknown>;
   generated_at?: string | null;
@@ -447,8 +865,7 @@ export interface BackendRecommendationRun {
 export interface BackendRecommendationScoreBreakdown {
   preference_match?: number;
   rule_fit?: number;
-  budget_fit?: number;
-  confidence_score?: number;
+  value_for_money?: number;
   nlp_review_score?: number;
   final_score?: number;
 }
@@ -457,6 +874,10 @@ export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
+  community_calibration_used?: boolean;
+  community_snapshot_version?: string | null;
+  racket_context?: Record<string, string | number | null> | null;
+  cf_shadow?: Record<string, string | number | boolean | null>;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -468,10 +889,16 @@ export interface BackendRecommendationRationale {
     source?: string;
     official_score?: number | null;
     nlp_review_score?: number | null;
-    nlp_confidence?: number | null;
     nlp_influence?: number | null;
-    fusion_confidence?: number | null;
-    review_count_snapshot?: number | null;
+    baseline_score?: number | null;
+    community_score?: number | null;
+    community_distinct_users?: number | null;
+    community_booking_count?: number | null;
+    community_confidence?: number | null;
+    community_weight?: number | null;
+    community_evidence_scope?: string | null;
+    community_racket_model_key?: string | null;
+    community_source_version?: string | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;
@@ -484,15 +911,7 @@ export interface BackendRecommendationRationale {
     raw_score?: number | null;
     preference_weight?: number | null;
   }>;
-  budget?: {
-    price_rm?: number | null;
-    budget_tier?: BackendBudgetTier;
-    item_price_tier?: 'low' | 'mid' | 'high' | 'unknown';
-    budget_tier_bounds_rm?: {
-      min_rm?: number;
-      max_rm?: number;
-    };
-  };
+  price_rm?: number | null;
   rule_events?: Array<{
     rule?: string;
     delta?: number;
@@ -503,14 +922,21 @@ export interface BackendRecommendationRationale {
 }
 
 export interface BackendProfilePayload {
+  username?: string;
   skill_level?: string;
   playing_style?: string;
-  budget_tier?: BackendBudgetTier;
   preferred_tension?: number;
-  game_type?: string;
   frequency_per_week?: number;
-  preferred_feel?: 'soft' | 'balanced' | 'crisp' | 'hard';
-  recent_goal?: string;
+  preferred_feel?: 'soft' | 'medium' | 'hard';
+  preferred_gauge?: 'no_preference' | 'thin' | 'medium' | 'thick';
+  recent_goal?:
+    | 'balanced'
+    | 'power'
+    | 'control'
+    | 'durability'
+    | 'comfort'
+    | 'tension_retention'
+    | 'value_for_money';
   pref_attack?: number;
   pref_comfort?: number;
   pref_control?: number;
@@ -526,10 +952,18 @@ export interface BackendRecommendationPayload {
   user_id: string;
   skill_level: string;
   playing_style: string;
-  budget_tier: BackendBudgetTier;
   preferred_tension: number;
-  game_type: string;
   frequency_per_week: number;
+  preferred_feel: 'soft' | 'medium' | 'hard';
+  preferred_gauge: 'no_preference' | 'thin' | 'medium' | 'thick';
+  recent_goal:
+    | 'balanced'
+    | 'power'
+    | 'control'
+    | 'durability'
+    | 'comfort'
+    | 'tension_retention'
+    | 'value_for_money';
   pref_attack: number;
   pref_comfort: number;
   pref_control: number;

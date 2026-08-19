@@ -2,434 +2,371 @@
 
 ## Status
 
-Approved for planning.
+Full-data MacBERT training completed on Colab T4 on 2026-08-10. Offline
+inference and Matrix review subsequently completed. On 2026-08-12, the project
+owner clarified that MacBERT must not be merged into the old V9 workbook.
+Promotion run `bert-macbert-separate-matrix-promotion-20260812-v1` restored V9
+to its original artifact and promoted an independent 12-by-9 MacBERT Matrix.
+Docker/Postgres has recovered and the independent Matrix is imported as 108
+`nlp_review` rows across the approved 12 strings at migration head
+`20260811_0027`.
+
+This document supersedes the broader 2026-05-31 proposal. The active scope is a
+small FYP-ready Silver baseline, not the earlier two-stage five-class, mandatory
+Gold, or 33-string delivery plan.
+
+## Decision Summary
+
+- Use only the 12 strings in `config/approved_string_cohort_v1.csv` throughout
+  active catalog flows, BERT training, matrix generation, and recommendation
+  comparison.
+- Keep the 33-string raw source unchanged for historical and research
+  provenance. The other strings are hidden from the system, not deleted.
+- Train one aspect-conditioned three-class classifier with labels
+  `not_mentioned`, `positive`, and `negative`.
+- Use only high-confidence rule-based Silver rows with
+  `needs_manual_review=0`. Exclude `mentioned` and `mixed` instead of coercing
+  them into a class.
+- Use `hfl/chinese-macbert-base` with inverse-frequency weighted cross entropy.
+- Do not use zero-shot NLI.
+- Do not claim human Gold, independent annotation, Cohen's Kappa, or
+  human-ground-truth accuracy.
+- Run the full model offline on Colab T4 and return all outputs to an immutable
+  local `output/runs/<run-id>/` directory.
+- Generate a reviewed 12-by-9 matrix after full training; do not overwrite the
+  current V9 workbook automatically.
+- Link future system feedback through offline batch inference and the existing
+  recommendation-matrix importer, without deploying a separate AI service.
 
 ## Goal
 
-Improve badminton string review understanding and recommendation reliability by
-adding a raw-first, BERT-enhanced ABSA pipeline. The pipeline should produce a
-backend-compatible recommendation matrix while preserving the current
-confidence-aware backend recommender.
+Use review text to create traceable item-side signals for nine badminton-string
+aspects while keeping the current backend recommender and runtime architecture
+stable.
 
-The primary outcome is a repeatable FYP-ready workflow:
+The nine aspects are:
 
-1. Load raw badminton string reviews.
-2. Build better preprocessing and annotation data.
-3. Train and evaluate two-stage Chinese BERT/MacBERT ABSA models.
-4. Generate a `v10` hybrid recommendation matrix.
-5. Compare review understanding and recommendation output against existing
-   rule/TF-IDF/v9 baselines.
+1. `attack`
+2. `comfort`
+3. `control`
+4. `durability`
+5. `elasticity`
+6. `sound`
+7. `string_movement`
+8. `tension_retention`
+9. `value_for_money`
 
-## Current Context
+## Non-goals
 
-The active recommendation runtime imports review-derived features from:
+- Human Gold annotation or Kappa reporting
+- Zero-shot NLI labeling
+- Five-class prediction
+- Training or publishing models for all 33 raw-source strings
+- Real-time MacBERT inference inside the feedback POST request
+- Automatic model retraining from new customer comments
+- Automatic promotion of model scores into production runtime data
+- Rewriting the backend recommendation scorer
 
-- `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+## System and Data Boundary
 
-The backend imports that matrix into `string_recommendation_matrix` with
-`source_layer="nlp_review"`. The scorer then fuses NLP review scores with
-official performance, feature priors, budget fit, rules, and confidence.
+### Active cohort
 
-The new work should not rewrite the backend recommender. It should improve the
-offline ABSA layer and keep the output compatible with the existing importer.
+`config/approved_string_cohort_v1.csv` is the shared boundary for the backend
+and BERT preparation:
 
-## Important Inputs
+- Yonex BG80
+- Yonex BG65
+- Yonex BG66 ULTIMAX
+- Yonex BG80 POWER
+- Yonex EXBOLT 63
+- Yonex AEROBITE
+- Victor VBS-66 NANO
+- Victor VBS-68 Power
+- Li-Ning No.1
+- Li-Ning N65
+- Gosen RYZONIC 65
+- Kumpoo JS-63
 
-### Raw Source
+### Raw and protected inputs
 
-- `ml/nlp-workbench-latest/data/archive_latest/badminton_strings_data.json`
+- Raw review JSON:
+  `ml/nlp-workbench-latest/data/archive_latest/badminton_strings_data.json`
+- Domain dictionary:
+  `ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv`
+- Normalization rules:
+  `ml/nlp-workbench-latest/data/normalization_rules_v8.csv`
+- Current backend MacBERT review matrix:
+  `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
+- Preserved legacy V9 workbook:
+  `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
 
-This is the source of truth for raw review text and metadata. It contains 33
-strings and 22,250 reviews.
+The ZIP archive, historical `*_latest.csv` files, MacBERT Matrix, and legacy V9
+workbook are protected assets. Experiments do not rewrite them.
 
-Use these fields:
+### Prepared training dataset
 
-- string metadata: `eid`, `name`, `brand`, `series`, `rating`, `price`, `gauge`,
-  `material`, `source_url`
-- review metadata: `review_id`, `content`, `rating_label`, `likes`, `comments`,
-  `not_helpful`, `review_date`, `source_url`, `full_review_url`
-
-Do not export personal fields such as `username` or `user_profile_url` into
-training artifacts, reports, or model outputs.
-
-### Weak Labels
-
-- `ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv`
-
-This file is the main weak-label training source. It contains high-confidence
-`not_mentioned`, `positive`, and `negative` rows with `needs_manual_review=0`.
-
-### Difficult-Case Pool
-
-- `ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv`
-
-This file is the sampling pool for difficult cases and the manual gold set. It
-includes `mentioned`, `mixed`, and `needs_manual_review=1` rows that should not
-be blindly treated as high-confidence training labels.
-
-### Preprocessing Resources
-
-- `ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv`
-- `ml/nlp-workbench-latest/data/normalization_rules_v8.csv`
-
-Use these as the starting domain vocabulary and normalization rules. The v8
-dictionary has 320 terms across 9 aspects, and the v8 normalization file has 27
-rules.
-
-### Baselines
-
-- `ml/nlp-workbench-latest/data/latest_tfidf_string_feature_matrix.csv`
-- `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
-
-Use these for matrix-level and recommendation-level before/after comparison.
-
-### Backend Compatibility Inputs
-
-- `backend/data/string_catalog_db_ready.json`
-- `backend/app/adapters/persistence/sqlalchemy/recommendation_matrix_import.py`
-- `backend/tests/test_recommendation_matrix_import.py`
-
-The v10 matrix must match all 33 catalog items. Current raw JSON, v9 workbook,
-and backend catalog review counts align.
-
-## Data And Annotation Design
-
-Create a manual gold set of 900 to 1,500 review-aspect samples.
-
-Use stratified sampling across all 9 aspects:
-
-- `attack`
-- `comfort`
-- `control`
-- `durability`
-- `elasticity`
-- `sound`
-- `string_movement`
-- `tension_retention`
-- `value_for_money`
-
-Each aspect should include:
-
-- clear positive examples
-- clear negative examples
-- mixed examples
-- not-mentioned examples
-- difficult cases with negation, contrast, metaphor, tension/price references,
-  or aspect overlap
-
-Use two-stage gold labels:
-
-- `gold_mentioned`: `yes` or `no`
-- `gold_sentiment`: `positive`, `negative`, `mixed`, or `neutral`
-
-`gold_sentiment` is required only when `gold_mentioned=yes`.
-
-The gold set is for validation, test reporting, and error analysis. The main
-training set can use weak labels, but model claims should be reported on the
-manual gold set.
-
-Suggested path:
-
-- `ml/nlp-workbench-latest/annotations/absa_gold_set_v1.csv`
-
-## Preprocessing Design
-
-Build preprocessing from raw reviews, not from already-expanded ABSA CSV rows.
-
-The preprocessing layer should:
-
-- normalize whitespace, repeated punctuation, full-width/half-width variants,
-  and common typo variants
-- preserve meaningful sentiment and aspect cues such as `不`, `没`, `无`, `太`,
-  `很`, `有点`, `稍微`, `但是`, and `不过`
-- protect brand/model tokens such as `BG80`, `BG-80`, `66UM`, `EXBOLT`, and
-  `AEROBITE`
-- apply `normalization_rules_v8.csv`
-- use `domain_dictionary_optimized_v8.csv` for vocabulary, evidence extraction,
-  and hybrid fallback
-- split clauses by punctuation and contrast words such as `但是`, `但`, `不过`,
-  `然而`, `只是`, and `可惜`
-- emit diagnostic tags such as `has_negation`, `has_contrast`, `has_tension`,
-  `has_price`, `has_metaphor`, and `has_multiple_aspects`
-
-BERT input should be aspect-aware:
+Current preparation run:
 
 ```text
-评论：<normalized review or clause>
-方面：<Chinese aspect description + aspect key>
+bert-prep-system12-high3-20260810-v1
 ```
+
+Verified facts:
+
+| Field | Value |
+| --- | ---: |
+| Strings | 12 |
+| Reviews | 16,184 |
+| Review-aspect rows | 130,421 |
+| Train rows | 104,045 |
+| Validation rows | 13,077 |
+| Test rows | 13,299 |
+| `not_mentioned` | 95,455 |
+| `positive` | 28,127 |
+| `negative` | 6,839 |
+
+Dataset SHA-256:
+
+```text
+64ff725a7f38696cb21a178249b3ce642c4f8bb99485a914b8beff80af89754d
+```
+
+The split groups by normalized review text and records zero review, text, or
+group crossings. Every row retains
+`annotation_provenance=rule_based_silver_not_human_gold`.
 
 ## Model Design
 
-Use a two-stage Chinese BERT/MacBERT ABSA design.
+Each training row is one target string, one aspect, and one review:
 
-Recommended model:
+```text
+目标球线：<canonical string name>
+评价方面：<Chinese aspect description>
+评论：<review text>
+```
 
-- `hfl/chinese-macbert-base`
+Output labels:
 
-Execution split:
+| ID | Label | Meaning |
+| ---: | --- | --- |
+| 0 | `not_mentioned` | The review does not provide evidence for this aspect. |
+| 1 | `positive` | The review expresses positive evidence for this aspect. |
+| 2 | `negative` | The review expresses negative evidence for this aspect. |
 
-- local machine: small smoke test for data loading, preprocessing, inference,
-  and matrix generation
-- Colab/Kaggle: full GPU training and evaluation
+Training configuration:
 
-### Task A: Aspect Mention Detection
+- Model: `hfl/chinese-macbert-base`
+- Seed: `42`
+- Maximum sequence length: `128` for the approved full run
+- Epochs: `3`
+- Train batch size: `8`
+- Evaluation batch size: `16`
+- Gradient accumulation: `1` (one batch per optimizer update)
+- Drop final partial batch: `false`
+- Learning rate: `2e-5`
+- Weight decay: `0.01`
+- Class balancing: inverse-frequency weighted cross entropy
+- Early stopping: validation macro-F1, patience `2`
+- Precision: float32
 
-Input:
+One training step processes one batch and performs one optimizer update. With
+104,045 training rows, batch size 8, and three epochs, the full run contains
+39,018 optimizer steps.
 
-- normalized review or clause
-- aspect prompt
+## Execution and Reproducibility
 
-Output:
+### Local gates
 
-- `mentioned=yes/no`
+Run before cloud training:
 
-Training labels:
+```bash
+cd ml/nlp-workbench-latest
+.venv/bin/python -m pytest -q tests
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+```
 
-- high-confidence `positive` and `negative` -> `mentioned=yes`
-- high-confidence `not_mentioned` -> `mentioned=no`
-- `mentioned` and `mixed` from the long CSV should mainly feed the gold/difficult
-  pool unless manually verified
+A bounded 5,000-row-per-split benchmark completed under run ID
+`bert-benchmark-system12-high3-macbert-weighted-20260810-v1`. It reached
+pseudo-label test macro-F1 `0.86877`; negative-class F1 was `0.71828`. These
+numbers validate the selected weighted method only and are not the final
+full-data result.
 
-Controls:
+### Colab full run
 
-- split by `review_id` group to avoid leakage
-- downsample or class-weight the dominant `not_mentioned` class
-- report accuracy, macro F1, mentioned F1, and per-aspect F1
+Use the portable dataset-only boundary. Upload only the prepared Silver CSV and
+minimum training code. Raw sources, historical latest files, and the current
+backend matrix stay local.
 
-### Task B: Aspect Sentiment Classification
+```bash
+python scripts/train_bert.py \
+  --run-id bert-full-system12-high3-macbert-weighted-colab-20260810-v1 \
+  --dataset output/runs/bert-prep-system12-high3-20260810-v1/bert/bert_pseudo_labeled_dataset.csv \
+  --expected-dataset-sha256 64ff725a7f38696cb21a178249b3ce642c4f8bb99485a914b8beff80af89754d \
+  --model-name hfl/chinese-macbert-base \
+  --seed 42 \
+  --max-length 128 \
+  --epochs 3 \
+  --train-batch-size 8 \
+  --eval-batch-size 16
+```
 
-Input:
+The run manifest must record:
 
-- normalized review or clause
-- aspect prompt
-- only samples with `mentioned=yes`
+```text
+input_boundary.mode = portable_dataset_sha256
+input_boundary.protected_source_assets_uploaded = false
+promotion.status = not_promoted
+gold_dataset_status = not_available
+```
 
-Output:
+Before the Colab session is stopped, download the complete run directory to the
+same local run ID and verify the dataset hash, metrics, predictions, tokenizer,
+model weights, and manifests.
 
-- `positive`, `negative`, `mixed`, or `neutral`
+### Completed full-run evidence
 
-Training labels:
+Run ID:
 
-- first version uses high-confidence positive/negative weak labels
-- mixed and neutral quality comes from manual gold set and difficult-case review
+```text
+bert-full-system12-high3-macbert-weighted-colab-20260810-v1
+```
 
-Controls:
+The run completed all 39,018 optimiser steps and produced the following Silver
+pseudo-label test metrics:
 
-- report macro F1 and per-class F1
-- report per-aspect sentiment F1
-- inspect confusion between overlapping aspects such as `attack` and
-  `elasticity`, or `durability` and `tension_retention`
+| Metric | Result |
+| --- | ---: |
+| Accuracy | `0.98819` |
+| Macro-F1 | `0.97865` |
+| Weighted-F1 | `0.98817` |
+| Mention/non-mention F1 | `0.97990` |
+| Negative-class F1 | `0.96582` |
 
-## Hybrid Decision Design
+The local artifact verification confirmed 33 expected files, including model
+weights, tokenizer files, two retained checkpoints, predictions, metrics and
+manifests. The frozen dataset SHA-256 matched the preparation run,
+`input_boundary.mode=portable_dataset_sha256`, and
+`promotion.status=not_promoted`. All 30 NLP tests passed before the Colab
+session was stopped.
 
-The BERT model should not discard the existing dictionary/rule layer.
+## Evaluation Claim Boundary
 
-Hybrid behavior:
-
-- BERT and dictionary agree: increase confidence
-- BERT high confidence, dictionary silent: accept BERT as model-only evidence
-- dictionary high confidence, BERT low confidence: keep rule fallback
-- BERT and dictionary conflict: lower confidence and write an error-analysis row
-- mixed evidence: pull score toward the middle and reduce confidence
-
-Weight aggregation by:
-
-- BERT probability
-- log-scaled `likes`
-- optional recency signal from `review_date`
-- dictionary agreement
-- consistency among reviews for the same string/aspect
-
-## Review-Count Policy
-
-Keep all 33 strings in the v10 matrix and backend import.
-
-Use review-count-aware confidence:
-
-- `review_count >= 100`: core evaluation set, normal NLP confidence
-- `review_count < 100`: low-evidence set, NLP confidence discounted and fallback
-  used more aggressively
-
-Current low-evidence strings:
-
-- `JS-69`: 81 reviews
-- `JS-67`: 78 reviews
-- `雷鸣69`: 44 reviews
-
-Main FYP recommendation comparison should report the 30-string core set with
-`review_count >= 100`. The 3 low-evidence strings remain in catalog and matrix
-outputs but are excluded from headline metrics or clearly marked as low
-evidence.
-
-An optional stricter analysis can report the 22-string subset with
-`review_count >= 200`.
-
-## Matrix Generation Design
-
-Generate:
-
-- `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v10_bert_hybrid.xlsx`
-
-Keep v9-compatible columns:
-
-- `string_id`
-- `string_name`
-- `brand`
-- `series`
-- `gauge_mm`
-- `material`
-- `price_rm`
-- `rating`
-- `review_count`
-- `budget_tier`
-- `source_url`
-- `attack`
-- `comfort`
-- `control`
-- `durability`
-- `elasticity`
-- `sound`
-- `string_movement`
-- `tension_retention`
-- `value_for_money`
-- `<aspect>_100`
-- `<aspect>_confidence`
-- `<aspect>_review_raw`
-
-Add analysis columns where useful. The backend importer ignores unknown columns:
-
-- `<aspect>_mentions`
-- `<aspect>_positive`
-- `<aspect>_negative`
-- `<aspect>_mixed`
-- `<aspect>_evidence`
-- `<aspect>_fallback`
-
-Special handling:
-
-- `attack` remains the matrix column name; backend maps it to runtime
-  `repulsion`
-- `string_movement` must score "less movement / does not run" as better
-- `tension_retention` must score `掉磅快` as negative and `保磅好` as positive
-- `value_for_money` should combine review sentiment with price/affordability
-- low evidence should fall back to v9, official scores, or priors with lower
-  confidence
-
-## Backend Integration Design
-
-Do not rewrite the backend scorer.
-
-Integration steps:
-
-1. Generate the v10 workbook.
-2. Import it through the existing admin import path or by setting
-   `RECOMMENDATION_MATRIX_SOURCE_PATH`.
-3. Confirm all 33 rows match backend catalog items.
-4. Add or adjust a backend import test for the v10 workbook.
-5. Compare recommendation runs against v9 using existing admin run-audit pages.
-
-Expected backend checks:
-
-- `matched_strings = 33`
-- `unmatched_strings = 0`
-- `source_layer = "nlp_review"`
-- core features and support features are imported for all catalog rows
-
-## Evaluation Design
-
-### ABSA Evaluation
-
-Compare on the manual gold set:
-
-1. rule-based labels
-2. TF-IDF baseline
-3. BERT/MacBERT
-4. BERT + dictionary hybrid
-
-Mention metrics:
+Report:
 
 - accuracy
-- macro F1
-- mentioned F1
-- per-aspect F1
+- macro-F1
+- weighted-F1
+- mention/non-mention F1
+- per-class F1
+- three-class confusion matrix
+- split and per-label row counts
 
-Sentiment metrics:
+All current evaluation is against pseudo labels derived from the same rule
+policy used to construct the Silver training data. The valid claim is:
 
-- macro F1
-- positive/negative/mixed/neutral F1
-- per-aspect sentiment F1
-- confusion matrix
+> The model reproduces and generalizes the high-confidence Silver labeling
+> policy on leakage-safe held-out partitions.
 
-### Matrix Evaluation
+Do not claim that the metrics prove human sentiment accuracy or that MacBERT is
+better than a human-validated baseline. Human Gold evaluation can be added as a
+separate future research phase if two independent annotators and adjudication
+become available.
 
-Compare:
+## 12-by-9 Matrix Generation
 
-- v9 practical matrix
-- TF-IDF matrix
-- v10 BERT hybrid matrix
+After full training succeeds:
 
-Outputs:
+1. Run inference for the 12 approved strings and all nine aspects.
+2. Retain class probabilities, predicted class, model run ID, and review/sample
+   identifiers for audit.
+3. Exclude low-confidence predictions from score aggregation rather than
+   forcing every row into positive or negative evidence.
+4. Aggregate positive and negative evidence by string and aspect.
+5. Convert aggregate evidence to backend-compatible normalized scores,
+   confidence, and review-count fields.
+6. Preserve `attack` in the workbook; the backend maps the applicable attack
+   signal into its runtime repulsion feature.
+7. Write a versioned run-scoped CSV/XLSX. Do not write to the protected V9 path.
 
-- `ml/nlp-workbench-latest/output/bert_absa_v1/matrix_comparison.csv`
-- `ml/nlp-workbench-latest/output/bert_absa_v1/aspect_shift_report.csv`
+The output contains 12 rows and the nine domain aspects. Backend-derived fit
+features may still be calculated by the existing importer/scorer; they are not
+additional BERT labels.
 
-Track:
+## Feedback Linkage
 
-- score deltas
-- confidence deltas
-- evidence counts
-- positive/negative/mixed counts
-- fallback ratio
+The current application already persists one feedback record per completed
+booking, including the selected `string_id`, free-text `string_feedback`, and
+structured ratings.
 
-### Recommendation Evaluation
+Use the minimum batch flow:
 
-Use fixed player profiles:
+```text
+feedback export
+  -> filter to the 12 approved strings
+  -> create nine aspect-conditioned inputs per non-blank string comment
+  -> MacBERT inference
+  -> confidence-aware per-string aggregation
+  -> versioned 12-by-9 matrix
+  -> human-reviewed admin matrix import
+```
 
-- attacking player
-- control player
-- beginner/value player
-- high-tension player
-- frequent breaker / durability-focused player
+Existing endpoints:
 
-Compare:
+- `POST /api/bookings/{booking_id}/feedback`
+- `GET /api/admin/feedback/export`
+- `POST /api/admin/recommendation-matrix/import`
 
-- v9 top 5
-- v10 top 5
-- score breakdown
-- confidence score
-- top reasons
-- whether the recommendation better matches the profile
+Structured comfort, control, repulsion, durability, and tension ratings can be
+used as independent supporting evidence. They should not be silently replaced
+by BERT predictions.
 
-Suggested output:
+No inference is required inside the feedback request. Offline batch processing
+is sufficient for the single-shop FYP scope and avoids keeping a large model in
+the FastAPI runtime.
 
-- `ml/nlp-workbench-latest/output/bert_absa_v1/recommendation_comparison.md`
+The feedback inference/aggregation script is not implemented yet. The offline
+NLP operator owns export and inference; the shop admin/project owner reviews the
+matrix and triggers import. Confidence thresholds, aggregation formula, and
+score normalization must be fixed in the future inference task and recorded in
+that run's manifest rather than inferred from this design.
 
-## Known Risks
+## Promotion Gate
 
-- Existing complete ABSA notebooks contain a syntax issue in the TF-IDF input
-  cell. Implementation should script or repair the pipeline before relying on
-  notebook execution.
-- The latest labeling notebook contains a bare `pip install` cell. Setup should
-  move to requirements/docs or use notebook-safe shell syntax.
-- Weak labels may encode the old dictionary's biases. Manual gold evaluation is
-  required before claiming BERT improves accuracy.
-- Mixed and neutral labels are sparse and need careful manual review.
-- Colab/Kaggle training must export artifacts back into this workspace with
-  stable paths and version names.
-- Generated model artifacts and large outputs should not be committed unless the
-  user explicitly asks to version them.
+Training completion does not change the live system. Promotion requires a
+separate explicit decision after:
+
+1. Full run artifacts and hashes are verified locally.
+2. Final pseudo-label metrics and class confusion are reviewed.
+3. The generated 12-by-9 matrix matches all 12 approved catalog IDs.
+4. Recommendation comparisons are run against the current V9 matrix using fixed
+   player profiles.
+5. The admin import reports no unmatched approved strings.
+6. The current matrix is backed up and rollback remains available.
+
+The FYP project owner is the promotion approver. No automatic numeric promotion
+threshold has been approved yet; until one is recorded, the comparison evidence
+supports a documented human decision rather than an automatic pass/fail.
+
+### Approved promotion record
+
+The project owner first instructed `我要替换掉V9`, then clarified
+`新的bert matrix不要跟旧的V9合并一起` on 2026-08-12. The final promotion keeps
+the reviewed `0.995` threshold and minimum evidence `20`, but stores the 108
+MacBERT aspect cells in an independent workbook. The old V9 was restored to
+SHA256 `382d71cd90e195fcc41550c38175c13e1bb01515615fda572cf22fee90e05209`.
+The separate MacBERT Matrix SHA256 is
+`dd30e792a213a03386101c4c8d6ba5aae07fa0bfc8d3f7439c6df92171424f87`.
 
 ## Done Criteria
 
-- Raw review extraction is repeatable from `badminton_strings_data.json`.
-- Gold set CSV exists with 900 to 1,500 two-stage labels.
-- Preprocessing is repeatable and preserves key badminton-domain cues.
-- Local smoke test can run on a small sample.
-- Colab/Kaggle training workflow can train the full model.
-- ABSA metrics are reported on the manual gold set.
-- v10 BERT hybrid matrix is generated.
-- Backend import matches 33 of 33 strings.
-- Recommendation comparison is produced for fixed player profiles.
-- The final report clearly separates raw source, weak labels, gold labels,
-  baselines, model outputs, and backend runtime artifacts.
+- Full Colab model run completes and is downloaded under its immutable run ID.
+- Model/tokenizer, metrics, predictions, manifests, and dataset hash verify.
+- Experiment artifacts remain `not_promoted` until the promotion gate is
+  approved; the separate promotion run records the approved transition.
+- A repeatable inference script produces auditable predictions for nine aspects.
+- A versioned 12-by-9 feature matrix is generated without changing protected
+  current assets.
+- Existing feedback export can feed the offline inference path.
+- Existing backend importer accepts all 12 approved rows.
+- Documentation keeps Silver, Gold, model, matrix, and runtime claims separate.

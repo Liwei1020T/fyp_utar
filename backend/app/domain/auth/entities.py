@@ -21,6 +21,7 @@ class UserAccount:
     username: str
     phone_number: str
     password_hash: str
+    auth_version: int
     role: str
     auth_provider: str
     external_auth_id: str | None
@@ -47,3 +48,4 @@ class AuthTokenPayload:
     user_id: str
     phone_number: str
     role: str
+    auth_version: int

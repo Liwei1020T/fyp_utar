@@ -6,19 +6,19 @@
 
 @layer theme {
   @variant light {
-    --background: #F6F8FC;
+    --background: #F3F6FA;
     --foreground: #0F172A;
 
-    --app-page: #F6F8FC;
-    --app-page-auth: #F6F8FC;
-    --app-page-admin: #F6F8FC;
-    --app-surface: #FFFFFF;
-    --app-surface-elevated: #FFFFFF;
-    --app-muted: #F8FBFF;
-    --app-hero: #163B7A;
+    --app-page: #F3F6FA;
+    --app-page-auth: #F4F6F9;
+    --app-page-admin: #F1F4F8;
+    --app-surface: #FCFDFE;
+    --app-surface-elevated: #FCFDFE;
+    --app-muted: #F3F6FA;
+    --app-hero: #102F63;
     --app-hero-foreground: #FFFFFF;
     --app-hero-muted: #D6E4FF;
-    --app-tabbar: #FFFFFF;
+    --app-tabbar: #0D1B34;
 
     --surface: #FFFFFF;
     --surface-foreground: var(--foreground);
@@ -40,7 +40,7 @@
     --field-background: #FFFFFF;
     --field-foreground: var(--foreground);
     --field-placeholder: #94A3B8;
-    --field-border: #DCE6F7;
+    --field-border: #D8E0EA;
 
     --success: #059669;
     --success-foreground: #FFFFFF;
@@ -53,25 +53,25 @@
     --focus: var(--accent);
     --link: var(--accent);
 
-    --surface-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    --surface-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
     --overlay-shadow: 0 14px 32px rgba(37, 99, 235, 0.08);
     --field-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
   }
 
   @variant dark {
-    --background: #F6F8FC;
+    --background: #F3F6FA;
     --foreground: #0F172A;
 
-    --app-page: #F6F8FC;
-    --app-page-auth: #F6F8FC;
-    --app-page-admin: #F6F8FC;
-    --app-surface: #FFFFFF;
-    --app-surface-elevated: #FFFFFF;
-    --app-muted: #F8FBFF;
-    --app-hero: #163B7A;
+    --app-page: #F3F6FA;
+    --app-page-auth: #F4F6F9;
+    --app-page-admin: #F1F4F8;
+    --app-surface: #FCFDFE;
+    --app-surface-elevated: #FCFDFE;
+    --app-muted: #F3F6FA;
+    --app-hero: #102F63;
     --app-hero-foreground: #FFFFFF;
     --app-hero-muted: #D6E4FF;
-    --app-tabbar: #FFFFFF;
+    --app-tabbar: #0D1B34;
 
     --surface: #FFFFFF;
     --surface-foreground: var(--foreground);
@@ -93,7 +93,7 @@
     --field-background: #FFFFFF;
     --field-foreground: var(--foreground);
     --field-placeholder: #94A3B8;
-    --field-border: #DCE6F7;
+    --field-border: #D8E0EA;
 
     --success: #059669;
     --success-foreground: #FFFFFF;
@@ -106,7 +106,7 @@
     --focus: var(--accent);
     --link: var(--accent);
 
-    --surface-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    --surface-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
     --overlay-shadow: 0 14px 32px rgba(37, 99, 235, 0.08);
     --field-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
   }
@@ -151,11 +151,62 @@
   --color-separator: var(--separator);
   --color-focus: var(--focus);
   --color-link: var(--link);
+
+  /* HeroUI animations require concrete colors; its color parser cannot read color-mix(). */
+  --color-background-secondary: #F8FBFF;
+  --color-background-tertiary: #EEF4FF;
+  --color-background-inverse: #0F172A;
+  --color-default-hover: #E8EEF8;
+  --color-accent-hover: #1D4ED8;
+  --color-success-hover: #047857;
+  --color-warning-hover: #B45309;
+  --color-danger-hover: #B91C1C;
+  --color-field-hover: #F8FBFF;
+  --color-field-focus: #FFFFFF;
+  --color-field-border-hover: #CBD5E1;
+  --color-field-border-focus: #93C5FD;
+  --color-accent-soft: #DBEAFE;
+  --color-accent-soft-foreground: #2563EB;
+  --color-accent-soft-hover: #BFDBFE;
+  --color-danger-soft: #FEE2E2;
+  --color-danger-soft-foreground: #DC2626;
+  --color-danger-soft-hover: #FECACA;
+  --color-warning-soft: #FEF3C7;
+  --color-warning-soft-foreground: #D97706;
+  --color-warning-soft-hover: #FDE68A;
+  --color-success-soft: #D1FAE5;
+  --color-success-soft-foreground: #059669;
 }
 
 @source "./app";
 @source "./components";
 @source "./node_modules/heroui-native/lib";
+
+:root {
+  --color-background-secondary: #F8FBFF;
+  --color-background-tertiary: #EEF4FF;
+  --color-background-inverse: #0F172A;
+  --color-default-hover: #E8EEF8;
+  --color-accent-hover: #1D4ED8;
+  --color-success-hover: #047857;
+  --color-warning-hover: #B45309;
+  --color-danger-hover: #B91C1C;
+  --color-field-hover: #F8FBFF;
+  --color-field-focus: #FFFFFF;
+  --color-field-border-hover: #CBD5E1;
+  --color-field-border-focus: #93C5FD;
+  --color-accent-soft: #DBEAFE;
+  --color-accent-soft-foreground: #2563EB;
+  --color-accent-soft-hover: #BFDBFE;
+  --color-danger-soft: #FEE2E2;
+  --color-danger-soft-foreground: #DC2626;
+  --color-danger-soft-hover: #FECACA;
+  --color-warning-soft: #FEF3C7;
+  --color-warning-soft-foreground: #D97706;
+  --color-warning-soft-hover: #FDE68A;
+  --color-success-soft: #D1FAE5;
+  --color-success-soft-foreground: #059669;
+}
 
 html,
 body,

@@ -11,13 +11,17 @@ from sqlalchemy.orm import joinedload
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models import BookingUpdate
+from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
+from app.adapters.persistence.sqlalchemy.models.racket_feedback import Racket
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_booking_record
 from app.domain.booking.entities import BookingRecord
 from app.domain.booking.enums import BookingStatus
 from app.domain.booking.policies import booking_order_code
+from app.domain.store.entities import BookedSlot
 from app.domain.store.policies import ACTIVE_QUEUE_STATUSES
+from app.shared.constants import STORE_ID
 from app.shared.pagination import Page
 
 
@@ -51,11 +55,19 @@ class SqlAlchemyBookingRepository:
             joinedload(Booking.updates).joinedload(BookingUpdate.author),
         )
 
+    def lock_slot_capacity(self) -> None:
+        self.db.execute(
+            select(StoreBusinessHours.id)
+            .where(StoreBusinessHours.id == STORE_ID)
+            .with_for_update()
+        ).scalar_one()
+
     def create_booking(
         self,
         *,
         user_id: str,
         string_id: str,
+        racket_id: str | None = None,
         racket_brand: str | None,
         racket_model: str | None,
         requested_tension: float | None,
@@ -64,16 +76,19 @@ class SqlAlchemyBookingRepository:
         notes: str | None,
         status: str,
         changed_by_user_id: str | None,
+        service_method: str = "counter_dropoff",
     ) -> BookingRecord:
         booking = Booking(
             user_id=user_id,
             string_id=string_id,
+            racket_id=racket_id,
             racket_brand=racket_brand,
             racket_model=racket_model,
             requested_tension=requested_tension,
             drop_off_datetime=drop_off_datetime,
             expected_completion_datetime=expected_completion_datetime,
             notes=notes,
+            service_method=service_method,
             status=status,
         )
         self.db.add(booking)
@@ -86,11 +101,25 @@ class SqlAlchemyBookingRepository:
                 changed_by_user_id=changed_by_user_id,
             )
         )
-        self.db.commit()
+        self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking.id)
         assert refreshed is not None
         return refreshed
+
+    def get_owned_racket_identity(
+        self,
+        *,
+        racket_id: str,
+        user_id: str,
+    ) -> tuple[str, str] | None:
+        row = self.db.execute(
+            select(Racket.brand, Racket.model).where(
+                Racket.id == racket_id,
+                Racket.user_id == user_id,
+            )
+        ).one_or_none()
+        return (row.brand, row.model) if row is not None else None
 
     def get_by_id(self, booking_id: str) -> BookingRecord | None:
         booking = (
@@ -99,6 +128,12 @@ class SqlAlchemyBookingRepository:
             .scalar_one_or_none()
         )
         return to_booking_record(booking) if booking else None
+
+    def get_by_id_for_update(self, booking_id: str) -> BookingRecord | None:
+        locked_id = self.db.execute(
+            select(Booking.id).where(Booking.id == booking_id).with_for_update()
+        ).scalar_one_or_none()
+        return self.get_by_id(locked_id) if locked_id else None
 
     def list_by_user(self, user_id: str) -> Page[BookingRecord]:
         items = (
@@ -198,7 +233,7 @@ class SqlAlchemyBookingRepository:
                     note=note,
                 )
             )
-        self.db.commit()
+        self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking_id)
         assert refreshed is not None
@@ -228,27 +263,29 @@ class SqlAlchemyBookingRepository:
                 photo_type=photo_type,
             )
         )
-        self.db.commit()
+        self.db.flush()
         self.db.expire_all()
         refreshed = self.get_by_id(booking_id)
         assert refreshed is not None
         return refreshed
 
-    def list_slot_bookings(self) -> list[BookingRecord]:
-        items = (
-            self.db.execute(
-                self._detail_query().where(
-                    Booking.drop_off_datetime.is_not(None),
-                    Booking.status.not_in(
-                        [BookingStatus.CANCELLED.value, BookingStatus.REJECTED.value]
-                    ),
-                )
+    def list_slot_bookings(self) -> list[BookedSlot]:
+        rows = self.db.execute(
+            select(Booking.drop_off_datetime, Booking.status).where(
+                Booking.drop_off_datetime.is_not(None),
+                Booking.status.not_in(
+                    [BookingStatus.CANCELLED.value, BookingStatus.REJECTED.value]
+                ),
             )
-            .unique()
-            .scalars()
-            .all()
-        )
-        return [to_booking_record(item) for item in items]
+        ).all()
+        return [
+            BookedSlot(
+                drop_off_datetime=row.drop_off_datetime,
+                status=row.status,
+            )
+            for row in rows
+            if row.drop_off_datetime is not None
+        ]
 
     def get_by_order_code(self, order_code: str) -> BookingRecord | None:
         items = self.db.execute(self._detail_query()).unique().scalars().all()

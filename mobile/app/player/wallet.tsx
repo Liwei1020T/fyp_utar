@@ -1,21 +1,59 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ChevronRight } from 'lucide-react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen, useBottomContentInset } from '../../components/shared/AppScreen';
 import { formatCurrency, formatDateTime } from '../../lib/formatters';
-import { useAppStore, useCurrentUser, useWallets } from '../../store/appStore';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useCurrentUser,
+  useWallets,
+  useWalletTransactions,
+} from '../../store/appStore';
+import { BackendApiError, backendApi } from '../../services/backendApi';
+import { mapBackendWallet } from '../../services/backendMappers';
 
 export default function PlayerWalletScreen() {
   const router = useRouter();
   const bottomContentInset = useBottomContentInset(16);
   const user = useCurrentUser();
+  const token = useBackendAccessToken();
   const wallets = useWallets();
-  const transactions = useAppStore((state) => state.walletTransactions);
+  const transactions = useWalletTransactions();
+  const setLiveWallet = useAppStore((state) => state.setLiveWallet);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const refreshWallet = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    setIsRefreshing(true);
+    setLoadError(null);
+    try {
+      const wallet = mapBackendWallet(await backendApi.fetchWallet(token));
+      setLiveWallet(wallet.balance, wallet.transactions);
+    } catch (error) {
+      setLoadError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'Failed to refresh the wallet.',
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [setLiveWallet, token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshWallet();
+    }, [refreshWallet]),
+  );
 
   if (!user || user.role !== 'player') {
     return null;
@@ -28,7 +66,9 @@ export default function PlayerWalletScreen() {
     <AppScreen
       headerVariant="primary"
       title="Wallet balance"
-      subtitle="Stored balance for future checkout support and mock top-up behavior."
+      subtitle="Persisted balance and verified wallet transactions."
+      showBackButton
+      onBackPress={() => router.back()}
       scrollable={false}
     >
       <FlatList
@@ -36,6 +76,8 @@ export default function PlayerWalletScreen() {
         data={walletTransactions}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
+        refreshing={isRefreshing}
+        onRefresh={() => void refreshWallet()}
         ListHeaderComponent={
           <View className="gap-6 pb-6">
             <AppCard variant="dark" padding="lg">
@@ -48,6 +90,11 @@ export default function PlayerWalletScreen() {
               <HeroText className="mt-2 text-sm leading-6 text-primary-100">
                 Lifetime top-up {formatCurrency(wallet?.lifetimeTopUps ?? 0)}
               </HeroText>
+              {(wallet?.pendingTopUp ?? 0) > 0 ? (
+                <HeroText className="mt-1 text-sm leading-6 text-primary-100">
+                  Pending verification {formatCurrency(wallet?.pendingTopUp ?? 0)}
+                </HeroText>
+              ) : null}
             </AppCard>
 
             <AppButton
@@ -65,7 +112,7 @@ export default function PlayerWalletScreen() {
                   {item.description}
                 </HeroText>
                 <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
-                  {formatDateTime(item.createdAt)} • {item.methodLabel ?? 'Mock balance event'}
+                  {formatDateTime(item.createdAt)} • {item.methodLabel ?? 'Wallet ledger'}
                 </HeroText>
               </View>
               <HeroText className={`text-base font-bold ${item.direction === 'credit' ? 'text-green-600' : 'text-neutral-900'}`}>
@@ -75,22 +122,45 @@ export default function PlayerWalletScreen() {
             </View>
           </AppCard>
         )}
+        ListEmptyComponent={
+          <AppCard variant="subtle" className="mb-4" padding="md">
+            <HeroText className="text-base font-semibold text-neutral-900">
+              No wallet transactions yet
+            </HeroText>
+            <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
+              Verified top-ups and booking payments will appear here.
+            </HeroText>
+          </AppCard>
+        }
         ListFooterComponent={
-          <Pressable onPress={() => router.push('/player/payments/draft')}>
-            <AppCard variant="subtle" padding="md">
+          <View className="gap-4">
+            {loadError ? (
+              <AppCard variant="subtle" className="border border-red-100" padding="md">
+                <HeroText className="text-sm font-medium text-red-600">
+                  {loadError}
+                </HeroText>
+              </AppCard>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Use wallet in booking checkout"
+              onPress={() => router.push('/player/bookings')}
+            >
+              <AppCard variant="subtle" padding="md">
               <View className="flex-row items-center justify-between gap-4">
                 <View className="flex-1">
                   <HeroText className="text-base font-semibold text-neutral-900">
                     Use wallet in checkout
                   </HeroText>
                   <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
-                    Preview how stored balance can appear as a payment method in the booking flow.
+                    Open a priced booking and choose wallet balance as its payment method.
                   </HeroText>
                 </View>
                 <ChevronRight size={18} color="#94A3B8" />
               </View>
-            </AppCard>
-          </Pressable>
+              </AppCard>
+            </Pressable>
+          </View>
         }
       />
     </AppScreen>

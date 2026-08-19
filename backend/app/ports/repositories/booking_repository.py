@@ -4,15 +4,19 @@ from datetime import datetime
 from typing import Protocol
 
 from app.domain.booking.entities import BookingRecord
+from app.domain.store.entities import BookedSlot
 from app.shared.pagination import Page
 
 
 class BookingRepository(Protocol):
+    def lock_slot_capacity(self) -> None: ...
+
     def create_booking(
         self,
         *,
         user_id: str,
         string_id: str,
+        racket_id: str | None = None,
         racket_brand: str | None,
         racket_model: str | None,
         requested_tension: float | None,
@@ -21,9 +25,19 @@ class BookingRepository(Protocol):
         notes: str | None,
         status: str,
         changed_by_user_id: str | None,
+        service_method: str = "counter_dropoff",
     ) -> BookingRecord: ...
 
+    def get_owned_racket_identity(
+        self,
+        *,
+        racket_id: str,
+        user_id: str,
+    ) -> tuple[str, str] | None: ...
+
     def get_by_id(self, booking_id: str) -> BookingRecord | None: ...
+
+    def get_by_id_for_update(self, booking_id: str) -> BookingRecord | None: ...
 
     def get_by_order_code(self, order_code: str) -> BookingRecord | None: ...
 
@@ -64,7 +78,7 @@ class BookingRepository(Protocol):
         photo_type: str | None = None,
     ) -> BookingRecord: ...
 
-    def list_slot_bookings(self) -> list[BookingRecord]: ...
+    def list_slot_bookings(self) -> list[BookedSlot]: ...
 
     def list_active_queue(self) -> list[BookingRecord]: ...
 

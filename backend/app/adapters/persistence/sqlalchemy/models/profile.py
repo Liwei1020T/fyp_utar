@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import JSON
 from sqlalchemy import Numeric
 from sqlalchemy import String as SAString
 from sqlalchemy import func
@@ -34,14 +35,13 @@ class Profile(Base):
     )
     skill_level: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     playing_style: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
-    budget_tier: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     preferred_tension: Mapped[float | None] = mapped_column(
         Numeric(4, 1),
         nullable=True,
     )
-    game_type: Mapped[str | None] = mapped_column(SAString(16), nullable=True)
     frequency_per_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
     preferred_feel: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
+    preferred_gauge: Mapped[str | None] = mapped_column(SAString(32), nullable=True)
     recent_goal: Mapped[str | None] = mapped_column(SAString(500), nullable=True)
     pref_attack: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_comfort: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -52,6 +52,11 @@ class Profile(Base):
     pref_string_movement: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_tension_retention: Mapped[int | None] = mapped_column(Integer, nullable=True)
     pref_value_for_money: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notification_preferences: Mapped[dict[str, bool]] = mapped_column(
+        JSON,
+        default=dict,
+    )
+    privacy_settings: Mapped[dict[str, bool]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

@@ -1,3 +1,11 @@
+# Player Home Playwright Reference
+
+This reference snapshot predates the 2026-07-23 API-only remediation. It is
+retained for visual comparison, not as current runtime proof. Current player
+and administrator evidence is recorded in
+`docs/plans/mock-page-remediation.md` and
+`docs/admin-acceptance-2026-07-23.md`.
+
 - generic [ref=e96]:
   - generic [ref=e101]:
     - generic [ref=e105]:

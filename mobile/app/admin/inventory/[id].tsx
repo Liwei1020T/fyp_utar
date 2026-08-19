@@ -98,26 +98,26 @@ const CATALOG_VISIBILITY_OPTIONS = [
   { id: false, label: 'Hidden' },
 ] as const;
 
-const PRICING_MODE_OPTIONS: Array<{ id: PricingMode; label: string }> = [
+const PRICING_MODE_OPTIONS: { id: PricingMode; label: string }[] = [
   { id: 'fixed_price', label: 'Fixed price' },
   { id: 'quoted_at_shop', label: 'Quoted at shop' },
   { id: 'price_pending', label: 'Price pending' },
 ];
 
-const AVAILABILITY_OPTIONS: Array<{ id: InventoryAvailability; label: string }> = [
+const AVAILABILITY_OPTIONS: { id: InventoryAvailability; label: string }[] = [
   { id: 'in_stock', label: 'In Stock' },
   { id: 'low_stock', label: 'Low Stock' },
   { id: 'out_of_stock', label: 'Out of Stock' },
 ];
 
-const CATEGORY_OPTIONS: Array<{ id: StringItem['category']; label: string }> = [
+const CATEGORY_OPTIONS: { id: StringItem['category']; label: string }[] = [
   { id: 'repulsion', label: 'Repulsion' },
   { id: 'balanced', label: 'Balanced' },
   { id: 'control', label: 'Control' },
   { id: 'durable', label: 'Durable' },
 ];
 
-const SCORE_FIELDS: Array<{ key: ScoreKey; label: string }> = [
+const SCORE_FIELDS: { key: ScoreKey; label: string }[] = [
   { key: 'power', label: 'Power' },
   { key: 'control', label: 'Control' },
   { key: 'durability', label: 'Durability' },
@@ -326,6 +326,9 @@ function buildLocalPatch(
   normalized: NormalizedFormState,
 ): Partial<StringItem> {
   const gaugeMm = normalized.gaugeMm ?? stringItem.catalog.gaugeMinMm ?? stringItem.catalog.gaugeMaxMm;
+  const crossGaugeMm = stringItem.catalog.isHybrid
+    ? stringItem.catalog.gaugeMaxMm ?? gaugeMm
+    : gaugeMm;
   const stockQty = Math.max(0, normalized.stockLevel ?? stringItem.inventory.stockQty);
   const inventoryPrice =
     normalized.pricingMode === 'fixed_price'
@@ -352,7 +355,7 @@ function buildLocalPatch(
     modelName: normalized.modelName,
     localizedName: normalized.localizedName || undefined,
     gaugeMinMm: gaugeMm,
-    gaugeMaxMm: gaugeMm,
+    gaugeMaxMm: crossGaugeMm,
     material: normalized.material,
     description: normalized.description,
     mainTrait: normalized.mainTrait,
@@ -417,14 +420,20 @@ function buildLocalPatch(
   };
 }
 
-function buildCatalogPayload(normalized: NormalizedFormState) {
+function buildCatalogPayload(
+  normalized: NormalizedFormState,
+  stringItem: StringItem,
+) {
+  const crossGaugeMm = stringItem.catalog.isHybrid
+    ? stringItem.catalog.gaugeMaxMm ?? normalized.gaugeMm
+    : normalized.gaugeMm;
   return {
     brand: normalized.brand,
     model_name: normalized.modelName,
     display_name: `${normalized.brand} ${normalized.modelName}`.trim(),
     gauge_main_mm: normalized.gaugeMm,
-    gauge_cross_mm: normalized.gaugeMm,
-    gauge_label: normalized.gaugeMm != null ? `${normalized.gaugeMm.toFixed(2)} mm` : null,
+    gauge_cross_mm: crossGaugeMm,
+    gauge_label: formatGaugeRange(normalized.gaugeMm, crossGaugeMm),
     category: normalized.category,
     main_trait: normalized.mainTrait || null,
     tension_min_lbs: normalized.tensionMinLbs,
@@ -433,7 +442,7 @@ function buildCatalogPayload(normalized: NormalizedFormState) {
     short_description: createShortDescription(normalized.description),
     full_description: normalized.description,
     original_name: normalized.localizedName || null,
-    is_hybrid: false,
+    is_hybrid: stringItem.catalog.isHybrid,
     is_active: normalized.isActive,
   };
 }
@@ -515,7 +524,7 @@ function ChoiceGroup<T extends string | boolean>({
   label: string;
   helperText?: string;
   value: T;
-  options: Array<{ id: T; label: string }>;
+  options: { id: T; label: string }[];
   onChange: (value: T) => void;
 }) {
   return (
@@ -564,7 +573,7 @@ function ScoreRow({
             Scale 1 to 10
           </HeroText>
         </View>
-        <View className="h-11 w-[74px] rounded-[14px] border border-[#D8E2EE] bg-[#F8FBFF] px-3">
+        <View className="h-12 w-[74px] rounded-[14px] border border-[#D8E2EE] bg-[#F8FBFF] px-3">
           <HeroTextField
             variant="secondary"
             keyboardType="numeric"
@@ -628,7 +637,6 @@ export default function AdminInventoryDetailScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const token = useBackendAccessToken();
   const strings = useStrings();
-  const sessionSource = useAppStore((state) => state.sessionSource);
   const updateStringItem = useAppStore((state) => state.updateStringItem);
   const stringItem = strings.find((item) => item.id === params.id);
 
@@ -791,7 +799,7 @@ export default function AdminInventoryDetailScreen() {
     return normalizedForm.imageUrl !== initialNormalizedForm.imageUrl || pendingImageUpload != null;
   }, [initialNormalizedForm, normalizedForm, pendingImageUpload]);
 
-  if ((isHydrating && !form) || (params.id && !stringItem && sessionSource === 'backend')) {
+  if ((isHydrating && !form) || (params.id && !stringItem && Boolean(token))) {
     return (
       <AppScreen
         tone="admin"
@@ -835,7 +843,6 @@ export default function AdminInventoryDetailScreen() {
     );
   }
 
-  const backendSyncEnabled = sessionSource === 'backend' && Boolean(token);
   const summaryPrice = getInventoryPriceLabel(previewItem);
 
   const setField = <K extends keyof InventoryFormState>(
@@ -900,13 +907,14 @@ export default function AdminInventoryDetailScreen() {
       return;
     }
 
-    const localPatch = buildLocalPatch(stringItem, validation.data);
     setErrors({});
     setStatusBanner(null);
 
-    if (!backendSyncEnabled) {
-      updateStringItem(stringItem.id, localPatch);
-      Alert.alert('String saved', 'All edits were updated in the local admin workspace.');
+    if (!token) {
+      setStatusBanner({
+        tone: 'error',
+        message: 'Your admin session expired. Sign in again before saving.',
+      });
       return;
     }
 
@@ -924,43 +932,51 @@ export default function AdminInventoryDetailScreen() {
     }
 
     setIsSaving(true);
+    let savedServerChanges = false;
     try {
+      const hasStructuredServerChanges =
+        hasCatalogServerChanges ||
+        hasScoreServerChanges ||
+        hasInventoryServerChanges;
+
+      if (hasStructuredServerChanges) {
+        await backendApi.adminUpdateStringEditor(token!, stringItem.id, {
+          ...(hasCatalogServerChanges
+            ? { catalog: buildCatalogPayload(validation.data, stringItem) }
+            : {}),
+          ...(hasScoreServerChanges
+            ? {
+                official_performance: buildOfficialPerformancePayload(
+                  validation.data,
+                ),
+              }
+            : {}),
+          ...(hasInventoryServerChanges
+            ? { inventory: buildInventoryPayload(validation.data) }
+            : {}),
+        });
+        savedServerChanges = true;
+      }
+
+      let imageSaveError: unknown = null;
       if (hasImageServerChanges) {
-        if (pendingImageUpload && validation.data.imageUrl) {
-          await backendApi.adminUploadStringImage(token!, stringItem.id, {
-            photo: pendingImageUpload,
-          });
-        } else if (
-          !validation.data.imageUrl &&
-          initialNormalizedForm?.imageUrl &&
-          isPersistedBackendImage(initialNormalizedForm.imageUrl)
-        ) {
-          await backendApi.adminDeleteStringImage(token!, stringItem.id);
+        try {
+          if (pendingImageUpload && validation.data.imageUrl) {
+            await backendApi.adminUploadStringImage(token!, stringItem.id, {
+              photo: pendingImageUpload,
+            });
+            savedServerChanges = true;
+          } else if (
+            !validation.data.imageUrl &&
+            initialNormalizedForm?.imageUrl &&
+            isPersistedBackendImage(initialNormalizedForm.imageUrl)
+          ) {
+            await backendApi.adminDeleteStringImage(token!, stringItem.id);
+            savedServerChanges = true;
+          }
+        } catch (error) {
+          imageSaveError = error;
         }
-      }
-
-      if (hasCatalogServerChanges) {
-        await backendApi.adminUpdateString(
-          token!,
-          stringItem.id,
-          buildCatalogPayload(validation.data),
-        );
-      }
-
-      if (hasScoreServerChanges) {
-        await backendApi.adminUpdateOfficialPerformance(
-          token!,
-          stringItem.id,
-          buildOfficialPerformancePayload(validation.data),
-        );
-      }
-
-      if (hasInventoryServerChanges) {
-        await backendApi.adminUpdateInventoryString(
-          token!,
-          stringItem.id,
-          buildInventoryPayload(validation.data),
-        );
       }
 
       const [inventoryResponse, officialPerformance] = await Promise.all([
@@ -995,6 +1011,22 @@ export default function AdminInventoryDetailScreen() {
 
       updateStringItem(stringItem.id, mapped);
 
+      if (imageSaveError) {
+        const imageErrorMessage =
+          imageSaveError instanceof BackendApiError
+            ? imageSaveError.message
+            : 'The image update could not be completed.';
+        const partialSuccessMessage = hasStructuredServerChanges
+          ? `Catalog, score, and shop changes were saved, but the image was not updated. ${imageErrorMessage}`
+          : imageErrorMessage;
+        setStatusBanner({
+          tone: 'error',
+          message: partialSuccessMessage,
+        });
+        Alert.alert('Image not saved', partialSuccessMessage);
+        return;
+      }
+
       const successMessage =
         'Catalog information, scores, media, and shop data were synced successfully.';
 
@@ -1004,12 +1036,15 @@ export default function AdminInventoryDetailScreen() {
       });
       Alert.alert('String saved', successMessage);
     } catch (saveError) {
+      const errorMessage =
+        saveError instanceof BackendApiError
+          ? saveError.message
+          : 'Failed to save the latest string changes.';
       setStatusBanner({
         tone: 'error',
-        message:
-          saveError instanceof BackendApiError
-            ? saveError.message
-            : 'Failed to save the latest string changes.',
+        message: savedServerChanges
+          ? `Changes were saved, but the latest record could not be refreshed. ${errorMessage}`
+          : errorMessage,
       });
     } finally {
       setIsSaving(false);
@@ -1024,6 +1059,17 @@ export default function AdminInventoryDetailScreen() {
       onBackPress={() => router.back()}
       title="Edit String"
       subtitle="Manage catalog info, scores, media, and shop inventory."
+      footer={
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label={isDirty ? 'Save string changes' : 'All changes saved'}
+            onPress={() => void saveInventory()}
+            isLoading={isSaving}
+            isDisabled={!isDirty}
+          />
+          <AppButton label="Back to inventory" variant="outline" onPress={() => router.back()} />
+        </View>
+      }
     >
       <AppSection variant="compact">
         <AppCard variant="highlighted" padding="md">
@@ -1299,19 +1345,6 @@ export default function AdminInventoryDetailScreen() {
         <StatusBanner tone={statusBanner.tone} message={statusBanner.message} />
       ) : null}
 
-      <View className="mt-6 gap-3">
-        <AppButton
-          label={isDirty ? 'Save string changes' : 'All changes saved'}
-          onPress={() => void saveInventory()}
-          isLoading={isSaving}
-          isDisabled={!isDirty}
-        />
-        <AppButton
-          label="Back to inventory"
-          variant="outline"
-          onPress={() => router.back()}
-        />
-      </View>
     </AppScreen>
   );
 }

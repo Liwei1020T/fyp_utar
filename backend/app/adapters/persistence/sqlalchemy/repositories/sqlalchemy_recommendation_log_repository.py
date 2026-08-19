@@ -46,24 +46,22 @@ class SqlAlchemyRecommendationLogRepository:
                 algorithm_version=algorithm_version,
             )
         )
-        self.db.commit()
+        self.db.flush()
 
     def create_run(
         self,
         *,
+        run_id: str,
         user_id: str | None,
         request_payload: dict[str, Any],
         profile_payload: dict[str, Any],
         result_payloads: list[dict[str, Any]],
         algorithm_version: str,
-        matrix_version: str | None,
-        feature_source_version: str | None,
     ) -> None:
         run = RecommendationRun(
+            id=run_id,
             user_id=user_id,
             algorithm_version=algorithm_version,
-            matrix_version=matrix_version,
-            feature_source_version=feature_source_version,
             request_snapshot=request_payload,
             profile_snapshot=profile_payload,
         )
@@ -80,14 +78,13 @@ class SqlAlchemyRecommendationLogRepository:
                     final_score=_float(result.get("score")) or 0.0,
                     preference_match_score=_float(breakdown.get("preference_match")),
                     rule_fit_score=_float(breakdown.get("rule_fit")),
-                    budget_fit_score=_float(breakdown.get("budget_fit")),
-                    confidence_score=_float(breakdown.get("confidence_score")),
+                    value_for_money_score=_float(breakdown.get("value_for_money")),
                     nlp_review_score=_float(breakdown.get("nlp_review_score")),
                     score_breakdown=breakdown,
                     rationale=rationale,
                 )
             )
-        self.db.commit()
+        self.db.flush()
 
     def list_logs(
         self,

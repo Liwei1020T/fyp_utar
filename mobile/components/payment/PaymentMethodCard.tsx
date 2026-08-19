@@ -22,7 +22,13 @@ export function PaymentMethodCard({
   onPress,
 }: PaymentMethodCardProps) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityLabel={`${title}. ${description}. ${badge}`}
+      accessibilityHint="Select this payment method"
+      accessibilityState={{ checked: Boolean(selected) }}
+    >
       <AppCard variant={selected ? 'highlighted' : 'elevated'} padding="md">
         <View className="flex-row items-start gap-4">
           <View className="h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50">

@@ -64,19 +64,23 @@ type HeroButtonComponent = React.ForwardRefExoticComponent<
   Label: typeof Button.Label;
 };
 
-export const HeroButton = Object.assign(
-  React.forwardRef<RNView, HeroButtonProps>(
-    ({ children, label, textClassName, ...props }, ref) => {
-      const content = children
-        ?? (label ? <Button.Label className={textClassName}>{label}</Button.Label> : null);
+const HeroButtonRoot = React.forwardRef<RNView, HeroButtonProps>(
+  ({ children, label, textClassName, ...props }, ref) => {
+    const content = children
+      ?? (label ? <Button.Label className={textClassName}>{label}</Button.Label> : null);
 
-      return (
-        <Button ref={ref} {...props}>
-          {content}
-        </Button>
-      );
-    },
-  ),
+    return (
+      <Button ref={ref} {...props}>
+        {content}
+      </Button>
+    );
+  },
+);
+
+HeroButtonRoot.displayName = 'HeroButton';
+
+export const HeroButton = Object.assign(
+  HeroButtonRoot,
   { Label: Button.Label },
 ) as HeroButtonComponent;
 

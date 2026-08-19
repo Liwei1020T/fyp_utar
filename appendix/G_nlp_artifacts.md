@@ -16,9 +16,12 @@ Canonical source folder:
 | ABSA labeling notebook | `ml/nlp-workbench-latest/stringsense_absa_labeling_notebook_latest.ipynb` | Supports review/aspect labeling workflow. |
 | Domain dictionary | `ml/nlp-workbench-latest/data/domain_dictionary_optimized_v8.csv` | Stores badminton-string domain terms and feature mappings. |
 | Normalization rules | `ml/nlp-workbench-latest/data/normalization_rules_v8.csv` | Stores text normalization rules for NLP preprocessing. |
-| High-confidence ABSA data | `ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv` | Stores high-confidence aspect-level review data. |
-| Long ABSA dataset | `ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv` | Stores longer-form review/aspect records. |
-| Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | CSV feature matrix for item-side recommendation features. |
+| High-confidence ABSA data | `ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv` | Historical pre-boundary output retained for audit; not the current training input. |
+| Long ABSA dataset | `ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv` | Historical pre-boundary output retained for audit; not the current training input. |
+| Approved system/BERT cohort | `config/approved_string_cohort_v1.csv` | Defines the 12 active strings shared by runtime filtering and BERT preparation. |
+| BERT preparation run | `ml/nlp-workbench-latest/output/runs/bert-prep-system12-high3-20260810-v1/` | Contains the frozen 130,421-row, high-confidence three-class Silver dataset and provenance. |
+| BERT training runs | `ml/nlp-workbench-latest/output/runs/<bert-training-run-id>/bert_training/` | Contains run-scoped model, metrics, predictions, and `not_promoted` manifests. |
+| Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | Compatibility CSV for the optional standalone AI-service path. |
 | Practical feature matrix XLSX | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` | Current default backend recommendation matrix source. |
 
 ## Backend Integration
@@ -35,6 +38,45 @@ Current runtime feature keys include:
 - `sound`
 - `string_movement`
 - `tension_retention`
+- `value_for_money`
+
+The BERT classifier uses all nine review aspects. In the recommender,
+`value_for_money` is an auxiliary budget/value signal while the other eight are
+the required core NLP feature set.
+
+## Current BERT Boundary
+
+- Model: `hfl/chinese-macbert-base`
+- Input: target string, one requested aspect, and review text
+- Labels: `not_mentioned`, `positive`, `negative`
+- Training source: high-confidence, rule-based Silver only
+- Excluded: `mentioned`, `mixed`, zero-shot NLI, and any human-Gold claim
+- Scope: 12 approved strings by 9 aspects
+- Runtime state: offline/run-scoped and `not_promoted`
+
+Metrics against the pseudo-labeled validation/test partitions validate pipeline
+behavior only. They do not establish human-ground-truth accuracy.
+
+## Feedback Linkage
+
+The existing feedback flow can enrich a future 12-by-9 matrix without putting
+MacBERT inside the synchronous API request:
+
+1. `POST /api/bookings/{booking_id}/feedback` persists `string_feedback` and
+   structured ratings against a completed booking whose `string_id` is known.
+2. `GET /api/admin/feedback/export` provides an auditable batch input.
+3. Offline inference evaluates each non-blank string comment against the nine
+   aspect prompts and retains probabilities and model/run provenance.
+4. Aggregation combines confident text signals with available structured
+   comfort, control, repulsion, durability, and tension ratings for the 12
+   approved strings.
+5. A versioned matrix is reviewed, then imported through
+   `POST /api/admin/recommendation-matrix/import` only after explicit promotion
+   approval.
+
+New feedback must not automatically retrain the model or overwrite the current
+backend matrix. Batch inference and manual import are sufficient for the FYP
+scope and keep every score traceable.
 
 ## Suggested Appendix Use
 
@@ -43,4 +85,4 @@ Include:
 1. A screenshot or exported table preview of the matrix columns.
 2. A short explanation of how review-derived features become recommendation inputs.
 3. The recommender formula from Appendix D.
-4. A note that FYP1 uses NLP-derived feature signals, not a deployed deep learning ranking service.
+4. A note that BERT is offline review understanding, not a deployed deep-learning ranking service.

@@ -6,27 +6,41 @@ from fastapi import Depends
 from app.domain.profile.entities import PlayerProfile
 from app.dto.profile import ProfileOut
 from app.dto.profile import ProfilePayload
+from app.dto.profile import PrivacySettingsPayload
 from app.dto.profile import profile_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_profile_repository
 from app.entrypoints.api.dependencies import get_recommendation_repository
+from app.entrypoints.api.dependencies import get_user_repository
 from app.use_cases.profile.get_my_profile import GetMyProfileUseCase
 from app.use_cases.profile.upsert_my_profile import UpsertMyProfileUseCase
 
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
+DEFAULT_PRIVACY_SETTINGS = {
+    "analytics_consent": True,
+    "personalization_consent": True,
+    "marketing_consent": False,
+}
 
-@router.get("", response_model=ProfileOut)
+
+@router.get("", response_model=ProfileOut | None)
 def get_profile(
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
-) -> ProfileOut:
+    user_repository=Depends(get_user_repository),
+) -> ProfileOut | None:
     profile = GetMyProfileUseCase(profile_repository=profile_repository).execute(
         current_user.user_id
     )
-    return profile_to_dto(profile)
+    if profile is None:
+        return None
+
+    user = user_repository.get_by_id(current_user.user_id)
+    assert user is not None
+    return profile_to_dto(profile, username=user.username)
 
 
 @router.put("", response_model=ProfileOut)
@@ -35,6 +49,7 @@ def upsert_profile(
     current_user: CurrentUser = Depends(get_current_customer),
     profile_repository=Depends(get_profile_repository),
     recommendation_repository=Depends(get_recommendation_repository),
+    user_repository=Depends(get_user_repository),
 ) -> ProfileOut:
     profile = UpsertMyProfileUseCase(
         profile_repository=profile_repository,
@@ -44,7 +59,32 @@ def upsert_profile(
             user_id=current_user.user_id,
             created_at=None,
             updated_at=None,
-            **payload.model_dump(),
-        )
+            **payload.model_dump(exclude={"username"}),
+        ),
+        username=payload.username,
     )
-    return profile_to_dto(profile)
+    user = user_repository.get_by_id(current_user.user_id)
+    assert user is not None
+    return profile_to_dto(profile, username=user.username)
+
+
+@router.get("/privacy", response_model=PrivacySettingsPayload)
+def get_privacy_settings(
+    current_user: CurrentUser = Depends(get_current_customer),
+    profile_repository=Depends(get_profile_repository),
+) -> PrivacySettingsPayload:
+    values = profile_repository.get_privacy_settings(current_user.user_id)
+    return PrivacySettingsPayload(**{**DEFAULT_PRIVACY_SETTINGS, **values})
+
+
+@router.put("/privacy", response_model=PrivacySettingsPayload)
+def update_privacy_settings(
+    payload: PrivacySettingsPayload,
+    current_user: CurrentUser = Depends(get_current_customer),
+    profile_repository=Depends(get_profile_repository),
+) -> PrivacySettingsPayload:
+    values = profile_repository.update_privacy_settings(
+        current_user.user_id,
+        payload.model_dump(),
+    )
+    return PrivacySettingsPayload(**values)

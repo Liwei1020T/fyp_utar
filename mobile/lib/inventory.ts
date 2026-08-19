@@ -114,6 +114,10 @@ export function getInventoryPriceLabel(item: StringItem) {
   };
 }
 
+export function hasPendingInventoryPrice(item: StringItem) {
+  return getInventoryPriceLabel(item).state === 'pending';
+}
+
 export function getInventoryAttentionState(item: StringItem): InventoryAttentionState {
   if (!item.catalog.isActive) {
     return 'inactive';
@@ -121,7 +125,7 @@ export function getInventoryAttentionState(item: StringItem): InventoryAttention
   if (item.inventory.availabilityStatus === 'out_of_stock') {
     return 'out_of_stock';
   }
-  if (item.inventory.priceStatus === 'pending' || item.inventory.price == null) {
+  if (hasPendingInventoryPrice(item)) {
     return 'price_missing';
   }
   if (item.inventory.availabilityStatus === 'low_stock' || item.inventory.stockQty <= 5) {
@@ -184,7 +188,7 @@ export function getInventorySummary(items: StringItem[]) {
     (item) => getInventoryAttentionState(item) === 'low_stock',
   ).length;
   const pricePending = items.filter(
-    (item) => getInventoryAttentionState(item) === 'price_missing',
+    hasPendingInventoryPrice,
   ).length;
 
   return {

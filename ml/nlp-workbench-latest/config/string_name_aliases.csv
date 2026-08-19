@@ -1,0 +1,41 @@
+raw_name,normalized_name,canonical_name,mapping_method,confidence,review_status,notes
+BG-80,bg80,Yonex BG80,source_catalog_exact,1.0,confirmed,Exact source name
+BG80,bg80,Yonex BG80,manual_alias,1.0,confirmed,Common punctuation-free alias
+BG 80,bg80,Yonex BG80,manual_alias,1.0,confirmed,Common spaced alias
+YONEX BG80,yonexbg80,Yonex BG80,manual_brand_alias,1.0,confirmed,English brand alias
+尤尼克斯BG80,尤尼克斯bg80,Yonex BG80,manual_brand_alias,1.0,confirmed,Chinese brand alias
+BG-65,bg65,Yonex BG65,source_catalog_exact,1.0,confirmed,Exact source name
+BG-65Ti,bg65ti,Yonex BG65 Titanium,source_catalog_exact,1.0,confirmed,Exact source name
+BG66 ULTIMAX,bg66ultimax,Yonex BG66 ULTIMAX,source_catalog_exact,1.0,confirmed,Exact source name
+BG80 POWER,bg80power,Yonex BG80 POWER,source_catalog_exact,1.0,confirmed,Exact source name
+80P,80p,Yonex BG80 POWER,common_short_alias,1.0,confirmed,Confirmed by project owner on 2026-08-03
+AEROSONIC,aerosonic,Yonex AEROSONIC,source_catalog_exact,1.0,confirmed,Exact source name
+BG66 FORCE,bg66force,Yonex BG66 FORCE,source_catalog_exact,1.0,confirmed,Exact source name
+AEROBITE,aerobite,Yonex AEROBITE,source_catalog_exact,1.0,confirmed,Exact source name
+AEROBITE BOOST,aerobiteboost,Yonex AEROBITE BOOST,source_catalog_exact,1.0,confirmed,Exact source name
+EXBOLT 63,exbolt63,Yonex EXBOLT 63,source_catalog_exact,1.0,confirmed,Exact source name
+EXBOLT65,exbolt65,Yonex EXBOLT 65,source_catalog_exact,1.0,confirmed,Exact source name
+EXBOLT 65,exbolt65,Yonex EXBOLT 65,manual_alias,1.0,confirmed,Common spaced alias
+xb65,xb65,Yonex EXBOLT 65,common_short_alias,1.0,confirmed,Confirmed by project owner on 2026-08-03
+EXBOLT 68,exbolt68,Yonex EXBOLT 68,source_catalog_exact,1.0,confirmed,Exact source name
+RYZONIC 65,ryzonic65,Gosen RYZONIC 65,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-66 NANO,vbs66nano,Victor VBS-66 NANO,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-69 NANO,vbs69nano,Victor VBS-69 NANO,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-68,vbs68,Victor VBS-68,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-70,vbs70,Victor VBS-70,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-61,vbs61,Victor VBS-61,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-63,vbs63,Victor VBS-63,source_catalog_exact,1.0,confirmed,Exact source name
+VBS-68 Power,vbs68power,Victor VBS-68 Power,source_catalog_exact,1.0,confirmed,Exact source name
+李宁1号线,李宁1号线,Li-Ning No.1,source_catalog_exact,1.0,confirmed,Exact source name
+N65,n65,Li-Ning N65,source_catalog_exact,1.0,confirmed,Exact source name
+N68,n68,Li-Ning N68,source_catalog_exact,1.0,confirmed,Exact source name
+N63,n63,Li-Ning N63,source_catalog_exact,1.0,confirmed,Exact source name
+N61,n61,Li-Ning N61,source_catalog_exact,1.0,confirmed,Exact source name
+Kizuna Z61,kizunaz61,Kizuna Z61,source_catalog_exact,1.0,confirmed,Exact source name
+JS-63,js63,Kumpoo JS-63,source_catalog_exact,1.0,confirmed,Exact source name
+雷鸣69,雷鸣69,Gosen RYZONIC 69,source_catalog_exact,1.0,confirmed,Exact source name
+JS-65,js65,Kumpoo JS-65,source_catalog_exact,1.0,confirmed,Exact source name
+RYZONIC 58,ryzonic58,Gosen RYZONIC 58,source_catalog_exact,1.0,confirmed,Exact source name
+JS-69,js69,Kumpoo JS-69,source_catalog_exact,1.0,confirmed,Exact source name
+JS-67,js67,Kumpoo JS-67,source_catalog_exact,1.0,confirmed,Exact source name
+N69,n69,Li-Ning N69,source_catalog_exact,1.0,confirmed,Exact source name

@@ -1,25 +1,24 @@
-- generic [ref=e18]:
-  - generic [ref=e19]:
-    - generic [ref=e20]:
-      - img [ref=e22]
-      - generic [ref=e25] [cursor=pointer]: STRINGSENSE FYP 1 PROTOTYPE
-      - generic [ref=e26]: Premium frontend prototype for one badminton stringing shop.
-      - generic [ref=e27]: Explore the complete player journey and the shop admin workspace from one polished Expo Router build.
-      - generic [ref=e28]:
-        - generic [ref=e29]
-        - generic [ref=e38]
-    - generic [ref=e47]:
-      - generic [ref=e52] [cursor=pointer]:
-        - img [ref=e54]
-        - generic [ref=e57]
-      - generic [ref=e66] [cursor=pointer]:
-        - img [ref=e68]
-        - generic [ref=e72]
-  - generic [ref=e77]:
-    - button "Continue to login" [ref=e78] [cursor=pointer]:
-      - generic [ref=e79]:
-        - generic [ref=e80]: Continue to login
-        - img [ref=e82]
-    - generic [ref=e85] [cursor=pointer]: New player? Create an account
-    - generic [ref=e87] [cursor=pointer]: Quick demo as player
-    - generic [ref=e88]: frontend-only • mock data • expo router • fyp 2026
+# Auth Welcome Playwright Snapshot
+
+Captured from the API-only Expo Web build on 2026-07-23.
+
+- generic [ref=f2e20]:
+  - generic [ref=f2e26]:
+    - generic [ref=f2e27]: StringSense
+    - generic [ref=f2e28]: Badminton stringing
+  - generic [ref=f2e29]:
+    - generic [ref=f2e30] [cursor=pointer]: Secure workspace access
+    - generic [ref=f2e32]: Log in to StringSense
+    - generic [ref=f2e33]: Choose a workspace, then continue with a backend-backed login.
+  - generic [ref=f2e34]:
+    - generic [ref=f2e35]:
+      - generic [ref=f2e42] [cursor=pointer]:
+        - generic [ref=f2e43]: Player workspace
+        - generic [ref=f2e44]: Recommendations, bookings, tracking, and profile
+      - generic [ref=f2e55] [cursor=pointer]:
+        - generic [ref=f2e56]: Admin workspace
+        - generic [ref=f2e57]: Bookings, inventory, business hours, and store settings
+    - generic [ref=f2e61]:
+      - generic [ref=f2e62] [cursor=pointer]: Continue to login
+      - generic [ref=f2e66]: Player registration is open; admin access is operator-configured
+  - generic [ref=f2e68]: New player? Create an account

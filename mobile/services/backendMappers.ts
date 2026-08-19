@@ -1,41 +1,57 @@
 import type {
   AdminProfile,
   Booking,
+  BookingFeedback,
   BookingStatus,
   BookingStatusEntry,
   BookingUpdate,
   BookingSlot,
-  BudgetRange,
   BusinessHours,
+  ChatConversation,
+  NotificationItem,
+  Payment,
   PlayerProfile,
   PlayFrequency,
   PlayingStyle,
   PreferredFeel,
+  PreferredGauge,
+  RecentGoal,
   RecommendationMatch,
   RecommendationScoreBreakdown,
+  RacketPassport,
   SkillLevel,
   StringItem,
+  WalletBalance,
+  WalletTransaction,
 } from '../types/domain';
 import type {
   BackendAdminInventoryString,
   BackendAuthUser,
   BackendBooking,
+  BackendBookingConversation,
   BackendBookingStatusHistory,
   BackendBookingUpdate,
-  BackendBudgetTier,
   BackendInventoryAvailability,
+  BackendFeedback,
+  BackendNotification,
   BackendOfficialPerformance,
+  BackendPayment,
   BackendPricingMode,
   BackendProfile,
   BackendProfilePayload,
   BackendRecommendationPayload,
   BackendRecommendationResponse,
+  BackendRacket,
+  BackendRacketDetail,
   BackendString,
   BackendSlot,
   BackendStoreBusinessHours,
+  BackendWallet,
+  BackendWalletTransaction,
 } from '../types/backend';
 import {
   formatBookingOrderCode,
+  formatConversationMode,
   formatLocalDateInputValue,
   formatLocalTimeValue,
 } from '../lib/formatters';
@@ -119,10 +135,6 @@ function derivedTensionRetentionPreference(
   return toTenPreference(
     Math.round((priorities.control + priorities.durability) / 2),
   );
-}
-
-function derivedValuePreference(priorities: PlayerProfile['priorities']) {
-  return toTenPreference(Math.round((priorities.durability + priorities.comfort) / 2));
 }
 
 export function mapBackendSkillLevel(
@@ -209,50 +221,52 @@ export function mapPlayFrequencyToBackend(value: PlayFrequency): number {
   }
 }
 
-export function mapBackendBudgetRange(
-  budgetTier?: BackendBudgetTier | null,
-): BudgetRange {
-  if (budgetTier === 'below_30') {
-    return 'Below RM30';
-  }
-  if (budgetTier === 'above_50') {
-    return 'RM50+';
-  }
-  if (budgetTier === 'between_30_50') {
-    return 'RM30–RM50';
-  }
-  return 'RM30–RM50';
-}
-
-function mapBudgetRangeToBackend(
-  value: BudgetRange,
-): { budgetTier: BackendBudgetTier; budgetMin: number; budgetMax: number } {
-  switch (value) {
-    case 'Below RM30':
-      return { budgetTier: 'below_30', budgetMin: 0, budgetMax: 30 };
-    case 'RM50+':
-      return { budgetTier: 'above_50', budgetMin: 50, budgetMax: 999 };
-    case 'RM30–RM50':
-    default:
-      return { budgetTier: 'between_30_50', budgetMin: 30, budgetMax: 50 };
-  }
-}
-
 function mapPreferredFeelToBackend(value: PreferredFeel) {
-  return value.toLowerCase() as 'soft' | 'balanced' | 'crisp' | 'hard';
+  return value.toLowerCase() as 'soft' | 'medium' | 'hard';
 }
 
 export function mapBackendPreferredFeel(profile?: BackendProfile | null): PreferredFeel {
-  if ((profile?.pref_comfort ?? 0) >= 4) {
+  if (profile?.preferred_feel === 'soft') {
     return 'Soft';
   }
-  if ((profile?.pref_attack ?? 0) >= 4 && (profile?.preferred_tension ?? 0) >= 27) {
+  if (profile?.preferred_feel === 'hard') {
     return 'Hard';
   }
-  if ((profile?.pref_attack ?? 0) >= 4 || (profile?.pref_sound ?? 0) >= 4) {
-    return 'Crisp';
-  }
-  return 'Balanced';
+  return 'Medium';
+}
+
+function mapPreferredGaugeToBackend(value: PreferredGauge) {
+  return value.toLowerCase().replace(' ', '_') as
+    | 'no_preference'
+    | 'thin'
+    | 'medium'
+    | 'thick';
+}
+
+function mapBackendPreferredGauge(
+  value: BackendProfile['preferred_gauge'] | undefined,
+): PreferredGauge {
+  if (value === 'thin') return 'Thin';
+  if (value === 'medium') return 'Medium';
+  if (value === 'thick') return 'Thick';
+  return 'No preference';
+}
+
+const recentGoalToBackend = {
+  'Balanced setup': 'balanced',
+  'More power': 'power',
+  'Better control': 'control',
+  'More durability': 'durability',
+  'More comfort': 'comfort',
+  'Hold tension longer': 'tension_retention',
+  'Better value': 'value_for_money',
+} as const;
+
+function mapBackendRecentGoal(value?: BackendProfile['recent_goal']): RecentGoal {
+  const match = Object.entries(recentGoalToBackend).find(
+    ([, backendValue]) => backendValue === value,
+  );
+  return (match?.[0] as RecentGoal | undefined) ?? 'Balanced setup';
 }
 
 export function mapBackendUserToPlayerProfile(
@@ -269,10 +283,8 @@ export function mapBackendUserToPlayerProfile(
     skillLevel: mapBackendSkillLevel(profile?.skill_level),
     playingStyle: mapBackendPlayingStyle(profile?.playing_style),
     playFrequency: mapFrequencyToPlayFrequency(profile?.frequency_per_week),
-    budgetRange: mapBackendBudgetRange(profile?.budget_tier),
-    preferredFeel: profile?.preferred_feel
-      ? titleCase(profile.preferred_feel) as PreferredFeel
-      : mapBackendPreferredFeel(profile),
+    preferredFeel: mapBackendPreferredFeel(profile),
+    preferredGauge: mapBackendPreferredGauge(profile?.preferred_gauge),
     preferredTension: profile?.preferred_tension ?? 24,
     priorities: {
       power: mapBackendPreference(profile?.pref_attack),
@@ -280,6 +292,7 @@ export function mapBackendUserToPlayerProfile(
       durability: mapBackendPreference(profile?.pref_durability),
       comfort: mapBackendPreference(profile?.pref_comfort),
       sound: mapBackendPreference(profile?.pref_sound),
+      value: mapBackendPreference(profile?.pref_value_for_money),
     },
     advancedPreferences: {
       elasticity: mapBackendPreference(profile?.pref_elasticity),
@@ -287,10 +300,8 @@ export function mapBackendUserToPlayerProfile(
       stringMovement: mapBackendPreference(profile?.pref_string_movement),
     },
     homeVenue: 'Klang Valley',
-    preferredAdminId: 'admin-001',
-    recentGoal:
-      profile?.recent_goal ??
-      'Use your saved profile to generate a grounded shortlist for the next restring.',
+    preferredAdminId: 'main',
+    recentGoal: mapBackendRecentGoal(profile?.recent_goal),
   };
 }
 
@@ -301,14 +312,6 @@ export function mapBackendUserToAdminProfile(user: BackendAuthUser): AdminProfil
     name: user.username,
     email: user.phone_number,
     avatarLabel: initials(user.username),
-    businessName: 'StringSense',
-    city: 'Kuala Lumpur',
-    branchCode: 'LIVE-BACKEND',
-    averageTurnaroundHours: 24,
-    queueCapacity: 24,
-    rating: 4.8,
-    specialties: ['Booking operations', 'Inventory control', 'String setup support'],
-    escalationEmail: user.phone_number,
   };
 }
 
@@ -323,13 +326,19 @@ function deriveCategory(item: BackendString): StringItem['category'] {
 }
 
 function deriveRecommendedTension(item: BackendString): [number, number] {
+  let derived: [number, number];
   if (item.comfort >= 0.7) {
-    return [22, 27];
+    derived = [22, 27];
+  } else if (item.stability_score >= 0.7 || item.durability >= 0.7) {
+    derived = [24, 29];
+  } else {
+    derived = [23, 28];
   }
-  if (item.stability_score >= 0.7 || item.durability >= 0.7) {
-    return [24, 29];
-  }
-  return [23, 28];
+
+  return [
+    item.tension_min_lbs ?? derived[0],
+    item.tension_max_lbs ?? derived[1],
+  ];
 }
 
 function deriveStrengthLabels(item: BackendString) {
@@ -497,17 +506,22 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const gaugeBounds = deriveGaugeBounds(item, category);
   const ratings = deriveScores(item);
   const mainTrait = deriveMainTrait(item, category, strengths);
-  const tensionMinLbs = recommendedTension[0];
-  const tensionMaxLbs = recommendedTension[1];
+  const tensionMinLbs = item.tension_min_lbs;
+  const tensionMaxLbs = item.tension_max_lbs;
   const gauge = formatGaugeRange(gaugeBounds.min, gaugeBounds.max);
   const priceStatus = derivePriceStatus(item.price_rm);
-  const availability = deriveAvailabilityStatus(item.is_active ? 8 : 0);
+  const stockQty = Math.max(0, item.available_stock);
+  const availability = deriveAvailabilityStatus(
+    stockQty,
+    item.availability_status,
+  );
   const imageUrl = resolveBackendMediaUrl(item.image_url);
   const catalog = {
     id: item.id,
     brand: item.brand,
     modelName: item.model_name,
     localizedName: item.original_name ?? undefined,
+    isHybrid: item.is_hybrid,
     gaugeMinMm: gaugeBounds.min,
     gaugeMaxMm: gaugeBounds.max,
     material: deriveMaterial(item),
@@ -520,8 +534,8 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
         .join(' and ')} with a ${titleCase(category)} leaning setup.`,
     mainTrait,
     category,
-    tensionMinLbs: item.tension_min_lbs ?? tensionMinLbs,
-    tensionMaxLbs: item.tension_max_lbs ?? tensionMaxLbs,
+    tensionMinLbs,
+    tensionMaxLbs,
     performanceScores: ratings,
     imageUrl,
     isActive: item.is_active,
@@ -531,7 +545,7 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
   const inventory = {
     id: item.id,
     stringId: item.id,
-    stockQty: item.is_active ? 8 : 0,
+    stockQty,
     price: item.price_rm ?? null,
     priceStatus,
     availabilityStatus: availability,
@@ -556,10 +570,10 @@ export function mapBackendStringToStringItem(item: BackendString): StringItem {
     tensionMinLbs: catalog.tensionMinLbs,
     tensionMaxLbs: catalog.tensionMaxLbs,
     ratings,
-    tensionNote: `Suggested range ${formatTensionRange(
-      tensionMinLbs,
-      tensionMaxLbs,
-    )} based on the current backend profile.`,
+    tensionNote:
+      tensionMinLbs != null || tensionMaxLbs != null
+        ? `Recorded catalog range: ${formatTensionRange(tensionMinLbs, tensionMaxLbs)}.`
+        : 'No catalog tension range is recorded for this string.',
     description: catalog.description,
     imageUrl,
     isActive: catalog.isActive,
@@ -692,8 +706,9 @@ function mapBackendStatus(value: string): BookingStatus {
     case 'picked_up':
       return 'completed';
     case 'cancelled':
-    case 'rejected':
       return 'cancelled';
+    case 'rejected':
+      return 'rejected';
     default:
       return 'awaiting_dropoff';
   }
@@ -754,49 +769,56 @@ function mapBackendBookingUpdateToBookingUpdate(
 
 export function mapBackendBookingToBooking(
   booking: BackendBooking,
-  priceByStringId: Map<string, number>,
-  adminId = 'admin-001',
+  adminId = 'main',
 ): Booking {
   const status = mapBackendStatus(booking.status);
+  const slotMatch = booking.slot_id?.match(
+    /^slot-(\d{4}-\d{2}-\d{2})-(\d{2}:\d{2})$/,
+  );
+  const slotDate = slotMatch?.[1];
+  const slotTime = slotMatch?.[2];
   const dropOffDateTime = booking.drop_off_datetime
     ? new Date(booking.drop_off_datetime)
     : null;
-  const stringFee = priceByStringId.get(booking.string_id) ?? 0;
 
   return {
     id: booking.id,
-    orderCode: booking.order_code ?? formatBookingOrderCode(booking.id),
+    orderCode: booking.order_code,
     playerId: booking.user_id,
     adminId,
     stringId: booking.string_id,
     status,
-    paymentStatus: 'paid',
+    paymentStatus: 'unpaid',
+    racketId: booking.racket_id ?? undefined,
     racketBrand: booking.racket_brand ?? 'Unknown',
     racketModel: booking.racket_model ?? 'Unknown',
     requestedTension: booking.requested_tension ?? 24,
-    dropOffDate: dropOffDateTime
-      ? formatLocalDateInputValue(dropOffDateTime)
-      : booking.created_at?.slice(0, 10) ?? 'TBD',
-    dropOffTime: dropOffDateTime
-      ? formatLocalTimeValue(dropOffDateTime)
-      : 'TBD',
+    customerName: booking.customer_username ?? undefined,
+    customerPhone: booking.customer_phone_number ?? undefined,
+    dropOffDate:
+      slotDate
+      ?? (dropOffDateTime
+        ? formatLocalDateInputValue(dropOffDateTime)
+        : booking.created_at?.slice(0, 10) ?? 'TBD'),
+    dropOffTime:
+      slotTime ?? (dropOffDateTime ? formatLocalTimeValue(dropOffDateTime) : 'TBD'),
     expectedCompletionAt: booking.expected_completion_datetime ?? undefined,
     collectionAt: booking.collection_datetime ?? undefined,
     createdAt: booking.created_at ?? new Date().toISOString(),
     notes: booking.notes ?? undefined,
+    serviceMethod: booking.service_method,
     cancellationReason: booking.cancellation_reason ?? undefined,
     completionSummary: booking.completion_summary ?? undefined,
     serviceFee: 0,
-    stringFee,
-    totalAmount: stringFee,
-    amountPaid: stringFee,
+    stringFee: 0,
+    totalAmount: 0,
+    amountPaid: 0,
     walletUsed: 0,
     bookingToken: booking.id,
-    checkInReference:
-      booking.check_in_reference ?? `LIVE-${booking.id.slice(0, 8).toUpperCase()}`,
+    checkInReference: booking.check_in_reference,
     queuePosition: 0,
     paymentRuleNote:
-      'This FYP1 booking covers drop-off, status updates, and collection tracking only.',
+      'Payment status and totals come from the server payment quote and ledger.',
     timeline: historyToTimeline(
       booking.status_history,
       status,
@@ -806,32 +828,235 @@ export function mapBackendBookingToBooking(
   };
 }
 
+export function mapBackendNotificationToNotification(
+  notification: BackendNotification,
+): NotificationItem {
+  return {
+    id: notification.id,
+    userId: notification.user_id,
+    category: notification.category,
+    title: notification.title,
+    body: notification.body,
+    createdAt: notification.created_at,
+    read: notification.read,
+    route: notification.route,
+  };
+}
+
+export function mapBackendConversationToConversation(
+  conversation: BackendBookingConversation,
+  booking?: Booking,
+  adminId?: string,
+): ChatConversation {
+  const updatedAt =
+    conversation.updated_at ??
+    conversation.created_at ??
+    conversation.support_requested_at;
+  const messages = conversation.messages.map((message) => {
+    const isAdmin = message.author_role === 'admin';
+    return {
+      id: message.id,
+      role: isAdmin ? 'admin' : 'user',
+      senderName:
+        isAdmin
+          ? 'Shop admin'
+          : booking?.customerName ?? 'Player',
+      body: message.body,
+      sentAt: message.created_at ?? updatedAt,
+    } satisfies ChatConversation['messages'][number];
+  });
+  const isGeneralSupport = conversation.booking_id == null;
+
+  return {
+    id: conversation.id,
+    playerId: conversation.player_id,
+    adminId: booking?.adminId ?? adminId,
+    bookingId: conversation.booking_id ?? undefined,
+    stringId: booking?.stringId,
+    title: isGeneralSupport
+      ? 'General support'
+      : `Booking ${booking?.orderCode ?? formatBookingOrderCode(conversation.booking_id ?? '')}`,
+    mode: conversation.state,
+    statusLabel: formatConversationMode(conversation.state),
+    summary:
+      messages.at(-1)?.body ??
+      (isGeneralSupport
+        ? 'General support requested.'
+        : 'Support requested for this booking.'),
+    updatedAt,
+    quickPrompts: [
+      'Can you confirm my drop-off time?',
+      'I need to update my service note.',
+      'When will my racket be ready?',
+    ],
+    messages,
+  };
+}
+
+export function mapBackendFeedbackToBookingFeedback(
+  feedback: BackendFeedback,
+): BookingFeedback {
+  return {
+    id: feedback.id,
+    bookingId: feedback.booking_id,
+    userId: feedback.user_id,
+    rating: feedback.rating,
+    recommendationRelevance: feedback.recommendation_relevance ?? undefined,
+    stringSatisfaction: feedback.string_satisfaction ?? undefined,
+    tensionSatisfaction: feedback.tension_satisfaction ?? undefined,
+    comfort: feedback.comfort ?? undefined,
+    control: feedback.control ?? undefined,
+    repulsion: feedback.repulsion ?? undefined,
+    durability: feedback.durability ?? undefined,
+    durabilityAvailableAt: feedback.durability_available_at ?? undefined,
+    canRateDurability: feedback.can_rate_durability,
+    durabilityRatedAt: feedback.durability_rated_at ?? undefined,
+    structuredFieldConfirmedAt: feedback.structured_field_confirmed_at,
+    wouldUseAgain: feedback.would_use_again ?? undefined,
+    comment: feedback.comment ?? undefined,
+    stringFeedback: feedback.string_feedback ?? undefined,
+    serviceFeedback: feedback.service_feedback ?? undefined,
+    sentimentTags: feedback.sentiment_tags,
+    createdAt: feedback.created_at,
+    updatedAt: feedback.updated_at,
+  };
+}
+
+export function mapBackendRacketToRacketPassport(
+  racket: BackendRacket | BackendRacketDetail,
+): RacketPassport {
+  const serviceHistory =
+    'service_history' in racket ? racket.service_history : [];
+  const stringHistory = serviceHistory.map((entry) => {
+    const feedback = entry.feedback
+      ? mapBackendFeedbackToBookingFeedback(entry.feedback)
+      : undefined;
+    return {
+      bookingId: entry.booking_id,
+      stringId: entry.string_id,
+      stringName: entry.string_name,
+      tension: entry.requested_tension ?? 0,
+      installedAt: entry.serviced_at,
+      feelRating: feedback ? feedback.rating * 2 : 0,
+      durabilityNote:
+        feedback?.stringFeedback ??
+        feedback?.serviceFeedback ??
+        'No feedback recorded.',
+      feedback,
+    };
+  });
+  const summaryTension = racket.current_tension ?? undefined;
+  const tensions = serviceHistory.flatMap((entry) =>
+    entry.requested_tension == null ? [] : [entry.requested_tension],
+  );
+  if (tensions.length === 0 && summaryTension != null) {
+    tensions.push(summaryTension);
+  }
+  const preferredRange: [number, number] =
+    tensions.length > 0
+      ? [Math.min(...tensions), Math.max(...tensions)]
+      : [0, 0];
+  const currentService = serviceHistory[0];
+
+  return {
+    id: racket.id,
+    playerId: racket.user_id,
+    nickname: racket.nickname,
+    modelKey: racket.model_key,
+    brand: racket.brand,
+    model: racket.model,
+    weightClass: racket.weight_class ?? 'Not recorded',
+    balancePoint: racket.balance_point ?? 'Not recorded',
+    gripSize: racket.grip_size ?? 'Not recorded',
+    preferredUse: racket.preferred_use ?? 'Not recorded',
+    notes: racket.notes ?? '',
+    serviceCount: racket.service_count ?? serviceHistory.length,
+    currentStringId:
+      currentService?.string_id ?? racket.current_string_id ?? '',
+    currentTension: currentService?.requested_tension ?? summaryTension ?? 0,
+    preferredRange,
+    lastServicedAt:
+      currentService?.serviced_at ?? racket.last_serviced_at ?? racket.updated_at,
+    stringHistory,
+  };
+}
+
+export function mapBackendPaymentToPayment(
+  payment: BackendPayment,
+): Payment {
+  return {
+    id: payment.id,
+    bookingId: payment.booking_id ?? undefined,
+    playerId: payment.user_id,
+    method: payment.method,
+    status: payment.status,
+    amount: payment.amount,
+    type: payment.type,
+    createdAt: payment.created_at,
+    reference: payment.reference,
+    note: payment.note ?? undefined,
+    proofUrl: resolveBackendMediaUrl(payment.proof_url),
+  };
+}
+
+export function mapBackendWalletTransaction(
+  transaction: BackendWalletTransaction,
+): WalletTransaction {
+  return {
+    id: transaction.id,
+    userId: transaction.user_id,
+    type: transaction.type,
+    direction: transaction.direction,
+    status: transaction.status,
+    amount: transaction.amount,
+    description: transaction.description,
+    createdAt: transaction.created_at,
+    relatedBookingId: transaction.related_booking_id ?? undefined,
+    methodLabel: transaction.method_label ?? undefined,
+  };
+}
+
+export function mapBackendWallet(wallet: BackendWallet): {
+  balance: WalletBalance;
+  transactions: WalletTransaction[];
+} {
+  return {
+    balance: {
+      userId: wallet.user_id,
+      availableBalance: wallet.available_balance,
+      pendingTopUp: wallet.pending_top_up,
+      lifetimeTopUps: wallet.lifetime_top_ups,
+    },
+    transactions: wallet.transactions.map(mapBackendWalletTransaction),
+  };
+}
+
 export function buildBackendProfilePayload(
   player: Pick<
     PlayerProfile,
     | 'skillLevel'
+    | 'name'
     | 'playingStyle'
     | 'playFrequency'
     | 'preferredTension'
     | 'preferredFeel'
+    | 'preferredGauge'
     | 'recentGoal'
     | 'priorities'
-    | 'budgetRange'
   > &
     Partial<Pick<PlayerProfile, 'advancedPreferences'>>,
 ): BackendProfilePayload {
-  const budget = mapBudgetRangeToBackend(player.budgetRange);
   const advanced = advancedPreferencesForPayload(player);
 
   return {
+    username: player.name,
     skill_level: mapFrontendSkillLevel(player.skillLevel),
     playing_style: mapFrontendPlayingStyle(player.playingStyle),
-    budget_tier: budget.budgetTier,
     preferred_tension: player.preferredTension,
-    game_type: 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(player.playFrequency),
-    preferred_feel: mapPreferredFeelToBackend(player.preferredFeel ?? 'Balanced'),
-    recent_goal: player.recentGoal,
+    preferred_feel: mapPreferredFeelToBackend(player.preferredFeel ?? 'Medium'),
+    preferred_gauge: mapPreferredGaugeToBackend(player.preferredGauge),
+    recent_goal: recentGoalToBackend[player.recentGoal],
     pref_attack: toTenPreference(player.priorities.power),
     pref_comfort: toTenPreference(player.priorities.comfort),
     pref_control: toTenPreference(player.priorities.control),
@@ -840,7 +1065,7 @@ export function buildBackendProfilePayload(
     pref_sound: toTenPreference(player.priorities.sound),
     pref_string_movement: toTenPreference(advanced.stringMovement),
     pref_tension_retention: toTenPreference(advanced.tensionRetention),
-    pref_value_for_money: derivedValuePreference(player.priorities),
+    pref_value_for_money: toTenPreference(player.priorities.value),
   };
 }
 
@@ -850,24 +1075,23 @@ export function buildRecommendationPayload(input: {
   playingStyle: PlayingStyle;
   preferredTension: number;
   playFrequency: PlayFrequency;
-  budgetRange?: BudgetRange;
+  preferredFeel: PreferredFeel;
+  preferredGauge: PreferredGauge;
+  recentGoal: RecentGoal;
   priorities: PlayerProfile['priorities'];
   advancedPreferences?: PlayerProfile['advancedPreferences'];
-  gameType?: string;
 }): BackendRecommendationPayload {
-  const budget = input.budgetRange
-    ? mapBudgetRangeToBackend(input.budgetRange)
-    : { budgetTier: 'between_30_50' as const, budgetMin: 30, budgetMax: 50 };
   const advanced = advancedPreferencesForPayload(input);
 
   return {
     user_id: input.userId,
     skill_level: mapFrontendSkillLevel(input.skillLevel),
     playing_style: mapFrontendPlayingStyle(input.playingStyle),
-    budget_tier: budget.budgetTier,
     preferred_tension: input.preferredTension,
-    game_type: input.gameType ?? 'doubles',
     frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),
+    preferred_feel: mapPreferredFeelToBackend(input.preferredFeel),
+    preferred_gauge: mapPreferredGaugeToBackend(input.preferredGauge),
+    recent_goal: recentGoalToBackend[input.recentGoal],
     pref_attack: toTenPreference(input.priorities.power),
     pref_comfort: toTenPreference(input.priorities.comfort),
     pref_control: toTenPreference(input.priorities.control),
@@ -876,7 +1100,7 @@ export function buildRecommendationPayload(input: {
     pref_sound: toTenPreference(input.priorities.sound),
     pref_string_movement: toTenPreference(advanced.stringMovement),
     pref_tension_retention: toTenPreference(advanced.tensionRetention),
-    pref_value_for_money: derivedValuePreference(input.priorities),
+    pref_value_for_money: toTenPreference(input.priorities.value),
     top_n: 3,
   };
 }
@@ -906,7 +1130,7 @@ export function mapRecommendationResponse(
         item.model_name ??
         item.string_name.replace(`${item.brand} `, ''),
       stringName: item.string_name,
-      price: item.price_rm ?? matched?.price ?? 0,
+      price: item.price_rm ?? matched?.inventory.price ?? null,
       matchScore: Math.round(item.score * 100),
       reasons: item.reasons,
       aspectScores: item.aspect_scores,
@@ -915,10 +1139,15 @@ export function mapRecommendationResponse(
       fitAngle: item.rationale_payload?.primary_fit_angle,
       tradeOffSummary: item.rationale_payload?.trade_off_summary,
       algorithmVersion: response.algorithm_version,
+      runId: response.run_id ?? null,
       generatedAt: item.generated_at ?? response.generated_at ?? null,
       suggestedTensionRange: matched
-        ? `${matched.recommendedTension[0]}-${matched.recommendedTension[1]} lbs`
-        : '23-28 lbs',
+        ? formatTensionRange(
+            matched.tensionMinLbs,
+            matched.tensionMaxLbs,
+            'Tension guidance unavailable',
+          )
+        : 'Tension guidance unavailable',
     };
   });
 }
@@ -932,8 +1161,7 @@ function mapRecommendationScoreBreakdown(
   return {
     preferenceMatch: value.preference_match,
     ruleFit: value.rule_fit,
-    budgetFit: value.budget_fit,
-    confidenceScore: value.confidence_score,
+    valueForMoney: value.value_for_money,
     nlpReviewScore: value.nlp_review_score,
     finalScore: value.final_score,
   };

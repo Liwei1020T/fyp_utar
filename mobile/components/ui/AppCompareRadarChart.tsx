@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import Svg, { Polygon, Line, Text as SvgText, Circle, G } from 'react-native-svg';
+import Svg, { Polygon, Line, Text as SvgText, G } from 'react-native-svg';
 import { appChromeColors } from './theme';
 
 interface RadarData {

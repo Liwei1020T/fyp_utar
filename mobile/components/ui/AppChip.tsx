@@ -69,13 +69,18 @@ export function AppChip({
       className={cn(
         'border',
         sizeStyles[size],
+        onPress ? 'min-h-11 min-w-11' : '',
         variantStyles[variant],
         className
       )}
+      hitSlop={onPress ? 4 : undefined}
       onPress={onPress}
       {...props}
     >
-      <HeroText className={cn(textStyles[variant], textClassName)}>
+      <HeroText
+        className={cn('min-w-0 shrink', textStyles[variant], textClassName)}
+        numberOfLines={1}
+      >
         {label}
       </HeroText>
     </HeroChip>

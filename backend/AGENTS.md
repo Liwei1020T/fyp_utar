@@ -18,7 +18,7 @@
 - Python format check: `./.venv/bin/ruff format --check .`
 - Python typecheck: `./.venv/bin/mypy app ai_service tests`
 - Python tests: `./.venv/bin/pytest -v`
-- Alembic upgrade: `./.venv/bin/alembic upgrade head`
+- Alembic upgrade: `./scripts/alembic upgrade head`
 - Fast loop for touched areas first, then run the relevant full checks before completion.
 - Ruff excludes generated and inactive paths such as `.venv/`, caches, and AppleDouble sidecar files, so repo-wide Python checks should stay green without narrowing the command scope.
 
@@ -35,17 +35,21 @@
   - phone-first auth (`phone_number + password`)
   - booking state transition enforcement
   - recommendation flow: frontend -> unified Python backend -> in-process AI module
+  - FYP-scoped Agent flow: guided player recommendation/explanation plus a read-only admin operations summary; broader completed tools and admin write handlers remain preserved but inactive
   - admin string CRUD/import
+  - commerce flow: player payment/top-up request -> admin verification -> persisted payment and wallet ledger
 - Config/runtime rules:
   - Unified backend reads `.env` through `pydantic-settings`
   - relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root
-  - default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx`
+  - default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate
   - compatibility `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` values point to CSV artifacts under `../ml/nlp-workbench-latest/output/`
-  - `AUTO_CREATE_SCHEMA` is acceptable for local dev/test; use Alembic for controlled schema changes
+  - Alembic is the sole runtime schema owner; ORM `create_all` is test-fixture only
   - `SEED_ADMIN_ENABLED` defaults to `false`; enabling it requires explicit companion credentials
 - State/data boundaries:
   - SQLAlchemy + Alembic own the active core business tables
   - the unified Python backend owns workflow writes
+  - booking support, player feedback, and derived notifications reuse persisted booking updates/history
+  - payment status and wallet balance come only from `payments` and `wallet_transactions`
   - recommendation logs remain business-owned data
 
 ## Change Rules
@@ -78,7 +82,7 @@
   - from workspace root, run `docker compose up -d postgres`
 - Setup:
   - `uv sync --extra dev`
-  - `./.venv/bin/alembic upgrade head`
+  - `./scripts/alembic upgrade head`
 - Environment:
   - copy `.env.example` to `.env`
   - only set `SEED_ADMIN_*` when the matching seed flag is explicitly enabled

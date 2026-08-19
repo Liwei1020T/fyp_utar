@@ -32,6 +32,13 @@
 - Old: `stringsense_backend/modules/store_ops.py`
 - New: `app/entrypoints/api/routes/store_routes.py` plus store/admin actions in `app/entrypoints/api/routes/admin_routes.py`
 
+Current post-migration route modules with no legacy one-file equivalent:
+
+- `app/entrypoints/api/routes/commerce_routes.py`
+- `app/entrypoints/api/routes/notification_routes.py`
+- `app/entrypoints/api/routes/booking_conversation_routes.py`
+- `app/entrypoints/api/routes/racket_feedback_routes.py`
+
 ## Business Logic
 
 - Old: booking transition rules in route helpers and shared enums in `stringsense_backend/core/domain.py`
@@ -55,10 +62,18 @@
 - Old: `stringsense_backend/db/models.py`
 - New: split model files under `app/adapters/persistence/sqlalchemy/models/`
 
-- Old: route modules performed direct SQLAlchemy queries
-- New: SQLAlchemy access is isolated in repository adapters under `app/adapters/persistence/sqlalchemy/repositories/`
+- Old: route modules mixed reusable domain rules with direct SQLAlchemy queries
+- New: reusable and multi-repository behavior uses ports plus repository
+  adapters under `app/adapters/persistence/sqlalchemy/repositories/`.
+  Compact single-provider CRUD/ledger modules may remain in the entrypoint when
+  adding a one-implementation port would only add pass-through boilerplate.
 
-## Security and AI
+- `app/adapters/persistence/sqlalchemy/session.py:get_db` owns commit/rollback
+  for every request. Repositories and route-local persistence only flush, so
+  multi-repository use cases remain atomic without a pass-through transaction
+  manager abstraction.
+
+## Security and Recommendation
 
 - Old: `stringsense_backend/core/security.py`
 - New:
@@ -66,7 +81,8 @@
   - `app/adapters/services/security/jwt_token_service.py`
 
 - Old: `stringsense_backend/modules/ai.py`
-- New: `app/adapters/services/ai/recommendation_engine_adapter.py`
+- Active recommendation: `app/domain/recommendation/scoring.py`
+- Standalone compatibility only: `ai_service/`
 
 ## Shared / Config
 

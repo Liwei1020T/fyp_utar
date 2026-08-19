@@ -6,11 +6,11 @@ This appendix identifies representative code sections that are suitable for incl
 
 | Area | File | Suggested Lines / Function | Why Include |
 | --- | --- | --- | --- |
-| App bootstrap | `mobile/app/_layout.tsx` | `BackendSessionBootstrap`, root providers | Shows app initialization, React Query, HeroUI Native, and backend session restoration. |
+| App bootstrap | `mobile/app/_layout.tsx` | `BackendSessionBootstrap`, root providers | Shows app initialization, HeroUI Native, native/current-tab session restoration, and `/auth/me` revalidation. |
 | Role routing | `mobile/components/roles/RoleGuard.tsx` | `RoleGuard` | Demonstrates player/admin route protection. |
 | Backend API client | `mobile/services/backendApi.ts` | `requestJson`, `requestFormJson`, `backendApi` methods | Shows typed frontend-backend communication and error handling. |
 | Recommendation screen | `mobile/app/player/(tabs)/recommend.tsx` | `handleGenerate` | Shows how the mobile app triggers backend recommendation generation. |
-| State management | `mobile/store/appStore.ts` | session and live data state | Shows hybrid local/backend state management. |
+| State management | `mobile/store/appStore.ts` | session, successful API snapshots, and transient drafts | Shows backend-authoritative writes without a mock business-data fallback. |
 
 ## Backend Application
 
@@ -28,12 +28,13 @@ This appendix identifies representative code sections that are suitable for incl
 
 ```python
 FINAL_SCORE_WEIGHTS = {
-    "preference_match": 0.60,
+    "preference_match": 0.75,
     "rule_fit": 0.15,
-    "budget_fit": 0.15,
-    "confidence_score": 0.10,
 }
 ```
+
+The scorer divides by the `0.90` weight total, so the effective blend is
+`83.33% preference_match + 16.67% rule_fit`.
 
 ### Booking Status Transition Policy
 
@@ -63,4 +64,3 @@ router.push('/player/results');
 - Keep excerpts short.
 - Do not include secrets, `.env` values, generated caches, or full source files.
 - Use screenshots plus code excerpts together: screenshots prove UI behavior, while code excerpts prove implementation logic.
-

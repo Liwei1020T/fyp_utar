@@ -77,12 +77,7 @@ class RecommendationMatrixEntryRecord:
     source_layer: str
     raw_value: float | None
     normalized_score: float | None
-    confidence: float | None
     evidence_note: str | None
-    source_ref: str | None
-    source_version: str | None
-    source_generated_at: datetime | None
-    review_count_snapshot: int | None
     updated_at: datetime | None
 
 

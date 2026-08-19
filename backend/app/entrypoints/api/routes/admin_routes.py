@@ -10,7 +10,19 @@ from fastapi import File
 from fastapi import Form
 from fastapi import Query
 from fastapi import UploadFile
+from sqlalchemy import select
+from sqlalchemy import delete
+from sqlalchemy.orm import Session
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import (
+    approved_catalog_ids,
+)
+from app.adapters.persistence.sqlalchemy.catalog_seed import (
+    merge_with_approved_defaults,
+)
+from app.adapters.persistence.sqlalchemy.models import CheckInToken
+from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
 from app.dto.booking import BookingSortField
@@ -24,6 +36,7 @@ from app.dto.catalog import OfficialPerformancePayload
 from app.dto.catalog import RecommendationMatrixImportReportOut
 from app.dto.catalog import RecommendationMatrixInspectionOut
 from app.dto.catalog import StringOut
+from app.dto.catalog import StringEditorUpdatePayload
 from app.dto.catalog import StringWritePayload
 from app.dto.catalog import inventory_movement_to_dto
 from app.dto.catalog import inventory_string_to_dto
@@ -34,20 +47,17 @@ from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
 from app.dto.recommendation import recommendation_log_to_dict
 from app.dto.recommendation import recommendation_run_to_dict
-from app.dto.store import AnalyticsSummaryOut
 from app.dto.store import CheckInLookupOut
 from app.dto.store import CheckInPayload
-from app.dto.store import PopularStringOut
 from app.dto.store import ServiceQueueItemOut
 from app.dto.store import ServiceQueueLaneOut
 from app.dto.store import ServiceQueueOut
+from app.dto.store import SecureCheckInPayload
 from app.dto.store import StoreBusinessHoursOut
 from app.dto.store import StoreBusinessHoursPayload
 from app.dto.store import StoreSettingsOut
 from app.dto.store import StoreSettingsPayload
-from app.dto.store import analytics_summary_to_dto
 from app.dto.store import business_hours_to_dto
-from app.dto.store import popular_string_to_dto
 from app.dto.store import settings_to_dto
 from app.dto.store import slot_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
@@ -58,10 +68,14 @@ from app.entrypoints.api.dependencies import get_current_admin
 from app.entrypoints.api.dependencies import get_recommendation_log_repository
 from app.entrypoints.api.dependencies import get_store_repository
 from app.shared.errors import BadRequestError
+from app.shared.transaction_effects import register_created_file
+from app.shared.transaction_effects import register_removed_file
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
 from app.shared.upload_storage import delete_booking_update_photo
+from app.shared.upload_storage import delete_payment_qr
 from app.shared.upload_storage import delete_string_catalog_image
 from app.shared.upload_storage import save_booking_update_photo
+from app.shared.upload_storage import save_payment_qr
 from app.shared.upload_storage import save_string_catalog_image
 from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
@@ -88,6 +102,7 @@ from app.use_cases.catalog.update_official_performance import (
     UpdateOfficialPerformanceUseCase,
 )
 from app.use_cases.catalog.update_string import UpdateStringUseCase
+from app.use_cases.catalog.update_string_editor import UpdateStringEditorUseCase
 from app.use_cases.recommendation.list_recommendation_logs import (
     ListRecommendationLogsUseCase,
 )
@@ -100,7 +115,7 @@ from app.use_cases.recommendation.get_recommendation_run import (
 from app.use_cases.store.confirm_checkin import ConfirmCheckInUseCase
 from app.use_cases.store.get_business_hours import GetBusinessHoursUseCase
 from app.use_cases.store.get_queue import GetQueueUseCase
-from app.use_cases.store.get_store_analytics import GetStoreAnalyticsUseCase
+from app.domain.store.policies import hash_check_in_token
 from app.use_cases.store.get_store_settings import GetStoreSettingsUseCase
 from app.use_cases.store.list_slots import ListSlotsUseCase
 from app.use_cases.store.lookup_checkin import LookupCheckInUseCase
@@ -111,6 +126,15 @@ from app.use_cases.store.update_store_settings import UpdateStoreSettingsUseCase
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 BookingPhotoType = Literal["racket", "service_progress", "other"]
+
+
+def _prepare_string_values() -> PrepareStringValuesUseCase:
+    settings = get_settings()
+    return PrepareStringValuesUseCase(
+        approved_strings_path=settings.approved_strings_path,
+        approved_catalog_ids=approved_catalog_ids(settings.approved_string_cohort_path),
+        merge_defaults=merge_with_approved_defaults,
+    )
 
 
 async def read_upload_bytes_limited(
@@ -160,6 +184,40 @@ async def save_string_image_upload(photo: UploadFile) -> str:
     )
 
 
+def inventory_update_values(payload: InventoryUpdatePayload) -> dict[str, object]:
+    values: dict[str, object] = {}
+    numeric_fields = (
+        "price_rm",
+        "stock_level",
+        "current_stock",
+        "reserved_stock",
+        "reorder_level",
+        "reorder_quantity",
+        "cost_price",
+        "selling_price",
+    )
+    optional_fields = (
+        "pricing_mode",
+        "availability_status",
+        "movement_type",
+        "reference_type",
+        "reference_id",
+    )
+    for field in numeric_fields:
+        if field in payload.model_fields_set:
+            values[field] = getattr(payload, field)
+    for field in optional_fields:
+        if field in payload.model_fields_set:
+            values[field] = getattr(payload, field)
+    if "is_active" in payload.model_fields_set:
+        values["is_active"] = bool(payload.is_active)
+    if "admin_note" in payload.model_fields_set:
+        values["admin_note"] = (
+            payload.admin_note.strip() if payload.admin_note else None
+        )
+    return values
+
+
 @router.get("/strings", response_model=dict)
 def admin_list_strings(
     search: str | None = Query(default=None, max_length=100),
@@ -198,9 +256,7 @@ def admin_create_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> StringOut:
-    values = PrepareStringValuesUseCase(
-        approved_strings_path=get_settings().approved_strings_path
-    ).execute(
+    values = _prepare_string_values().execute(
         brand=payload.brand,
         model_name=payload.model_name,
         overrides=payload.model_dump(exclude_none=True),
@@ -219,16 +275,14 @@ def admin_update_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> StringOut:
-    PrepareStringValuesUseCase(
-        approved_strings_path=get_settings().approved_strings_path
-    ).execute(
+    _prepare_string_values().execute(
         brand=payload.brand,
         model_name=payload.model_name,
         overrides={},
     )
     catalog_values = payload.model_dump(
         exclude_none=True,
-        exclude={"price_rm"},
+        exclude={"brand", "price_rm"},
     )
     item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
@@ -253,24 +307,22 @@ async def admin_upload_string_image(
     photo: UploadFile = File(...),
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> StringOut:
     existing = GetStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
         include_inactive=True,
     )
     image_path = await save_string_image_upload(photo)
+    register_created_file(db, image_path, delete_string_catalog_image)
     previous_image_path = existing.image_url
-    try:
-        item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
-            string_id=string_id,
-            values={"catalog": {"image_url": image_path}},
-        )
-    except Exception:
-        delete_string_catalog_image(image_path)
-        raise
+    item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        values={"catalog": {"image_url": image_path}},
+    )
 
     if previous_image_path:
-        delete_string_catalog_image(previous_image_path)
+        register_removed_file(db, previous_image_path, delete_string_catalog_image)
     return string_to_dto(item)
 
 
@@ -279,6 +331,7 @@ def admin_delete_string_image(
     string_id: str,
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> StringOut:
     existing = GetStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
@@ -289,7 +342,7 @@ def admin_delete_string_image(
         values={"catalog": {"image_url": None}},
     )
     if existing.image_url:
-        delete_string_catalog_image(existing.image_url)
+        register_removed_file(db, existing.image_url, delete_string_catalog_image)
     return string_to_dto(item)
 
 
@@ -347,44 +400,50 @@ def admin_update_inventory_string(
     _: CurrentUser = Depends(get_current_admin),
     catalog_repository=Depends(get_catalog_repository),
 ) -> AdminInventoryStringOut:
-    values: dict[str, object] = {}
-    if "price_rm" in payload.model_fields_set:
-        values["price_rm"] = payload.price_rm
-    if "stock_level" in payload.model_fields_set:
-        stock_level = payload.stock_level or 0
-        values["stock_level"] = stock_level
-        values["is_active"] = stock_level > 0
-    if "current_stock" in payload.model_fields_set:
-        values["current_stock"] = payload.current_stock or 0
-    if "reserved_stock" in payload.model_fields_set:
-        values["reserved_stock"] = payload.reserved_stock or 0
-    if "reorder_level" in payload.model_fields_set:
-        values["reorder_level"] = payload.reorder_level or 0
-    if "reorder_quantity" in payload.model_fields_set:
-        values["reorder_quantity"] = payload.reorder_quantity or 0
-    if "cost_price" in payload.model_fields_set:
-        values["cost_price"] = payload.cost_price
-    if "selling_price" in payload.model_fields_set:
-        values["selling_price"] = payload.selling_price
-    if "pricing_mode" in payload.model_fields_set:
-        values["pricing_mode"] = payload.pricing_mode
-    if "availability_status" in payload.model_fields_set:
-        values["availability_status"] = payload.availability_status
-    if "is_active" in payload.model_fields_set:
-        values["is_active"] = bool(payload.is_active)
-    if "admin_note" in payload.model_fields_set:
-        values["admin_note"] = (
-            payload.admin_note.strip() if payload.admin_note else None
-        )
-    if "movement_type" in payload.model_fields_set:
-        values["movement_type"] = payload.movement_type
-    if "reference_type" in payload.model_fields_set:
-        values["reference_type"] = payload.reference_type
-    if "reference_id" in payload.model_fields_set:
-        values["reference_id"] = payload.reference_id
     item = UpdateInventoryStringUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id,
-        values=values,
+        values=inventory_update_values(payload),
+    )
+    return inventory_string_to_dto(item)
+
+
+@router.put(
+    "/inventory/strings/{string_id}/editor",
+    response_model=AdminInventoryStringOut,
+)
+def admin_update_string_editor(
+    string_id: str,
+    payload: StringEditorUpdatePayload,
+    _: CurrentUser = Depends(get_current_admin),
+    catalog_repository=Depends(get_catalog_repository),
+) -> AdminInventoryStringOut:
+    catalog_values: dict[str, object] = {}
+    if payload.catalog is not None:
+        _prepare_string_values().execute(
+            brand=payload.catalog.brand,
+            model_name=payload.catalog.model_name,
+            overrides={},
+        )
+        catalog_values = payload.catalog.model_dump(
+            exclude_none=True,
+            exclude={"brand", "price_rm"},
+        )
+
+    inventory_values = (
+        inventory_update_values(payload.inventory)
+        if payload.inventory is not None
+        else {}
+    )
+    official_performance_values = (
+        payload.official_performance.model_dump(exclude_none=True)
+        if payload.official_performance is not None
+        else {}
+    )
+    item = UpdateStringEditorUseCase(catalog_repository=catalog_repository).execute(
+        string_id=string_id,
+        catalog_values=catalog_values,
+        inventory_values=inventory_values,
+        official_performance_values=official_performance_values,
     )
     return inventory_string_to_dto(item)
 
@@ -466,7 +525,8 @@ def admin_import_recommendation_matrix(
     catalog_repository=Depends(get_catalog_repository),
 ) -> RecommendationMatrixImportReportOut:
     report = ImportRecommendationMatrixUseCase(
-        catalog_repository=catalog_repository
+        catalog_repository=catalog_repository,
+        matrix_path=get_settings().recommendation_matrix_path,
     ).execute()
     return recommendation_matrix_import_report_to_dto(report)
 
@@ -516,8 +576,11 @@ def admin_update_booking_status(
     payload: UpdateBookingStatusPayload,
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingOut:
-    booking = UpdateBookingStatusUseCase(booking_repository=booking_repository).execute(
+    booking = UpdateBookingStatusUseCase(
+        booking_repository=booking_repository,
+    ).execute(
         booking_id=booking_id,
         next_status=payload.status,
         expected_completion_datetime=payload.expected_completion_datetime,
@@ -527,6 +590,17 @@ def admin_update_booking_status(
         changed_by_user_id=current_user.user_id,
         note=payload.note,
     )
+    if payload.status == "completed":
+        db.execute(
+            delete(RecommendationScoreCache).where(
+                RecommendationScoreCache.algorithm_version.in_(
+                    {
+                        "fyp1_similarity_preferences_community_v10",
+                        "fyp1_similarity_preferences_community_racket_cf_v11",
+                    }
+                )
+            )
+        )
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
@@ -538,6 +612,7 @@ async def admin_add_booking_update(
     photo_type: BookingPhotoType = Form(default="other"),
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingOut:
     GetBookingUseCase(booking_repository=booking_repository).execute(booking_id)
     photo_path = None
@@ -549,23 +624,18 @@ async def admin_add_booking_update(
             photo_original_name,
             photo_content_type,
         ) = await save_update_photo_upload(photo)
+        register_created_file(db, photo_path, delete_booking_update_photo)
 
-    try:
-        booking = AddBookingUpdateUseCase(
-            booking_repository=booking_repository
-        ).execute(
-            booking_id=booking_id,
-            author_user_id=current_user.user_id,
-            author_role=current_user.role,
-            comment=comment,
-            photo_path=photo_path,
-            photo_original_name=photo_original_name,
-            photo_content_type=photo_content_type,
-            photo_type=photo_type if photo_path else None,
-        )
-    except Exception:
-        delete_booking_update_photo(photo_path)
-        raise
+    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
+        booking_id=booking_id,
+        author_user_id=current_user.user_id,
+        author_role=current_user.role,
+        comment=comment,
+        photo_path=photo_path,
+        photo_original_name=photo_original_name,
+        photo_content_type=photo_content_type,
+        photo_type=photo_type if photo_path else None,
+    )
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
@@ -577,6 +647,7 @@ async def admin_upload_booking_photo(
     photo_type: BookingPhotoType = Form(default="racket"),
     current_user: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
+    db: Session = Depends(get_db, scope="function"),
 ) -> BookingOut:
     GetBookingUseCase(booking_repository=booking_repository).execute(booking_id)
     (
@@ -584,22 +655,17 @@ async def admin_upload_booking_photo(
         photo_original_name,
         photo_content_type,
     ) = await save_update_photo_upload(photo)
-    try:
-        booking = AddBookingUpdateUseCase(
-            booking_repository=booking_repository
-        ).execute(
-            booking_id=booking_id,
-            author_user_id=current_user.user_id,
-            author_role=current_user.role,
-            comment=comment,
-            photo_path=photo_path,
-            photo_original_name=photo_original_name,
-            photo_content_type=photo_content_type,
-            photo_type=photo_type,
-        )
-    except Exception:
-        delete_booking_update_photo(photo_path)
-        raise
+    register_created_file(db, photo_path, delete_booking_update_photo)
+    booking = AddBookingUpdateUseCase(booking_repository=booking_repository).execute(
+        booking_id=booking_id,
+        author_user_id=current_user.user_id,
+        author_role=current_user.role,
+        comment=comment,
+        photo_path=photo_path,
+        photo_original_name=photo_original_name,
+        photo_content_type=photo_content_type,
+        photo_type=photo_type,
+    )
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
@@ -691,6 +757,7 @@ def admin_list_slots(
         store_repository=store_repository,
         booking_repository=booking_repository,
         clock=clock,
+        store_timezone=get_settings().store_timezone,
     ).execute(date_value=date_value, date_from=date_from, days=days)
     return page_to_dict(page, lambda item: slot_to_dto(item).model_dump())
 
@@ -728,6 +795,84 @@ def admin_check_in_booking(
     ).execute(
         booking_id=payload.booking_id,
         reference=payload.reference,
+        admin_user_id=current_user.user_id,
+        note=payload.note,
+    )
+    return booking_to_dto(booking, include_user=True, include_history=True)
+
+
+def _active_check_in_token(
+    db: Session,
+    *,
+    raw_token: str,
+    now,
+    lock: bool,
+) -> CheckInToken:
+    query = select(CheckInToken).where(
+        CheckInToken.token_hash == hash_check_in_token(raw_token),
+        CheckInToken.used_at.is_(None),
+        CheckInToken.revoked_at.is_(None),
+        CheckInToken.expires_at > now,
+    )
+    if lock:
+        query = query.with_for_update()
+    token = db.scalar(query)
+    if token is None:
+        raise BadRequestError("QR token is invalid, expired, or already used")
+    return token
+
+
+@router.post("/check-in/lookup", response_model=CheckInLookupOut)
+def admin_lookup_secure_check_in(
+    payload: SecureCheckInPayload,
+    _: CurrentUser = Depends(get_current_admin),
+    booking_repository=Depends(get_booking_repository),
+    clock=Depends(get_clock),
+    db: Session = Depends(get_db, scope="function"),
+) -> CheckInLookupOut:
+    token = _active_check_in_token(
+        db,
+        raw_token=payload.token,
+        now=clock.now(),
+        lock=False,
+    )
+    booking = GetBookingUseCase(booking_repository=booking_repository).execute(
+        token.booking_id
+    )
+    return CheckInLookupOut(
+        matched_by="qr_token",
+        booking=booking_to_dto(
+            booking,
+            include_user=True,
+            include_history=True,
+        ).model_dump(),
+    )
+
+
+@router.post("/check-in/confirm", response_model=BookingOut)
+def admin_confirm_secure_check_in(
+    payload: SecureCheckInPayload,
+    current_user: CurrentUser = Depends(get_current_admin),
+    booking_repository=Depends(get_booking_repository),
+    clock=Depends(get_clock),
+    db: Session = Depends(get_db, scope="function"),
+) -> BookingOut:
+    now = clock.now()
+    token = _active_check_in_token(
+        db,
+        raw_token=payload.token,
+        now=now,
+        lock=True,
+    )
+    token.used_at = now
+    booking = ConfirmCheckInUseCase(
+        booking_repository=booking_repository,
+        lookup_check_in_use_case=LookupCheckInUseCase(
+            booking_repository=booking_repository
+        ),
+    ).execute(
+        booking_id=token.booking_id,
+        reference=None,
         admin_user_id=current_user.user_id,
         note=payload.note,
     )
@@ -784,32 +929,42 @@ def admin_update_store_settings(
     return settings_to_dto(settings)
 
 
-@router.get("/analytics/summary", response_model=AnalyticsSummaryOut)
-def admin_analytics_summary(
+@router.post("/store-settings/payment-qr", response_model=StoreSettingsOut)
+async def admin_upload_payment_qr(
+    photo: UploadFile = File(...),
     _: CurrentUser = Depends(get_current_admin),
-    booking_repository=Depends(get_booking_repository),
-    catalog_repository=Depends(get_catalog_repository),
-    clock=Depends(get_clock),
-) -> AnalyticsSummaryOut:
-    summary = GetStoreAnalyticsUseCase(
-        booking_repository=booking_repository,
-        catalog_repository=catalog_repository,
-        clock=clock,
-    ).execute_summary()
-    return analytics_summary_to_dto(summary)
+    store_repository=Depends(get_store_repository),
+    db: Session = Depends(get_db, scope="function"),
+) -> StoreSettingsOut:
+    existing = GetStoreSettingsUseCase(store_repository=store_repository).execute()
+    content = await read_upload_bytes_limited(
+        photo,
+        oversize_message="Payment QR must be 5 MB or smaller",
+    )
+    image_path = save_payment_qr(
+        content=content,
+        content_type=photo.content_type,
+        original_name=photo.filename,
+    )
+    register_created_file(db, image_path, delete_payment_qr)
+    settings = UpdateStoreSettingsUseCase(store_repository=store_repository).execute(
+        {"payment_qr_path": image_path}
+    )
+    if existing.payment_qr_path:
+        register_removed_file(db, existing.payment_qr_path, delete_payment_qr)
+    return settings_to_dto(settings)
 
 
-@router.get("/analytics/popular-strings", response_model=list[PopularStringOut])
-def admin_popular_strings(
-    limit: int = Query(default=5, ge=1, le=20),
+@router.delete("/store-settings/payment-qr", response_model=StoreSettingsOut)
+def admin_delete_payment_qr(
     _: CurrentUser = Depends(get_current_admin),
-    booking_repository=Depends(get_booking_repository),
-    catalog_repository=Depends(get_catalog_repository),
-    clock=Depends(get_clock),
-) -> list[PopularStringOut]:
-    items = GetStoreAnalyticsUseCase(
-        booking_repository=booking_repository,
-        catalog_repository=catalog_repository,
-        clock=clock,
-    ).execute_popular_strings(limit=limit)
-    return [popular_string_to_dto(item) for item in items]
+    store_repository=Depends(get_store_repository),
+    db: Session = Depends(get_db, scope="function"),
+) -> StoreSettingsOut:
+    existing = GetStoreSettingsUseCase(store_repository=store_repository).execute()
+    settings = UpdateStoreSettingsUseCase(store_repository=store_repository).execute(
+        {"payment_qr_path": None}
+    )
+    if existing.payment_qr_path:
+        register_removed_file(db, existing.payment_qr_path, delete_payment_qr)
+    return settings_to_dto(settings)

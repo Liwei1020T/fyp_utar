@@ -1,15 +1,7 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  ChevronRight,
-  Gauge,
-  LogOut,
-  NotebookText,
-  Settings2,
-  Settings,
-  Sparkles,
-} from 'lucide-react-native';
+import { LogOut, Settings, Settings2 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -41,46 +33,21 @@ export default function PlayerProfileScreen() {
     user.playingStyle === 'Defensive'
       ? 'Control / Defensive'
       : user.playingStyle;
-  const budgetRange = user.budgetRange ?? 'RM30–RM50';
-  const preferredFeel = user.preferredFeel ?? 'Balanced';
-  const profileSummarySentence = `${apiAlignedSkillLevel} player leaning ${user.playingStyle.toLowerCase()} with a ${preferredFeel.toLowerCase()} impact feel, ${budgetRange.toLowerCase()} budget, and a preferred ${user.preferredTension} lbs setup for ${formatPlayFrequency(user.playFrequency).toLowerCase()} sessions.`;
+  const preferredFeel = user.preferredFeel ?? 'Medium';
+  const profileSummarySentence = `${apiAlignedSkillLevel} player leaning ${user.playingStyle.toLowerCase()} with a ${preferredFeel.toLowerCase()} impact feel, ${user.preferredGauge.toLowerCase()} gauge preference, and a preferred ${user.preferredTension} lbs setup for ${formatPlayFrequency(user.playFrequency).toLowerCase()} sessions.`;
   const profileChips = [
     apiAlignedSkillLevel,
     user.playingStyle,
     `${user.preferredTension} lbs`,
     formatPlayFrequency(user.playFrequency).replace(' / ', '/'),
   ];
-  const shortcutItems = [
-    {
-      title: 'Edit onboarding profile',
-      subtitle: 'Update skill level, style, priorities, and preferred tension.',
-      icon: <Sparkles size={18} color="#2F64B6" />,
-      route: '/player/profile/edit',
-    },
-    {
-      title: 'My bookings',
-      subtitle: 'Check current orders, collection status, and service history.',
-      icon: <NotebookText size={18} color="#2F64B6" />,
-      route: '/player/bookings',
-    },
-    {
-      title: 'Recommendation setup',
-      subtitle: 'Refresh your recommendation flow with your latest preferences.',
-      icon: <Gauge size={18} color="#2F64B6" />,
-      route: '/player/recommend',
-    },
-    {
-      title: 'App settings',
-      subtitle: 'Manage notification preferences and prototype app controls.',
-      icon: <Settings2 size={18} color="#2F64B6" />,
-      route: '/player/notifications/preferences',
-    },
-  ] as const;
   const profileFacts = [
     { label: 'Skill level', value: apiAlignedSkillLevel },
     { label: 'Playing style', value: apiAlignedPlayingStyle },
-    { label: 'Budget range', value: budgetRange },
     { label: 'Preferred feel', value: preferredFeel },
+    { label: 'Preferred gauge', value: user.preferredGauge },
+    { label: 'Recent goal', value: user.recentGoal },
+    { label: 'Value priority', value: `${user.priorities.value}/10` },
     { label: 'Preferred tension', value: `${user.preferredTension} lbs` },
     { label: 'Play frequency', value: formatPlayFrequency(user.playFrequency) },
   ];
@@ -89,7 +56,7 @@ export default function PlayerProfileScreen() {
     <AppScreen
       headerVariant="primary"
       title="Profile"
-      subtitle="Your badminton preferences, activity snapshot, and quick actions."
+      subtitle="Your badminton preferences and account."
       headerRight={
         <AppIconButton
           icon={<Settings size={20} color="#475569" />}
@@ -181,60 +148,28 @@ export default function PlayerProfileScreen() {
         </AppCard>
       </AppSection>
 
-      <AppSection
-        eyebrow="SHORTCUTS"
-        title="Quick actions"
-        subtitle="Jump back into the parts of the app you use most."
-      >
-        <View className="gap-3">
-          {shortcutItems.map((item) => (
-            <Pressable
-              key={item.title}
-              onPress={() => router.push(item.route as never)}
-              className="active:opacity-70"
-            >
-              <AppCard
-                variant="elevated"
-                padding="md"
-                className="rounded-[24px]"
-              >
-                <View className="flex-row items-center justify-between gap-4">
-                  <View className="flex-row items-center gap-3.5">
-                    <View className="h-10 w-10 items-center justify-center rounded-2xl bg-primary-50">
-                      {item.icon}
-                    </View>
-                    <View className="flex-1">
-                      <HeroText className="text-[15px] font-bold text-neutral-900 leading-tight">
-                        {item.title}
-                      </HeroText>
-                      <HeroText className="mt-1 text-[13px] leading-5 text-neutral-500 font-medium">
-                        {item.subtitle}
-                      </HeroText>
-                    </View>
-                  </View>
-                  <ChevronRight size={18} color="#94A3B8" />
-                </View>
-              </AppCard>
-            </Pressable>
-          ))}
-        </View>
-      </AppSection>
-
       <View className="mt-8 mb-3">
         <HeroText className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
           Account
         </HeroText>
+        <AppButton
+          label="Account settings"
+          variant="outline"
+          size="md"
+          leadingIcon={<Settings2 size={18} color="#2F64B6" />}
+          onPress={() => router.push('/player/settings')}
+        />
         <AppButton
           label="Log out"
           variant="ghost"
           size="md"
           onPress={() => {
             logout();
-            router.replace('/auth/welcome');
+            router.replace('/auth/login');
           }}
           leadingIcon={<LogOut size={18} color="#DC2626" />}
           textClassName="text-red-600 font-semibold"
-          className="h-[48px] justify-start rounded-[18px] border border-red-100/80 bg-white/70 px-4"
+          className="mt-3 h-[48px] justify-start rounded-[18px] border border-red-100/80 bg-white/70 px-4"
         />
       </View>
     </AppScreen>

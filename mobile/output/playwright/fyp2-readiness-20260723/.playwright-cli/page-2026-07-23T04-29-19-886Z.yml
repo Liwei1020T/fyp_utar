@@ -1,0 +1,943 @@
+- generic [ref=e157]:
+  - generic [ref=e158]:
+    - generic [ref=e163]:
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - generic [ref=e168]: Admin overview
+          - generic [ref=e169]: StringSense counter operations.
+        - button [ref=e427] [cursor=pointer]
+      - generic [ref=e178]:
+        - generic [ref=e179]:
+          - generic [ref=e181]:
+            - generic [ref=e182]: Today
+            - generic [ref=e183]: Operational snapshot
+          - generic [ref=e185]:
+            - generic [ref=e189]:
+              - generic [ref=e193]: Today bookings
+              - generic [ref=e194]: "0"
+            - generic [ref=e198]:
+              - generic [ref=e203]: Awaiting drop-off
+              - generic [ref=e204]: "1"
+            - generic [ref=e208]:
+              - generic [ref=e213]: In progress
+              - generic [ref=e214]: "5"
+            - generic [ref=e218]:
+              - generic [ref=e224]: Ready pickup
+              - generic [ref=e225]: "3"
+        - generic [ref=e226]:
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - generic [ref=e229]: Primary actions
+              - generic [ref=e230]: Start with the counter flow
+              - generic [ref=e231]: Keep the work queue, counter flow, and store setup close at hand.
+            - generic [ref=e232] [cursor=pointer]: 1 awaiting
+          - generic [ref=e235]:
+            - button [ref=e428] [cursor=pointer]:
+              - generic [ref=e245]:
+                - generic [ref=e246]: Check-in
+                - generic [ref=e247]: Confirm player racket drop-off at the counter.
+            - button [ref=e429] [cursor=pointer]:
+              - generic [ref=e258]:
+                - generic [ref=e259]: Bookings
+                - generic [ref=e260]: Update service status and monitor the queue.
+            - button [ref=e430] [cursor=pointer]:
+              - generic [ref=e279]:
+                - generic [ref=e280]: Inventory
+                - generic [ref=e281]: Review string stock and low-stock items.
+            - button [ref=e431] [cursor=pointer]:
+              - generic [ref=e293]:
+                - generic [ref=e294]: Business hours
+                - generic [ref=e295]: Adjust slots and store availability windows.
+            - button [ref=e432] [cursor=pointer]:
+              - generic [ref=e307]:
+                - generic [ref=e308]: Store settings
+                - generic [ref=e309]: Edit store profile, notes, and policies.
+        - generic [ref=e312]:
+          - generic [ref=e314]:
+            - generic [ref=e315]: Highlights
+            - generic [ref=e316]: What needs attention?
+          - generic [ref=e318]:
+            - generic [ref=e319]: 1 booking waiting for racket drop-off.
+            - generic [ref=e327]: 5 jobs currently on the stringing bench.
+            - generic [ref=e335]: 0 string SKUs flagged for stock review.
+            - button [ref=e433] [cursor=pointer]:
+              - generic [ref=e362]:
+                - generic [ref=e363]: Recommendation runs
+                - generic [ref=e364]: Review saved recommendation histories, profile snapshots, and score breakdowns.
+    - generic [ref=e438]:
+      - generic [ref=e442]:
+        - generic [ref=e443]: Admin bookings
+        - generic [ref=e444]: Mobile queue for counter and stringing operations.
+      - generic [ref=e448]:
+        - generic [ref=e450]:
+          - generic [ref=e451]: "Today: 0 bookings · 5 in progress · 3 ready for collection"
+          - textbox [ref=e1152]:
+            - /placeholder: Search order, racket, or string...
+          - generic [ref=e463]:
+            - button [ref=e1153] [cursor=pointer]:
+              - generic [ref=e465]: All
+            - button [ref=e1154] [cursor=pointer]:
+              - generic [ref=e467]: Awaiting
+            - button [ref=e1155] [cursor=pointer]:
+              - generic [ref=e469]: In Progress
+            - button [ref=e1156] [cursor=pointer]:
+              - generic [ref=e471]: Ready
+            - button [ref=e1157] [cursor=pointer]:
+              - generic [ref=e473]: Completed
+        - button [ref=e1158] [cursor=pointer]:
+          - generic [ref=e504]:
+            - generic [ref=e505]:
+              - generic [ref=e506]: Order ORD-6B2F5
+              - generic [ref=e508]: Awaiting Dropoff
+            - generic [ref=e510]:
+              - generic [ref=e511]: Yonex Astrox 88D Pro
+              - generic [ref=e512]: Yonex BG65 · 22 lbs
+              - generic [ref=e513]:
+                - generic [ref=e514]: RM 35.00
+                - generic [ref=e515]: ·
+                - generic [ref=e518]: Tue, 5 May
+            - generic [ref=e519]:
+              - generic [ref=e520]:
+                - generic [ref=e521]: "Action: Receive racket at counter"
+                - generic [ref=e522]: Queue open
+              - generic [ref=e523]: Open
+        - button [ref=e1159] [cursor=pointer]:
+          - generic [ref=e479]:
+            - generic [ref=e480]:
+              - generic [ref=e481]: Order ORD-2AD07
+              - generic [ref=e483]: In Progress
+            - generic [ref=e485]:
+              - generic [ref=e486]: Yonex Astrox 88D Pro
+              - generic [ref=e487]: Li-Ning N63 · 22 lbs
+              - generic [ref=e488]:
+                - generic [ref=e489]: RM 48.00
+                - generic [ref=e490]: ·
+                - generic [ref=e493]: Fri, 24 Jul
+            - generic [ref=e494]:
+              - generic [ref=e495]:
+                - generic [ref=e496]: "Action: Continue stringing"
+                - generic [ref=e497]: Queue open
+              - generic [ref=e498]: Open
+        - button [ref=e1160] [cursor=pointer]:
+          - generic [ref=e529]:
+            - generic [ref=e530]:
+              - generic [ref=e531]: Order ORD-3A39E
+              - generic [ref=e533]: In Progress
+            - generic [ref=e535]:
+              - generic [ref=e536]: Yonex Astrox 88D Pro
+              - generic [ref=e537]: Li-Ning N63 · 28 lbs
+              - generic [ref=e538]:
+                - generic [ref=e539]: RM 48.00
+                - generic [ref=e540]: ·
+                - generic [ref=e543]: Wed, 6 May
+            - generic [ref=e544]:
+              - generic [ref=e545]:
+                - generic [ref=e546]: "Action: Continue stringing"
+                - generic [ref=e547]: Queue open
+              - generic [ref=e548]: Open
+        - button [ref=e1161] [cursor=pointer]:
+          - generic [ref=e554]:
+            - generic [ref=e555]:
+              - generic [ref=e556]: Order ORD-58D00
+              - generic [ref=e558]: In Progress
+            - generic [ref=e560]:
+              - generic [ref=e561]: Yonex Astrox 88D Pro
+              - generic [ref=e562]: Gosen RYZONIC 65 · 27 lbs
+              - generic [ref=e563]:
+                - generic [ref=e564]: RM 40.00
+                - generic [ref=e565]: ·
+                - generic [ref=e568]: Thu, 7 May
+            - generic [ref=e569]:
+              - generic [ref=e570]:
+                - generic [ref=e571]: "Action: Continue stringing"
+                - generic [ref=e572]: Queue open
+              - generic [ref=e573]: Open
+        - button [ref=e1162] [cursor=pointer]:
+          - generic [ref=e579]:
+            - generic [ref=e580]:
+              - generic [ref=e581]: Order ORD-5278E
+              - generic [ref=e583]: In Progress
+            - generic [ref=e585]:
+              - generic [ref=e586]: Yonex Astrox 88D Pro
+              - generic [ref=e587]: Yonex BG65 · 22 lbs
+              - generic [ref=e588]:
+                - generic [ref=e589]: RM 35.00
+                - generic [ref=e590]: ·
+                - generic [ref=e593]: Thu, 23 Apr
+            - generic [ref=e594]:
+              - generic [ref=e595]:
+                - generic [ref=e596]: "Action: Continue stringing"
+                - generic [ref=e597]: Queue open
+              - generic [ref=e598]: Open
+        - button [ref=e1163] [cursor=pointer]:
+          - generic [ref=e604]:
+            - generic [ref=e605]:
+              - generic [ref=e606]: Order ORD-AD8CD
+              - generic [ref=e608]: In Progress
+            - generic [ref=e610]:
+              - generic [ref=e611]: Victor Thruster Ryuga II
+              - generic [ref=e612]: Yonex EXBOLT 63 · 27 lbs
+              - generic [ref=e613]:
+                - generic [ref=e614]: RM 76.00
+                - generic [ref=e615]: ·
+                - generic [ref=e618]: Thu, 9 Apr
+            - generic [ref=e619]:
+              - generic [ref=e620]:
+                - generic [ref=e621]: "Action: Continue stringing"
+                - generic [ref=e622]: Queue open
+              - generic [ref=e623]: Open
+        - button [ref=e1164] [cursor=pointer]:
+          - generic [ref=e629]:
+            - generic [ref=e630]:
+              - generic [ref=e631]: Order ORD-ED0E2
+              - generic [ref=e633]: Ready For Collection
+            - generic [ref=e635]:
+              - generic [ref=e636]: Yonex Astrox 88D Pro
+              - generic [ref=e637]: Kumpoo JS-63 · 22 lbs
+              - generic [ref=e638]:
+                - generic [ref=e639]: RM 33.00
+                - generic [ref=e640]: ·
+                - generic [ref=e643]: Wed, 15 Apr
+            - generic [ref=e644]:
+              - generic [ref=e645]:
+                - generic [ref=e646]: "Action: Prepare for collection"
+                - generic [ref=e647]: Pickup ready
+              - generic [ref=e648]: Open
+        - button [ref=e1165] [cursor=pointer]:
+          - generic [ref=e654]:
+            - generic [ref=e655]:
+              - generic [ref=e656]: Order ORD-62AD3
+              - generic [ref=e658]: Ready For Collection
+            - generic [ref=e660]:
+              - generic [ref=e661]: Yonex Astrox 88D Pro
+              - generic [ref=e662]: Other Kizuna Z61 · 24 lbs
+              - generic [ref=e663]:
+                - generic [ref=e664]: RM 50.00
+                - generic [ref=e665]: ·
+                - generic [ref=e668]: Tue, 7 Apr
+            - generic [ref=e669]:
+              - generic [ref=e670]:
+                - generic [ref=e671]: "Action: Prepare for collection"
+                - generic [ref=e672]: Pickup ready
+              - generic [ref=e673]: Open
+        - button [ref=e1166] [cursor=pointer]:
+          - generic [ref=e679]:
+            - generic [ref=e680]:
+              - generic [ref=e681]: Order ORD-2FB45
+              - generic [ref=e683]: Ready For Collection
+            - generic [ref=e685]:
+              - generic [ref=e686]: Li-Ning 3D Calibar 900
+              - generic [ref=e687]: Yonex AEROSONIC · 25 lbs
+              - generic [ref=e688]:
+                - generic [ref=e689]: RM 85.00
+                - generic [ref=e690]: ·
+                - generic [ref=e693]: Fri, 10 Apr
+            - generic [ref=e694]:
+              - generic [ref=e695]:
+                - generic [ref=e696]: "Action: Prepare for collection"
+                - generic [ref=e697]: Pickup ready
+              - generic [ref=e698]: Open
+        - button [ref=e1167] [cursor=pointer]:
+          - generic [ref=e704]:
+            - generic [ref=e705]:
+              - generic [ref=e706]: Order ORD-C4C20
+              - generic [ref=e708]: Completed
+            - generic [ref=e710]:
+              - generic [ref=e711]: Yonex Astrox 88D Pro
+              - generic [ref=e712]: Gosen RYZONIC 65 · 24 lbs
+              - generic [ref=e713]:
+                - generic [ref=e714]: RM 40.00
+                - generic [ref=e715]: ·
+                - generic [ref=e718]: Fri, 24 Apr
+            - generic [ref=e719]:
+              - generic [ref=e720]:
+                - generic [ref=e721]: "Action: No further action"
+                - generic [ref=e722]: Collected
+              - generic [ref=e723]: Open
+        - button [ref=e1168] [cursor=pointer]:
+          - generic [ref=e729]:
+            - generic [ref=e730]:
+              - generic [ref=e731]: Order ORD-498F4
+              - generic [ref=e733]: Completed
+            - generic [ref=e735]:
+              - generic [ref=e736]: Yonex Astrox 88D
+              - generic [ref=e737]: Gosen RYZONIC 58 · 25 lbs
+              - generic [ref=e738]:
+                - generic [ref=e739]: RM 30.00
+                - generic [ref=e740]: ·
+                - generic [ref=e743]: Mon, 13 Apr
+            - generic [ref=e744]:
+              - generic [ref=e745]:
+                - generic [ref=e746]: "Action: No further action"
+                - generic [ref=e747]: Collected
+              - generic [ref=e748]: Open
+        - button [ref=e1169] [cursor=pointer]:
+          - generic [ref=e754]:
+            - generic [ref=e755]:
+              - generic [ref=e756]: Order ORD-EB394
+              - generic [ref=e758]: Completed
+            - generic [ref=e760]:
+              - generic [ref=e761]: Yonex Astrox 88D Pro
+              - generic [ref=e762]: Other Kizuna Z61 · 24 lbs
+              - generic [ref=e763]:
+                - generic [ref=e764]: RM 50.00
+                - generic [ref=e765]: ·
+                - generic [ref=e768]: Sat, 11 Apr
+            - generic [ref=e769]:
+              - generic [ref=e770]:
+                - generic [ref=e771]: "Action: No further action"
+                - generic [ref=e772]: Collected
+              - generic [ref=e773]: Open
+        - button [ref=e1170] [cursor=pointer]:
+          - generic [ref=e779]:
+            - generic [ref=e780]:
+              - generic [ref=e781]: Order ORD-C0E3B
+              - generic [ref=e783]: Completed
+            - generic [ref=e785]:
+              - generic [ref=e786]: Yonex Astrox 88D Pro
+              - generic [ref=e787]: Yonex BG80 · 26 lbs
+              - generic [ref=e788]:
+                - generic [ref=e789]: RM 48.00
+                - generic [ref=e790]: ·
+                - generic [ref=e793]: Wed, 8 Apr
+            - generic [ref=e794]:
+              - generic [ref=e795]:
+                - generic [ref=e796]: "Action: No further action"
+                - generic [ref=e797]: Collected
+              - generic [ref=e798]: Open
+        - button [ref=e1171] [cursor=pointer]:
+          - generic [ref=e804]:
+            - generic [ref=e805]:
+              - generic [ref=e806]: Order ORD-8D577
+              - generic [ref=e808]: Completed
+            - generic [ref=e810]:
+              - generic [ref=e811]: Apacs Z-Ziggler
+              - generic [ref=e812]: Victor VBS-66 NANO · 23 lbs
+              - generic [ref=e813]:
+                - generic [ref=e814]: RM 43.00
+                - generic [ref=e815]: ·
+                - generic [ref=e818]: Tue, 7 Apr
+            - generic [ref=e819]:
+              - generic [ref=e820]:
+                - generic [ref=e821]: "Action: No further action"
+                - generic [ref=e822]: Collected
+              - generic [ref=e823]: Open
+    - generic [ref=e1176]:
+      - generic [ref=e1180]:
+        - generic [ref=e1181]: Inventory
+        - generic [ref=e1182]: Manage stock, pricing, and shop readiness.
+      - generic [ref=e1186]:
+        - generic [ref=e1188]:
+          - generic [ref=e1189]: 33 items · 0 low stock · 0 price pending
+          - generic [ref=e1190]:
+            - textbox "Search string or brand" [ref=e1195]
+            - button "Filter" [ref=e1196] [cursor=pointer]
+            - button "Attention first" [ref=e1199] [cursor=pointer]
+          - generic [ref=e1205]:
+            - button "All" [ref=e1206] [cursor=pointer]
+            - button "In Stock" [ref=e1208] [cursor=pointer]
+            - button "Low Stock" [ref=e1210] [cursor=pointer]
+            - button "Out of Stock" [ref=e1212] [cursor=pointer]
+            - button "Price Missing" [ref=e1214] [cursor=pointer]
+          - generic [ref=e1216]:
+            - generic [ref=e1217]: Needs attention
+            - generic [ref=e1218]: 12 items
+          - generic [ref=e1219]:
+            - generic [ref=e1223]:
+              - generic [ref=e1225]:
+                - generic [ref=e1226]: G
+                - generic [ref=e1227]: No photo
+              - generic [ref=e1228]:
+                - generic [ref=e1229]:
+                  - generic [ref=e1230]:
+                    - generic [ref=e1231]: RYZONIC 58
+                    - generic [ref=e1232]: Gosen
+                  - generic [ref=e1233] [cursor=pointer]: In Stock
+                - generic [ref=e1235]: 0.58 mm · Repulsion
+                - generic [ref=e1236]:
+                  - generic [ref=e1237] [cursor=pointer]: Stock 8
+                  - generic [ref=e1239] [cursor=pointer]: RM 30.00
+                  - generic [ref=e1241] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1243]:
+                  - button "Edit stock" [ref=e1244] [cursor=pointer]
+                  - button "Edit price" [ref=e1246] [cursor=pointer]
+            - generic [ref=e1251]:
+              - generic "Gosen RYZONIC 69 thumbnail" [ref=e1253]:
+                - img "Gosen RYZONIC 69 thumbnail" [ref=e1255]
+              - generic [ref=e1256]:
+                - generic [ref=e1257]:
+                  - generic [ref=e1258]:
+                    - generic [ref=e1259]: RYZONIC 69
+                    - generic [ref=e1260]: Gosen
+                  - generic [ref=e1261] [cursor=pointer]: In Stock
+                - generic [ref=e1263]: 0.69 mm · Repulsion
+                - generic [ref=e1264]:
+                  - generic [ref=e1265] [cursor=pointer]: Stock 8
+                  - generic [ref=e1267] [cursor=pointer]: RM 30.00
+                  - generic [ref=e1269] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1271]:
+                  - button "Edit stock" [ref=e1272] [cursor=pointer]
+                  - button "Edit price" [ref=e1274] [cursor=pointer]
+            - generic [ref=e1279]:
+              - generic "Kumpoo JS-63 thumbnail" [ref=e1281]:
+                - img "Kumpoo JS-63 thumbnail" [ref=e1283]
+              - generic [ref=e1284]:
+                - generic [ref=e1285]:
+                  - generic [ref=e1286]:
+                    - generic [ref=e1287]: JS-63
+                    - generic [ref=e1288]: Kumpoo
+                  - generic [ref=e1289] [cursor=pointer]: In Stock
+                - generic [ref=e1291]: 0.63 mm · Repulsion
+                - generic [ref=e1292]:
+                  - generic [ref=e1293] [cursor=pointer]: Stock 8
+                  - generic [ref=e1295] [cursor=pointer]: RM 33.00
+                  - generic [ref=e1297] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1299]:
+                  - button "Edit stock" [ref=e1300] [cursor=pointer]
+                  - button "Edit price" [ref=e1302] [cursor=pointer]
+            - generic [ref=e1307]:
+              - generic [ref=e1309]:
+                - generic [ref=e1310]: K
+                - generic [ref=e1311]: No photo
+              - generic [ref=e1312]:
+                - generic [ref=e1313]:
+                  - generic [ref=e1314]:
+                    - generic [ref=e1315]: JS-65
+                    - generic [ref=e1316]: Kumpoo
+                  - generic [ref=e1317] [cursor=pointer]: In Stock
+                - generic [ref=e1319]: 0.65 mm · Repulsion
+                - generic [ref=e1320]:
+                  - generic [ref=e1321] [cursor=pointer]: Stock 8
+                  - generic [ref=e1323] [cursor=pointer]: RM 33.00
+                  - generic [ref=e1325] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1327]:
+                  - button "Edit stock" [ref=e1328] [cursor=pointer]
+                  - button "Edit price" [ref=e1330] [cursor=pointer]
+            - generic [ref=e1335]:
+              - generic [ref=e1337]:
+                - generic [ref=e1338]: K
+                - generic [ref=e1339]: No photo
+              - generic [ref=e1340]:
+                - generic [ref=e1341]:
+                  - generic [ref=e1342]:
+                    - generic [ref=e1343]: JS-67
+                    - generic [ref=e1344]: Kumpoo
+                  - generic [ref=e1345] [cursor=pointer]: In Stock
+                - generic [ref=e1347]: 0.67 mm · Repulsion
+                - generic [ref=e1348]:
+                  - generic [ref=e1349] [cursor=pointer]: Stock 8
+                  - generic [ref=e1351] [cursor=pointer]: RM 33.00
+                  - generic [ref=e1353] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1355]:
+                  - button "Edit stock" [ref=e1356] [cursor=pointer]
+                  - button "Edit price" [ref=e1358] [cursor=pointer]
+            - generic [ref=e1363]:
+              - generic [ref=e1365]:
+                - generic [ref=e1366]: K
+                - generic [ref=e1367]: No photo
+              - generic [ref=e1368]:
+                - generic [ref=e1369]:
+                  - generic [ref=e1370]:
+                    - generic [ref=e1371]: JS-69
+                    - generic [ref=e1372]: Kumpoo
+                  - generic [ref=e1373] [cursor=pointer]: In Stock
+                - generic [ref=e1375]: 0.69 mm · Repulsion
+                - generic [ref=e1376]:
+                  - generic [ref=e1377] [cursor=pointer]: Stock 8
+                  - generic [ref=e1379] [cursor=pointer]: RM 33.00
+                  - generic [ref=e1381] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1383]:
+                  - button "Edit stock" [ref=e1384] [cursor=pointer]
+                  - button "Edit price" [ref=e1386] [cursor=pointer]
+            - generic [ref=e1391]:
+              - generic "Li-Ning N65 thumbnail" [ref=e1393]:
+                - img "Li-Ning N65 thumbnail" [ref=e1395]
+              - generic [ref=e1396]:
+                - generic [ref=e1397]:
+                  - generic [ref=e1398]:
+                    - generic [ref=e1399]: N65
+                    - generic [ref=e1400]: Li-Ning
+                  - generic [ref=e1401] [cursor=pointer]: In Stock
+                - generic [ref=e1403]: 0.65 mm · Repulsion
+                - generic [ref=e1404]:
+                  - generic [ref=e1405] [cursor=pointer]: Stock 8
+                  - generic [ref=e1407] [cursor=pointer]: RM 45.00
+                  - generic [ref=e1409] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1411]:
+                  - button "Edit stock" [ref=e1412] [cursor=pointer]
+                  - button "Edit price" [ref=e1414] [cursor=pointer]
+            - generic [ref=e1419]:
+              - generic [ref=e1421]:
+                - generic [ref=e1422]: "Y"
+                - generic [ref=e1423]: No photo
+              - generic [ref=e1424]:
+                - generic [ref=e1425]:
+                  - generic [ref=e1426]:
+                    - generic [ref=e1427]: AEROSONIC
+                    - generic [ref=e1428]: Yonex
+                  - generic [ref=e1429] [cursor=pointer]: In Stock
+                - generic [ref=e1431]: 0.61 mm · Repulsion
+                - generic [ref=e1432]:
+                  - generic [ref=e1433] [cursor=pointer]: Stock 8
+                  - generic [ref=e1435] [cursor=pointer]: RM 85.00
+                  - generic [ref=e1437] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1439]:
+                  - button "Edit stock" [ref=e1440] [cursor=pointer]
+                  - button "Edit price" [ref=e1442] [cursor=pointer]
+            - generic [ref=e1447]:
+              - generic [ref=e1449]:
+                - generic [ref=e1450]: "Y"
+                - generic [ref=e1451]: No photo
+              - generic [ref=e1452]:
+                - generic [ref=e1453]:
+                  - generic [ref=e1454]:
+                    - generic [ref=e1455]: BG66 FORCE
+                    - generic [ref=e1456]: Yonex
+                  - generic [ref=e1457] [cursor=pointer]: In Stock
+                - generic [ref=e1459]: 0.65 mm · Repulsion
+                - generic [ref=e1460]:
+                  - generic [ref=e1461] [cursor=pointer]: Stock 8
+                  - generic [ref=e1463] [cursor=pointer]: Price pending
+                  - generic [ref=e1465] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1467]:
+                  - button "Edit stock" [ref=e1468] [cursor=pointer]
+                  - button "Add price" [ref=e1470] [cursor=pointer]
+            - generic [ref=e1475]:
+              - generic [ref=e1477]:
+                - generic [ref=e1478]: "Y"
+                - generic [ref=e1479]: No photo
+              - generic [ref=e1480]:
+                - generic [ref=e1481]:
+                  - generic [ref=e1482]:
+                    - generic [ref=e1483]: BG80 POWER
+                    - generic [ref=e1484]: Yonex
+                  - generic [ref=e1485] [cursor=pointer]: In Stock
+                - generic [ref=e1487]: 0.68 mm · Repulsion
+                - generic [ref=e1488]:
+                  - generic [ref=e1489] [cursor=pointer]: Stock 8
+                  - generic [ref=e1491] [cursor=pointer]: RM 76.00
+                  - generic [ref=e1493] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1495]:
+                  - button "Edit stock" [ref=e1496] [cursor=pointer]
+                  - button "Edit price" [ref=e1498] [cursor=pointer]
+            - generic [ref=e1503]:
+              - generic [ref=e1505]:
+                - generic [ref=e1506]: "Y"
+                - generic [ref=e1507]: No photo
+              - generic [ref=e1508]:
+                - generic [ref=e1509]:
+                  - generic [ref=e1510]:
+                    - generic [ref=e1511]: EXBOLT 65
+                    - generic [ref=e1512]: Yonex
+                  - generic [ref=e1513] [cursor=pointer]: In Stock
+                - generic [ref=e1515]: 0.65 mm · Repulsion
+                - generic [ref=e1516]:
+                  - generic [ref=e1517] [cursor=pointer]: Stock 8
+                  - generic [ref=e1519] [cursor=pointer]: RM 76.00
+                  - generic [ref=e1521] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1523]:
+                  - button "Edit stock" [ref=e1524] [cursor=pointer]
+                  - button "Edit price" [ref=e1526] [cursor=pointer]
+            - generic [ref=e1531]:
+              - generic [ref=e1533]:
+                - generic [ref=e1534]: "Y"
+                - generic [ref=e1535]: No photo
+              - generic [ref=e1536]:
+                - generic [ref=e1537]:
+                  - generic [ref=e1538]:
+                    - generic [ref=e1539]: EXBOLT 68
+                    - generic [ref=e1540]: Yonex
+                  - generic [ref=e1541] [cursor=pointer]: In Stock
+                - generic [ref=e1543]: 0.68 mm · Repulsion
+                - generic [ref=e1544]:
+                  - generic [ref=e1545] [cursor=pointer]: Stock 8
+                  - generic [ref=e1547] [cursor=pointer]: RM 76.00
+                  - generic [ref=e1549] [cursor=pointer]: Hidden from catalog
+                - generic [ref=e1551]:
+                  - button "Edit stock" [ref=e1552] [cursor=pointer]
+                  - button "Edit price" [ref=e1554] [cursor=pointer]
+          - generic [ref=e1556]:
+            - generic [ref=e1557]: All inventory
+            - generic [ref=e1558]: 33 shown
+        - generic [ref=e1564]:
+          - generic [ref=e1566]:
+            - generic [ref=e1567]: G
+            - generic [ref=e1568]: No photo
+          - generic [ref=e1569]:
+            - generic [ref=e1570]:
+              - generic [ref=e1571]:
+                - generic [ref=e1572]: RYZONIC 58
+                - generic [ref=e1573]: Gosen
+              - generic [ref=e1574] [cursor=pointer]: In Stock
+            - generic [ref=e1576]: 0.58 mm · Repulsion
+            - generic [ref=e1577]:
+              - generic [ref=e1578] [cursor=pointer]: Stock 8
+              - generic [ref=e1580] [cursor=pointer]: RM 30.00
+              - generic [ref=e1582] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1584]:
+              - button "Edit stock" [ref=e1585] [cursor=pointer]
+              - button "Edit details" [ref=e1587] [cursor=pointer]
+              - button "Notes" [ref=e1589] [cursor=pointer]
+        - generic [ref=e1596]:
+          - generic "Gosen RYZONIC 69 thumbnail" [ref=e1598]:
+            - img "Gosen RYZONIC 69 thumbnail" [ref=e1600]
+          - generic [ref=e1601]:
+            - generic [ref=e1602]:
+              - generic [ref=e1603]:
+                - generic [ref=e1604]: RYZONIC 69
+                - generic [ref=e1605]: Gosen
+              - generic [ref=e1606] [cursor=pointer]: In Stock
+            - generic [ref=e1608]: 0.69 mm · Repulsion
+            - generic [ref=e1609]:
+              - generic [ref=e1610] [cursor=pointer]: Stock 8
+              - generic [ref=e1612] [cursor=pointer]: RM 30.00
+              - generic [ref=e1614] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1616]:
+              - button "Edit stock" [ref=e1617] [cursor=pointer]
+              - button "Edit details" [ref=e1619] [cursor=pointer]
+              - button "Notes" [ref=e1621] [cursor=pointer]
+        - generic [ref=e1628]:
+          - generic "Kumpoo JS-63 thumbnail" [ref=e1630]:
+            - img "Kumpoo JS-63 thumbnail" [ref=e1632]
+          - generic [ref=e1633]:
+            - generic [ref=e1634]:
+              - generic [ref=e1635]:
+                - generic [ref=e1636]: JS-63
+                - generic [ref=e1637]: Kumpoo
+              - generic [ref=e1638] [cursor=pointer]: In Stock
+            - generic [ref=e1640]: 0.63 mm · Repulsion
+            - generic [ref=e1641]:
+              - generic [ref=e1642] [cursor=pointer]: Stock 8
+              - generic [ref=e1644] [cursor=pointer]: RM 33.00
+              - generic [ref=e1646] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1648]:
+              - button "Edit stock" [ref=e1649] [cursor=pointer]
+              - button "Edit details" [ref=e1651] [cursor=pointer]
+              - button "Notes" [ref=e1653] [cursor=pointer]
+        - generic [ref=e1660]:
+          - generic [ref=e1662]:
+            - generic [ref=e1663]: K
+            - generic [ref=e1664]: No photo
+          - generic [ref=e1665]:
+            - generic [ref=e1666]:
+              - generic [ref=e1667]:
+                - generic [ref=e1668]: JS-65
+                - generic [ref=e1669]: Kumpoo
+              - generic [ref=e1670] [cursor=pointer]: In Stock
+            - generic [ref=e1672]: 0.65 mm · Repulsion
+            - generic [ref=e1673]:
+              - generic [ref=e1674] [cursor=pointer]: Stock 8
+              - generic [ref=e1676] [cursor=pointer]: RM 33.00
+              - generic [ref=e1678] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1680]:
+              - button "Edit stock" [ref=e1681] [cursor=pointer]
+              - button "Edit details" [ref=e1683] [cursor=pointer]
+              - button "Notes" [ref=e1685] [cursor=pointer]
+        - generic [ref=e1692]:
+          - generic [ref=e1694]:
+            - generic [ref=e1695]: K
+            - generic [ref=e1696]: No photo
+          - generic [ref=e1697]:
+            - generic [ref=e1698]:
+              - generic [ref=e1699]:
+                - generic [ref=e1700]: JS-67
+                - generic [ref=e1701]: Kumpoo
+              - generic [ref=e1702] [cursor=pointer]: In Stock
+            - generic [ref=e1704]: 0.67 mm · Repulsion
+            - generic [ref=e1705]:
+              - generic [ref=e1706] [cursor=pointer]: Stock 8
+              - generic [ref=e1708] [cursor=pointer]: RM 33.00
+              - generic [ref=e1710] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1712]:
+              - button "Edit stock" [ref=e1713] [cursor=pointer]
+              - button "Edit details" [ref=e1715] [cursor=pointer]
+              - button "Notes" [ref=e1717] [cursor=pointer]
+        - generic [ref=e1724]:
+          - generic [ref=e1726]:
+            - generic [ref=e1727]: K
+            - generic [ref=e1728]: No photo
+          - generic [ref=e1729]:
+            - generic [ref=e1730]:
+              - generic [ref=e1731]:
+                - generic [ref=e1732]: JS-69
+                - generic [ref=e1733]: Kumpoo
+              - generic [ref=e1734] [cursor=pointer]: In Stock
+            - generic [ref=e1736]: 0.69 mm · Repulsion
+            - generic [ref=e1737]:
+              - generic [ref=e1738] [cursor=pointer]: Stock 8
+              - generic [ref=e1740] [cursor=pointer]: RM 33.00
+              - generic [ref=e1742] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1744]:
+              - button "Edit stock" [ref=e1745] [cursor=pointer]
+              - button "Edit details" [ref=e1747] [cursor=pointer]
+              - button "Notes" [ref=e1749] [cursor=pointer]
+        - generic [ref=e1756]:
+          - generic "Li-Ning N65 thumbnail" [ref=e1758]:
+            - img "Li-Ning N65 thumbnail" [ref=e1760]
+          - generic [ref=e1761]:
+            - generic [ref=e1762]:
+              - generic [ref=e1763]:
+                - generic [ref=e1764]: N65
+                - generic [ref=e1765]: Li-Ning
+              - generic [ref=e1766] [cursor=pointer]: In Stock
+            - generic [ref=e1768]: 0.65 mm · Repulsion
+            - generic [ref=e1769]:
+              - generic [ref=e1770] [cursor=pointer]: Stock 8
+              - generic [ref=e1772] [cursor=pointer]: RM 45.00
+              - generic [ref=e1774] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1776]:
+              - button "Edit stock" [ref=e1777] [cursor=pointer]
+              - button "Edit details" [ref=e1779] [cursor=pointer]
+              - button "Notes" [ref=e1781] [cursor=pointer]
+        - generic [ref=e1788]:
+          - generic [ref=e1790]:
+            - generic [ref=e1791]: "Y"
+            - generic [ref=e1792]: No photo
+          - generic [ref=e1793]:
+            - generic [ref=e1794]:
+              - generic [ref=e1795]:
+                - generic [ref=e1796]: AEROSONIC
+                - generic [ref=e1797]: Yonex
+              - generic [ref=e1798] [cursor=pointer]: In Stock
+            - generic [ref=e1800]: 0.61 mm · Repulsion
+            - generic [ref=e1801]:
+              - generic [ref=e1802] [cursor=pointer]: Stock 8
+              - generic [ref=e1804] [cursor=pointer]: RM 85.00
+              - generic [ref=e1806] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1808]:
+              - button "Edit stock" [ref=e1809] [cursor=pointer]
+              - button "Edit details" [ref=e1811] [cursor=pointer]
+              - button "Notes" [ref=e1813] [cursor=pointer]
+        - generic [ref=e1820]:
+          - generic [ref=e1822]:
+            - generic [ref=e1823]: "Y"
+            - generic [ref=e1824]: No photo
+          - generic [ref=e1825]:
+            - generic [ref=e1826]:
+              - generic [ref=e1827]:
+                - generic [ref=e1828]: BG66 FORCE
+                - generic [ref=e1829]: Yonex
+              - generic [ref=e1830] [cursor=pointer]: In Stock
+            - generic [ref=e1832]: 0.65 mm · Repulsion
+            - generic [ref=e1833]:
+              - generic [ref=e1834] [cursor=pointer]: Stock 8
+              - generic [ref=e1836] [cursor=pointer]: Price pending
+              - generic [ref=e1838] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1840]:
+              - button "Edit stock" [ref=e1841] [cursor=pointer]
+              - button "Edit details" [ref=e1843] [cursor=pointer]
+              - button "Notes" [ref=e1845] [cursor=pointer]
+        - generic [ref=e1852]:
+          - generic [ref=e1854]:
+            - generic [ref=e1855]: "Y"
+            - generic [ref=e1856]: No photo
+          - generic [ref=e1857]:
+            - generic [ref=e1858]:
+              - generic [ref=e1859]:
+                - generic [ref=e1860]: BG80 POWER
+                - generic [ref=e1861]: Yonex
+              - generic [ref=e1862] [cursor=pointer]: In Stock
+            - generic [ref=e1864]: 0.68 mm · Repulsion
+            - generic [ref=e1865]:
+              - generic [ref=e1866] [cursor=pointer]: Stock 8
+              - generic [ref=e1868] [cursor=pointer]: RM 76.00
+              - generic [ref=e1870] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1872]:
+              - button "Edit stock" [ref=e1873] [cursor=pointer]
+              - button "Edit details" [ref=e1875] [cursor=pointer]
+              - button "Notes" [ref=e1877] [cursor=pointer]
+        - generic [ref=e1884]:
+          - generic [ref=e1886]:
+            - generic [ref=e1887]: "Y"
+            - generic [ref=e1888]: No photo
+          - generic [ref=e1889]:
+            - generic [ref=e1890]:
+              - generic [ref=e1891]:
+                - generic [ref=e1892]: EXBOLT 65
+                - generic [ref=e1893]: Yonex
+              - generic [ref=e1894] [cursor=pointer]: In Stock
+            - generic [ref=e1896]: 0.65 mm · Repulsion
+            - generic [ref=e1897]:
+              - generic [ref=e1898] [cursor=pointer]: Stock 8
+              - generic [ref=e1900] [cursor=pointer]: RM 76.00
+              - generic [ref=e1902] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1904]:
+              - button "Edit stock" [ref=e1905] [cursor=pointer]
+              - button "Edit details" [ref=e1907] [cursor=pointer]
+              - button "Notes" [ref=e1909] [cursor=pointer]
+        - generic [ref=e1916]:
+          - generic [ref=e1918]:
+            - generic [ref=e1919]: "Y"
+            - generic [ref=e1920]: No photo
+          - generic [ref=e1921]:
+            - generic [ref=e1922]:
+              - generic [ref=e1923]:
+                - generic [ref=e1924]: EXBOLT 68
+                - generic [ref=e1925]: Yonex
+              - generic [ref=e1926] [cursor=pointer]: In Stock
+            - generic [ref=e1928]: 0.68 mm · Repulsion
+            - generic [ref=e1929]:
+              - generic [ref=e1930] [cursor=pointer]: Stock 8
+              - generic [ref=e1932] [cursor=pointer]: RM 76.00
+              - generic [ref=e1934] [cursor=pointer]: Hidden from catalog
+            - generic [ref=e1936]:
+              - button "Edit stock" [ref=e1937] [cursor=pointer]
+              - button "Edit details" [ref=e1939] [cursor=pointer]
+              - button "Notes" [ref=e1941] [cursor=pointer]
+        - generic [ref=e1948]:
+          - generic "Gosen RYZONIC 65 thumbnail" [ref=e1950]:
+            - img "Gosen RYZONIC 65 thumbnail" [ref=e1952]
+          - generic [ref=e1953]:
+            - generic [ref=e1954]:
+              - generic [ref=e1955]:
+                - generic [ref=e1956]: RYZONIC 65
+                - generic [ref=e1957]: Gosen
+              - generic [ref=e1958] [cursor=pointer]: In Stock
+            - generic [ref=e1960]: 0.65 mm · Repulsion
+            - generic [ref=e1961]:
+              - generic [ref=e1962] [cursor=pointer]: Stock 8
+              - generic [ref=e1964] [cursor=pointer]: RM 40.00
+            - generic [ref=e1966]:
+              - button "Edit stock" [ref=e1967] [cursor=pointer]
+              - button "Edit details" [ref=e1969] [cursor=pointer]
+              - button "Notes" [ref=e1971] [cursor=pointer]
+        - generic [ref=e1978]:
+          - generic "Li-Ning N61 thumbnail" [ref=e1980]:
+            - img "Li-Ning N61 thumbnail" [ref=e1982]
+          - generic [ref=e1983]:
+            - generic [ref=e1984]:
+              - generic [ref=e1985]:
+                - generic [ref=e1986]: N61
+                - generic [ref=e1987]: Li-Ning
+              - generic [ref=e1988] [cursor=pointer]: In Stock
+            - generic [ref=e1990]: 0.61 mm · Repulsion
+            - generic [ref=e1991]:
+              - generic [ref=e1992] [cursor=pointer]: Stock 8
+              - generic [ref=e1994] [cursor=pointer]: RM 45.00
+            - generic [ref=e1996]:
+              - button "Edit stock" [ref=e1997] [cursor=pointer]
+              - button "Edit details" [ref=e1999] [cursor=pointer]
+              - button "Notes" [ref=e2001] [cursor=pointer]
+        - generic [ref=e2008]:
+          - generic "Li-Ning N63 thumbnail" [ref=e2010]:
+            - img "Li-Ning N63 thumbnail" [ref=e2012]
+          - generic [ref=e2013]:
+            - generic [ref=e2014]:
+              - generic [ref=e2015]:
+                - generic [ref=e2016]: N63
+                - generic [ref=e2017]: Li-Ning
+              - generic [ref=e2018] [cursor=pointer]: In Stock
+            - generic [ref=e2020]: 0.63 mm · Repulsion
+            - generic [ref=e2021]:
+              - generic [ref=e2022] [cursor=pointer]: Stock 8
+              - generic [ref=e2024] [cursor=pointer]: RM 48.00
+            - generic [ref=e2026]:
+              - button "Edit stock" [ref=e2027] [cursor=pointer]
+              - button "Edit details" [ref=e2029] [cursor=pointer]
+              - button "Notes" [ref=e2031] [cursor=pointer]
+        - generic [ref=e2038]:
+          - generic "Li-Ning N68 thumbnail" [ref=e2040]:
+            - img "Li-Ning N68 thumbnail" [ref=e2042]
+          - generic [ref=e2043]:
+            - generic [ref=e2044]:
+              - generic [ref=e2045]:
+                - generic [ref=e2046]: N68
+                - generic [ref=e2047]: Li-Ning
+              - generic [ref=e2048] [cursor=pointer]: In Stock
+            - generic [ref=e2050]: 0.68 mm · Repulsion
+            - generic [ref=e2051]:
+              - generic [ref=e2052] [cursor=pointer]: Stock 8
+              - generic [ref=e2054] [cursor=pointer]: RM 43.00
+            - generic [ref=e2056]:
+              - button "Edit stock" [ref=e2057] [cursor=pointer]
+              - button "Edit details" [ref=e2059] [cursor=pointer]
+              - button "Notes" [ref=e2061] [cursor=pointer]
+        - generic [ref=e2068]:
+          - generic "Li-Ning N69 thumbnail" [ref=e2070]:
+            - img "Li-Ning N69 thumbnail" [ref=e2072]
+          - generic [ref=e2073]:
+            - generic [ref=e2074]:
+              - generic [ref=e2075]:
+                - generic [ref=e2076]: N69
+                - generic [ref=e2077]: Li-Ning
+              - generic [ref=e2078] [cursor=pointer]: In Stock
+            - generic [ref=e2080]: 0.69 mm · Balance · Balanced
+            - generic [ref=e2081]:
+              - generic [ref=e2082] [cursor=pointer]: Stock 8
+              - generic [ref=e2084] [cursor=pointer]: RM 47.00
+            - generic [ref=e2086]:
+              - button "Edit stock" [ref=e2087] [cursor=pointer]
+              - button "Edit details" [ref=e2089] [cursor=pointer]
+              - button "Notes" [ref=e2091] [cursor=pointer]
+        - generic [ref=e2098]:
+          - generic "Li-Ning No.1 thumbnail" [ref=e2100]:
+            - img "Li-Ning No.1 thumbnail" [ref=e2102]
+          - generic [ref=e2103]:
+            - generic [ref=e2104]:
+              - generic [ref=e2105]:
+                - generic [ref=e2106]: No.1
+                - generic [ref=e2107]: Li-Ning
+              - generic [ref=e2108] [cursor=pointer]: In Stock
+            - generic [ref=e2110]: 0.65 mm · Repulsion
+            - generic [ref=e2111]:
+              - generic [ref=e2112] [cursor=pointer]: Stock 8
+              - generic [ref=e2114] [cursor=pointer]: RM 45.00
+            - generic [ref=e2116]:
+              - button "Edit stock" [ref=e2117] [cursor=pointer]
+              - button "Edit details" [ref=e2119] [cursor=pointer]
+              - button "Notes" [ref=e2121] [cursor=pointer]
+        - generic [ref=e2128]:
+          - generic "Other Kizuna Z61 thumbnail" [ref=e2130]:
+            - img "Other Kizuna Z61 thumbnail" [ref=e2132]
+          - generic [ref=e2133]:
+            - generic [ref=e2134]:
+              - generic [ref=e2135]:
+                - generic [ref=e2136]: Kizuna Z61
+                - generic [ref=e2137]: Other
+              - generic [ref=e2138] [cursor=pointer]: In Stock
+            - generic [ref=e2140]: 0.61 mm · Repulsion
+            - generic [ref=e2141]:
+              - generic [ref=e2142] [cursor=pointer]: Stock 8
+              - generic [ref=e2144] [cursor=pointer]: RM 50.00
+            - generic [ref=e2146]:
+              - button "Edit stock" [ref=e2147] [cursor=pointer]
+              - button "Edit details" [ref=e2149] [cursor=pointer]
+              - button "Notes" [ref=e2151] [cursor=pointer]
+        - generic [ref=e2158]:
+          - generic "Victor VBS-61 thumbnail" [ref=e2160]:
+            - img "Victor VBS-61 thumbnail" [ref=e2162]
+          - generic [ref=e2163]:
+            - generic [ref=e2164]:
+              - generic [ref=e2165]:
+                - generic [ref=e2166]: VBS-61
+                - generic [ref=e2167]: Victor
+              - generic [ref=e2168] [cursor=pointer]: In Stock
+            - generic [ref=e2170]: 0.61 mm · Repulsion
+            - generic [ref=e2171]:
+              - generic [ref=e2172] [cursor=pointer]: Stock 8
+              - generic [ref=e2174] [cursor=pointer]: RM 43.00
+            - generic [ref=e2176]:
+              - button "Edit stock" [ref=e2177] [cursor=pointer]
+              - button "Edit details" [ref=e2179] [cursor=pointer]
+              - button "Notes" [ref=e2181] [cursor=pointer]
+        - generic [ref=e2188]:
+          - generic "Victor VBS-63 thumbnail" [ref=e2190]:
+            - img "Victor VBS-63 thumbnail" [ref=e2192]
+          - generic [ref=e2193]:
+            - generic [ref=e2194]:
+              - generic [ref=e2195]:
+                - generic [ref=e2196]: VBS-63
+                - generic [ref=e2197]: Victor
+              - generic [ref=e2198] [cursor=pointer]: In Stock
+            - generic [ref=e2200]: 0.63 mm · Repulsion
+            - generic [ref=e2201]:
+              - generic [ref=e2202] [cursor=pointer]: Stock 8
+              - generic [ref=e2204] [cursor=pointer]: RM 43.00
+            - generic [ref=e2206]:
+              - button "Edit stock" [ref=e2207] [cursor=pointer]
+              - button "Edit details" [ref=e2209] [cursor=pointer]
+              - button "Notes" [ref=e2211] [cursor=pointer]
+  - tablist [ref=e368]:
+    - tab "Overview" [ref=e370] [cursor=pointer]
+    - tab "Bookings" [ref=e388] [cursor=pointer]
+    - tab "Inventory" [active] [selected] [ref=e400] [cursor=pointer]

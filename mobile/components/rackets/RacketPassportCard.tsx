@@ -14,7 +14,12 @@ interface RacketPassportCardProps {
 
 export function RacketPassportCard({ racket, currentStringLabel, onPress }: RacketPassportCardProps) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${racket.nickname}. ${racket.brand} ${racket.model}. ${racket.currentTension} pounds, ${currentStringLabel}, ${racket.serviceCount} services`}
+      accessibilityHint="Open this racket passport"
+    >
       <AppCard variant="elevated" padding="md">
         <View className="flex-row items-start gap-4">
           <View className="h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50">

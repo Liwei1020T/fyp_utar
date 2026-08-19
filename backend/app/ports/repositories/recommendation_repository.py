@@ -3,12 +3,27 @@ from __future__ import annotations
 from typing import Protocol
 
 from app.domain.recommendation.entities import CachedRecommendationRecord
+from app.domain.recommendation.entities import CommunityFeedbackRow
 from app.domain.recommendation.entities import RecommendationCandidateModel
+from app.domain.recommendation.entities import RecommendationInteraction
+from app.domain.recommendation.entities import RacketRecommendationContext
 from app.domain.recommendation.entities import UserPreferenceVectorEntry
 
 
 class RecommendationRepository(Protocol):
     def list_active_candidates(self) -> list[RecommendationCandidateModel]: ...
+
+    def get_owned_racket_context(
+        self,
+        *,
+        user_id: str,
+        racket_id: str,
+        target_tension: float,
+    ) -> RacketRecommendationContext | None: ...
+
+    def list_community_feedback_rows(self) -> list[CommunityFeedbackRow]: ...
+
+    def list_recommendation_interactions(self) -> list[RecommendationInteraction]: ...
 
     def replace_user_preference_vector(
         self,
@@ -32,6 +47,8 @@ class RecommendationRepository(Protocol):
         algorithm_version: str,
         results: list[dict[str, object]],
     ) -> list[CachedRecommendationRecord]: ...
+
+    def clear_score_cache(self, *, user_id: str) -> None: ...
 
     def get_cached_results(
         self,

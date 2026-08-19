@@ -21,14 +21,13 @@ import {
   useBackendAccessToken,
   useCurrentUser,
   usePreferredAdminId,
+  useRackets,
   useStrings,
 } from '../../../store/appStore';
-import { MOCK_BOOKING_SLOTS } from '../../../mocks';
-import { getAdminById, getStringById } from '../../../services/mockAppService';
 import { formatCurrency, formatDateLabel, formatLocalDateInputValue } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendSlotToBookingSlot } from '../../../services/backendMappers';
-import type { BookingSlot } from '../../../types/domain';
+import type { BookingSlot, PlayerProfile } from '../../../types/domain';
 
 const bookingSchema = z.object({
   racketBrand: z.string().min(1, 'Racket brand is required'),
@@ -62,23 +61,37 @@ function getSlotPeriod(slot: BookingSlot): SlotPeriod {
 }
 
 export default function NewBookingScreen() {
-  const params = useLocalSearchParams<{ stringId?: string }>();
-  const router = useRouter();
   const user = useCurrentUser();
-  const preferredAdminId = usePreferredAdminId();
-  const strings = useStrings();
-  const token = useBackendAccessToken();
-  const setBookingDraft = useAppStore((state) => state.setBookingDraft);
 
   if (!user || user.role !== 'player') {
     return null;
   }
 
+  return <NewBookingContent user={user} />;
+}
+
+function NewBookingContent({ user }: { user: PlayerProfile }) {
+  const params = useLocalSearchParams<{ racketId?: string; stringId?: string }>();
+  const router = useRouter();
+  const preferredAdminId = usePreferredAdminId();
+  const strings = useStrings();
+  const rackets = useRackets();
+  const token = useBackendAccessToken();
+  const setBookingDraft = useAppStore((state) => state.setBookingDraft);
+  const storeSettings = useAppStore((state) => state.storeSettings);
+  const playerRackets = rackets.filter((item) => item.playerId === user.id);
+  const [selectedRacketId, setSelectedRacketId] = useState<string | null>(
+    params.racketId ?? null,
+  );
+  const selectedRacket = playerRackets.find(
+    (item) => item.id === selectedRacketId,
+  );
+
   const requestedStringId = params.stringId;
   const requestedString = requestedStringId
-    ? strings.find((item) => item.id === requestedStringId) ?? getStringById(requestedStringId)
+    ? strings.find((item) => item.id === requestedStringId)
     : undefined;
-  const fallbackString = strings[0] ?? getStringById('string-001');
+  const fallbackString = strings[0];
   const [selectedStringId, setSelectedStringId] = useState(
     requestedString?.id ?? fallbackString?.id ?? ''
   );
@@ -87,11 +100,10 @@ export default function NewBookingScreen() {
     strings.find((item) => item.id === selectedStringId) ??
     requestedString ??
     fallbackString;
-  const adminId = preferredAdminId ?? user.preferredAdminId;
+  const adminId = preferredAdminId ?? 'main';
   const today = formatLocalDateInputValue(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [liveSlots, setLiveSlots] = useState<BookingSlot[]>([]);
-  const [didLoadLiveSlots, setDidLoadLiveSlots] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [bookingPhoto, setBookingPhoto] = useState<{
@@ -99,10 +111,10 @@ export default function NewBookingScreen() {
     name: string;
     type: string;
   } | null>(null);
-  const sourceSlots =
-    token && didLoadLiveSlots && !slotsError
-      ? liveSlots
-      : MOCK_BOOKING_SLOTS.filter((item) => item.adminId === adminId);
+  const [serviceMethod, setServiceMethod] = useState<
+    'counter_dropoff' | 'pickup_request'
+  >('counter_dropoff');
+  const sourceSlots = liveSlots;
   const slots = sourceSlots.filter((item) => item.adminId === adminId && item.date === selectedDate);
   const availableSlots = useMemo(
     () => slots.filter((item) => item.availableSpots > 0),
@@ -119,11 +131,12 @@ export default function NewBookingScreen() {
   const selectedSlot = slots.find(
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
-  const selectedAdmin = getAdminById(adminId);
-  const selectedAdminName = selectedAdmin?.businessName ?? 'Assigned shop';
-  const selectedAdminMeta = selectedAdmin
-    ? `${selectedAdmin.city} · Avg turnaround ${selectedAdmin.averageTurnaroundHours} hours`
-    : 'Drop-off service desk';
+  const selectedAdminName =
+    storeSettings?.storeName.trim()
+    || 'Assigned shop';
+  const selectedAdminMeta =
+    storeSettings?.address.trim()
+    || 'Drop-off service desk';
   const recommendedMin = selectedString?.recommendedTension[0] ?? 24;
   const recommendedMax = selectedString?.recommendedTension[1] ?? 29;
   const showPeriodFilter = slots.length > 6;
@@ -139,8 +152,8 @@ export default function NewBookingScreen() {
   } = useForm<BookingFormInput, unknown, BookingForm>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      racketBrand: 'Yonex',
-      racketModel: 'Astrox 88D Pro',
+      racketBrand: '',
+      racketModel: '',
       requestedTension: selectedString?.recommendedTension[0] ?? 26,
       notes: '',
     },
@@ -154,6 +167,14 @@ export default function NewBookingScreen() {
 
     setValue('requestedTension', selectedString.recommendedTension[0]);
   }, [selectedString?.id, selectedString, setValue]);
+
+  useEffect(() => {
+    if (!selectedRacket) {
+      return;
+    }
+    setValue('racketBrand', selectedRacket.brand, { shouldValidate: true });
+    setValue('racketModel', selectedRacket.model, { shouldValidate: true });
+  }, [selectedRacket, setValue]);
 
   useEffect(() => {
     if (requestedString?.id) {
@@ -177,6 +198,7 @@ export default function NewBookingScreen() {
     const hydrateSlots = async () => {
       setIsLoadingSlots(true);
       setSlotsError(null);
+      setLiveSlots([]);
       try {
         const response = await backendApi.listSlots(token, {
           date_from: today,
@@ -189,7 +211,6 @@ export default function NewBookingScreen() {
           mapBackendSlotToBookingSlot(item, adminId),
         );
         setLiveSlots(mappedSlots);
-        setDidLoadLiveSlots(true);
         const firstAvailable = mappedSlots.find((item) => item.availableSpots > 0);
         if (firstAvailable) {
           setSelectedDate(firstAvailable.date);
@@ -197,6 +218,7 @@ export default function NewBookingScreen() {
         }
       } catch (error) {
         if (!cancelled) {
+          setLiveSlots([]);
           setSlotsError(
             error instanceof BackendApiError
               ? error.message
@@ -256,21 +278,27 @@ export default function NewBookingScreen() {
     }
   }, [availableSlots, selectedPeriod, selectedSlotId, selectedString, showPeriodFilter, slots]);
 
-  const onSubmit = async (data: BookingForm) => {
+  const onSubmit = (data: BookingForm) => {
+    if (!token) {
+      setSlotError('Your player session expired. Sign in again to continue.');
+      return;
+    }
+
     if (!selectedString || !selectedSlot || selectedSlot.availableSpots < 1) {
       setSlotError('Select an available drop-off slot before continuing.');
       return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 350));
     setBookingDraft({
       stringId: selectedString.id,
       adminId,
-      racketId: null,
+      racketId: selectedRacket?.id ?? null,
       racketBrand: data.racketBrand,
       racketModel: data.racketModel,
       requestedTension: data.requestedTension,
       notes: data.notes ?? '',
+      serviceMethod,
+      slotId: selectedSlot.id,
       dropOffDate: selectedSlot.date,
       dropOffTime: selectedSlot.time,
       photoUri: bookingPhoto?.uri,
@@ -300,6 +328,23 @@ export default function NewBookingScreen() {
     });
   };
 
+  if (requestedStringId && !requestedString && strings.length === 0 && token) {
+    return (
+      <AppScreen
+        title="Loading catalog"
+        subtitle="Checking the selected string against the active catalog."
+        showBackButton
+        onBackPress={() => router.back()}
+      >
+        <AppCard variant="subtle" className="mt-8" padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Please wait while the live catalog is loaded.
+          </HeroText>
+        </AppCard>
+      </AppScreen>
+    );
+  }
+
   if (requestedStringId && !requestedString) {
     return (
       <AppScreen
@@ -324,7 +369,26 @@ export default function NewBookingScreen() {
   }
 
   if (!selectedString) {
-    return null;
+    return (
+      <AppScreen
+        title="Catalog unavailable"
+        subtitle="No live string data is available for a new booking."
+        showBackButton
+        onBackPress={() => router.back()}
+      >
+        <AppCard variant="subtle" className="mt-8" padding="md">
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Return to the catalog and retry after the backend connection is restored.
+          </HeroText>
+          <View className="mt-4">
+            <AppButton
+              label="Back to catalog"
+              onPress={() => router.replace('/player/strings')}
+            />
+          </View>
+        </AppCard>
+      </AppScreen>
+    );
   }
 
   const tensionValue =
@@ -334,7 +398,7 @@ export default function NewBookingScreen() {
   const selectedDateLabel = formatDateLabel(selectedSlot?.date ?? selectedDate);
   const selectedTimeLabel = selectedSlot?.label ?? 'Select a slot';
   const slotSupportCopy = slotsError
-    ? `${slotsError} Showing local fallback slots.`
+    ? `${slotsError} Live slots are unavailable; retry before continuing.`
     : 'Times reflect current shop availability.';
   const selectedCategoryLabel =
     selectedString.category.charAt(0).toUpperCase() + selectedString.category.slice(1);
@@ -348,6 +412,17 @@ export default function NewBookingScreen() {
       subtitle="Configure your restring request."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Continue to summary"
+            size="lg"
+            onPress={handleSubmit(onSubmit)}
+            isLoading={isSubmitting}
+            isDisabled={!selectedSlot}
+          />
+        </View>
+      }
     >
       <AppCard variant="highlighted" className="rounded-[28px]" padding="md">
         <View className="flex-row items-start justify-between gap-3">
@@ -397,6 +472,7 @@ export default function NewBookingScreen() {
                   <Pressable
                     key={item.id}
                     accessibilityRole="button"
+                    accessibilityLabel={`${item.brand} ${item.model}, ${item.gauge}`}
                     accessibilityState={{ selected: isSelected }}
                     onPress={() => {
                       setSelectedStringId(item.id);
@@ -459,6 +535,78 @@ export default function NewBookingScreen() {
 
       <AppSection eyebrow="Setup" title="Racket and tension" variant="compact">
         <AppCard variant="elevated" padding="md">
+          <HeroText className="mb-2 ml-1 text-sm font-semibold text-foreground">
+            Racket passport
+          </HeroText>
+          <View className="mb-4 gap-2">
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityLabel="Enter racket manually"
+              accessibilityState={{ checked: !selectedRacket }}
+              onPress={() => setSelectedRacketId(null)}
+            >
+              <AppCard
+                variant={!selectedRacket ? 'highlighted' : 'subtle'}
+                padding="sm"
+              >
+                <HeroText className="text-sm font-semibold text-neutral-900">
+                  Manual racket entry
+                </HeroText>
+                <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
+                  Use this for a frame that is not registered yet.
+                </HeroText>
+              </AppCard>
+            </Pressable>
+            {playerRackets.map((racket) => {
+              const isSelected = racket.id === selectedRacket?.id;
+              return (
+                <Pressable
+                  key={racket.id}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${racket.nickname}, ${racket.brand} ${racket.model}`}
+                  accessibilityState={{ checked: isSelected }}
+                  onPress={() => setSelectedRacketId(racket.id)}
+                >
+                  <AppCard
+                    variant={isSelected ? 'highlighted' : 'subtle'}
+                    padding="sm"
+                  >
+                    <View className="flex-row items-center justify-between gap-3">
+                      <View className="min-w-0 flex-1">
+                        <HeroText className="text-sm font-semibold text-neutral-900">
+                          {racket.nickname}
+                        </HeroText>
+                        <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
+                          {racket.brand} {racket.model}
+                        </HeroText>
+                      </View>
+                      {isSelected ? (
+                        <AppChip label="Selected" variant="primary" />
+                      ) : null}
+                    </View>
+                  </AppCard>
+                </Pressable>
+              );
+            })}
+            {playerRackets.length === 0 ? (
+              <AppCard variant="subtle" padding="sm">
+                <HeroText className="text-xs leading-5 text-neutral-500">
+                  No saved rackets yet. Continue manually or register one first.
+                </HeroText>
+              </AppCard>
+            ) : null}
+            {params.racketId && !selectedRacket ? (
+              <HeroText className="text-xs font-medium leading-5 text-amber-700">
+                The requested saved racket is unavailable. Choose another racket
+                or continue with manual entry.
+              </HeroText>
+            ) : null}
+            <AppButton
+              label="Register another racket"
+              variant="outline"
+              onPress={() => router.push('/player/rackets/new')}
+            />
+          </View>
           <Controller
             control={control}
             name="racketBrand"
@@ -469,6 +617,12 @@ export default function NewBookingScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.racketBrand?.message}
+                isDisabled={Boolean(selectedRacket)}
+                helperText={
+                  selectedRacket
+                    ? 'Snapshot copied from the selected passport.'
+                    : undefined
+                }
               />
             )}
           />
@@ -482,6 +636,7 @@ export default function NewBookingScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.racketModel?.message}
+                isDisabled={Boolean(selectedRacket)}
               />
             )}
           />
@@ -559,6 +714,35 @@ export default function NewBookingScreen() {
             )}
           />
         </AppCard>
+      </AppSection>
+
+      <AppSection
+        eyebrow="Handover"
+        title="Pickup or counter drop-off"
+        variant="compact"
+      >
+        <View className="flex-row gap-3">
+          {[
+            ['counter_dropoff', 'Counter drop-off'],
+            ['pickup_request', 'Request pickup'],
+          ].map(([id, label]) => (
+            <View key={id} className="flex-1">
+              <AppButton
+                label={label}
+                variant={serviceMethod === id ? 'primary' : 'outline'}
+                onPress={() =>
+                  setServiceMethod(
+                    id as 'counter_dropoff' | 'pickup_request',
+                  )
+                }
+              />
+            </View>
+          ))}
+        </View>
+        <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
+          Pickup is a request for the selected slot; the shop confirms logistics
+          through booking updates.
+        </HeroText>
       </AppSection>
 
       <AppSection eyebrow="Drop-off" title="Date and time" variant="compact">
@@ -694,15 +878,6 @@ export default function NewBookingScreen() {
         </AppCard>
       </AppSection>
 
-      <View className="mb-12 mt-6">
-        <AppButton
-          label="Continue to summary"
-          size="lg"
-          onPress={handleSubmit(onSubmit)}
-          isLoading={isSubmitting}
-          isDisabled={!selectedSlot}
-        />
-      </View>
     </AppScreen>
   );
 }

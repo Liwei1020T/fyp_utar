@@ -1,18 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, View, Image } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
   Search, 
   SlidersHorizontal, 
-  ChevronLeft, 
   LayoutGrid, 
   Tags,
   Plus,
-  Check
+  Check,
+  ChevronRight,
+  SearchX,
 } from 'lucide-react-native';
-import { HeroText, HeroTextField } from '../../../components/ui/heroui';
-import { AppButton } from '../../../components/ui/AppButton';
+import { HeroText, cn } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
+import { AppButton } from '../../../components/ui/AppButton';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
@@ -24,7 +25,6 @@ import { StringProductImage } from '../../../components/shared/StringProductImag
 import { useAppStore, useStrings } from '../../../store/appStore';
 import { formatCurrency, formatLabel } from '../../../lib/formatters';
 import { getInventoryPriceLabel } from '../../../lib/inventory';
-import { cn } from '../../../components/ui/heroui';
 import type { StringItem } from '../../../types/domain';
 
 const sortOptions = [
@@ -52,7 +52,6 @@ export default function StringsCatalogScreen() {
   const strings = useStrings();
   const compareSelection = useAppStore((state) => state.compareSelection);
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
-  const clearCompareSelection = useAppStore((state) => state.clearCompareSelection);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'repulsion' | 'balanced' | 'control' | 'durable'>('all');
@@ -60,10 +59,38 @@ export default function StringsCatalogScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('all');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedPrice, setSelectedPrice] = useState<
+    'all' | 'below_30' | '30_50' | 'above_50'
+  >('all');
+  const [selectedGauge, setSelectedGauge] = useState<string | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<
+    'power' | 'control' | 'durability' | 'comfort' | 'sound' | null
+  >(null);
+
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 ||
+    selectedCategory !== 'all' ||
+    selectedBrand !== null ||
+    selectedPrice !== 'all' ||
+    selectedGauge !== null ||
+    selectedFeature !== null;
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSelectedBrand(null);
+    setSelectedPrice('all');
+    setSelectedGauge(null);
+    setSelectedFeature(null);
+  };
 
   const brands = useMemo(() => {
     return Array.from(new Set(strings.map(s => s.brand))).sort();
   }, [strings]);
+  const gauges = useMemo(
+    () => Array.from(new Set(strings.map((item) => item.gauge))).sort(),
+    [strings],
+  );
 
   const filteredStrings = useMemo(() => {
     const next = strings.filter((item) => {
@@ -72,8 +99,23 @@ export default function StringsCatalogScreen() {
         item.brand.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' ? true : item.category === selectedCategory;
       const matchesBrand = !selectedBrand || item.brand === selectedBrand;
+      const matchesGauge = !selectedGauge || item.gauge === selectedGauge;
+      const matchesPrice =
+        selectedPrice === 'all' ||
+        (selectedPrice === 'below_30' && item.price > 0 && item.price < 30) ||
+        (selectedPrice === '30_50' && item.price >= 30 && item.price <= 50) ||
+        (selectedPrice === 'above_50' && item.price > 50);
+      const matchesFeature =
+        !selectedFeature || item.ratings[selectedFeature] >= 8;
       
-      return matchesSearch && matchesCategory && matchesBrand;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesBrand &&
+        matchesGauge &&
+        matchesPrice &&
+        matchesFeature
+      );
     });
 
     if (displayMode === 'all') {
@@ -84,7 +126,17 @@ export default function StringsCatalogScreen() {
     }
 
     return next;
-  }, [searchQuery, selectedCategory, sortBy, strings, displayMode, selectedBrand]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    sortBy,
+    strings,
+    displayMode,
+    selectedBrand,
+    selectedGauge,
+    selectedPrice,
+    selectedFeature,
+  ]);
 
   const groupedByBrand = useMemo(() => {
     if (displayMode !== 'brand') return [];
@@ -110,6 +162,7 @@ export default function StringsCatalogScreen() {
       <View className="flex-row items-center gap-3 mb-5">
         <AppInput
           variant="minimal"
+          accessibilityLabel="Search string catalog"
           placeholder="Search models or brands..."
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -120,6 +173,7 @@ export default function StringsCatalogScreen() {
         <AppIconButton
           icon={<SlidersHorizontal size={18} color={showFilters ? '#2563EB' : '#475569'} strokeWidth={2.5} />}
           accessibilityLabel={showFilters ? 'Hide catalog filters' : 'Show catalog filters'}
+          accessibilityState={{ expanded: showFilters }}
           onPress={() => setShowFilters(!showFilters)}
           className={cn(
             "h-11 w-11 rounded-full border shadow-sm",
@@ -142,10 +196,81 @@ export default function StringsCatalogScreen() {
                   label={item === 'all' ? 'All' : formatLabel(item)}
                   size="sm"
                   variant={selectedCategory === item ? 'primary' : 'neutral'}
+                  accessibilityState={{ selected: selectedCategory === item }}
                   onPress={() => setSelectedCategory(item as typeof selectedCategory)}
                 />
               )}
             />
+          </AppSection>
+
+          <View className="h-px bg-neutral-100 my-4" />
+
+          <AppSection eyebrow="Price" title="Price range" variant="compact" className="mt-0">
+            <View className="flex-row flex-wrap gap-2">
+              {[
+                ['all', 'All prices'],
+                ['below_30', 'Below RM30'],
+                ['30_50', 'RM30–RM50'],
+                ['above_50', 'Above RM50'],
+              ].map(([id, label]) => (
+                <AppChip
+                  key={id}
+                  label={label}
+                  size="sm"
+                  variant={selectedPrice === id ? 'primary' : 'neutral'}
+                  accessibilityState={{ selected: selectedPrice === id }}
+                  onPress={() => setSelectedPrice(id as typeof selectedPrice)}
+                />
+              ))}
+            </View>
+          </AppSection>
+
+          <View className="h-px bg-neutral-100 my-4" />
+
+          <AppSection eyebrow="Specification" title="Gauge" variant="compact" className="mt-0">
+            <View className="flex-row flex-wrap gap-2">
+              {['all', ...gauges].map((gauge) => (
+                <AppChip
+                  key={gauge}
+                  label={gauge === 'all' ? 'All gauges' : gauge}
+                  size="sm"
+                  variant={
+                    (gauge === 'all' && !selectedGauge) ||
+                    selectedGauge === gauge
+                      ? 'secondary'
+                      : 'neutral'
+                  }
+                  accessibilityState={{
+                    selected:
+                      (gauge === 'all' && !selectedGauge) || selectedGauge === gauge,
+                  }}
+                  onPress={() => setSelectedGauge(gauge === 'all' ? null : gauge)}
+                />
+              ))}
+            </View>
+          </AppSection>
+
+          <View className="h-px bg-neutral-100 my-4" />
+
+          <AppSection eyebrow="Strength" title="Feature score 8+" variant="compact" className="mt-0">
+            <View className="flex-row flex-wrap gap-2">
+              {(['power', 'control', 'durability', 'comfort', 'sound'] as const).map(
+                (feature) => (
+                  <AppChip
+                    key={feature}
+                    label={formatLabel(feature)}
+                    size="sm"
+                    variant={selectedFeature === feature ? 'info' : 'neutral'}
+                    accessibilityState={{ selected: selectedFeature === feature }}
+                    onPress={() =>
+                      setSelectedFeature((current) =>
+                        current === feature ? null : feature,
+                      )
+                    }
+                  />
+                ),
+              )}
+            </View>
           </AppSection>
 
           <View className="h-px bg-neutral-100 my-4" />
@@ -159,6 +284,7 @@ export default function StringsCatalogScreen() {
                     label={item.label}
                     size="sm"
                     variant={sortBy === item.id ? 'info' : 'neutral'}
+                    accessibilityState={{ selected: sortBy === item.id }}
                     onPress={() => setSortBy(item.id)}
                   />
                 ))}
@@ -166,25 +292,27 @@ export default function StringsCatalogScreen() {
             </AppSection>
           )}
 
-          {displayMode === 'brand' && (
-            <AppSection eyebrow="Manufacturers" title="Brand" variant="compact" className="mt-0">
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={['all', ...brands]}
-                keyExtractor={(item) => item}
-                ItemSeparatorComponent={() => <View className="w-2" />}
-                renderItem={({ item }) => (
-                  <AppChip
-                    label={item === 'all' ? 'All Brands' : item}
-                    size="sm"
-                    variant={(item === 'all' && !selectedBrand) || selectedBrand === item ? 'secondary' : 'neutral'}
-                    onPress={() => setSelectedBrand(item === 'all' ? null : item)}
-                  />
-                )}
-              />
-            </AppSection>
-          )}
+          <AppSection eyebrow="Manufacturers" title="Brand" variant="compact" className="mt-0">
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={['all', ...brands]}
+              keyExtractor={(item) => item}
+              ItemSeparatorComponent={() => <View className="w-2" />}
+              renderItem={({ item }) => (
+                <AppChip
+                  label={item === 'all' ? 'All Brands' : item}
+                  size="sm"
+                  variant={(item === 'all' && !selectedBrand) || selectedBrand === item ? 'secondary' : 'neutral'}
+                  accessibilityState={{
+                    selected:
+                      (item === 'all' && !selectedBrand) || selectedBrand === item,
+                  }}
+                  onPress={() => setSelectedBrand(item === 'all' ? null : item)}
+                />
+              )}
+            />
+          </AppSection>
         </View>
       )}
     </View>
@@ -199,41 +327,46 @@ export default function StringsCatalogScreen() {
         className="mb-2 shadow-none" 
         variant="default" 
         padding="sm"
-        onPress={() => router.push(`/player/strings/${item.id}`)}
       >
         <View className="flex-row items-center gap-3">
-          {/* Left: Thumbnail */}
-          <View className="h-14 w-14 rounded-lg bg-slate-50 items-center justify-center overflow-hidden border border-slate-100">
-            <StringProductImage
-              imageUrl={item.imageUrl}
-              brand={item.brand}
-              model={item.model}
-              gauge={item.gauge}
-              className="h-full w-full"
-              fallbackClassName="h-12 w-9 rounded-xl border-[3px]"
-              fallbackTextClassName="px-2 text-[8px]"
-              fallbackGaugeClassName="mt-2 px-2 py-1"
-              resizeMode="cover"
-            />
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${item.brand} ${item.model}, ${item.gauge}, ${formatLabel(item.category)}`}
+            accessibilityHint="Open string details"
+            className="min-w-0 flex-1 flex-row items-center gap-3 rounded-lg"
+            onPress={() => router.push(`/player/strings/${item.id}`)}
+          >
+            <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+              <StringProductImage
+                imageUrl={item.imageUrl}
+                brand={item.brand}
+                model={item.model}
+                gauge={item.gauge}
+                className="h-full w-full"
+                fallbackClassName="h-12 w-9 rounded-xl border-[3px]"
+                fallbackTextClassName="px-2 text-[8px]"
+                fallbackGaugeClassName="mt-2 px-2 py-1"
+                resizeMode="cover"
+              />
+            </View>
 
-          {/* Center: Info */}
-          <View className="flex-1">
-            <HeroText className="text-[9px] font-bold uppercase tracking-wider text-primary-600">
-              {item.brand}
-            </HeroText>
-            <HeroText className="text-[15px] font-bold text-slate-900 leading-tight" numberOfLines={1}>
-              {item.model}
-            </HeroText>
-            <HeroText className="text-[11px] font-bold text-slate-400 mt-0.5">
-              P: {item.ratings.power} • C: {item.ratings.control} • D: {item.ratings.durability}
-            </HeroText>
-            <HeroText className="text-[11px] text-slate-500 font-medium" numberOfLines={1}>
-              {item.gauge} • {formatLabel(item.category)}
-            </HeroText>
-          </View>
+            <View className="min-w-0 flex-1">
+              <HeroText className="text-[10px] font-bold uppercase tracking-wider text-primary-600">
+                {item.brand}
+              </HeroText>
+              <HeroText className="text-[15px] font-bold leading-tight text-slate-900" numberOfLines={2}>
+                {item.model}
+              </HeroText>
+              <HeroText className="mt-0.5 text-[11px] font-bold text-slate-500">
+                P: {item.ratings.power} • C: {item.ratings.control} • D: {item.ratings.durability}
+              </HeroText>
+              <HeroText className="text-[11px] font-medium text-slate-500" numberOfLines={1}>
+                {item.gauge} • {formatLabel(item.category)}
+              </HeroText>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
 
-          {/* Right: Actions */}
           <View className="items-end gap-1.5">
             <HeroText
               className={cn(
@@ -244,19 +377,19 @@ export default function StringsCatalogScreen() {
               {priceLabel.hasPrice ? formatCurrency(item.price) : priceLabel.label}
             </HeroText>
             <Pressable 
+              accessibilityRole="button"
+              accessibilityLabel={`${isSelected ? 'Remove' : 'Add'} ${item.brand} ${item.model} ${isSelected ? 'from' : 'to'} comparison`}
+              accessibilityState={{ selected: isSelected }}
               onPress={() => toggleCompareSelection(item.id)}
               className={cn(
-                "flex-row items-center gap-1 px-2.5 py-1 rounded-full border",
+                "min-h-11 min-w-[76px] flex-row items-center justify-center gap-1 rounded-full border px-2.5 py-1",
                 isSelected ? "bg-primary-600 border-primary-600" : "bg-white border-slate-200"
               )}
             >
-              {isSelected ? <Check size={10} color="white" strokeWidth={3} /> : <Plus size={10} color="#64748B" strokeWidth={3} />}
-              <HeroText className={cn("text-[9px] font-black uppercase tracking-tighter", isSelected ? "text-white" : "text-slate-500")}>
+              {isSelected ? <Check size={12} color="white" strokeWidth={3} /> : <Plus size={12} color="#64748B" strokeWidth={3} />}
+              <HeroText className={cn("text-[11px] font-bold", isSelected ? "text-white" : "text-slate-600")}>
                 {isSelected ? 'Compared' : 'Compare'}
               </HeroText>
-            </Pressable>
-            <Pressable onPress={() => router.push(`/player/strings/${item.id}`)}>
-              <HeroText className="text-[10px] font-bold text-primary-600 uppercase tracking-wider">Details</HeroText>
             </Pressable>
           </View>
         </View>
@@ -281,6 +414,32 @@ export default function StringsCatalogScreen() {
           scrollIndicatorInsets={{ bottom: bottomContentInset + 60 }}
           contentContainerStyle={{ paddingBottom: bottomContentInset + 80, paddingTop: 4 }}
           ListHeaderComponent={renderHeaderComponent}
+          ListEmptyComponent={
+            <AppCard variant="subtle" padding="lg" className="mt-2">
+              <View className="items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-50">
+                  <SearchX size={20} color="#2563EB" />
+                </View>
+                <HeroText className="mt-4 text-center text-lg font-bold text-slate-900">
+                  {hasActiveFilters ? 'No strings match' : 'No strings available'}
+                </HeroText>
+                <HeroText className="mt-1 max-w-[320px] text-center text-sm leading-5 text-slate-600">
+                  {hasActiveFilters
+                    ? 'Try a broader search or clear the active filters.'
+                    : 'The live catalog does not contain any strings yet.'}
+                </HeroText>
+                {hasActiveFilters ? (
+                  <AppButton
+                    label="Clear filters"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onPress={clearFilters}
+                  />
+                ) : null}
+              </View>
+            </AppCard>
+          }
           renderItem={({ item }) => {
             if (isBrandGroup(item)) {
               const group = item;
@@ -290,11 +449,6 @@ export default function StringsCatalogScreen() {
                     <HeroText className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
                       {group.name}
                     </HeroText>
-                    <Pressable>
-                      <HeroText className="text-[9px] font-bold text-primary-600 uppercase tracking-widest">
-                        View All
-                      </HeroText>
-                    </Pressable>
                   </View>
                   {group.data.map((stringItem) => (
                     <CompactStringCard key={stringItem.id} item={stringItem} />

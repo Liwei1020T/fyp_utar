@@ -9,6 +9,8 @@ from sqlalchemy.orm import sessionmaker
 
 from app.adapters.persistence.sqlalchemy.base import Base
 from app.config.settings import get_settings
+from app.shared.transaction_effects import commit_transaction_effects
+from app.shared.transaction_effects import rollback_transaction_effects
 
 
 def _connect_args(database_url: str) -> dict[str, object]:
@@ -52,5 +54,21 @@ def get_db() -> Iterator[Session]:
     db = SessionLocal()
     try:
         yield db
+    except BaseException:
+        try:
+            db.rollback()
+        finally:
+            rollback_transaction_effects(db)
+        raise
+    else:
+        try:
+            db.commit()
+        except BaseException:
+            try:
+                db.rollback()
+            finally:
+                rollback_transaction_effects(db)
+            raise
+        commit_transaction_effects(db)
     finally:
         db.close()

@@ -26,6 +26,10 @@ export function AppCard({
   padding = 'md',
   variant = 'default',
   contentClassName,
+  accessibilityHint,
+  accessibilityLabel,
+  accessibilityRole,
+  accessibilityState,
   ...props
 }: AppCardProps) {
   const nativeVariantMap: Record<AppCardVariant, SurfaceVariant> = {
@@ -38,17 +42,17 @@ export function AppCard({
 
   const paddingStyles = {
     none: 'p-0',
-    sm: 'p-3.5',
-    md: 'p-5',
-    lg: 'p-6',
+    sm: 'p-3',
+    md: 'p-4',
+    lg: 'p-5',
   };
 
   const shellStyles = {
-    default: 'bg-white border border-[#DCE6F7] shadow-soft',
-    elevated: 'bg-white border border-[#E8EEF8] shadow-soft',
-    highlighted: 'bg-primary-50 border border-primary-200 shadow-soft',
-    subtle: 'bg-[#F8FBFF] border border-[#E8EEF8] shadow-none',
-    dark: 'bg-app-hero border border-white/10 shadow-soft',
+    default: 'bg-white border border-[#DCE3EC] shadow-none',
+    elevated: 'bg-white border border-[#DCE3EC] shadow-soft',
+    highlighted: 'bg-primary-50 border border-primary-200 shadow-none',
+    subtle: 'bg-[#F3F6FA] border border-[#E7ECF2] shadow-none',
+    dark: 'bg-app-hero border border-white/10 shadow-float',
   };
 
   const coreStyles = {
@@ -63,22 +67,28 @@ export function AppCard({
     <Surface
       variant={nativeVariantMap[variant]}
       className={cn(
-        'overflow-hidden rounded-[20px]',
+        'overflow-hidden rounded-[18px]',
         shellStyles[variant],
         className
       )}
       {...props}
+      {...(onPress
+        ? {}
+        : { accessibilityHint, accessibilityLabel, accessibilityRole, accessibilityState })}
     >
       <View
         className={cn(
-          'overflow-hidden rounded-[20px]',
+          'overflow-hidden rounded-[18px]',
           coreStyles[variant]
         )}
       >
         {onPress ? (
           <Pressable
             onPress={onPress}
-            accessibilityRole="button"
+            accessibilityHint={accessibilityHint}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole={accessibilityRole ?? 'button'}
+            accessibilityState={accessibilityState}
             className={cn(paddingStyles[padding], contentClassName)}
             style={({ pressed }) => (pressed ? styles.pressed : undefined)}
           >
@@ -94,7 +104,7 @@ export function AppCard({
 
 const styles = StyleSheet.create({
   pressed: {
-    opacity: 0.96,
-    transform: [{ scale: 0.992 }],
+    opacity: 0.94,
+    transform: [{ scale: 0.99 }],
   },
 });

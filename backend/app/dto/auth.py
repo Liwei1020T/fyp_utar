@@ -105,6 +105,32 @@ class MessageResponse(BaseModel):
     message: str
 
 
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, value: str, info) -> str:
+        hasher = cast(PasswordHasher, info.context["password_hasher"])
+        return hasher.validate_local_password(value)
+
+
+class AccountDeletionRequestPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    reason: str | None = Field(default=None, min_length=1, max_length=1000)
+
+
+class AccountDeletionRequestOut(BaseModel):
+    id: str
+    status: str
+    reason: str | None
+    requested_at: str
+
+
 def user_to_dto(user: UserAccount) -> UserOut:
     return UserOut(
         id=user.id,

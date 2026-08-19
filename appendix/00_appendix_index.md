@@ -1,6 +1,9 @@
 # StringSense Appendix Material Index
 
-This folder contains supporting materials for the FYP1 report. It should not be treated as only system screenshots. The recommended appendix package is:
+This folder contains supporting materials for the FYP report. FYP1 claim
+boundaries remain explicit, while API, schema, and testing summaries describe
+the current implementation and label later FYP2 evidence separately. It should
+not be treated as only system screenshots.
 
 | Appendix | Material | Purpose |
 | --- | --- | --- |
@@ -17,5 +20,6 @@ Suggested usage in the report:
 1. Place screenshots after the implementation chapter or as Appendix A.
 2. Place API/database/algorithm details after the technical design chapter.
 3. Place code extracts and test evidence after the testing/evaluation chapter.
-4. Mention that FYP2 deferred modules such as payment, wallet, chat, notifications, racket passport, service queue, and QR check-in are not claimed as completed FYP1 features.
-
+4. State that payment, wallet, chat, notifications, racket passport, service
+   queue, and check-in are now implemented and tested, but are not claimed as
+   completed FYP1 deliverables.

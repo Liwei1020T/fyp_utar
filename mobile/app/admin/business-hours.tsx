@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen } from '../../components/shared/AppScreen';
@@ -108,6 +106,10 @@ export default function AdminBusinessHoursScreen() {
     if (!localHours || !user || user.role !== 'admin') {
       return;
     }
+    if (!token) {
+      setError('Your admin session expired. Sign in again before saving.');
+      return;
+    }
     const nextHours = {
       ...localHours,
       specialClosedDates: closedDatesText
@@ -118,18 +120,14 @@ export default function AdminBusinessHoursScreen() {
     setError(null);
     setIsSaving(true);
     try {
-      if (token) {
-        const response = await backendApi.updateBusinessHours(
-          token,
-          mapBusinessHoursToBackendPayload(nextHours),
-        );
-        const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
-        updateBusinessHours(user.id, mapped);
-        setLocalHours(mapped);
-        setClosedDatesText(mapped.specialClosedDates.join(', '));
-      } else {
-        updateBusinessHours(user.id, nextHours);
-      }
+      const response = await backendApi.updateBusinessHours(
+        token,
+        mapBusinessHoursToBackendPayload(nextHours),
+      );
+      const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
+      updateBusinessHours(user.id, mapped);
+      setLocalHours(mapped);
+      setClosedDatesText(mapped.specialClosedDates.join(', '));
       setSaveSuccessMessage('Business hours saved. Player booking slots now use the updated schedule.');
     } catch (saveError) {
       setSaveSuccessMessage(null);
@@ -167,6 +165,16 @@ export default function AdminBusinessHoursScreen() {
       subtitle="Backend-connected store schedule used to generate player booking slots."
       showBackButton
       onBackPress={() => router.back()}
+      footer={
+        <View className="border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+          <AppButton
+            label="Save business hours"
+            size="lg"
+            onPress={saveBusinessHours}
+            isLoading={isSaving}
+          />
+        </View>
+      }
     >
       <AppSection eyebrow="Schedule" title="Weekly operating pattern">
         <View className="gap-3">
@@ -233,13 +241,6 @@ export default function AdminBusinessHoursScreen() {
           {error}
         </HeroText>
       ) : null}
-      <AppButton
-        label="Save business hours"
-        size="lg"
-        className="mt-8"
-        onPress={saveBusinessHours}
-        isLoading={isSaving}
-      />
     </AppScreen>
   );
 }

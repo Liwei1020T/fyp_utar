@@ -17,11 +17,7 @@ export default function IndexScreen() {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      router.replace((user ? getRoleHome(user.role) : '/auth/welcome') as never);
-    }, 900);
-
-    return () => clearTimeout(timeout);
+    router.replace((user ? getRoleHome(user.role) : '/auth/login') as never);
   }, [hasHydrated, router, user]);
 
   return (

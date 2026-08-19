@@ -48,7 +48,11 @@ function buildRationaleSummary(rationale: Record<string, unknown>) {
     'algorithm_family',
     'primary_fit_angle',
     'trade_off_summary',
+    'community_calibration_used',
+    'community_snapshot_version',
     'collaborative_filtering_used',
+    'racket_context',
+    'cf_shadow',
   ] as const;
 
   return summaryKeys
@@ -75,8 +79,7 @@ function ScoreBreakdownRows({ item }: { item: BackendRecommendationRunItem }) {
         {[
           ['Preference match', item.preference_match_score],
           ['Rule fit', item.rule_fit_score],
-          ['Budget fit', item.budget_fit_score],
-          ['Confidence', item.confidence_score],
+          ['Value for money', item.value_for_money_score],
           ['NLP review', item.nlp_review_score],
         ].map(([label, value]) => (
           <View key={label} className="flex-row items-center justify-between">
@@ -205,14 +208,6 @@ export default function AdminRecommendationRunDetailScreen() {
                 {
                   label: 'Algorithm version',
                   value: run.algorithm_version,
-                },
-                {
-                  label: 'Matrix version',
-                  value: run.matrix_version || 'Unavailable',
-                },
-                {
-                  label: 'Feature source version',
-                  value: run.feature_source_version || 'Unavailable',
                 },
               ]}
             />

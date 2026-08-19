@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
@@ -13,8 +13,6 @@ import {
   splitPhoneIdentifier,
 } from '../../components/auth/PhoneNumberField';
 import { AppButton } from '../../components/ui/AppButton';
-import { AppCard } from '../../components/ui/AppCard';
-import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
 import { useAppStore } from '../../store/appStore';
@@ -24,7 +22,6 @@ import {
   mapBackendUserToAdminProfile,
   mapBackendUserToPlayerProfile,
 } from '../../services/backendMappers';
-import type { UserRole } from '../../types/domain';
 
 const loginSchema = z.object({
   countryCode: z.string().min(2, 'Choose a country code'),
@@ -38,39 +35,15 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-const demoUsers: Array<{
-  role: UserRole;
-  label: string;
-  identifier: string;
-  password: string;
-  description: string;
-}> = [
-  {
-    role: 'player',
-    label: 'Player',
-    identifier: '+60123456789',
-    password: 'password',
-    description: 'Use your phone-based player login.',
-  },
-  {
-    role: 'admin',
-    label: 'Admin',
-    identifier: '+60190000000',
-    password: 'admin1234',
-    description: 'Use the seeded backend admin login for shop operations.',
-  },
-];
-
 export default function LoginScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ role?: UserRole; identifier?: string }>();
+  const params = useLocalSearchParams<{ identifier?: string }>();
   const setBackendPlayerSession = useAppStore(
     (state) => state.setBackendPlayerSession,
   );
   const setBackendAdminSession = useAppStore(
     (state) => state.setBackendAdminSession,
   );
-  const [selectedRole, setSelectedRole] = useState<UserRole>(params.role ?? 'player');
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -88,24 +61,21 @@ export default function LoginScreen() {
     },
   });
 
-  const activeDemo = useMemo(
-    () => demoUsers.find((item) => item.role === selectedRole) ?? demoUsers[0],
-    [selectedRole]
-  );
   const countryCodeValue = watch('countryCode');
   const phoneNumberValue = watch('phoneNumber');
   const identifierValue = composePhoneIdentifier(countryCodeValue, phoneNumberValue);
 
   useEffect(() => {
-    const phoneParts = splitPhoneIdentifier(params.identifier ?? activeDemo.identifier);
+    if (!params.identifier) {
+      return;
+    }
+    const phoneParts = splitPhoneIdentifier(params.identifier);
     setValue('countryCode', phoneParts.countryCode);
     setValue('phoneNumber', phoneParts.phoneNumber);
-    setValue('password', activeDemo.password);
-  }, [activeDemo.identifier, activeDemo.password, params.identifier, setValue]);
+  }, [params.identifier, setValue]);
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
-    await new Promise((resolve) => setTimeout(resolve, 250));
     const phoneIdentifier = composePhoneIdentifier(data.countryCode, data.phoneNumber);
 
     try {
@@ -114,12 +84,7 @@ export default function LoginScreen() {
         password: data.password,
       });
 
-      if (selectedRole === 'admin') {
-        if (auth.role !== 'admin') {
-          setFormError('This account is not an admin account.');
-          return;
-        }
-
+      if (auth.role === 'admin') {
         setBackendAdminSession({
           accessToken: auth.access_token,
           admin: mapBackendUserToAdminProfile(auth.user),
@@ -129,18 +94,20 @@ export default function LoginScreen() {
       }
 
       if (auth.role !== 'customer') {
-        setFormError('This account is not a player account.');
+        setFormError('This account type is not supported by the mobile app.');
         return;
       }
 
-      const profile = await backendApi.fetchProfile(auth.access_token).catch(() => null);
+      const profile = await backendApi.fetchProfile(auth.access_token);
 
       setBackendPlayerSession({
         accessToken: auth.access_token,
         player: mapBackendUserToPlayerProfile(auth.user, profile),
       });
 
-      router.replace((profile ? '/player' : '/player/profile/edit') as never);
+      router.replace(
+        (profile ? '/player' : '/player/profile/edit?onboarding=1') as never,
+      );
     } catch (error) {
       setFormError(
         error instanceof BackendApiError
@@ -152,23 +119,15 @@ export default function LoginScreen() {
 
   return (
     <AuthShell
-      eyebrow={selectedRole === 'player' ? 'Player access' : 'Admin access'}
-      title="Log in"
-      subtitle={
-        selectedRole === 'player'
-          ? 'Use your phone and password to open the player flow.'
-          : 'Use the seeded backend admin phone and password to enter the operations workspace.'
-      }
-      onBack={() => {
-        if (router.canGoBack()) {
-          router.back();
-        } else {
-          router.replace('/auth/welcome');
-        }
-      }}
+      title="Welcome back"
       footer={
         <View className="items-center gap-3">
-          <Pressable onPress={() => router.push('/auth/register')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Create a player account"
+            className="min-h-11 justify-center"
+            onPress={() => router.push('/auth/register')}
+          >
             <HeroText className="text-sm font-semibold text-primary-700">
               Need a player account? Create one
             </HeroText>
@@ -177,23 +136,6 @@ export default function LoginScreen() {
       }
     >
       <View className="gap-4">
-        <View className="gap-3">
-          <View className="flex-row gap-2">
-            {demoUsers.map((item) => (
-              <AppChip
-                key={item.role}
-                label={item.label}
-                size="md"
-                variant={selectedRole === item.role ? 'primary' : 'neutral'}
-                onPress={() => setSelectedRole(item.role)}
-              />
-            ))}
-          </View>
-          <HeroText className="text-sm leading-5 text-neutral-500">
-            {activeDemo.description}
-          </HeroText>
-        </View>
-
         <Controller
           control={control}
           name="phoneNumber"
@@ -201,20 +143,18 @@ export default function LoginScreen() {
             <PhoneNumberField
               countryCode={countryCodeValue}
               value={value}
-              onChangePhoneNumber={onChange}
+              onChangePhoneNumber={(nextValue) => {
+                onChange(nextValue);
+                setFormError(null);
+              }}
               onChangeCountryCode={(nextCode) =>
                 setValue('countryCode', nextCode, { shouldValidate: true })
               }
-              placeholder={selectedRole === 'player' ? '123456789' : '190000000'}
+              placeholder="123456789"
               error={
                 errors.countryCode?.message ??
-                errors.phoneNumber?.message ??
-                formError
+                errors.phoneNumber?.message
               }
-              helperText={`We will sign in with ${composePhoneIdentifier(
-                countryCodeValue,
-                value || '',
-              )}.`}
             />
           )}
         />
@@ -228,17 +168,24 @@ export default function LoginScreen() {
               placeholder="password"
               secureTextEntry
               value={value}
-              onChangeText={onChange}
+              onChangeText={(nextValue) => {
+                onChange(nextValue);
+                setFormError(null);
+              }}
               error={errors.password?.message}
-              helperText={
-                selectedRole === 'player'
-                  ? 'Use the password from your player account.'
-                  : 'Use the seeded admin password from the backend environment.'
-              }
               leftAdornment={<LockKeyhole size={18} color="#64748B" />}
             />
           )}
         />
+
+        {formError ? (
+          <HeroText
+            accessibilityLiveRegion="polite"
+            className="text-sm font-medium leading-5 text-red-600"
+          >
+            {formError}
+          </HeroText>
+        ) : null}
 
         <AppButton
           label="Sign in"
@@ -247,53 +194,22 @@ export default function LoginScreen() {
           isLoading={isSubmitting}
         />
 
-        {selectedRole === 'player' ? (
-          <Pressable
-            className="self-end"
-            onPress={() =>
-              router.push(
-                `/auth/forgot-password?identifier=${encodeURIComponent(
-                  identifierValue || '',
-                )}`,
-              )
-            }
-          >
-            <HeroText className="text-sm font-semibold text-primary-700">
-              Forgot password?
-            </HeroText>
-          </Pressable>
-        ) : null}
-
-        <View className="gap-2">
-          {demoUsers.map((item) => (
-            <Pressable
-              key={item.role}
-              onPress={() => {
-                const phoneParts = splitPhoneIdentifier(item.identifier);
-                setSelectedRole(item.role);
-                setValue('countryCode', phoneParts.countryCode);
-                setValue('phoneNumber', phoneParts.phoneNumber);
-                setValue('password', item.password);
-              }}
-            >
-              <AppCard variant="subtle" padding="sm">
-                <View className="flex-row items-center justify-between gap-4">
-                  <View className="flex-1">
-                    <HeroText className="text-sm font-semibold text-neutral-900">
-                      {item.label} demo
-                    </HeroText>
-                    <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-                      {item.description}
-                    </HeroText>
-                  </View>
-                  <HeroText className="text-xs font-semibold text-primary-700">
-                    {item.identifier}
-                  </HeroText>
-                </View>
-              </AppCard>
-            </Pressable>
-          ))}
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Reset player password"
+          className="min-h-11 self-end justify-center"
+          onPress={() =>
+            router.push(
+              `/auth/forgot-password?identifier=${encodeURIComponent(
+                identifierValue || '',
+              )}`,
+            )
+          }
+        >
+          <HeroText className="text-sm font-semibold text-primary-700">
+            Forgot player password?
+          </HeroText>
+        </Pressable>
       </View>
     </AuthShell>
   );

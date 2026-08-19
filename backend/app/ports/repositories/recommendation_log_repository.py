@@ -21,13 +21,12 @@ class RecommendationLogRepository(Protocol):
     def create_run(
         self,
         *,
+        run_id: str,
         user_id: str | None,
         request_payload: dict[str, Any],
         profile_payload: dict[str, Any],
         result_payloads: list[dict[str, Any]],
         algorithm_version: str,
-        matrix_version: str | None,
-        feature_source_version: str | None,
     ) -> None: ...
 
     def list_logs(

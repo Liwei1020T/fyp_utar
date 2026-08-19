@@ -2,10 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
+  CameraView,
+  type BarcodeScanningResult,
+  useCameraPermissions,
+} from 'expo-camera';
+import {
   CalendarClock,
   Check,
   CircleCheck,
-  ScanLine,
   Search,
 } from 'lucide-react-native';
 import { AppButton } from '../../components/ui/AppButton';
@@ -23,18 +27,17 @@ import {
 } from '../../store/appStore';
 import { backendApi, BackendApiError } from '../../services/backendApi';
 import { mapBackendBookingToBooking } from '../../services/backendMappers';
-import { getStringById, getUserById } from '../../services/mockAppService';
 import { formatBookingOrderCode, formatBookingStatus } from '../../lib/formatters';
 import { getBookingStatusVariant } from '../../components/ui/theme';
 import type { Booking } from '../../types/domain';
 
 type ChecklistKey = 'playerPresent' | 'racketReceived' | 'setupConfirmed';
 
-const CHECKLIST_ITEMS: Array<{
+const CHECKLIST_ITEMS: {
   key: ChecklistKey;
   label: string;
   helper: string;
-}> = [
+}[] = [
   {
     key: 'playerPresent',
     label: 'Player present',
@@ -77,13 +80,6 @@ function getTodayLocalDate() {
   return `${year}-${month}-${day}`;
 }
 
-function getLookupTokens(booking: Booking) {
-  return [
-    booking.orderCode ?? formatBookingOrderCode(booking.id),
-    booking.id,
-  ].map((value) => value.trim().toUpperCase());
-}
-
 function getDropOffConfirmationStatus(booking: Booking) {
   if (booking.status === 'awaiting_dropoff' || booking.status === 'confirmed') {
     return 'Awaiting drop-off';
@@ -102,8 +98,8 @@ export default function AdminCheckInScreen() {
   const token = useBackendAccessToken();
   const bookings = useBookings();
   const strings = useStrings();
-  const updateBookingStatus = useAppStore((state) => state.updateBookingStatus);
-  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
+  const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const todaysAwaitingDropOffBookings = useMemo(() => {
     if (!user || user.role !== 'admin') {
@@ -138,6 +134,9 @@ export default function AdminCheckInScreen() {
   const [notes, setNotes] = useState('');
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
+  const [qrToken, setQrToken] = useState<string | null>(null);
   const [checklist, setChecklist] = useState<Record<ChecklistKey, boolean>>({
     playerPresent: false,
     racketReceived: false,
@@ -157,20 +156,6 @@ export default function AdminCheckInScreen() {
     setNotes('');
   };
 
-  const resolveLocalMatch = (value: string) => {
-    const normalized = value.trim().toUpperCase();
-
-    return (
-      bookings.find((item) => {
-        if (item.adminId !== user.id) {
-          return false;
-        }
-
-        return getLookupTokens(item).some((token) => token.includes(normalized));
-      }) ?? null
-    );
-  };
-
   const setSelectedBooking = (booking: Booking | null) => {
     setMatch(booking);
     setConfirmError(null);
@@ -179,6 +164,59 @@ export default function AdminCheckInScreen() {
     if (booking) {
       setOrderId(booking.orderCode ?? formatBookingOrderCode(booking.id));
     }
+  };
+
+  const mapLookupBooking = (response: Awaited<ReturnType<
+    typeof backendApi.adminLookupSecureCheckIn
+  >>) => {
+    const mapped = mapBackendBookingToBooking(
+      response.booking,
+      user.id,
+    );
+    upsertLiveBooking(mapped);
+    setSelectedBooking(mapped);
+    return mapped;
+  };
+
+  const handleBarcodeScanned = async ({ data }: BarcodeScanningResult) => {
+    if (hasScanned || !token) {
+      return;
+    }
+    setHasScanned(true);
+    setLookupError(null);
+    if (!data.startsWith('SSQR.')) {
+      setLookupError('This is not a StringSense check-in QR.');
+      return;
+    }
+    setIsLookingUp(true);
+    try {
+      const response = await backendApi.adminLookupSecureCheckIn(token, data);
+      mapLookupBooking(response);
+      setQrToken(data);
+      setScannerOpen(false);
+    } catch (error) {
+      setLookupError(
+        error instanceof BackendApiError
+          ? error.message
+          : 'The QR code could not be validated.',
+      );
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const openScanner = async () => {
+    const permission = cameraPermission?.granted
+      ? cameraPermission
+      : await requestCameraPermission();
+    if (!permission.granted) {
+      setLookupError('Camera permission is required to scan booking QR codes.');
+      return;
+    }
+    setQrToken(null);
+    setHasScanned(false);
+    setScannerOpen(true);
+    setLookupError(null);
   };
 
   const runLookup = async (input = orderId) => {
@@ -193,26 +231,16 @@ export default function AdminCheckInScreen() {
     }
 
     if (!token) {
-      const localMatch = resolveLocalMatch(normalized);
-      setSelectedBooking(localMatch);
-      if (!localMatch) {
-        setLookupError('No booking matched that order ID.');
-      }
+      setMatch(null);
+      setLookupError('Your admin session expired. Sign in again to look up bookings.');
       return;
     }
 
     setIsLookingUp(true);
     try {
       const response = await backendApi.adminLookupCheckIn(token, normalized);
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(response.booking, priceByStringId, user.id);
-      const currentBookings = useAppStore.getState().liveBookings;
-      setLiveBookings(
-        currentBookings.some((item) => item.id === mapped.id)
-          ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-          : [mapped, ...currentBookings],
-      );
-      setSelectedBooking(mapped);
+      mapLookupBooking(response);
+      setQrToken(null);
     } catch (error) {
       setMatch(null);
       setLookupError(
@@ -246,25 +274,20 @@ export default function AdminCheckInScreen() {
     }
 
     if (!token) {
-      updateBookingStatus(match.id, 'in_progress');
-      router.push(`/admin/bookings/${match.id}`);
+      setConfirmError('Your admin session expired. Sign in again to confirm drop-off.');
       return;
     }
 
     setIsConfirming(true);
     try {
-      const updated = await backendApi.adminCheckIn(token, {
-        booking_id: match.id,
-        note: notes.trim() || null,
-      });
-      const priceByStringId = new Map(strings.map((item) => [item.id, item.price]));
-      const mapped = mapBackendBookingToBooking(updated, priceByStringId, user.id);
-      const currentBookings = useAppStore.getState().liveBookings;
-      setLiveBookings(
-        currentBookings.some((item) => item.id === mapped.id)
-          ? currentBookings.map((item) => (item.id === mapped.id ? mapped : item))
-          : [mapped, ...currentBookings],
-      );
+      const updated = qrToken
+        ? await backendApi.adminConfirmSecureCheckIn(token, qrToken, notes)
+        : await backendApi.adminCheckIn(token, {
+            booking_id: match.id,
+            note: notes.trim() || null,
+          });
+      const mapped = mapBackendBookingToBooking(updated, user.id);
+      upsertLiveBooking(mapped);
       router.push(`/admin/bookings/${mapped.id}`);
     } catch (error) {
       setConfirmError(
@@ -278,10 +301,15 @@ export default function AdminCheckInScreen() {
   };
 
   const matchedOrderId = match ? match.orderCode ?? formatBookingOrderCode(match.id) : null;
-  const matchedPlayer = match ? getUserById(match.playerId) : null;
-  const matchedString = match ? getStringById(match.stringId) : null;
+  const matchedString = match
+    ? strings.find((item) => item.id === match.stringId)
+    : null;
+  const matchedPlayerName =
+    match?.customerName
+    ?? 'Player booking';
   const matchedPlayerContact =
-    matchedPlayer && matchedPlayer.role === 'player' ? matchedPlayer.phone : '-';
+    match?.customerPhone
+    ?? '-';
 
   return (
     <AppScreen
@@ -289,7 +317,7 @@ export default function AdminCheckInScreen() {
       headerVariant="flow"
       compactHeader
       title="Check-in"
-      subtitle="Confirm player drop-off by order ID"
+      subtitle="Scan a secure QR or find a booking by order ID"
       showBackButton
       onBackPress={() => router.back()}
       contentContainerClassName="pt-3"
@@ -320,12 +348,9 @@ export default function AdminCheckInScreen() {
 
             <View className="gap-3" style={{ gap: 12 }}>
               <AppButton
-                label="Scan code"
+                label="Scan booking QR"
                 variant="outline"
-                leadingIcon={<ScanLine size={16} color="#5E6B7D" />}
-                onPress={() => {
-                  setLookupError('QR scan can be added later. Use the order ID for now.');
-                }}
+                onPress={() => void openScanner()}
               />
               <AppButton
                 label="Find booking"
@@ -334,6 +359,34 @@ export default function AdminCheckInScreen() {
                 isLoading={isLookingUp}
               />
             </View>
+
+            {scannerOpen ? (
+              <View className="overflow-hidden rounded-[24px]">
+                <CameraView
+                  style={{ height: 320 }}
+                  barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                  onBarcodeScanned={
+                    hasScanned ? undefined : handleBarcodeScanned
+                  }
+                />
+                <View className="gap-2 bg-neutral-950 p-3">
+                  <HeroText className="text-center text-sm text-white">
+                    Align the player&apos;s StringSense QR inside the camera.
+                  </HeroText>
+                  <AppButton
+                    label={hasScanned ? 'Scan again' : 'Close camera'}
+                    variant="outline"
+                    onPress={() => {
+                      if (hasScanned) {
+                        setHasScanned(false);
+                      } else {
+                        setScannerOpen(false);
+                      }
+                    }}
+                  />
+                </View>
+              </View>
+            ) : null}
 
             <View className="flex-row flex-wrap gap-2">
               <AppChip
@@ -403,7 +456,7 @@ export default function AdminCheckInScreen() {
                   <View className="flex-row items-start justify-between gap-4">
                     <HeroText className="text-sm font-medium text-neutral-500">Player</HeroText>
                     <HeroText className="flex-1 text-right text-sm font-semibold text-neutral-950">
-                      {matchedPlayer?.name ?? 'Player booking'}
+                      {matchedPlayerName}
                     </HeroText>
                   </View>
                   <View className="flex-row items-start justify-between gap-4">
@@ -462,6 +515,9 @@ export default function AdminCheckInScreen() {
                     return (
                       <Pressable
                         key={item.key}
+                        accessibilityRole="checkbox"
+                        accessibilityLabel={`${item.label}. ${item.helper}`}
+                        accessibilityState={{ checked: isChecked }}
                         onPress={() =>
                           setChecklist((current) => ({
                             ...current,

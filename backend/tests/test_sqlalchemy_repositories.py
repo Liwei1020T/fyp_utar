@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from datetime import UTC
 
+import pytest
+
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_booking_repository import (
     SqlAlchemyBookingRepository,
 )
@@ -16,6 +18,7 @@ from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.domain.booking.enums import BookingStatus
+from app.shared.errors import BadRequestError
 
 
 def test_sqlalchemy_booking_repository_creates_history_entries() -> None:
@@ -81,3 +84,32 @@ def test_sqlalchemy_booking_repository_creates_history_entries() -> None:
         assert eta_only.status == BookingStatus.IN_PROGRESS.value
         assert eta_only.expected_completion_datetime is None
         assert len(eta_only.status_history) == 2
+
+
+def test_catalog_editor_rolls_back_every_section_after_validation_failure() -> None:
+    with SessionLocal() as db:
+        repository = SqlAlchemyCatalogRepository(db)
+        string_item = repository.list_active_catalog()[0]
+        original_description = string_item.short_description
+
+        with pytest.raises(BadRequestError, match="Unsupported pricing mode"):
+            repository.update_editor(
+                string_item.id,
+                catalog_values={
+                    "short_description": "This partial change must roll back."
+                },
+                inventory_values={"pricing_mode": "unsupported"},
+                official_performance_values={
+                    "source_name": "This must also roll back."
+                },
+            )
+
+        db.rollback()
+        persisted = repository.get_by_id(
+            string_item.id,
+            include_inactive=True,
+        )
+        assert persisted is not None
+        assert persisted.short_description == original_description
+        assert persisted.official_performance is not None
+        assert persisted.official_performance.source_name is None
