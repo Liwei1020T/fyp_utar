@@ -1,5 +1,58 @@
 # Agent Scope Simplification Progress
 
+## 2026-08-24
+
+- Started Phase 27 after the user explicitly requested complete Agent testing
+  and re-enabling player string comparison.
+- Scope: restore the existing `compare_strings` tool, comparison prompt and
+  mobile starter entry; preserve all write-action restrictions and avoid a new
+  RAG/vector service.
+- Validation target: focused and full backend checks, Mobile checks, live
+  DeepSeek provider/API behavior, and browser acceptance when the local runtime
+  permits it.
+- Re-enabled `compare_strings`, added the bounded comparison instruction and
+  starter prompt, updated scope documentation, and added focused aggregation
+  coverage without changing ranking or write boundaries.
+- Focused validation passed: Ruff, 16 Agent tests, Mobile TypeScript, lint, and
+  all 10 Mobile tests.
+- Runtime preflight: Agent configuration and key are present, but Docker,
+  PostgreSQL, backend, and Web are currently stopped; migration AppleDouble
+  sidecars must be cleared through the repo wrapper before full pytest.
+- Ran the repository Alembic wrapper: 16 migration AppleDouble sidecars were
+  removed and the graph/current PostgreSQL revision both resolve to
+  `20260818_0032 (head)`.
+- PostgreSQL is healthy on port 55432; Expo Web production export passed with
+  3,677 modules. Full Ruff/format/Mypy passed, while the combined pytest command
+  exceeded the 30-second output window near completion and needs a standalone
+  final-count rerun.
+- Real DeepSeek comparison call reached the provider and returned structured
+  output, but exposed a display-name versus catalog-ID mismatch at the
+  comparison tool boundary; root-cause resolution is in progress.
+- Added bounded exact display-name resolution in `compare_strings`; focused
+  Ruff/Mypy and 16 Agent tests passed, and the repeated real DeepSeek comparison
+  returned a correct two-source answer.
+- Seeded an isolated admin and configured three isolated prices through public
+  admin APIs. Real DeepSeek store, admin summary, admin inventory, and non-empty
+  guided recommendation flows passed without touching retained PostgreSQL data.
+- Created one isolated booking through the public API; the real admin Agent then
+  returned a verified booking source. Browser acceptance is next.
+- Browser acceptance passed for authenticated player navigation and the new
+  comparison starter. A screenshot was captured under the existing
+  `output/playwright/.playwright-cli/` artifact area.
+- Browser network/console checks passed: `/api/agent/query` returned 200 and the
+  accepted page had zero warnings or errors.
+- Final backend validation passed: Ruff, format, Mypy, and 147 tests with 2
+  expected skips. `git diff --check` passed and no migration AppleDouble
+  sidecars remain.
+- Code-simplifier review retained the bounded exact-name lookup and existing
+  details tool; no new abstraction, dependency, API, or schema change is needed.
+- Closed the Playwright session, stopped the isolated Backend and Web servers,
+  and stopped the task-started PostgreSQL container; ports 3001 and 8081 are no
+  longer listening.
+- Final UI review aligned the chatbot header and hero copy with the newly active
+  comparison capability; Mobile checks and export were rerun afterward.
+- Phase 27 is complete.
+
 ## 2026-08-18
 
 - Started Phase 26 after the user explicitly requested WhatsApp delivery for

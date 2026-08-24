@@ -23,9 +23,9 @@ import type {
 const starterQuestions = [
   'Help me choose a string step by step.',
   'What are the store opening hours?',
+  'Compare Yonex BG80 and Yonex BG65.',
   // Deferred FYP scope; uncomment with the matching backend tools.
   // 'Which string best suits my saved profile?',
-  // 'Compare Yonex BG80 and Yonex BG65.',
   // 'Explain my latest recommendation.',
 ] as const;
 
@@ -135,7 +135,7 @@ export default function PlayerAgentScreen() {
     <AppScreen
       headerVariant="secondary"
       title="StringSense AI"
-      subtitle="Guided string selection with verified recommendations and live stock."
+      subtitle="Guided selection, string comparisons, and live stock."
       showBackButton
       onBackPress={() => router.back()}
       footer={
@@ -170,7 +170,7 @@ export default function PlayerAgentScreen() {
               Choose with evidence.
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-              Answer four short questions to receive up to three suitable in-stock options.
+              Answer four short questions for recommendations, or compare two approved strings.
             </HeroText>
           </View>
         </View>

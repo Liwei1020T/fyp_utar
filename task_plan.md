@@ -7,14 +7,16 @@ Keep only the FYP-focused Agent scope while preserving completed code for later 
 ## Active Scope
 
 - Player guided string selection.
+- Player comparison of two or three approved strings.
 - Exact recommendation explanation.
 - Verified in-stock alternatives.
-- Admin read-only operations summary.
+- Live customer-facing store information.
+- Admin read-only operations summary plus booking and inventory queries.
 
 ## Deferred Scope
 
-- Player comparison, review Q&A, store information, booking queries, saved/latest recommendation queries, and Agent-created handoff.
-- Admin booking, inventory, payment, and support searches.
+- Player review Q&A, booking queries, saved/latest recommendation queries, and Agent-created handoff.
+- Admin payment and support searches.
 - Admin booking, inventory, and support write proposals.
 - Source chips and suggested-question chips in the Agent answer card.
 
@@ -126,9 +128,16 @@ Deferred implementations remain in the repository and are disabled at their regi
 
 **Status:** complete
 
+### Phase 27 — Re-enable string comparison and complete Agent validation
+
+**Status:** complete
+
 ## Decisions
 
-- Keep the admin read-only summary; disable all admin detailed queries and writes.
+- Keep the admin Agent read-only; allow booking and inventory queries while all
+  admin Agent writes remain disabled.
+- Re-enable player string comparison using the preserved backend tool without
+  adding a new RAG service or changing V11 ranking ownership.
 - Leave day-7/day-10 notification automation unchanged because it is not an Agent capability.
 - Preserve authentication, ownership checks, output validation, rate limiting, and evidence grounding.
 - Treat manual admin payment verification as the completed FYP payment design; a real gateway is an optional external integration unless the assessment explicitly requires it.
@@ -174,6 +183,12 @@ Deferred implementations remain in the repository and are disabled at their regi
 
 | Error | Attempt | Resolution |
 |---|---:|---|
+| First live comparison returned no data for existing BG80/BG65 rows | 1 | Identified a display-name versus catalog-ID tool contract mismatch; resolve identifiers at the shared comparison boundary. |
+| Isolated SQLite catalog query guessed `strings.id` | 1 | Schema inspection showed the real primary key is `catalog_id`; the corrected read confirmed both requested strings exist. |
+| First Phase 27 live-findings patch had an invalid hunk separator | 1 | No files changed; reapplied the same notes with valid file-scoped hunks. |
+| Inventory-test search used unmatched zsh globs | 1 | No files changed; use explicit files or `rg --glob` for the next lookup. |
+| Static server returned 404 for direct `/player/chatbot` deep link | 1 | Re-entered through the production SPA root and used the real Home Ask AI navigation path; the route then loaded and passed. |
+| Phase 27 planning patch assumed `findings.md` was titled `Findings` | 1 | The patch was rejected atomically; reread the exact heading and split the planning updates. |
 | `react/no-unescaped-entities` on the Admin AI heading | 1 | Escaped the JSX apostrophe and reran mobile validation. |
 | Browser acceptance backend could not connect to PostgreSQL on port 55432 | 1 | Start the repository `postgres` service, verify health, then retry the backend. |
 | Docker Desktop opened but its engine/socket remained unavailable | 2 | Use an isolated temporary SQLite database for UI acceptance without touching project data. |

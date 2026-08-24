@@ -44,7 +44,7 @@ ALL_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
     },
     {
         "name": "compare_strings",
-        "description": "Compare two or three approved strings using the same catalog fields.",
+        "description": "Compare two or three approved strings by catalog ID or exact display name using the same catalog fields.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -230,7 +230,7 @@ ALL_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
 # FYP scope: uncomment a deferred name here to expose its preserved tool again.
 ACTIVE_AGENT_TOOL_NAMES = {
     "get_string_details",
-    # "compare_strings",
+    "compare_strings",
     # "get_review_evidence",
     # "get_recommendation_run_context",  # Still used as trusted page preload.
     "get_store_information",
@@ -344,9 +344,18 @@ class AgentToolbox:
         )
 
     def compare_strings(self, catalog_ids: list[str]) -> AgentToolResult:
-        if len(set(catalog_ids)) != len(catalog_ids):
+        catalog_lookup = {
+            key.casefold(): item.id
+            for item in self.catalog_repository.list_active_catalog()
+            for key in (item.id, item.display_name)
+        }
+        resolved_ids = [
+            catalog_lookup.get(catalog_id.casefold(), catalog_id)
+            for catalog_id in catalog_ids
+        ]
+        if len(set(resolved_ids)) != len(resolved_ids):
             raise BadRequestError("String comparison requires distinct catalog IDs")
-        results = [self.get_string_details(catalog_id) for catalog_id in catalog_ids]
+        results = [self.get_string_details(catalog_id) for catalog_id in resolved_ids]
         return AgentToolResult(
             data={"strings": [result.data["string"] for result in results]},
             sources=[source for result in results for source in result.sources],

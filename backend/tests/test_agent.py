@@ -119,6 +119,7 @@ def _login_admin(client: TestClient) -> str:
 def test_fyp_agent_scope_exposes_only_active_tools_and_string_action() -> None:
     assert {spec["name"] for spec in AGENT_TOOL_SPECS} == {
         "get_string_details",
+        "compare_strings",
         "get_store_information",
         "preview_recommendation_what_if",
         "find_in_stock_alternatives",
@@ -179,6 +180,7 @@ def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
     assert "Example JSON output" in client.calls[0]["messages"][0]["content"]
     assert any(
         "Always ask all four questions" in message.get("content", "")
+        and "call compare_strings" in message.get("content", "")
         and "call get_store_information" in message.get("content", "")
         and "answer under 70 words" in message.get("content", "")
         and "Do not repeat the same fact" in message.get("content", "")
@@ -344,6 +346,71 @@ def test_agent_rejects_a_still_deferred_tool_call() -> None:
 
     tool_message = client.calls[1]["messages"][-1]
     assert json.loads(tool_message["content"]) == {"error": "Agent tool is not enabled"}
+
+
+def test_compare_strings_combines_distinct_backend_items() -> None:
+    class Catalogs:
+        def list_active_catalog(self):
+            return [
+                SimpleNamespace(id="yonex-bg80", display_name="Yonex BG80"),
+                SimpleNamespace(id="yonex-bg65", display_name="Yonex BG65"),
+            ]
+
+    toolbox = AgentToolbox(
+        catalog_repository=cast(CatalogRepository, Catalogs()),
+        recommendation_log_repository=cast(RecommendationLogRepository, object()),
+        store_repository=cast(StoreRepository, object()),
+        booking_repository=cast(BookingRepository, object()),
+        profile_repository=cast(ProfileRepository, object()),
+        recommendation_repository=cast(RecommendationRepository, object()),
+    )
+    details = [
+        AgentToolResult(
+            data={"string": {"id": "yonex-bg80", "display_name": "Yonex BG80"}},
+            sources=[
+                {
+                    "source_type": "catalog",
+                    "source_id": "yonex-bg80",
+                    "label": "Yonex BG80",
+                    "version": None,
+                }
+            ],
+        ),
+        AgentToolResult(
+            data={"string": {"id": "yonex-bg65", "display_name": "Yonex BG65"}},
+            sources=[
+                {
+                    "source_type": "catalog",
+                    "source_id": "yonex-bg65",
+                    "label": "Yonex BG65",
+                    "version": None,
+                }
+            ],
+        ),
+    ]
+
+    resolved_ids: list[str] = []
+
+    def get_details(catalog_id: str) -> AgentToolResult:
+        resolved_ids.append(catalog_id)
+        return details.pop(0)
+
+    with patch.object(toolbox, "get_string_details", side_effect=get_details):
+        result = toolbox.execute(
+            name="compare_strings",
+            arguments={"catalog_ids": ["Yonex BG80", "Yonex BG65"]},
+            user_id="user-1",
+        )
+
+    assert resolved_ids == ["yonex-bg80", "yonex-bg65"]
+    assert [item["id"] for item in result.data["strings"]] == [
+        "yonex-bg80",
+        "yonex-bg65",
+    ]
+    assert [source["source_id"] for source in result.sources] == [
+        "yonex-bg80",
+        "yonex-bg65",
+    ]
 
 
 def test_recommendation_run_tool_hides_another_users_run() -> None:

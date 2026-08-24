@@ -85,7 +85,7 @@ Query cache owner.
 | [mobile/app/player/recommend/explain/[id].tsx](../mobile/app/player/recommend/explain/[id].tsx) | Exact-run dynamic Agent explanation with saved-rationale fallback. |
 | [mobile/app/player/profile/edit.tsx](../mobile/app/player/profile/edit.tsx) | Editable recommendation/player profile form. |
 | [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/%5Bid%5D.tsx) | Player human-support detail backed by persisted conversation state and messages. |
-| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | FYP-scoped four-question guided-selection Agent with live store information and verified replacement-string actions. |
+| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | FYP-scoped guided-selection and string-comparison Agent with live store information and verified replacement-string actions. |
 | [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Expiring server-issued QR check-in token screen. |
 | [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/%5BbookingId%5D.tsx) | Creates or displays the structured feedback record for one completed owned booking. |
 | [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Owned backend event feed with persisted read IDs. |
@@ -225,7 +225,7 @@ Backend lives in [backend](../backend). The active runtime is FastAPI under
 | Booking | `domain/booking`, `use_cases/booking`, `dto/booking.py` | Booking creation, list/detail, admin status transitions, status note validation. |
 | Store | `domain/store`, `use_cases/store`, `dto/store.py` | Business hours, slots, check-in, service queue, store settings, analytics. |
 | Recommendation | `domain/recommendation`, `use_cases/recommendation`, `dto/recommendation.py` | Recommendation generation and admin log listing. |
-| Agent | `use_cases/agent`, `adapters/services/agent`, `dto/agent.py` | FYP-scoped guided selection, exact-run context, in-stock alternatives, live store information, read-only admin booking and inventory queries, DeepSeek transport, and validated response. |
+| Agent | `use_cases/agent`, `adapters/services/agent`, `dto/agent.py` | FYP-scoped guided selection, string comparison, exact-run context, in-stock alternatives, live store information, read-only admin booking and inventory queries, DeepSeek transport, and validated response. |
 | Commerce | `routes/commerce_routes.py`, `dto/commerce.py`, commerce models | Server quotes, payment verification, and append-only wallet ledger. |
 | Notifications | `routes/notification_routes.py`, `dto/notifications.py`, notification models | Owned event feed, per-user read state, and persisted preferences. |
 | Human support | `routes/booking_conversation_routes.py`, `dto/booking_conversation.py`, conversation models | Booking-linked support plus one reusable booking-free support thread per player. |

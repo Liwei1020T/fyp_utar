@@ -1,5 +1,64 @@
 # Agent Scope Findings
 
+## Agent comparison and validation (2026-08-24)
+
+- `compare_strings` is fully implemented and currently excluded only by the
+  player tool allowlist, focused prompt, starter question, tests, and docs.
+- The existing comparison tool returns approved catalog, official performance,
+  price, stock, and aspect-score fields for two or three distinct catalog IDs;
+  V11 remains the only ranking owner.
+- The task requires separate evidence for fake-model contracts, live provider
+  behavior, and browser UI; success in one layer does not imply the others.
+- Focused contracts now pass with `compare_strings` active; all Agent write
+  actions remain restricted to the existing `open_string` navigation action.
+- Live runtime preflight found Docker Desktop stopped, no listeners on backend
+  port 3001 or Web port 8081, and 16 untracked AppleDouble migration sidecars.
+  The repository Alembic wrapper is the documented cleanup boundary for those
+  metadata files before the full suite is rerun.
+- The standard wrapper safely removed only AppleDouble sidecars; PostgreSQL is
+  healthy at migration head and the Web production bundle exports successfully.
+- A real DeepSeek request completed successfully and returned a valid grounded
+  response ID, proving the configured provider/model path works. The first
+  comparison still returned `insufficient_evidence` because the model supplied
+  display names while `compare_strings` accepted only exact catalog IDs.
+- The isolated seed contains the requested Yonex BG80/BG65 rows under
+  `yonex-bg80` and `yonex-bg65`; the failure is an identifier-resolution contract
+  gap, not missing catalog data.
+- `CatalogRepository.list_active_catalog()` already provides the bounded,
+  approved set needed for exact case-insensitive display-name resolution; no
+  fuzzy search, new endpoint, or dependency is required.
+- After exact-name resolution was added, a fresh real DeepSeek comparison
+  succeeded for Yonex BG80 versus BG65. The response cited both backend catalog
+  sources, reported truthful pending prices and live stock, and used
+  `evidence_status=partial` without claiming review analysis.
+- Live store-information retrieval also passed with two backend sources. The
+  first live guided preview correctly reached V11 but returned no candidates
+  because the isolated fresh catalog has pending prices and the required RM
+  budget filters unknown-price items; isolated admin pricing is needed to test
+  a non-empty recommendation result.
+- After isolated admin pricing, the live guided preview returned Yonex BG80 and
+  EXBOLT 63 with truthful prices, recommendation-run provenance, and verified
+  `open_string` actions. Live admin summary and low-stock inventory queries also
+  passed with the expected backend source types.
+- The first live booking-attention wording was answered from the operations
+  summary, so it does not yet prove the provider selected `find_admin_bookings`;
+  an explicit record-search prompt remains required.
+- After creating one isolated booking through the public player API, the real
+  admin Agent returned both operations and booking sources, proving live
+  `find_admin_bookings` selection. All active admin reads remain action-free.
+- The production Web bundle defaults to the correct local API base
+  `http://127.0.0.1:3001/api`, so it can be served directly for browser testing.
+- Playwright production-Web acceptance passed through the real navigation path:
+  player login -> home -> StringSense AI -> Compare BG80/BG65. The rendered
+  answer shows both prices, stock, specifications, trade-off, and three evidence
+  bullets without exposing internal tool names or calculations.
+- Browser network evidence shows the Agent POST returned HTTP 200 after all
+  authenticated bootstrap reads; Playwright reported zero console errors and
+  zero warnings on the accepted comparison page.
+- Final quality gates are green: 147 backend tests passed with 2 expected skips,
+  all backend static checks passed, all Mobile checks passed, and the final diff
+  contains no whitespace errors or AppleDouble migration sidecars.
+
 ## WhatsApp password-reset delivery (2026-08-18)
 
 - Forgot Password now sends its six-digit code through the configured OpenWA

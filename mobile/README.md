@@ -24,8 +24,9 @@ operations modules.
   - Persisted payment/wallet, notifications, booking support, racket passport,
     check-in, and completed-service feedback flows.
   - FYP-scoped DeepSeek Agent for four-question guided selection, exact-run
-    recommendation explanations, verified in-stock alternatives, live store
-    information, and a direct user-controlled human-support entry.
+    recommendation explanations, two-or-three-string comparison, verified
+    in-stock alternatives, live store information, and a direct user-controlled
+    human-support entry.
   - Day-7 feedback follow-up and one day-10 reminder through the App feed and
     configured WhatsApp delivery, stopping after feedback is submitted.
 - **Admin Flow:**
