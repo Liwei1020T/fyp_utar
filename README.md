@@ -96,15 +96,14 @@ Experiment outputs are never promoted automatically. The human-approved runtime 
 ## Backend and NLP Integration
 
 - `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
-- The unified FastAPI app does not import the legacy AI adapters or `ai_service` during startup
-- Standalone `ai_service` compatibility CSV settings use the canonical latest output directory when that package is run explicitly
+- The unified FastAPI app uses the in-process scorer in `backend/app/domain/recommendation/scoring.py`
 - If the NLP workbook does not exist, startup keeps persisted matrix rows when present and otherwise serves catalog/official-performance recommendations with health status `catalog_fallback`
 - Fresh databases start with all business days closed and store identity, contact, address, and pricing explicitly unconfigured until an admin saves real values
 
 ## Validation
 
 - Mobile: `cd mobile && nvm use && npm test && npx tsc --noEmit && npm run lint -- --max-warnings=0`
-- Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
+- Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app tests && ./.venv/bin/pytest -v`
 - NLP: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 
 More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md). The current mock-data remediation status is recorded in [docs/plans/mock-page-remediation.md](./docs/plans/mock-page-remediation.md), and the latest complete customer and administrator browser evidence is in [docs/customer-admin-acceptance-2026-07-24.md](./docs/customer-admin-acceptance-2026-07-24.md). The earlier administrator-only acceptance remains in [docs/admin-acceptance-2026-07-23.md](./docs/admin-acceptance-2026-07-23.md), and the pre-FYP2 remediation gate remains preserved in [docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md](./docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md).

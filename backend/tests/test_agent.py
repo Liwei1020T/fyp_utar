@@ -119,11 +119,14 @@ def _login_admin(client: TestClient) -> str:
 def test_fyp_agent_scope_exposes_only_active_tools_and_string_action() -> None:
     assert {spec["name"] for spec in AGENT_TOOL_SPECS} == {
         "get_string_details",
+        "get_store_information",
         "preview_recommendation_what_if",
         "find_in_stock_alternatives",
     }
     assert {spec["name"] for spec in ADMIN_AGENT_TOOL_SPECS} == {
-        "get_admin_operations_summary"
+        "get_admin_operations_summary",
+        "find_admin_bookings",
+        "find_admin_inventory",
     }
     assert ACTIVE_AGENT_ACTIONS == {"open_string"}
 
@@ -176,6 +179,7 @@ def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
     assert "Example JSON output" in client.calls[0]["messages"][0]["content"]
     assert any(
         "Always ask all four questions" in message.get("content", "")
+        and "call get_store_information" in message.get("content", "")
         and "answer under 70 words" in message.get("content", "")
         and "Do not repeat the same fact" in message.get("content", "")
         for message in client.calls[0]["messages"]
@@ -298,7 +302,7 @@ def test_agent_drops_action_with_unverified_resource_id() -> None:
     assert response.suggested_actions == []
 
 
-def test_agent_rejects_a_deferred_tool_call() -> None:
+def test_agent_rejects_a_still_deferred_tool_call() -> None:
     client = FakeModelClient(
         [
             _completion(
@@ -310,8 +314,8 @@ def test_agent_rejects_a_deferred_tool_call() -> None:
                             "id": "call-deferred",
                             "type": "function",
                             "function": {
-                                "name": "get_store_information",
-                                "arguments": "{}",
+                                "name": "get_review_evidence",
+                                "arguments": json.dumps({"catalog_id": "yonex-bg80"}),
                             },
                         }
                     ],
@@ -330,7 +334,10 @@ def test_agent_rejects_a_deferred_tool_call() -> None:
         model_client=client,
     ).execute(
         payload=AgentQueryDto.model_validate(
-            {"message": "What are the store hours?", "context": {"surface": "chatbot"}}
+            {
+                "message": "Summarize the BG80 reviews.",
+                "context": {"surface": "chatbot"},
+            }
         ),
         user_id="user-1",
     )
@@ -765,7 +772,7 @@ def test_agent_endpoint_accepts_validated_fake_model_response() -> None:
     assert response.json()["evidence_status"] == "insufficient_evidence"
 
 
-def test_admin_agent_uses_read_only_summary_and_filters_all_actions() -> None:
+def test_admin_agent_uses_enabled_read_tools_and_filters_all_actions() -> None:
     fake_client = FakeModelClient(
         [
             _completion(
@@ -831,15 +838,21 @@ def test_admin_agent_uses_read_only_summary_and_filters_all_actions() -> None:
     assert response.json()["sources"][0]["source_type"] == "admin_operations"
     assert response.json()["suggested_actions"] == []
     offered_tools = {tool["function"]["name"] for tool in fake_client.calls[0]["tools"]}
-    assert offered_tools == {"get_admin_operations_summary"}
+    assert offered_tools == {
+        "get_admin_operations_summary",
+        "find_admin_bookings",
+        "find_admin_inventory",
+    }
     assert any(
-        "read-only daily operations summary" in message.get("content", "")
+        "read-only operations information" in message.get("content", "")
         for message in fake_client.calls[0]["messages"]
         if isinstance(message.get("content"), str)
     )
     assert any(
         "answer under 60 words" in message.get("content", "")
         and "Never expose secrets" in message.get("content", "")
+        and "booking search" in message.get("content", "")
+        and "inventory search" in message.get("content", "")
         and "no suggested questions or actions" in message.get("content", "")
         for message in fake_client.calls[0]["messages"]
         if isinstance(message.get("content"), str)

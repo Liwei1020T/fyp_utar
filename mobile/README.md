@@ -24,8 +24,8 @@ operations modules.
   - Persisted payment/wallet, notifications, booking support, racket passport,
     check-in, and completed-service feedback flows.
   - FYP-scoped DeepSeek Agent for four-question guided selection, exact-run
-    recommendation explanations, verified in-stock alternatives, and a direct
-    user-controlled human-support entry.
+    recommendation explanations, verified in-stock alternatives, live store
+    information, and a direct user-controlled human-support entry.
   - Day-7 feedback follow-up and one day-10 reminder through the App feed and
     configured WhatsApp delivery, stopping after feedback is submitted.
 - **Admin Flow:**
@@ -35,8 +35,8 @@ operations modules.
   - String Inventory Management, including atomic editor saves and media.
   - Payment verification, support reply/resolve/close, and service queue.
   - Business hours, store settings, persisted analytics, and recommendation-run audit.
-  - Read-only Admin AI for the current operations summary; detailed lookup and
-    confirmed-action implementations remain preserved but inactive.
+  - Read-only Admin AI for the current operations summary plus booking and
+    inventory lookup; confirmed-action implementations remain preserved but inactive.
 - **Future extension:**
   - Advanced Recommendation Engine with NLP/DL.
 

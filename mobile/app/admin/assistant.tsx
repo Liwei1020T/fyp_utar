@@ -29,9 +29,9 @@ import type {
 
 const starterQuestions = [
   "Summarize today's operations.",
+  'Show low-stock strings.',
+  'Which bookings need attention?',
   // Deferred FYP scope; uncomment with the matching admin tool.
-  // 'Show low-stock strings.',
-  // 'Which bookings need attention?',
   // 'Show support conversations waiting for admin.',
   // 'Show pending payments.',
 ] as const;

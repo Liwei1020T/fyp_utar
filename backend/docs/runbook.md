@@ -35,7 +35,7 @@ http://127.0.0.1:3001/docs
 cd backend
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
-./.venv/bin/mypy app ai_service tests
+./.venv/bin/mypy app tests
 ./.venv/bin/pytest -v
 ```
 
@@ -87,10 +87,3 @@ cd backend
   the persisted balance and do not require a screenshot.
 - A future payment-provider webhook must replace manual verification for that
   provider; it must not create a second payment ledger.
-
-## 6. Optional Compatibility Component
-
-This component still exists for compatibility checks and local experimentation:
-- `ai_service/` standalone HTTP entrypoint
-
-It is not imported by the unified FastAPI startup and is not the active public runtime path.

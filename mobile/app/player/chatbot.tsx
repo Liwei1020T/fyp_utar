@@ -22,11 +22,11 @@ import type {
 
 const starterQuestions = [
   'Help me choose a string step by step.',
+  'What are the store opening hours?',
   // Deferred FYP scope; uncomment with the matching backend tools.
   // 'Which string best suits my saved profile?',
   // 'Compare Yonex BG80 and Yonex BG65.',
   // 'Explain my latest recommendation.',
-  // 'What are the store opening hours?',
 ] as const;
 
 type ConversationEntry =

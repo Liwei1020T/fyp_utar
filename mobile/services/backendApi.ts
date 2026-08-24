@@ -28,15 +28,12 @@ import type {
   BackendNotificationPreferences,
   BackendNotificationPreferencesPayload,
   BackendPrivacySettings,
-  BackendDeviceToken,
   BackendOfficialPerformance,
-  BackendOfficialPerformancePayload,
   BackendPage,
   BackendPayment,
   BackendPopularString,
   BackendProfile,
   BackendProfilePayload,
-  BackendRecommendationPayload,
   BackendRecommendationDetailResponse,
   BackendRecommendationResponse,
   BackendRecommendationRun,
@@ -52,7 +49,6 @@ import type {
   BackendStoreSettingsPayload,
   BackendString,
   BackendStringEditorUpdatePayload,
-  BackendStringWritePayload,
   BackendUpdateRacketPayload,
   BackendUpdateFeedbackPayload,
   BackendWallet,
@@ -262,21 +258,6 @@ export const backendApi = {
         token,
       },
     );
-  },
-  registerPushToken(
-    token: string,
-    payload: {
-      token: string;
-      platform: 'ios' | 'android' | 'web';
-      device_name?: string;
-      enabled?: boolean;
-    },
-  ) {
-    return requestJson<BackendDeviceToken>('/devices/push-token', {
-      method: 'POST',
-      body: payload,
-      token,
-    });
   },
   listPayments(token: string) {
     return requestJson<BackendPayment[]>('/payments', { token });
@@ -625,29 +606,6 @@ export const backendApi = {
     const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
     return requestJson<BackendPage<BackendSlot>>(`/slots${suffix}`, { token });
   },
-  adminListSlots(
-    token: string,
-    params?: {
-      date?: string;
-      date_from?: string;
-      days?: number;
-    },
-  ) {
-    const searchParams = new URLSearchParams();
-    if (params?.date) {
-      searchParams.set('date', params.date);
-    }
-    if (params?.date_from) {
-      searchParams.set('date_from', params.date_from);
-    }
-    if (params?.days != null) {
-      searchParams.set('days', String(params.days));
-    }
-    const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : '';
-    return requestJson<BackendPage<BackendSlot>>(`/admin/slots${suffix}`, {
-      token,
-    });
-  },
   adminLookupCheckIn(token: string, reference: string) {
     const searchParams = new URLSearchParams({ reference });
     return requestJson<BackendCheckInLookupResponse>(
@@ -890,35 +848,10 @@ export const backendApi = {
       token,
     });
   },
-  adminUpdateString(
-    token: string,
-    stringId: string,
-    payload: BackendStringWritePayload,
-  ) {
-    return requestJson<BackendString>(`/admin/strings/${stringId}`, {
-      method: 'PUT',
-      body: payload,
-      token,
-    });
-  },
   adminFetchOfficialPerformance(token: string, stringId: string) {
     return requestJson<BackendOfficialPerformance>(
       `/admin/strings/${stringId}/official-performance`,
       { token },
-    );
-  },
-  adminUpdateOfficialPerformance(
-    token: string,
-    stringId: string,
-    payload: BackendOfficialPerformancePayload,
-  ) {
-    return requestJson<BackendOfficialPerformance>(
-      `/admin/strings/${stringId}/official-performance`,
-      {
-        method: 'PUT',
-        body: payload,
-        token,
-      },
     );
   },
   createBooking(
@@ -1022,20 +955,6 @@ export const backendApi = {
       `/bookings/${bookingId}/feedback-eligibility`,
       { token },
     );
-  },
-  previewRecommendations(token: string, payload: BackendRecommendationPayload) {
-    return requestJson<BackendRecommendationResponse>('/recommendations/preview', {
-      method: 'POST',
-      body: payload,
-      token,
-    });
-  },
-  profileRecommendations(token: string, top_n = 3, racket_id?: string) {
-    return requestJson<BackendRecommendationResponse>('/recommendations/profile', {
-      method: 'POST',
-      body: { top_n, racket_id },
-      token,
-    });
   },
   generateRecommendations(token: string, top_n = 3, racket_id?: string) {
     return requestJson<BackendRecommendationResponse>('/recommendations/generate', {

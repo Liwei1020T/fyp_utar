@@ -436,18 +436,6 @@ def get_racket(
     )
 
 
-@router.get(
-    "/rackets/{racket_id}/history",
-    response_model=list[RacketServiceHistoryOut],
-)
-def get_racket_history(
-    racket_id: str,
-    current_user: CurrentUser = Depends(get_current_customer),
-    db: Session = Depends(get_db, scope="function"),
-) -> list[RacketServiceHistoryOut]:
-    return get_racket(racket_id, current_user, db).service_history
-
-
 @router.patch("/rackets/{racket_id}", response_model=RacketOut)
 def update_racket(
     racket_id: str,

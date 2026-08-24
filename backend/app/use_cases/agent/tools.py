@@ -233,7 +233,7 @@ ACTIVE_AGENT_TOOL_NAMES = {
     # "compare_strings",
     # "get_review_evidence",
     # "get_recommendation_run_context",  # Still used as trusted page preload.
-    # "get_store_information",
+    "get_store_information",
     # "get_my_bookings",
     # "get_my_string_preferences",
     # "get_my_recommendations",

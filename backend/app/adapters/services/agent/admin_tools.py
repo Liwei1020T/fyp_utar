@@ -102,8 +102,8 @@ ALL_ADMIN_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
 # FYP scope: the completed admin tools stay defined below for later re-enablement.
 ACTIVE_ADMIN_AGENT_TOOL_NAMES = {
     "get_admin_operations_summary",
-    # "find_admin_bookings",
-    # "find_admin_inventory",
+    "find_admin_bookings",
+    "find_admin_inventory",
     # "get_admin_payment_queue",
     # "get_admin_support_queue",
 }

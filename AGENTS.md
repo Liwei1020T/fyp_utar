@@ -20,7 +20,7 @@
 - Mobile Expo Go smoke: start backend with `--host 0.0.0.0`, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
 - Backend setup: `cd backend && uv sync --extra dev`
 - Backend migrations: `cd backend && ./scripts/alembic upgrade head`
-- Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
+- Backend full validation: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app tests && ./.venv/bin/pytest -v`
 - NLP setup: `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`
 - NLP fast validation: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests`
 - NLP reproducibility run: `cd ml/nlp-workbench-latest && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
@@ -40,11 +40,10 @@
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
   - recommendation learning loop: completed booking feedback -> bounded v10 community calibration; exact-racket interaction history -> gated v11 CF with exact v10 fallback below three independent supporters
-  - FYP-scoped player Agent: four-question guided selection, exact-run explanation, and verified in-stock alternatives -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V11 remains the only ranking owner
+  - FYP-scoped player Agent: four-question guided selection, exact-run explanation, verified in-stock alternatives, and live store information -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V11 remains the only ranking owner
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
-  - admin Agent operations: one read-only current-operations summary; detailed tools and write handlers remain preserved but inactive
+  - admin Agent operations: read-only current-operations summary plus booking and inventory searches; write handlers remain preserved but inactive
   - NLP artifact handoff: independent 12-string MacBERT workbook in `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`; legacy V9 remains separate
-  - AI-service compatibility artifact handoff: `ml/nlp-workbench-latest/output/` -> backend `AI_*_PATH` config
 - State/data boundaries:
   - `backend/` owns runtime data, auth, bookings, notification preferences, commerce ledgers, and recommendation logs
   - `mobile/` is API-only at runtime: every route page uses backend or backend-derived records and no seeded mock session exists

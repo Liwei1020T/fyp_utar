@@ -82,7 +82,6 @@ Current post-migration route modules with no legacy one-file equivalent:
 
 - Old: `stringsense_backend/modules/ai.py`
 - Active recommendation: `app/domain/recommendation/scoring.py`
-- Standalone compatibility only: `ai_service/`
 
 ## Shared / Config
 

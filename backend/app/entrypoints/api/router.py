@@ -22,10 +22,7 @@ from app.entrypoints.api.routes.booking_routes import router as booking_router
 from app.entrypoints.api.routes.commerce_routes import router as commerce_router
 from app.entrypoints.api.routes.catalog_routes import router as catalog_router
 from app.entrypoints.api.routes.media_routes import router as media_router
-from app.entrypoints.api.routes.notification_routes import (
-    devices_router,
-    router as notification_router,
-)
+from app.entrypoints.api.routes.notification_routes import router as notification_router
 from app.entrypoints.api.routes.profile_routes import router as profile_router
 from app.entrypoints.api.routes.recommendation_routes import (
     router as recommendation_router,
@@ -49,7 +46,6 @@ router.include_router(profile_router)
 router.include_router(catalog_router)
 router.include_router(media_router)
 router.include_router(notification_router)
-router.include_router(devices_router)
 router.include_router(booking_router)
 router.include_router(booking_conversation_router)
 router.include_router(racket_feedback_router)

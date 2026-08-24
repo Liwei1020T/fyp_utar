@@ -5,10 +5,8 @@ from fastapi import Depends
 
 from app.dto.recommendation import ProfileRecommendationPayload
 from app.dto.recommendation import RecommendationDetailDto
-from app.dto.recommendation import RecommendationRequestDto
 from app.dto.recommendation import RecommendationResponseDto
 from app.dto.recommendation import recommendation_detail_to_dto
-from app.dto.recommendation import recommendation_request_to_domain
 from app.dto.recommendation import recommendation_response_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
@@ -22,45 +20,6 @@ from app.use_cases.recommendation.generate_recommendation import (
 
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
-
-
-@router.post("/preview", response_model=RecommendationResponseDto)
-def preview_recommendations(
-    payload: RecommendationRequestDto,
-    current_user: CurrentUser = Depends(get_current_customer),
-    profile_repository=Depends(get_profile_repository),
-    recommendation_repository=Depends(get_recommendation_repository),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
-) -> RecommendationResponseDto:
-    result = GenerateRecommendationUseCase(
-        profile_repository=profile_repository,
-        recommendation_repository=recommendation_repository,
-        recommendation_log_repository=recommendation_log_repository,
-    ).execute_preview(
-        user_id=current_user.user_id,
-        request=recommendation_request_to_domain(payload),
-    )
-    return recommendation_response_to_dto(result)
-
-
-@router.post("/profile", response_model=RecommendationResponseDto)
-def recommend_for_profile(
-    payload: ProfileRecommendationPayload,
-    current_user: CurrentUser = Depends(get_current_customer),
-    profile_repository=Depends(get_profile_repository),
-    recommendation_repository=Depends(get_recommendation_repository),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
-) -> RecommendationResponseDto:
-    result = GenerateRecommendationUseCase(
-        profile_repository=profile_repository,
-        recommendation_repository=recommendation_repository,
-        recommendation_log_repository=recommendation_log_repository,
-    ).execute_profile(
-        user_id=current_user.user_id,
-        top_n=payload.top_n,
-        racket_id=payload.racket_id,
-    )
-    return recommendation_response_to_dto(result)
 
 
 @router.post("/generate", response_model=RecommendationResponseDto)

@@ -4,14 +4,12 @@ StringSense now runs on a unified Python backend:
 
 - `app/` is the active public backend runtime organized in clean architecture layers.
 - `app/domain/recommendation/scoring.py` is the single active public recommendation implementation.
-- `ai_service/` remains a standalone compatibility reference and is not imported by unified FastAPI startup.
 
 ## Active Structure
 
 ```text
 backend/
   app/
-  ai_service/
   migrations/
   data/raw/
   docs/
@@ -35,7 +33,8 @@ Key variables:
 - `OPENWA_BASE_URL`, `OPENWA_SESSION_ID`, `OPENWA_API_KEY`: OpenWA REST endpoint
   and session-scoped operator credential
 - `AGENT_ENABLED`, `AGENT_API_KEY`: enable the authenticated FYP-scoped player
-  Agent and read-only admin summary, using a server-only DeepSeek credential
+  Agent and read-only admin operations, booking, and inventory queries, using a
+  server-only DeepSeek credential
 - `AGENT_MODEL`: defaults to the selected `deepseek-v4-flash` model
 - `SEED_ADMIN_*`: optional admin seed controls; enabling them requires a valid
   username, 9-to-15-digit phone number, and password
@@ -47,9 +46,6 @@ in `../config/approved_string_cohort_v1.csv`. Other master-data rows remain
 persisted for historical booking and audit references, but catalog, inventory,
 editing, booking selection, and recommendation APIs do not expose them.
 
-`AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` remain for standalone `ai_service/` compatibility and use CSV artifacts under `../ml/nlp-workbench-latest/output/`.
-
-Legacy AI env vars such as `AI_INTERNAL_API_KEY` are only needed if you still run `ai_service/` directly for standalone compatibility checks.
 
 Keep `EXPO_ACCESS_TOKEN` in the deployment secret store or untracked
 `backend/.env`. Never put it in the mobile app or use an `EXPO_PUBLIC_*` name.
@@ -116,7 +112,7 @@ FastAPI docs are available at `http://127.0.0.1:3001/docs`.
 cd backend
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
-./.venv/bin/mypy app ai_service tests
+./.venv/bin/mypy app tests
 ./.venv/bin/pytest -v
 ```
 
@@ -150,7 +146,6 @@ Public unified Python endpoints:
 - `GET /api/bookings/{id}/feedback`
 - `POST /api/bookings/{id}/feedback`
 - `GET /api/strings`
-- `GET /api/strings/{id}`
 - `POST /api/bookings`
 - `GET /api/bookings`
 - `GET /api/bookings/{id}`
@@ -160,25 +155,17 @@ Public unified Python endpoints:
 - `POST /api/payments/bookings/{id}`
 - `GET /api/wallet`
 - `POST /api/wallet/top-ups`
-- `POST /api/recommendations/preview`
-- `POST /api/recommendations/profile`
 - `POST /api/recommendations/generate`
 - `GET /api/recommendations/{user_id}`
 - `GET /api/recommendations/{user_id}/{catalog_id}`
 - `POST /api/agent/query`
-- `GET /api/admin/strings`
-- `POST /api/admin/strings`
-- `PUT /api/admin/strings/{id}`
-- `DELETE /api/admin/strings/{id}`
 - `POST /api/admin/strings/{id}/image`
 - `DELETE /api/admin/strings/{id}/image`
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
 - `PUT /api/admin/inventory/strings/{id}/editor` (atomic catalog, official-performance, and inventory update)
-- `GET /api/admin/inventory/strings/{id}/movements`
 - `GET /api/admin/strings/{id}/official-performance`
-- `PUT /api/admin/strings/{id}/official-performance`
 - `GET /api/admin/strings/{id}/recommendation-matrix`
 - `POST /api/admin/recommendation-matrix/import`
 - `GET /api/admin/bookings`
@@ -190,7 +177,6 @@ Public unified Python endpoints:
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`
 - `GET /api/store-settings`
-- `GET /api/admin/slots`
 - `GET /api/admin/check-in/lookup`
 - `POST /api/admin/check-in`
 - `GET /api/admin/service-queue`
@@ -206,7 +192,6 @@ Public unified Python endpoints:
 - `POST /api/admin/conversations/{id}/read`
 - `POST /api/admin/conversations/{id}/resolve`
 - `POST /api/admin/conversations/{id}/close`
-- `GET /api/admin/recommendations/logs`
 - `GET /api/admin/recommendations/runs`
 - `GET /api/admin/recommendations/runs/{run_id}`
 

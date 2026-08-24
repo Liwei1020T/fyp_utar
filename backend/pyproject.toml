@@ -38,7 +38,7 @@ extend-exclude = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["ai_service*", "app*"]
+include = ["app*"]
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -71,16 +71,14 @@ def test_catalog_inventory_and_recommendations_only_expose_the_twelve_strings() 
     admin_headers = _headers(_login_admin())
 
     player_catalog = client.get("/api/strings", headers=customer_headers)
-    admin_catalog = client.get("/api/admin/strings", headers=admin_headers)
     admin_inventory = client.get(
         "/api/admin/inventory/strings",
         headers=admin_headers,
     )
 
     assert player_catalog.status_code == 200
-    assert admin_catalog.status_code == 200
     assert admin_inventory.status_code == 200
-    for response in (player_catalog, admin_catalog, admin_inventory):
+    for response in (player_catalog, admin_inventory):
         payload = response.json()
         assert payload["total"] == 12
         assert {item["id"] for item in payload["items"]} == APPROVED_IDS
@@ -150,10 +148,9 @@ def test_other_strings_are_hidden_but_preserved_for_history() -> None:
     customer_headers = _headers(_register_customer())
     admin_headers = _headers(_login_admin())
 
-    assert (
-        client.get(f"/api/strings/{HIDDEN_ID}", headers=customer_headers).status_code
-        == 404
-    )
+    player_catalog = client.get("/api/strings", headers=customer_headers)
+    assert player_catalog.status_code == 200
+    assert HIDDEN_ID not in {item["id"] for item in player_catalog.json()["items"]}
     assert (
         client.get(
             f"/api/admin/inventory/strings/{HIDDEN_ID}",
@@ -161,20 +158,6 @@ def test_other_strings_are_hidden_but_preserved_for_history() -> None:
         ).status_code
         == 404
     )
-    assert (
-        client.get(
-            f"/api/admin/inventory/strings/{HIDDEN_ID}/movements",
-            headers=admin_headers,
-        ).status_code
-        == 404
-    )
-    create_hidden = client.post(
-        "/api/admin/strings",
-        headers=admin_headers,
-        json={"brand": "Yonex", "model_name": "EXBOLT 65"},
-    )
-    assert create_hidden.status_code == 400
-
     with SessionLocal() as db:
         assert db.get(StringCatalogItem, HIDDEN_ID) is not None
         assert db.scalar(select(func.count()).select_from(StringCatalogItem)) == 33

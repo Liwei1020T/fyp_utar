@@ -131,16 +131,6 @@ def test_player_admin_operational_flow() -> None:
     assert export.status_code == 200
     assert "recommendation_relevance" in export.text
 
-    device = client.post(
-        "/api/devices/push-token",
-        headers=_headers(player_token),
-        json={
-            "token": "ExponentPushToken[test-device-token]",
-            "platform": "ios",
-            "device_name": "Test iPhone",
-        },
-    )
-    assert device.status_code == 200
     notification = client.post(
         "/api/admin/notifications",
         headers=_headers(admin_token),
@@ -153,7 +143,8 @@ def test_player_admin_operational_flow() -> None:
         },
     )
     assert notification.status_code == 200
-    assert notification.json()["status"] == "disabled"
+    assert notification.json()["status"] == "failed"
+    assert notification.json()["provider_message"] == "No active device token"
     feed = client.get("/api/notifications", headers=_headers(player_token))
     assert any(item["title"] == "Counter update" for item in feed.json())
 

@@ -25,9 +25,6 @@ Source files:
 | Profile | `/api/profile` | GET | Retrieve current player profile. |
 | Profile | `/api/profile` | PUT | Create or update player recommendation profile. |
 | Catalog | `/api/strings` | GET | Browse active badminton strings. |
-| Catalog | `/api/strings/{id}` | GET | View string details. |
-| Recommendation | `/api/recommendations/preview` | POST | Preview ranked results without persisting a recommendation run. |
-| Recommendation | `/api/recommendations/profile` | POST | Generate recommendations from the current saved profile. |
 | Recommendation | `/api/recommendations/generate` | POST | Generate and persist profile-based recommendation results. |
 | Recommendation | `/api/recommendations/{user_id}` | GET | Retrieve cached recommendation results; the mobile app uses `me` for the current player. |
 | Recommendation | `/api/recommendations/{user_id}/{catalog_id}` | GET | Retrieve explanation details for one cached recommended string. |
@@ -57,14 +54,11 @@ Source files:
 
 | Module | Endpoint | Method | Purpose |
 | --- | --- | --- | --- |
-| Admin Catalog | `/api/admin/strings` | GET/POST | List or create catalog strings. |
-| Admin Catalog | `/api/admin/strings/{id}` | PUT/DELETE | Update or deactivate catalog string. |
 | Admin Catalog | `/api/admin/strings/{id}/image` | POST/DELETE | Upload or remove string product image. |
 | Admin Inventory | `/api/admin/inventory/strings` | GET | List store inventory. |
 | Admin Inventory | `/api/admin/inventory/strings/{id}` | GET/PATCH | View or update inventory price, stock, status, and notes. |
 | Admin Inventory | `/api/admin/inventory/strings/{id}/editor` | PUT | Atomically update catalog, official performance, and inventory sections. |
-| Admin Inventory | `/api/admin/inventory/strings/{id}/movements` | GET | View inventory movement history. |
-| Admin Evidence | `/api/admin/strings/{id}/official-performance` | GET/PUT | Inspect or update official/manual performance. |
+| Admin Evidence | `/api/admin/strings/{id}/official-performance` | GET | Inspect official/manual performance. |
 | Admin Evidence | `/api/admin/strings/{id}/recommendation-matrix` | GET | Inspect effective and source-layer recommendation features. |
 | Admin Evidence | `/api/admin/recommendation-matrix/import` | POST | Re-import the configured recommendation matrix and report matched/updated/unmatched rows. |
 | Admin Booking | `/api/admin/bookings` | GET | List all bookings for admin. |
@@ -82,11 +76,9 @@ Source files:
 | Admin Support | `/api/admin/conversations/{id}/resolve` | POST | Mark a support thread resolved. |
 | Admin Support | `/api/admin/conversations/{id}/close` | POST | Close a support thread. |
 | Admin Store | `/api/admin/business-hours` | GET/PUT | Read or update business hours and slot rules. |
-| Admin Store | `/api/admin/slots` | GET | Inspect generated booking slots using the administrator view. |
 | Admin Store | `/api/admin/store-settings` | GET/PUT | Read or update limited store settings. |
 | Admin Analytics | `/api/admin/analytics/summary` | GET | Read persisted operations/payment metrics. |
 | Admin Analytics | `/api/admin/analytics/popular-strings` | GET | Read popular-string aggregates. |
-| Admin Recommendation | `/api/admin/recommendations/logs` | GET | View recommendation request/response logs. |
 | Admin Recommendation | `/api/admin/recommendations/runs` | GET | View persisted recommendation runs and ranked items. |
 | Admin Recommendation | `/api/admin/recommendations/runs/{run_id}` | GET | Inspect one run with request/profile snapshots and score evidence. |
 

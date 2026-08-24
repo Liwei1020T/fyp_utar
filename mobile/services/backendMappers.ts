@@ -39,7 +39,6 @@ import type {
   BackendPricingMode,
   BackendProfile,
   BackendProfilePayload,
-  BackendRecommendationPayload,
   BackendRecommendationResponse,
   BackendRacket,
   BackendRacketDetail,
@@ -1066,42 +1065,6 @@ export function buildBackendProfilePayload(
     pref_string_movement: toTenPreference(advanced.stringMovement),
     pref_tension_retention: toTenPreference(advanced.tensionRetention),
     pref_value_for_money: toTenPreference(player.priorities.value),
-  };
-}
-
-export function buildRecommendationPayload(input: {
-  userId: string;
-  skillLevel: SkillLevel;
-  playingStyle: PlayingStyle;
-  preferredTension: number;
-  playFrequency: PlayFrequency;
-  preferredFeel: PreferredFeel;
-  preferredGauge: PreferredGauge;
-  recentGoal: RecentGoal;
-  priorities: PlayerProfile['priorities'];
-  advancedPreferences?: PlayerProfile['advancedPreferences'];
-}): BackendRecommendationPayload {
-  const advanced = advancedPreferencesForPayload(input);
-
-  return {
-    user_id: input.userId,
-    skill_level: mapFrontendSkillLevel(input.skillLevel),
-    playing_style: mapFrontendPlayingStyle(input.playingStyle),
-    preferred_tension: input.preferredTension,
-    frequency_per_week: mapPlayFrequencyToBackend(input.playFrequency),
-    preferred_feel: mapPreferredFeelToBackend(input.preferredFeel),
-    preferred_gauge: mapPreferredGaugeToBackend(input.preferredGauge),
-    recent_goal: recentGoalToBackend[input.recentGoal],
-    pref_attack: toTenPreference(input.priorities.power),
-    pref_comfort: toTenPreference(input.priorities.comfort),
-    pref_control: toTenPreference(input.priorities.control),
-    pref_durability: toTenPreference(input.priorities.durability),
-    pref_elasticity: toTenPreference(advanced.elasticity),
-    pref_sound: toTenPreference(input.priorities.sound),
-    pref_string_movement: toTenPreference(advanced.stringMovement),
-    pref_tension_retention: toTenPreference(advanced.tensionRetention),
-    pref_value_for_money: toTenPreference(input.priorities.value),
-    top_n: 3,
   };
 }
 

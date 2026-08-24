@@ -85,7 +85,7 @@ Query cache owner.
 | [mobile/app/player/recommend/explain/[id].tsx](../mobile/app/player/recommend/explain/[id].tsx) | Exact-run dynamic Agent explanation with saved-rationale fallback. |
 | [mobile/app/player/profile/edit.tsx](../mobile/app/player/profile/edit.tsx) | Editable recommendation/player profile form. |
 | [mobile/app/player/chat/[id].tsx](../mobile/app/player/chat/%5Bid%5D.tsx) | Player human-support detail backed by persisted conversation state and messages. |
-| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | FYP-scoped four-question guided-selection Agent with verified replacement-string actions. |
+| [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | FYP-scoped four-question guided-selection Agent with live store information and verified replacement-string actions. |
 | [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Expiring server-issued QR check-in token screen. |
 | [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/%5BbookingId%5D.tsx) | Creates or displays the structured feedback record for one completed owned booking. |
 | [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Owned backend event feed with persisted read IDs. |
@@ -168,9 +168,7 @@ Query cache owner.
 
 Backend lives in [backend](../backend). The active runtime is FastAPI under
 `backend/app`; its only active recommendation implementation is
-`backend/app/domain/recommendation/scoring.py`. `backend/ai_service` is
-preserved for explicit standalone compatibility checks and is not imported by
-unified startup.
+`backend/app/domain/recommendation/scoring.py`.
 
 ### Backend Config And Runtime
 
@@ -227,7 +225,7 @@ unified startup.
 | Booking | `domain/booking`, `use_cases/booking`, `dto/booking.py` | Booking creation, list/detail, admin status transitions, status note validation. |
 | Store | `domain/store`, `use_cases/store`, `dto/store.py` | Business hours, slots, check-in, service queue, store settings, analytics. |
 | Recommendation | `domain/recommendation`, `use_cases/recommendation`, `dto/recommendation.py` | Recommendation generation and admin log listing. |
-| Agent | `use_cases/agent`, `adapters/services/agent`, `dto/agent.py` | FYP-scoped guided selection, exact-run context, in-stock alternatives, read-only admin summary, DeepSeek transport, and validated response. |
+| Agent | `use_cases/agent`, `adapters/services/agent`, `dto/agent.py` | FYP-scoped guided selection, exact-run context, in-stock alternatives, live store information, read-only admin booking and inventory queries, DeepSeek transport, and validated response. |
 | Commerce | `routes/commerce_routes.py`, `dto/commerce.py`, commerce models | Server quotes, payment verification, and append-only wallet ledger. |
 | Notifications | `routes/notification_routes.py`, `dto/notifications.py`, notification models | Owned event feed, per-user read state, and persisted preferences. |
 | Human support | `routes/booking_conversation_routes.py`, `dto/booking_conversation.py`, conversation models | Booking-linked support plus one reusable booking-free support thread per player. |
@@ -254,24 +252,6 @@ reuse seam.
 | [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
 
-### Backend AI Compatibility Package
-
-| Path | Purpose |
-| --- | --- |
-| [backend/ai_service/app.py](../backend/ai_service/app.py) | Standalone compatibility FastAPI app with internal API key guard. |
-| [backend/ai_service/main.py](../backend/ai_service/main.py) | Standalone service entrypoint. |
-| [backend/ai_service/service.py](../backend/ai_service/service.py) | `RecommendationService` compatibility facade for recommend, explain, review analysis, and RAG-like lookup. |
-| [backend/ai_service/data_loader.py](../backend/ai_service/data_loader.py) | Loads CSV or JSONL string matrix/review signals and normalizes scores. |
-| [backend/ai_service/schemas.py](../backend/ai_service/schemas.py) | Legacy combined Pydantic schemas. |
-| [backend/ai_service/schemas](../backend/ai_service/schemas) | Split schemas for recommendation, review analysis, and RAG. |
-| [backend/ai_service/services/recommendation_engine.py](../backend/ai_service/services/recommendation_engine.py) | Pure recommendation scoring helpers used by compatibility service. |
-| [backend/ai_service/services/review_analysis.py](../backend/ai_service/services/review_analysis.py) | Rule-based review aspect aggregation. |
-| [backend/ai_service/services/rag.py](../backend/ai_service/services/rag.py) | Lightweight RAG-style matching helper. |
-| [backend/ai_service/core/config.py](../backend/ai_service/core/config.py) | AI service-specific settings. |
-
-Active recommendation API calls use
-`backend/app/domain/recommendation/scoring.py`; `backend/ai_service/*` is not
-loaded by the unified runtime.
 
 ### Backend Tests
 
@@ -290,8 +270,6 @@ loaded by the unified runtime.
 | [backend/tests/test_store_analytics.py](../backend/tests/test_store_analytics.py) | Persisted commerce analytics and store-local day boundary. |
 | [backend/tests/test_transaction_atomicity.py](../backend/tests/test_transaction_atomicity.py) | Failure-injection coverage for recommendation, password-reset, and secure check-in transaction rollback. |
 | [backend/tests/test_player_admin_operations.py](../backend/tests/test_player_admin_operations.py) | Secure QR, detailed feedback, device delivery, account security, and privacy flow. |
-| [backend/tests/test_ai_service_api.py](../backend/tests/test_ai_service_api.py) | AI compatibility API coverage. |
-| [backend/tests/test_ai_service_service.py](../backend/tests/test_ai_service_service.py) | AI service/facade coverage. |
 
 ## NLP Workbench
 
@@ -343,6 +321,6 @@ Prefer the commands in [AGENTS.md](../AGENTS.md). Minimum checks by scope:
 
 - Docs-only change: inspect Markdown diff; no build normally required.
 - Mobile code change: `cd mobile && nvm use && npx tsc --noEmit`.
-- Backend code change: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`.
+- Backend code change: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app tests && ./.venv/bin/pytest -v`.
 - Backend contract/schema change: add or update tests, update `backend/docs/api-contract.md` and/or `backend/docs/database.md`.
 - Cross-workspace change: run the relevant backend and mobile checks, then smoke the mobile app against `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api`.

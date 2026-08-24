@@ -14,7 +14,6 @@ Mobile App
 
 - `app/` is now the primary runtime package.
 - `app/domain/recommendation/scoring.py` is the only recommendation implementation loaded by the unified runtime.
-- `ai_service/` is preserved for explicit standalone compatibility checks and is not imported during unified startup.
 
 ## Layering Rules
 
@@ -198,7 +197,6 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 
 ## AI Boundary
 
-- `ai_service/` remains preserved for standalone compatibility, review analysis, and RAG-style helper logic.
 - The active profile recommender now lives in `app/domain/recommendation/scoring.py` and reads normalized catalog/matrix persistence through `app/ports/repositories/recommendation_repository.py`.
 - The unified FYP-scoped Agent lives in `app/use_cases/agent`, calls DeepSeek only
   through `app/adapters/services/agent`, and supports four-question guided
@@ -208,10 +206,6 @@ The main weakness was runtime usage. Before this refactor, the public recommende
   remain preserved behind inactive allowlist entries.
 - Exact recommendation explanations are owner-scoped by persisted `run_id`;
   source metadata is collected server-side from successful tool calls.
-- The former unified-runtime legacy AI adapters were removed.
-  `ai_service.service.RecommendationService` remains isolated inside the
-  explicit standalone compatibility package and is not wired into unified
-  FastAPI dependencies or startup.
 
 ## Authentication Abuse Boundary
 
@@ -244,6 +238,6 @@ cd backend
 ./scripts/alembic heads
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
-./.venv/bin/mypy app ai_service tests
+./.venv/bin/mypy app tests
 ./.venv/bin/pytest -v
 ```

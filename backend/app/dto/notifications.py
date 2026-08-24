@@ -72,15 +72,6 @@ class MarkNotificationsReadOut(BaseModel):
     marked_read_ids: list[str]
 
 
-class PushTokenPayload(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-
-    token: str = Field(min_length=8, max_length=255)
-    platform: DevicePlatform
-    device_name: str | None = Field(default=None, min_length=1, max_length=120)
-    enabled: bool = True
-
-
 class DeviceTokenOut(BaseModel):
     id: str
     user_id: str

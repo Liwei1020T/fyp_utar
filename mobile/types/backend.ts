@@ -947,31 +947,3 @@ export interface BackendProfilePayload {
   pref_tension_retention?: number;
   pref_value_for_money?: number;
 }
-
-export interface BackendRecommendationPayload {
-  user_id: string;
-  skill_level: string;
-  playing_style: string;
-  preferred_tension: number;
-  frequency_per_week: number;
-  preferred_feel: 'soft' | 'medium' | 'hard';
-  preferred_gauge: 'no_preference' | 'thin' | 'medium' | 'thick';
-  recent_goal:
-    | 'balanced'
-    | 'power'
-    | 'control'
-    | 'durability'
-    | 'comfort'
-    | 'tension_retention'
-    | 'value_for_money';
-  pref_attack: number;
-  pref_comfort: number;
-  pref_control: number;
-  pref_durability: number;
-  pref_elasticity: number;
-  pref_sound: number;
-  pref_string_movement: number;
-  pref_tension_retention: number;
-  pref_value_for_money: number;
-  top_n?: number;
-}

@@ -71,8 +71,8 @@ It does not mean background training or eager regeneration for every user:
 - saved v9 results and immutable recommendation runs are never rewritten;
 - v10 comparison and active v11 cache rows become stale when eligible community
   or collaborative evidence changes;
-- the next explicit `POST /api/recommendations/profile` or
-  `POST /api/recommendations/generate` recalculates against the latest aggregate;
+- the next explicit `POST /api/recommendations/generate` recalculates against
+  the latest aggregate;
 - a cached-result request never performs a hidden write. When no current v11
   cache exists, mobile offers an explicit "Refresh recommendations" action.
 
@@ -416,9 +416,8 @@ GET /api/strings/community-summary
 GET /api/admin/feedback/community-summary
 ```
 
-Declare the static player route before `GET /api/strings/{string_id}` so
-`community-summary` is not interpreted as a string ID. The same aggregation
-module should serve player and admin presentation so the numbers cannot drift.
+The same aggregation module should serve player and admin presentation so the
+numbers cannot drift.
 
 `FeedbackOut` exposes server-derived durability state:
 

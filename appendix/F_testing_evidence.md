@@ -43,7 +43,7 @@ Source files:
 cd backend
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
-./.venv/bin/mypy app ai_service tests
+./.venv/bin/mypy app tests
 ./.venv/bin/pytest -v
 ```
 

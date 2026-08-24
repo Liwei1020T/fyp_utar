@@ -7,8 +7,10 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sqlalchemy import select
 
+from app.adapters.persistence.sqlalchemy.models import InventoryMovement
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.models import StringInventoryItem
 from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
@@ -361,14 +363,6 @@ def test_recommendations_logs_and_admin_string_controls():
         assert cache_rows[0].preference_match_score is not None
         assert cache_rows[0].value_for_money_score is not None
 
-    log_response = client.get(
-        "/api/admin/recommendations/logs",
-        headers=headers(admin_token),
-    )
-    assert log_response.status_code == 200
-    assert log_response.json()["total"] == 1
-    assert log_response.json()["items"][0]["phone_number"] == "+60128888888"
-
     runs_response = client.get(
         "/api/admin/recommendations/runs",
         headers=headers(admin_token),
@@ -394,27 +388,39 @@ def test_recommendations_logs_and_admin_string_controls():
     assert removed_duplicate_route.status_code == 403
 
     admin_strings = client.get(
-        "/api/admin/strings",
+        "/api/admin/inventory/strings",
         headers=headers(admin_token),
     )
     assert admin_strings.status_code == 200
     string_item = admin_strings.json()["items"][0]
 
     update_string = client.put(
-        f"/api/admin/strings/{string_item['id']}",
+        f"/api/admin/inventory/strings/{string_item['id']}/editor",
         headers=headers(admin_token),
         json={
-            "brand": string_item["brand"],
-            "model_name": string_item["model_name"],
-            "price_rm": 55,
+            "catalog": {
+                "brand": string_item["brand"],
+                "model_name": string_item["model_name"],
+            },
+            "inventory": {
+                "selling_price": 55,
+                "pricing_mode": "fixed_price",
+            },
         },
     )
     assert update_string.status_code == 200
-    assert update_string.json()["price_rm"] == 55
+    assert update_string.json()["selling_price"] == 55
 
-    deactivate_string = client.delete(
-        f"/api/admin/strings/{string_item['id']}",
+    deactivate_string = client.put(
+        f"/api/admin/inventory/strings/{string_item['id']}/editor",
         headers=headers(admin_token),
+        json={
+            "catalog": {
+                "brand": string_item["brand"],
+                "model_name": string_item["model_name"],
+                "is_active": False,
+            }
+        },
     )
     assert deactivate_string.status_code == 200
     assert deactivate_string.json()["is_active"] is False
@@ -468,11 +474,9 @@ def test_admin_inventory_string_update_controls_public_availability():
     assert out_of_stock_response.json()["availability"] == "out_of_stock"
     assert out_of_stock_response.json()["is_active"] is True
 
-    public_lookup = client.get(
-        f"/api/strings/{string_id}",
-        headers=headers(customer_token),
-    )
-    assert public_lookup.status_code == 404
+    public_catalog = client.get("/api/strings", headers=headers(customer_token))
+    assert public_catalog.status_code == 200
+    assert string_id not in {item["id"] for item in public_catalog.json()["items"]}
 
 
 def test_public_string_filters_expose_normalized_catalog_fields():
@@ -528,21 +532,28 @@ def test_admin_can_persist_official_performance_and_inventory_history():
     assert official_before.json()["status"] == "pending_manual_fill"
 
     official_update = client.put(
-        f"/api/admin/strings/{string_id}/official-performance",
+        f"/api/admin/inventory/strings/{string_id}/editor",
         headers=headers(admin_token),
         json={
-            "source_type": "manual",
-            "source_name": "Yonex JP catalog",
-            "repulsion_power": 9.2,
-            "control": 8.4,
-            "status": "manually_curated",
-            "notes": "Initial official values entered by admin.",
+            "official_performance": {
+                "source_type": "manual",
+                "source_name": "Yonex JP catalog",
+                "repulsion_power": 9.2,
+                "control": 8.4,
+                "status": "manually_curated",
+                "notes": "Initial official values entered by admin.",
+            }
         },
     )
     assert official_update.status_code == 200
-    assert official_update.json()["source_name"] == "Yonex JP catalog"
-    assert official_update.json()["repulsion_power"] == 9.2
-    assert official_update.json()["status"] == "manually_curated"
+    official_after = client.get(
+        f"/api/admin/strings/{string_id}/official-performance",
+        headers=headers(admin_token),
+    )
+    assert official_after.status_code == 200
+    assert official_after.json()["source_name"] == "Yonex JP catalog"
+    assert official_after.json()["repulsion_power"] == 9.2
+    assert official_after.json()["status"] == "manually_curated"
 
     inventory_before = client.get(
         f"/api/admin/inventory/strings/{string_id}",
@@ -574,17 +585,21 @@ def test_admin_can_persist_official_performance_and_inventory_history():
     assert inventory_update.json()["pricing_mode"] == "fixed_price"
     assert inventory_update.json()["availability_status"] == "in_stock"
 
-    movement_history = client.get(
-        f"/api/admin/inventory/strings/{string_id}/movements",
-        headers=headers(admin_token),
-    )
-    assert movement_history.status_code == 200
-    assert movement_history.json()["total"] >= 1
-    assert movement_history.json()["items"][0]["movement_type"] == "RESTOCK"
-    assert movement_history.json()["items"][0]["reference_id"] == "PO-2026-04-12"
-    assert (
-        movement_history.json()["items"][0]["quantity"] == 10 - previous_available_stock
-    )
+    with SessionLocal() as db:
+        inventory_id = db.scalar(
+            select(StringInventoryItem.inventory_id).where(
+                StringInventoryItem.catalog_id == string_id
+            )
+        )
+        movement = db.scalars(
+            select(InventoryMovement)
+            .where(InventoryMovement.inventory_id == inventory_id)
+            .order_by(InventoryMovement.created_at.desc())
+        ).first()
+        assert movement is not None
+        assert movement.movement_type == "RESTOCK"
+        assert movement.reference_id == "PO-2026-04-12"
+        assert movement.quantity == 10 - previous_available_stock
 
 
 def test_admin_string_editor_updates_all_sections_atomically():
@@ -644,12 +659,19 @@ def test_admin_string_editor_updates_all_sections_atomically():
     assert official_response.json()["source_name"] == "Atomic editor source"
     assert official_response.json()["control"] == 8.8
 
-    movement_history = client.get(
-        f"/api/admin/inventory/strings/{string_id}/movements",
-        headers=headers(admin_token),
-    )
-    assert movement_history.status_code == 200
-    assert movement_history.json()["items"][0]["quantity"] == 4
+    with SessionLocal() as db:
+        inventory_id = db.scalar(
+            select(StringInventoryItem.inventory_id).where(
+                StringInventoryItem.catalog_id == string_id
+            )
+        )
+        movement = db.scalars(
+            select(InventoryMovement)
+            .where(InventoryMovement.inventory_id == inventory_id)
+            .order_by(InventoryMovement.created_at.desc())
+        ).first()
+        assert movement is not None
+        assert movement.quantity == 4
 
 
 def test_admin_can_persist_catalog_editor_fields_and_string_image():
@@ -669,23 +691,25 @@ def test_admin_can_persist_catalog_editor_fields_and_string_image():
     assert len(after_upload) == len(before_upload) + 1
 
     update_string = client.put(
-        f"/api/admin/strings/{string_id}",
+        f"/api/admin/inventory/strings/{string_id}/editor",
         headers=headers(admin_token),
         json={
-            "brand": image_upload.json()["brand"],
-            "model_name": image_upload.json()["model_name"],
-            "gauge_main_mm": 0.69,
-            "gauge_cross_mm": 0.69,
-            "gauge_label": "0.69 mm",
-            "category": "durable",
-            "main_trait": "Durable",
-            "tension_min_lbs": 24,
-            "tension_max_lbs": 29,
-            "material_summary_en": "Braided nylon multifilament",
-            "full_description": "Updated from the admin editor.",
-            "short_description": "Updated admin summary.",
-            "original_name": "耐打测试线",
-            "is_active": True,
+            "catalog": {
+                "brand": image_upload.json()["brand"],
+                "model_name": image_upload.json()["model_name"],
+                "gauge_main_mm": 0.69,
+                "gauge_cross_mm": 0.69,
+                "gauge_label": "0.69 mm",
+                "category": "durable",
+                "main_trait": "Durable",
+                "tension_min_lbs": 24,
+                "tension_max_lbs": 29,
+                "material_summary_en": "Braided nylon multifilament",
+                "full_description": "Updated from the admin editor.",
+                "short_description": "Updated admin summary.",
+                "original_name": "耐打测试线",
+                "is_active": True,
+            }
         },
     )
     assert update_string.status_code == 200
@@ -727,12 +751,14 @@ def test_admin_delete_string_image_does_not_follow_parent_path_segments():
     assert detail_response.status_code == 200
 
     update_response = client.put(
-        f"/api/admin/strings/{string_id}",
+        f"/api/admin/inventory/strings/{string_id}/editor",
         headers=headers(admin_token),
         json={
-            "brand": detail_response.json()["brand"],
-            "model_name": detail_response.json()["model_name"],
-            "image_url": "../stringsense-path-traversal-guard.txt",
+            "catalog": {
+                "brand": detail_response.json()["brand"],
+                "model_name": detail_response.json()["model_name"],
+                "image_url": "../stringsense-path-traversal-guard.txt",
+            }
         },
     )
     assert update_response.status_code == 200
@@ -788,8 +814,8 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert booking_response.status_code == 200
 
     slots_after_booking = client.get(
-        f"/api/admin/slots?date={slot_date.isoformat()}",
-        headers=headers(admin_token),
+        f"/api/slots?date={slot_date.isoformat()}",
+        headers=headers(customer_token),
     )
     assert slots_after_booking.status_code == 200
     updated_slot = next(
@@ -810,8 +836,8 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert update_hours_response.status_code == 200
 
     closed_slots_response = client.get(
-        f"/api/admin/slots?date={slot_date.isoformat()}",
-        headers=headers(admin_token),
+        f"/api/slots?date={slot_date.isoformat()}",
+        headers=headers(customer_token),
     )
     assert closed_slots_response.status_code == 200
     assert closed_slots_response.json()["items"] == []

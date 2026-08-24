@@ -16,7 +16,7 @@
 - Local Postgres from workspace root: `docker compose up -d postgres`
 - Python lint: `./.venv/bin/ruff check .`
 - Python format check: `./.venv/bin/ruff format --check .`
-- Python typecheck: `./.venv/bin/mypy app ai_service tests`
+- Python typecheck: `./.venv/bin/mypy app tests`
 - Python tests: `./.venv/bin/pytest -v`
 - Alembic upgrade: `./scripts/alembic upgrade head`
 - Fast loop for touched areas first, then run the relevant full checks before completion.
@@ -26,23 +26,20 @@
 
 - Entry points:
   - Unified FastAPI backend: `app/main.py`
-  - Legacy AI-only service reference: `ai_service/main.py`
 - Core modules:
   - `app/`: FastAPI entrypoints, use cases, domain, ports, DTOs, and adapters for the unified backend
-  - `ai_service/`: reusable recommendation, review analysis, and RAG-style logic
   - `migrations/`: active migration history for the unified backend
 - Critical paths:
   - phone-first auth (`phone_number + password`)
   - booking state transition enforcement
   - recommendation flow: frontend -> unified Python backend -> in-process AI module
-  - FYP-scoped Agent flow: guided player recommendation/explanation plus a read-only admin operations summary; broader completed tools and admin write handlers remain preserved but inactive
+  - FYP-scoped Agent flow: guided player recommendation/explanation and live store information plus read-only admin operations, booking, and inventory queries; broader completed tools and admin write handlers remain preserved but inactive
   - admin string CRUD/import
   - commerce flow: player payment/top-up request -> admin verification -> persisted payment and wallet ledger
 - Config/runtime rules:
   - Unified backend reads `.env` through `pydantic-settings`
   - relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root
   - default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate
-  - compatibility `AI_MATRIX_CSV_PATH` and `AI_REVIEW_ASPECT_CSV_PATH` values point to CSV artifacts under `../ml/nlp-workbench-latest/output/`
   - Alembic is the sole runtime schema owner; ORM `create_all` is test-fixture only
   - `SEED_ADMIN_ENABLED` defaults to `false`; enabling it requires explicit companion credentials
 - State/data boundaries:
@@ -89,6 +86,6 @@
 - Run locally:
   - Unified backend: `./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
 - Test locally:
-  - `./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v`
+  - `./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app tests && ./.venv/bin/pytest -v`
 - Release/deploy:
   - Deploy the unified Python backend as the public backend.

@@ -146,7 +146,6 @@ Example profile request:
 - `PATCH /api/notifications/read`
 - `GET /api/notifications/preferences`
 - `PUT /api/notifications/preferences`
-- `POST /api/devices/push-token`
 - `GET /api/admin/device-tokens`
 - `GET /api/admin/notifications`
 - `POST /api/admin/notifications`
@@ -157,11 +156,12 @@ Preferences are stored per authenticated user and contain boolean `booking`,
 derives owned operational events and includes persisted admin deliveries before
 applying those preferences. Read event IDs are persisted per user.
 
-Device registration stores only the authenticated user's Expo token. Admin
-delivery always creates an in-app notification record; remote Expo delivery is
-attempted only when `EXPO_PUSH_ENABLED=true`. Production startup also requires
-the server-only `EXPO_ACCESS_TOKEN`, which is sent to Expo as a bearer token and
-must never be bundled into the mobile app.
+The current mobile app does not register Expo device tokens. Existing
+server-managed or legacy token rows remain visible to admins. Admin delivery
+always creates an in-app notification record; remote Expo delivery is attempted
+only for an existing enabled token when `EXPO_PUSH_ENABLED=true`. Production
+startup also requires the server-only `EXPO_ACCESS_TOKEN`, which is sent to Expo
+as a bearer token and must never be bundled into the mobile app.
 
 Alternatively, `OPENWA_ENABLED=true` sends the same persisted delivery through
 the configured self-hosted OpenWA session using the player's account phone
@@ -218,7 +218,6 @@ message table.
 - `GET /api/rackets/{racket_id}`
 - `PATCH /api/rackets/{racket_id}`
 - `DELETE /api/rackets/{racket_id}`
-- `GET /api/rackets/{racket_id}/history`
 - `GET /api/bookings/{booking_id}/feedback`
 - `POST /api/bookings/{booking_id}/feedback`
 - `PATCH /api/bookings/{booking_id}/feedback`
@@ -228,6 +227,8 @@ message table.
 
 Rackets are owned physical records with stable IDs. A booking may reference an
 owned racket and keeps the racket brand/model snapshot used at booking time.
+Racket detail includes its completed `service_history`; there is no separate
+history endpoint.
 Racket detail history includes only completed bookings for that racket.
 The authenticated racket-model catalogue returns the six standard FYP
 `key/brand/model` identities. Racket create/update accepts an optional
@@ -273,27 +274,19 @@ any active payment so checkout never trusts a stale catalog snapshot.
 ### Strings
 
 - `GET /api/strings`
-- `GET /api/strings/{id}`
-- `GET /api/admin/strings`
-- `POST /api/admin/strings`
-- `PUT /api/admin/strings/{id}`
-- `DELETE /api/admin/strings/{id}`
 - `POST /api/admin/strings/{id}/image`
 - `DELETE /api/admin/strings/{id}/image`
 - `GET /api/admin/inventory/strings`
 - `GET /api/admin/inventory/strings/{id}`
 - `PATCH /api/admin/inventory/strings/{id}`
 - `PUT /api/admin/inventory/strings/{id}/editor`
-- `GET /api/admin/inventory/strings/{id}/movements`
 - `GET /api/admin/strings/{id}/official-performance`
-- `PUT /api/admin/strings/{id}/official-performance`
 - `GET /api/admin/strings/{id}/recommendation-matrix`
 - `POST /api/admin/recommendation-matrix/import`
 - `GET /api/admin/business-hours`
 - `PUT /api/admin/business-hours`
 - `GET /api/slots`
 - `GET /api/store-settings`
-- `GET /api/admin/slots`
 - `GET /api/admin/check-in/lookup`
 - `POST /api/admin/check-in`
 - `POST /api/admin/check-in/lookup`
@@ -306,7 +299,9 @@ any active payment so checkout never trusts a stale catalog snapshot.
 - `GET /api/admin/analytics/summary`
 - `GET /api/admin/analytics/popular-strings`
 
-Only approved catalog strings from `backend/data/string_catalog_db_ready.json` can be created or updated.
+Only approved catalog strings from `backend/data/string_catalog_db_ready.json`
+are exposed or updated. Admin catalog, official-performance, and inventory
+changes use the atomic `/api/admin/inventory/strings/{id}/editor` endpoint.
 
 Admin string image upload accepts `multipart/form-data`:
 
@@ -426,40 +421,13 @@ check-in endpoints remain available for manual counter fallback.
 
 ### Recommendations
 
-- `POST /api/recommendations/preview`
-- `POST /api/recommendations/profile`
 - `POST /api/recommendations/generate`
 - `GET /api/recommendations/{user_id}`
 - `GET /api/recommendations/{user_id}/{catalog_id}`
-- `GET /api/admin/recommendations/logs`
 - `GET /api/admin/recommendations/runs`
 - `GET /api/admin/recommendations/runs/{run_id}`
 
-Direct preview request:
-
-```json
-{
-  "skill_level": "intermediate",
-  "playing_style": "attacking",
-  "preferred_tension": 25,
-  "frequency_per_week": 3,
-  "preferred_feel": "medium",
-  "preferred_gauge": "no_preference",
-  "recent_goal": "power",
-  "pref_attack": 5,
-  "pref_comfort": 3,
-  "pref_control": 4,
-  "pref_durability": 4,
-  "pref_elasticity": 5,
-  "pref_sound": 3,
-  "pref_string_movement": 4,
-  "pref_tension_retention": 4,
-  "pref_value_for_money": 3,
-  "top_n": 5
-}
-```
-
-Profile recommendation request:
+Generate recommendation request:
 
 ```json
 {
@@ -562,7 +530,7 @@ racket model. Otherwise `cf_weight=0.0` and the v10 score is unchanged. Matrix
 factorization, embeddings, review-count weighting, and historical catalog
 community metrics are not ranking inputs.
 
-`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload. The `/profile` route is retained as a compatibility alias.
+`POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload.
 
 `GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.
 

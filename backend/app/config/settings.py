@@ -98,7 +98,6 @@ class Settings(BaseSettings):
         alias="SEED_ADMIN_PHONE_NUMBER",
     )
     seed_admin_password: str | None = Field(default=None, alias="SEED_ADMIN_PASSWORD")
-    ai_internal_api_key: str | None = Field(default=None, alias="AI_INTERNAL_API_KEY")
     agent_enabled: bool = Field(default=False, alias="AGENT_ENABLED")
     agent_api_key: SecretStr | None = Field(default=None, alias="AGENT_API_KEY")
     agent_model: str = Field(default="deepseek-v4-flash", alias="AGENT_MODEL")

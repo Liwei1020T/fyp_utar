@@ -4,7 +4,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
 
-from app.dto.catalog import StringOut
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
 from app.entrypoints.api.dependencies import get_catalog_repository
@@ -12,7 +11,6 @@ from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_recommendation_repository
 from app.domain.recommendation.learning_signals import build_community_snapshot
 from app.dto.recommendation import community_snapshot_to_dict
-from app.use_cases.catalog.get_string import GetStringUseCase
 from app.use_cases.catalog.list_strings import ListStringsUseCase
 
 
@@ -60,15 +58,3 @@ def get_community_summary(
         target_racket_model_key=None,
     )
     return community_snapshot_to_dict(snapshot, racket_model_key=None)
-
-
-@router.get("/{string_id}", response_model=StringOut)
-def get_string(
-    string_id: str,
-    _: object = Depends(get_current_customer),
-    catalog_repository=Depends(get_catalog_repository),
-) -> StringOut:
-    item = GetStringUseCase(catalog_repository=catalog_repository).execute(
-        string_id=string_id
-    )
-    return string_to_dto(item)

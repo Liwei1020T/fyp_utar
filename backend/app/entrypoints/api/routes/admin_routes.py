@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date
 from typing import Literal
 from typing import cast
 
@@ -32,20 +31,16 @@ from app.dto.booking import booking_to_dto
 from app.dto.catalog import AdminInventoryStringOut
 from app.dto.catalog import InventoryUpdatePayload
 from app.dto.catalog import OfficialPerformanceOut
-from app.dto.catalog import OfficialPerformancePayload
 from app.dto.catalog import RecommendationMatrixImportReportOut
 from app.dto.catalog import RecommendationMatrixInspectionOut
 from app.dto.catalog import StringOut
 from app.dto.catalog import StringEditorUpdatePayload
-from app.dto.catalog import StringWritePayload
-from app.dto.catalog import inventory_movement_to_dto
 from app.dto.catalog import inventory_string_to_dto
 from app.dto.catalog import official_performance_to_dto
 from app.dto.catalog import recommendation_matrix_import_report_to_dto
 from app.dto.catalog import recommendation_matrix_inspection_to_dto
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
-from app.dto.recommendation import recommendation_log_to_dict
 from app.dto.recommendation import recommendation_run_to_dict
 from app.dto.store import CheckInLookupOut
 from app.dto.store import CheckInPayload
@@ -59,7 +54,6 @@ from app.dto.store import StoreSettingsOut
 from app.dto.store import StoreSettingsPayload
 from app.dto.store import business_hours_to_dto
 from app.dto.store import settings_to_dto
-from app.dto.store import slot_to_dto
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
@@ -81,8 +75,6 @@ from app.use_cases.booking.add_booking_update import AddBookingUpdateUseCase
 from app.use_cases.booking.get_booking import GetBookingUseCase
 from app.use_cases.booking.list_admin_bookings import ListAdminBookingsUseCase
 from app.use_cases.booking.update_booking_status import UpdateBookingStatusUseCase
-from app.use_cases.catalog.create_string import CreateStringUseCase
-from app.use_cases.catalog.deactivate_string import DeactivateStringUseCase
 from app.use_cases.catalog.get_string import GetStringUseCase
 from app.use_cases.catalog.get_official_performance import GetOfficialPerformanceUseCase
 from app.use_cases.catalog.get_recommendation_matrix import (
@@ -91,21 +83,11 @@ from app.use_cases.catalog.get_recommendation_matrix import (
 from app.use_cases.catalog.import_recommendation_matrix import (
     ImportRecommendationMatrixUseCase,
 )
-from app.use_cases.catalog.list_inventory_movements import (
-    ListInventoryMovementsUseCase,
-)
 from app.use_cases.catalog.list_inventory_strings import ListInventoryStringsUseCase
-from app.use_cases.catalog.list_strings import ListStringsUseCase
 from app.use_cases.catalog.prepare_string_values import PrepareStringValuesUseCase
 from app.use_cases.catalog.update_inventory_string import UpdateInventoryStringUseCase
-from app.use_cases.catalog.update_official_performance import (
-    UpdateOfficialPerformanceUseCase,
-)
 from app.use_cases.catalog.update_string import UpdateStringUseCase
 from app.use_cases.catalog.update_string_editor import UpdateStringEditorUseCase
-from app.use_cases.recommendation.list_recommendation_logs import (
-    ListRecommendationLogsUseCase,
-)
 from app.use_cases.recommendation.list_recommendation_runs import (
     ListRecommendationRunsUseCase,
 )
@@ -117,7 +99,6 @@ from app.use_cases.store.get_business_hours import GetBusinessHoursUseCase
 from app.use_cases.store.get_queue import GetQueueUseCase
 from app.domain.store.policies import hash_check_in_token
 from app.use_cases.store.get_store_settings import GetStoreSettingsUseCase
-from app.use_cases.store.list_slots import ListSlotsUseCase
 from app.use_cases.store.lookup_checkin import LookupCheckInUseCase
 from app.use_cases.store.update_business_hours import UpdateBusinessHoursUseCase
 from app.use_cases.store.update_store_settings import UpdateStoreSettingsUseCase
@@ -218,89 +199,6 @@ def inventory_update_values(payload: InventoryUpdatePayload) -> dict[str, object
     return values
 
 
-@router.get("/strings", response_model=dict)
-def admin_list_strings(
-    search: str | None = Query(default=None, max_length=100),
-    brand: str | None = Query(default=None, max_length=100),
-    series: str | None = Query(default=None, max_length=100),
-    gauge_min: float | None = Query(default=None, ge=0.4, le=1.2),
-    gauge_max: float | None = Query(default=None, ge=0.4, le=1.2),
-    is_hybrid: bool | None = Query(default=None),
-    is_active: bool | None = Query(default=None),
-    sort_by: str = Query(default="updated_at"),
-    sort_order: str = Query(default="desc"),
-    limit: int | None = Query(default=None, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
-    _: CurrentUser = Depends(get_current_admin),
-    catalog_repository=Depends(get_catalog_repository),
-) -> dict[str, object]:
-    page = ListStringsUseCase(catalog_repository=catalog_repository).execute(
-        is_active=is_active,
-        brand=brand,
-        series=series,
-        gauge_min=gauge_min,
-        gauge_max=gauge_max,
-        is_hybrid=is_hybrid,
-        search=search,
-        sort_by=sort_by,
-        sort_order=sort_order,
-        limit=limit,
-        offset=offset,
-    )
-    return page_to_dict(page, lambda item: string_to_dto(item).model_dump())
-
-
-@router.post("/strings", response_model=StringOut)
-def admin_create_string(
-    payload: StringWritePayload,
-    _: CurrentUser = Depends(get_current_admin),
-    catalog_repository=Depends(get_catalog_repository),
-) -> StringOut:
-    values = _prepare_string_values().execute(
-        brand=payload.brand,
-        model_name=payload.model_name,
-        overrides=payload.model_dump(exclude_none=True),
-    )
-    if payload.price_rm is not None:
-        cast(dict[str, object], values["inventory"])["selling_price"] = payload.price_rm
-        cast(dict[str, object], values["inventory"])["pricing_mode"] = "fixed_price"
-    item = CreateStringUseCase(catalog_repository=catalog_repository).execute(values)
-    return string_to_dto(item)
-
-
-@router.put("/strings/{string_id}", response_model=StringOut)
-def admin_update_string(
-    string_id: str,
-    payload: StringWritePayload,
-    _: CurrentUser = Depends(get_current_admin),
-    catalog_repository=Depends(get_catalog_repository),
-) -> StringOut:
-    _prepare_string_values().execute(
-        brand=payload.brand,
-        model_name=payload.model_name,
-        overrides={},
-    )
-    catalog_values = payload.model_dump(
-        exclude_none=True,
-        exclude={"brand", "price_rm"},
-    )
-    item = UpdateStringUseCase(catalog_repository=catalog_repository).execute(
-        string_id=string_id,
-        values={
-            "catalog": catalog_values,
-            "inventory": (
-                {
-                    "selling_price": payload.price_rm,
-                    "pricing_mode": "fixed_price",
-                }
-                if payload.price_rm is not None
-                else {}
-            ),
-        },
-    )
-    return string_to_dto(item)
-
-
 @router.post("/strings/{string_id}/image", response_model=StringOut)
 async def admin_upload_string_image(
     string_id: str,
@@ -343,18 +241,6 @@ def admin_delete_string_image(
     )
     if existing.image_url:
         register_removed_file(db, existing.image_url, delete_string_catalog_image)
-    return string_to_dto(item)
-
-
-@router.delete("/strings/{string_id}", response_model=StringOut)
-def admin_deactivate_string(
-    string_id: str,
-    _: CurrentUser = Depends(get_current_admin),
-    catalog_repository=Depends(get_catalog_repository),
-) -> StringOut:
-    item = DeactivateStringUseCase(catalog_repository=catalog_repository).execute(
-        string_id
-    )
     return string_to_dto(item)
 
 
@@ -449,25 +335,6 @@ def admin_update_string_editor(
 
 
 @router.get(
-    "/inventory/strings/{string_id}/movements",
-    response_model=dict,
-)
-def admin_inventory_movement_history(
-    string_id: str,
-    limit: int | None = Query(default=None, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
-    _: CurrentUser = Depends(get_current_admin),
-    catalog_repository=Depends(get_catalog_repository),
-) -> dict[str, object]:
-    page = ListInventoryMovementsUseCase(catalog_repository=catalog_repository).execute(
-        string_id=string_id,
-        limit=limit,
-        offset=offset,
-    )
-    return page_to_dict(page, lambda item: inventory_movement_to_dto(item).model_dump())
-
-
-@router.get(
     "/strings/{string_id}/official-performance",
     response_model=OfficialPerformanceOut,
 )
@@ -478,25 +345,6 @@ def admin_get_official_performance(
 ) -> OfficialPerformanceOut:
     item = GetOfficialPerformanceUseCase(catalog_repository=catalog_repository).execute(
         string_id=string_id
-    )
-    return official_performance_to_dto(item)
-
-
-@router.put(
-    "/strings/{string_id}/official-performance",
-    response_model=OfficialPerformanceOut,
-)
-def admin_update_official_performance(
-    string_id: str,
-    payload: OfficialPerformancePayload,
-    _: CurrentUser = Depends(get_current_admin),
-    catalog_repository=Depends(get_catalog_repository),
-) -> OfficialPerformanceOut:
-    item = UpdateOfficialPerformanceUseCase(
-        catalog_repository=catalog_repository
-    ).execute(
-        string_id=string_id,
-        values=payload.model_dump(exclude_none=True),
     )
     return official_performance_to_dto(item)
 
@@ -669,26 +517,6 @@ async def admin_upload_booking_photo(
     return booking_to_dto(booking, include_user=True, include_history=True)
 
 
-@router.get("/recommendations/logs", response_model=dict)
-def admin_recommendation_logs(
-    phone_number: str | None = Query(default=None, max_length=30),
-    algorithm_version: str | None = Query(default=None, max_length=80),
-    limit: int | None = Query(default=None, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
-    _: CurrentUser = Depends(get_current_admin),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
-) -> dict[str, object]:
-    page = ListRecommendationLogsUseCase(
-        recommendation_log_repository=recommendation_log_repository
-    ).execute(
-        phone_number=phone_number,
-        algorithm_version=algorithm_version,
-        limit=limit,
-        offset=offset,
-    )
-    return page_to_dict(page, recommendation_log_to_dict)
-
-
 @router.get("/recommendations/runs", response_model=dict)
 def admin_recommendation_runs(
     phone_number: str | None = Query(default=None, max_length=30),
@@ -741,25 +569,6 @@ def admin_update_business_hours(
         special_closed_dates=payload.special_closed_dates,
     )
     return business_hours_to_dto(hours)
-
-
-@router.get("/slots", response_model=dict)
-def admin_list_slots(
-    date_value: date | None = Query(default=None, alias="date"),
-    date_from: date | None = Query(default=None),
-    days: int = Query(default=7, ge=1, le=31),
-    _: CurrentUser = Depends(get_current_admin),
-    store_repository=Depends(get_store_repository),
-    booking_repository=Depends(get_booking_repository),
-    clock=Depends(get_clock),
-) -> dict[str, object]:
-    page = ListSlotsUseCase(
-        store_repository=store_repository,
-        booking_repository=booking_repository,
-        clock=clock,
-        store_timezone=get_settings().store_timezone,
-    ).execute(date_value=date_value, date_from=date_from, days=days)
-    return page_to_dict(page, lambda item: slot_to_dto(item).model_dump())
 
 
 @router.get("/check-in/lookup", response_model=CheckInLookupOut)

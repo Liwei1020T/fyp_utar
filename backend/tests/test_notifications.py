@@ -14,6 +14,7 @@ from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.models.notification import (
+    DeviceToken,
     NotificationDelivery,
 )
 from app.adapters.persistence.sqlalchemy.models.booking import Booking
@@ -99,6 +100,20 @@ def _admin_token() -> str:
     )
     assert response.status_code == 200
     return response.json()["access_token"]
+
+
+def _store_device_token(user_id: str, token: str) -> None:
+    with SessionLocal() as db:
+        db.add(
+            DeviceToken(
+                user_id=user_id,
+                token=token,
+                platform="ios",
+                enabled=True,
+                last_seen_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
 
 
 @pytest.fixture
@@ -321,15 +336,10 @@ def test_admin_push_delivery_returns_persisted_outcome_and_resends_once(
     monkeypatch,
     notification_activity: NotificationActivity,
 ) -> None:
-    token_response = client.post(
-        "/api/devices/push-token",
-        headers=_headers(notification_activity.owner_token),
-        json={
-            "token": "ExponentPushToken[transaction-test]",
-            "platform": "ios",
-        },
+    _store_device_token(
+        notification_activity.owner_id,
+        "ExponentPushToken[transaction-test]",
     )
-    assert token_response.status_code == 200
 
     settings = get_settings()
     monkeypatch.setattr(settings, "expo_push_enabled", True)
@@ -544,15 +554,10 @@ def test_admin_push_delivery_skips_provider_when_initial_commit_fails(
     monkeypatch,
     notification_activity: NotificationActivity,
 ) -> None:
-    token_response = client.post(
-        "/api/devices/push-token",
-        headers=_headers(notification_activity.owner_token),
-        json={
-            "token": "ExponentPushToken[commit-failure-test]",
-            "platform": "ios",
-        },
+    _store_device_token(
+        notification_activity.owner_id,
+        "ExponentPushToken[commit-failure-test]",
     )
-    assert token_response.status_code == 200
 
     settings = get_settings()
     monkeypatch.setattr(settings, "expo_push_enabled", True)

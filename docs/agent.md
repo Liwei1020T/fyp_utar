@@ -3,17 +3,18 @@
 ## Active Scope
 
 The FYP keeps one focused player recommendation Agent and one optional read-only
-admin summary surface:
+admin operations surface:
 
 - `/player/chatbot`: asks exactly one question at a time for playing style,
   preferred feel, durability importance, and maximum RM budget, then returns up
-  to three recommendation-preview results. It also provides a direct user-owned
-  entry to the existing human support screen.
+  to three recommendation-preview results. It answers live customer-facing store
+  information and provides a direct user-owned entry to the existing human
+  support screen.
 - `/player/recommend/explain/[id]`: explains the exact owned recommendation run
   in short player-friendly language and offers verified in-stock alternatives
   when the selected string is unavailable.
-- `/admin/assistant`: returns only the current read-only operations summary. It
-  does not search detailed records or propose changes.
+- `/admin/assistant`: returns the current read-only operations summary and can
+  search booking and inventory records. It does not propose changes.
 
 DeepSeek composes the response but never ranks strings. The existing V11
 recommendation use case remains the only ranking owner, and guided previews do
@@ -24,6 +25,7 @@ not update the saved profile or recommendation cache.
 Player model-call tools:
 
 - `get_string_details`
+- `get_store_information`
 - `preview_recommendation_what_if`
 - `find_in_stock_alternatives`
 
@@ -35,6 +37,8 @@ tool.
 Admin model-call tools:
 
 - `get_admin_operations_summary`
+- `find_admin_bookings`
+- `find_admin_inventory`
 
 The only active response action is `open_string`, used to open a verified
 replacement string. Evidence status and source metadata remain in the API
@@ -46,10 +50,9 @@ are hidden in the reduced mobile UI.
 The completed implementations remain in the repository and are not deleted.
 They are excluded from the active allowlists or hidden at the UI exposure point:
 
-- Player string comparison, review Q&A, store information, owned-booking lookup,
-  saved-preference lookup, latest-recommendation lookup, and Agent-created human
-  handoff.
-- Admin booking, inventory, payment, and support searches.
+- Player string comparison, review Q&A, owned-booking lookup, saved-preference
+  lookup, latest-recommendation lookup, and Agent-created human handoff.
+- Admin payment and support searches.
 - Admin booking-status, stock-count, and support-reply proposals and their
   confirmation handlers.
 - Evidence-status chips, source chips, suggested-question chips, and the broader
