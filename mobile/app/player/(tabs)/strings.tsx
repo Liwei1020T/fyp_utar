@@ -4,8 +4,6 @@ import { useRouter } from 'expo-router';
 import { 
   Search, 
   SlidersHorizontal, 
-  LayoutGrid, 
-  Tags,
   Plus,
   Check,
   ChevronRight,
@@ -14,10 +12,9 @@ import {
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
-import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
-import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { FloatingCompareTray } from '../../../components/shared/FloatingCompareTray';
@@ -34,8 +31,8 @@ const sortOptions = [
 ] as const;
 
 const modeOptions = [
-  { id: 'all', label: 'All Strings', icon: LayoutGrid },
-  { id: 'brand', label: 'By Brand', icon: Tags },
+  { id: 'all', label: 'All Strings' },
+  { id: 'brand', label: 'By Brand' },
 ] as const;
 
 type DisplayMode = (typeof modeOptions)[number]['id'];
@@ -152,10 +149,14 @@ export default function StringsCatalogScreen() {
 
   const renderHeaderComponent = () => (
     <View className="pb-3">
-      <AppSegmentedControl
-        options={modeOptions}
-        selectedId={displayMode}
-        onSelect={setDisplayMode}
+      <AppSelect
+        label="Catalog view"
+        value={displayMode}
+        options={modeOptions.map((option) => ({
+          id: option.id,
+          label: option.label,
+        }))}
+        onChange={(id) => setDisplayMode(id as DisplayMode)}
         className="mb-4"
       />
 
@@ -183,134 +184,92 @@ export default function StringsCatalogScreen() {
       </View>
 
       {showFilters && (
-        <View className="mb-4 bg-white/40 p-3 rounded-[24px] border border-neutral-100">
+        <View className="mb-4 rounded-[14px] border border-neutral-100 bg-white/40 p-3">
           <AppSection eyebrow="Collection" title="Category" variant="compact" className="mt-0">
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={['all', 'repulsion', 'balanced', 'control', 'durable']}
-              keyExtractor={(item) => item}
-              ItemSeparatorComponent={() => <View className="w-2" />}
-              renderItem={({ item }) => (
-                <AppChip
-                  label={item === 'all' ? 'All' : formatLabel(item)}
-                  size="sm"
-                  variant={selectedCategory === item ? 'primary' : 'neutral'}
-                  accessibilityState={{ selected: selectedCategory === item }}
-                  onPress={() => setSelectedCategory(item as typeof selectedCategory)}
-                />
-              )}
+            <AppSelect
+              label="String category"
+              value={selectedCategory}
+              options={['all', 'repulsion', 'balanced', 'control', 'durable'].map((item) => ({
+                id: item,
+                label: item === 'all' ? 'All categories' : formatLabel(item),
+              }))}
+              onChange={(id) => setSelectedCategory(id as typeof selectedCategory)}
             />
           </AppSection>
 
           <View className="h-px bg-neutral-100 my-4" />
 
           <AppSection eyebrow="Price" title="Price range" variant="compact" className="mt-0">
-            <View className="flex-row flex-wrap gap-2">
-              {[
-                ['all', 'All prices'],
-                ['below_30', 'Below RM30'],
-                ['30_50', 'RM30–RM50'],
-                ['above_50', 'Above RM50'],
-              ].map(([id, label]) => (
-                <AppChip
-                  key={id}
-                  label={label}
-                  size="sm"
-                  variant={selectedPrice === id ? 'primary' : 'neutral'}
-                  accessibilityState={{ selected: selectedPrice === id }}
-                  onPress={() => setSelectedPrice(id as typeof selectedPrice)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Price range"
+              value={selectedPrice}
+              options={[
+                { id: 'all', label: 'All prices' },
+                { id: 'below_30', label: 'Below RM30' },
+                { id: '30_50', label: 'RM30–RM50' },
+                { id: 'above_50', label: 'Above RM50' },
+              ]}
+              onChange={(id) => setSelectedPrice(id as typeof selectedPrice)}
+            />
           </AppSection>
 
           <View className="h-px bg-neutral-100 my-4" />
 
           <AppSection eyebrow="Specification" title="Gauge" variant="compact" className="mt-0">
-            <View className="flex-row flex-wrap gap-2">
-              {['all', ...gauges].map((gauge) => (
-                <AppChip
-                  key={gauge}
-                  label={gauge === 'all' ? 'All gauges' : gauge}
-                  size="sm"
-                  variant={
-                    (gauge === 'all' && !selectedGauge) ||
-                    selectedGauge === gauge
-                      ? 'secondary'
-                      : 'neutral'
-                  }
-                  accessibilityState={{
-                    selected:
-                      (gauge === 'all' && !selectedGauge) || selectedGauge === gauge,
-                  }}
-                  onPress={() => setSelectedGauge(gauge === 'all' ? null : gauge)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="String gauge"
+              value={selectedGauge ?? '__all_gauges__'}
+              placeholder="All gauges"
+              options={[
+                { id: '__all_gauges__', label: 'All gauges' },
+                ...gauges.map((gauge) => ({ id: gauge, label: gauge })),
+              ]}
+              onChange={(id) => setSelectedGauge(id === '__all_gauges__' ? null : id)}
+            />
           </AppSection>
 
           <View className="h-px bg-neutral-100 my-4" />
 
           <AppSection eyebrow="Strength" title="Feature score 8+" variant="compact" className="mt-0">
-            <View className="flex-row flex-wrap gap-2">
-              {(['power', 'control', 'durability', 'comfort', 'sound'] as const).map(
-                (feature) => (
-                  <AppChip
-                    key={feature}
-                    label={formatLabel(feature)}
-                    size="sm"
-                    variant={selectedFeature === feature ? 'info' : 'neutral'}
-                    accessibilityState={{ selected: selectedFeature === feature }}
-                    onPress={() =>
-                      setSelectedFeature((current) =>
-                        current === feature ? null : feature,
-                      )
-                    }
-                  />
+            <AppSelect
+              label="Feature score"
+              value={selectedFeature ?? '__any_feature__'}
+              placeholder="Any feature"
+              options={[
+                { id: '__any_feature__', label: 'Any feature' },
+                ...(['power', 'control', 'durability', 'comfort', 'sound'] as const).map(
+                  (feature) => ({ id: feature, label: formatLabel(feature) }),
                 ),
-              )}
-            </View>
+              ]}
+              onChange={(id) =>
+                setSelectedFeature(id === '__any_feature__' ? null : (id as typeof selectedFeature))
+              }
+            />
           </AppSection>
 
           <View className="h-px bg-neutral-100 my-4" />
 
           {displayMode === 'all' && (
             <AppSection eyebrow="Sort" title="Sort by" variant="compact" className="mt-0">
-              <View className="flex-row gap-2">
-                {sortOptions.map((item) => (
-                  <AppChip
-                    key={item.id}
-                    label={item.label}
-                    size="sm"
-                    variant={sortBy === item.id ? 'info' : 'neutral'}
-                    accessibilityState={{ selected: sortBy === item.id }}
-                    onPress={() => setSortBy(item.id)}
-                  />
-                ))}
-              </View>
+              <AppSelect
+                label="Sort by"
+                value={sortBy}
+                options={sortOptions.map((item) => ({ id: item.id, label: item.label }))}
+                onChange={(id) => setSortBy(id as typeof sortBy)}
+              />
             </AppSection>
           )}
 
           <AppSection eyebrow="Manufacturers" title="Brand" variant="compact" className="mt-0">
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={['all', ...brands]}
-              keyExtractor={(item) => item}
-              ItemSeparatorComponent={() => <View className="w-2" />}
-              renderItem={({ item }) => (
-                <AppChip
-                  label={item === 'all' ? 'All Brands' : item}
-                  size="sm"
-                  variant={(item === 'all' && !selectedBrand) || selectedBrand === item ? 'secondary' : 'neutral'}
-                  accessibilityState={{
-                    selected:
-                      (item === 'all' && !selectedBrand) || selectedBrand === item,
-                  }}
-                  onPress={() => setSelectedBrand(item === 'all' ? null : item)}
-                />
-              )}
+            <AppSelect
+              label="String brand"
+              value={selectedBrand ?? '__all_brands__'}
+              placeholder="All brands"
+              options={[
+                { id: '__all_brands__', label: 'All brands' },
+                ...brands.map((brand) => ({ id: brand, label: brand })),
+              ]}
+              onChange={(id) => setSelectedBrand(id === '__all_brands__' ? null : id)}
             />
           </AppSection>
         </View>
@@ -402,7 +361,7 @@ export default function StringsCatalogScreen() {
       <AppScreen
         headerVariant="primary"
         title="String catalog"
-        subtitle="Browse, filter, and compare strings with a compact view."
+        subtitle="Browse strings, compare setups, and choose what fits your game."
         scrollable={false}
       >
         <FlatList
@@ -412,7 +371,7 @@ export default function StringsCatalogScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           scrollIndicatorInsets={{ bottom: bottomContentInset + 60 }}
-          contentContainerStyle={{ paddingBottom: bottomContentInset + 80, paddingTop: 4 }}
+          contentContainerStyle={{ paddingBottom: bottomContentInset + 48, paddingTop: 4 }}
           ListHeaderComponent={renderHeaderComponent}
           ListEmptyComponent={
             <AppCard variant="subtle" padding="lg" className="mt-2">

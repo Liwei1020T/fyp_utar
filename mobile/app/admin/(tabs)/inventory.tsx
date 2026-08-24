@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowUpDown, Search, SlidersHorizontal } from 'lucide-react-native';
+import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { AdminInventoryCard } from '../../../components/admin/inventory/AdminInventoryCard';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
-import { AppChip } from '../../../components/ui/AppChip';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { appChromeColors } from '../../../components/ui/theme';
 import {
@@ -41,19 +41,6 @@ const SORT_OPTIONS: { id: InventorySort; label: string }[] = [
   { id: 'stock', label: 'Stock level' },
   { id: 'price', label: 'Price state' },
 ];
-
-function statusChipVariant(filter: InventoryStatusFilter) {
-  if (filter === 'out_of_stock') {
-    return 'danger' as const;
-  }
-  if (filter === 'low_stock' || filter === 'price_missing') {
-    return 'warning' as const;
-  }
-  if (filter === 'in_stock') {
-    return 'primary' as const;
-  }
-  return 'neutral' as const;
-}
 
 function matchesStatusFilter(item: StringItem, selected: InventoryStatusFilter) {
   if (selected === 'all') {
@@ -111,24 +98,25 @@ function SearchField({
   return (
     <View
       className={cn(
-        'h-12 flex-1 flex-row items-center gap-2 rounded-lg border bg-white px-3.5',
+        'h-[52px] flex-1 flex-row items-center gap-2.5 rounded-[12px] border bg-white px-4',
         isFocused ? 'border-primary-600' : 'border-[#D2D2D7]',
       )}
     >
       <Search
-        size={17}
+        size={20}
         color={isFocused ? appChromeColors.primary : 'rgba(29,29,31,0.48)'}
         strokeWidth={2}
       />
       <TextInput
-        placeholder="Search string or brand"
+        accessibilityLabel="Search inventory"
+        placeholder="Search inventory"
         value={value}
         onChangeText={onChangeText}
         onBlur={() => setIsFocused(false)}
         onFocus={() => setIsFocused(true)}
         placeholderTextColor="rgba(29,29,31,0.48)"
         selectionColor={appChromeColors.primary}
-        className="h-full flex-1 border-0 bg-transparent px-0 text-[14px] text-neutral-900 outline-none"
+        className="h-full flex-1 border-0 bg-transparent px-0 text-[16px] text-neutral-900 outline-none"
       />
     </View>
   );
@@ -139,11 +127,13 @@ function ToolbarButton({
   icon,
   isActive = false,
   onPress,
+  className,
 }: {
   label: string;
   icon: React.ReactNode;
   isActive?: boolean;
   onPress: () => void;
+  className?: string;
 }) {
   return (
     <Pressable
@@ -152,8 +142,9 @@ function ToolbarButton({
       accessibilityState={{ selected: isActive }}
       onPress={onPress}
       className={cn(
-        'h-11 flex-row items-center gap-1.5 rounded-[18px] border px-3.5',
+        'h-11 flex-row items-center gap-1.5 rounded-[10px] border px-3.5',
         isActive ? 'border-primary-100 bg-primary-50' : 'border-[#D8E2EE] bg-white',
+        className,
       )}
       style={({ pressed }) => (pressed ? styles.pressed : undefined)}
     >
@@ -228,9 +219,6 @@ export default function AdminInventoryScreen() {
     [filteredInventory],
   );
 
-  const selectedSortLabel =
-    SORT_OPTIONS.find((option) => option.id === sortBy)?.label ?? 'Sort';
-
   return (
     <AppScreen
       tone="admin"
@@ -254,93 +242,62 @@ export default function AdminInventoryScreen() {
               {summary.itemCount} items · {summary.lowStockCount} low stock · {summary.pricePendingCount} price pending
             </HeroText>
 
-            <View className="mb-3 flex-row items-center gap-2">
+            <View className="mb-3 gap-2">
               <SearchField value={searchQuery} onChangeText={setSearchQuery} />
-              <ToolbarButton
-                label="Filter"
-                isActive={showAdvancedFilters || Boolean(selectedBrand)}
-                icon={
-                  <SlidersHorizontal
-                    size={16}
-                    color={showAdvancedFilters || selectedBrand ? '#2F64B6' : '#64748B'}
-                    strokeWidth={2}
-                  />
-                }
-                onPress={() => setShowAdvancedFilters((value) => !value)}
-              />
-              <ToolbarButton
-                label={selectedSortLabel}
-                isActive
-                icon={<ArrowUpDown size={16} color="#2F64B6" strokeWidth={2} />}
-                onPress={() => {
-                  const currentIndex = SORT_OPTIONS.findIndex((item) => item.id === sortBy);
-                  const next = SORT_OPTIONS[(currentIndex + 1) % SORT_OPTIONS.length];
-                  setSortBy(next.id);
-                }}
-              />
+              <View className="flex-row gap-2">
+                <ToolbarButton
+                  label="Filter"
+                  className="flex-1"
+                  isActive={showAdvancedFilters || Boolean(selectedBrand)}
+                  icon={
+                    <SlidersHorizontal
+                      size={16}
+                      color={showAdvancedFilters || selectedBrand ? '#2F64B6' : '#64748B'}
+                      strokeWidth={2}
+                    />
+                  }
+                  onPress={() => setShowAdvancedFilters((value) => !value)}
+                />
+                <AppSelect
+                  label="Sort order"
+                  value={sortBy}
+                  options={SORT_OPTIONS.map((option) => ({
+                    id: option.id,
+                    label: option.label,
+                  }))}
+                  onChange={(id) => setSortBy(id as InventorySort)}
+                  className="flex-1"
+                />
+              </View>
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
+            <AppSelect
+              label="Stock status"
+              value={selectedStatus}
+              options={STATUS_FILTERS.map((filter) => ({
+                id: filter.id,
+                label: filter.label,
+              }))}
+              onChange={(id) => setSelectedStatus(id as InventoryStatusFilter)}
               className="mb-3"
-              contentContainerClassName="gap-2 pr-5"
-            >
-              {STATUS_FILTERS.map((filter) => (
-                <AppChip
-                  key={filter.id}
-                  label={filter.label}
-                  variant={
-                    selectedStatus === filter.id ? statusChipVariant(filter.id) : 'neutral'
-                  }
-                  onPress={() => setSelectedStatus(filter.id)}
-                />
-              ))}
-            </ScrollView>
+            />
 
             {showAdvancedFilters ? (
-              <View className="mb-4 rounded-[24px] border border-[#D8E2EE] bg-white px-4 py-4">
+              <View className="mb-4 rounded-[14px] border border-[#D8E2EE] bg-white px-4 py-4">
                 <HeroText className="text-[12px] font-bold uppercase tracking-[0.18em] text-primary-700">
-                  Filter shelf
+                  Filters
                 </HeroText>
 
-                <HeroText className="mt-3 text-[12px] font-semibold text-neutral-700">
-                  By brand
-                </HeroText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  className="mt-2"
-                  contentContainerClassName="gap-2 pr-5"
-                >
-                  <AppChip
-                    label="All brands"
-                    variant={!selectedBrand ? 'primary' : 'neutral'}
-                    onPress={() => setSelectedBrand(null)}
-                  />
-                  {brands.map((brand) => (
-                    <AppChip
-                      key={brand}
-                      label={brand}
-                      variant={selectedBrand === brand ? 'primary' : 'neutral'}
-                      onPress={() => setSelectedBrand(brand)}
-                    />
-                  ))}
-                </ScrollView>
-
-                <HeroText className="mt-4 text-[12px] font-semibold text-neutral-700">
-                  Sort
-                </HeroText>
-                <View className="mt-2 flex-row flex-wrap gap-2">
-                  {SORT_OPTIONS.map((option) => (
-                    <AppChip
-                      key={option.id}
-                      label={option.label}
-                      variant={sortBy === option.id ? 'secondary' : 'neutral'}
-                      onPress={() => setSortBy(option.id)}
-                    />
-                  ))}
-                </View>
+                <AppSelect
+                  label="Brand"
+                  value={selectedBrand ?? '__all_brands__'}
+                  placeholder="All brands"
+                  options={[
+                    { id: '__all_brands__', label: 'All brands' },
+                    ...brands.map((brand) => ({ id: brand, label: brand })),
+                  ]}
+                  onChange={(id) => setSelectedBrand(id === '__all_brands__' ? null : id)}
+                />
               </View>
             ) : null}
 

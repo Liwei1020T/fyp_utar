@@ -7,6 +7,7 @@ import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
+import { AppSelect } from '../../components/ui/AppSelect';
 import { HeroText } from '../../components/ui/heroui';
 import { formatDateTime } from '../../lib/formatters';
 import { BackendApiError, backendApi } from '../../services/backendApi';
@@ -158,28 +159,27 @@ export default function AdminNotificationsScreen() {
       onBackPress={() => router.back()}
     >
       <AppSection eyebrow="Compose" title="Send player update">
-        <View className="flex-row flex-wrap gap-2">
-          {recipients.map((recipient) => (
-            <AppChip
-              key={recipient.id}
-              label={`${recipient.name}${recipient.phone ? ` • ${recipient.phone}` : ''}`}
-              variant={
-                selectedUserId === recipient.id ? 'primary' : 'neutral'
-              }
-              onPress={() => setSelectedUserId(recipient.id)}
-            />
-          ))}
-        </View>
-        <View className="mt-3 flex-row flex-wrap gap-2">
-          {CATEGORIES.map((item) => (
-            <AppChip
-              key={item}
-              label={item}
-              variant={category === item ? 'secondary' : 'neutral'}
-              onPress={() => setCategory(item)}
-            />
-          ))}
-        </View>
+        <AppSelect
+          label="Player"
+          value={selectedUserId || null}
+          placeholder="Choose a player"
+          options={recipients.map((recipient) => ({
+            id: recipient.id,
+            label: recipient.name,
+            description: recipient.phone || 'Phone number unavailable',
+          }))}
+          onChange={setSelectedUserId}
+        />
+        <AppSelect
+          label="Notification category"
+          value={category}
+          options={CATEGORIES.map((item) => ({
+            id: item,
+            label: item.charAt(0).toUpperCase() + item.slice(1),
+          }))}
+          onChange={(value) => setCategory(value as BackendNotificationCategory)}
+          className="mt-3"
+        />
         <View className="mt-3 gap-3">
           <AppInput label="Title" value={title} onChangeText={setTitle} />
           <AppInput

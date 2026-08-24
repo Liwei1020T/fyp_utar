@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Banknote, QrCode, Wallet } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
-import { PaymentMethodCard } from '../../../components/payment/PaymentMethodCard';
 import { QrTransferPanel } from '../../../components/payment/QrTransferPanel';
 import {
   useAppStore,
@@ -33,28 +32,24 @@ const paymentOptions: {
   title: string;
   description: string;
   badge: string;
-  icon: React.ReactNode;
 }[] = [
   {
     method: 'qr_transfer',
     title: 'QR transfer',
     description: 'Scan the shop QR and submit your transfer screenshot for review.',
     badge: 'Recommended',
-    icon: <QrCode size={20} color="#22766D" />,
   },
   {
     method: 'cash',
     title: 'Cash',
     description: 'Pay at the shop and wait for the admin to confirm receipt.',
     badge: 'At shop',
-    icon: <Banknote size={20} color="#22766D" />,
   },
   {
     method: 'wallet_balance',
     title: 'Wallet balance',
     description: 'Pay immediately from your persisted StringSense balance.',
     badge: 'Stored',
-    icon: <Wallet size={20} color="#C98A2E" />,
   },
 ];
 
@@ -278,23 +273,16 @@ export default function PaymentScreen() {
       </AppCard>
 
       <AppSection eyebrow="Methods" title="Choose a payment method">
-        <View
-          className="gap-3"
-          accessibilityRole="radiogroup"
-          accessibilityLabel="Payment method"
-        >
-          {paymentOptions.map((item) => (
-            <PaymentMethodCard
-              key={item.method}
-              title={item.title}
-              description={item.description}
-              badge={item.badge}
-              icon={item.icon}
-              selected={selectedMethod === item.method}
-              onPress={() => setSelectedMethod(item.method)}
-            />
-          ))}
-        </View>
+        <AppSelect
+          label="Payment method"
+          value={selectedMethod}
+          options={paymentOptions.map((item) => ({
+            id: item.method,
+            label: item.title,
+            description: `${item.badge} · ${item.description}`,
+          }))}
+          onChange={(value) => setSelectedMethod(value as typeof selectedMethod)}
+        />
         {selectedMethod === 'qr_transfer' ? (
           <View className="mt-4">
             <QrTransferPanel

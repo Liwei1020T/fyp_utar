@@ -82,7 +82,7 @@ export function AppScreen({
             subtitle={subtitle}
             headerRight={headerRight}
             variant={headerVariant}
-            compact={compactHeader}
+            compact={compactHeader || (tone === 'admin' && headerVariant !== 'flow')}
             showBackButton={showBackButton}
             onBackPress={onBackPress}
             backAccessibilityLabel={backAccessibilityLabel}

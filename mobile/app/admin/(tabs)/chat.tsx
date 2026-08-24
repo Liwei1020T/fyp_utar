@@ -3,7 +3,7 @@ import { FlatList, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppChip } from '../../../components/ui/AppChip';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { ConversationCard } from '../../../components/chat/ConversationCard';
@@ -87,7 +87,7 @@ function AdminChatQueueContent({ user }: { user: AdminProfile }) {
   );
 
   return (
-    <AppScreen headerVariant="primary" title="Chat queue" subtitle="Booking and general support conversations for the shop admin desk." scrollable={false}>
+    <AppScreen tone="admin" headerVariant="primary" compactHeader title="Chat queue" subtitle="Booking and general support conversations for the shop admin desk." scrollable={false}>
       <FlatList
         className="flex-1"
         data={adminConversations}
@@ -96,7 +96,7 @@ function AdminChatQueueContent({ user }: { user: AdminProfile }) {
         refreshing={isRefreshing}
         onRefresh={() => void refreshConversations()}
         ListHeaderComponent={
-          <View className="gap-4 pb-6">
+          <View className="gap-3 pb-4">
             {error ? (
               <AppCard
                 variant="subtle"
@@ -114,21 +114,19 @@ function AdminChatQueueContent({ user }: { user: AdminProfile }) {
                 />
               </AppCard>
             ) : null}
-            <View className="flex-row flex-wrap gap-2">
-              {(['all', 'waiting_admin', 'admin_joined', 'resolved', 'closed'] as const).map((item) => (
-                <AppChip
-                  key={item}
-                  label={item === 'all' ? 'All' : formatConversationMode(item)}
-                  size="md"
-                  variant={filter === item ? 'primary' : 'neutral'}
-                  onPress={() => setFilter(item)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Conversation status"
+              value={filter}
+              options={(['all', 'waiting_admin', 'admin_joined', 'resolved', 'closed'] as const).map((item) => ({
+                id: item,
+                label: item === 'all' ? 'All conversations' : formatConversationMode(item),
+              }))}
+              onChange={(id) => setFilter(id as typeof filter)}
+            />
           </View>
         }
         renderItem={({ item }) => (
-          <View className="mb-4">
+          <View className="mb-2">
             <ConversationCard conversation={item} onPress={() => router.push(`/admin/chat/${item.id}`)} />
           </View>
         )}

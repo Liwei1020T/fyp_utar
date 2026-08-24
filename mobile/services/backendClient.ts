@@ -101,11 +101,11 @@ async function request<T>(
     }
     if (error instanceof Error && error.name === 'AbortError') {
       throw new BackendApiError(
-        `The backend did not respond within ${REQUEST_TIMEOUT_MS / 1000} seconds. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL is correct.`,
+        'The service is taking longer than expected. Check your connection and try again.',
       );
     }
     throw new BackendApiError(
-      'Unable to reach the backend. Confirm the API is running and EXPO_PUBLIC_API_BASE_URL points to it.',
+      'We could not reach StringSence right now. Check your connection and try again.',
     );
   } finally {
     clearTimeout(timeoutId);

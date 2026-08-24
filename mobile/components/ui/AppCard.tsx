@@ -67,9 +67,10 @@ export function AppCard({
     <Surface
       variant={nativeVariantMap[variant]}
       className={cn(
-        'overflow-hidden rounded-[18px]',
+        'overflow-hidden',
         shellStyles[variant],
-        className
+        className,
+        'rounded-[14px]',
       )}
       {...props}
       {...(onPress
@@ -78,7 +79,7 @@ export function AppCard({
     >
       <View
         className={cn(
-          'overflow-hidden rounded-[18px]',
+          'overflow-hidden rounded-[14px]',
           coreStyles[variant]
         )}
       >

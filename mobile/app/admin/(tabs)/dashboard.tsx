@@ -201,13 +201,13 @@ export default function AdminDashboardScreen() {
           <View className="flex-row items-start justify-between gap-4">
             <View className="flex-1">
               <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
-                Counter pulse
+                Today’s work
               </HeroText>
               <HeroText className="mt-3 text-[26px] font-bold leading-[31px] tracking-tight text-white">
                 {analytics ? `${inProgressCount} jobs on the bench` : 'Live service status'}
               </HeroText>
               <HeroText className="mt-1.5 text-[13px] leading-[19px] text-secondary-100">
-                Open the queue to move work through each service stage.
+                Open the service queue to move work through each stage.
               </HeroText>
             </View>
             <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-white/10">
@@ -349,7 +349,7 @@ export default function AdminDashboardScreen() {
               onChangeText={setToolQuery}
               leftAdornment={<Search size={18} color={appChromeColors.textMuted} />}
             />
-            <View className="flex-row flex-wrap gap-3">
+            <View className="gap-2">
             {filteredActions.map((action) => {
               const Icon = action.icon;
 
@@ -358,8 +358,8 @@ export default function AdminDashboardScreen() {
                   key={action.title}
                   variant={action.title === 'Check-in' ? 'highlighted' : 'elevated'}
                   padding="sm"
-                  className="w-[48%]"
-                  contentClassName="min-h-[116px] justify-between"
+                  className="w-full"
+                  contentClassName="min-h-[72px] flex-row items-center gap-3"
                   onPress={() => router.push(action.route as never)}
                 >
                   <View
@@ -374,7 +374,7 @@ export default function AdminDashboardScreen() {
                       color={action.title === 'Check-in' ? '#FFFFFF' : appChromeColors.primary}
                     />
                   </View>
-                  <View className="mt-3">
+                  <View className="min-w-0 flex-1">
                     <HeroText className="text-[15px] font-semibold leading-5 tracking-tight text-slate-900">
                       {action.title}
                     </HeroText>

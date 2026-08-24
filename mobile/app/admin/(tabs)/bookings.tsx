@@ -5,6 +5,7 @@ import { CalendarDays, Search } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
@@ -112,9 +113,9 @@ function AdminQueueCard({
   const stringSpec = `${stringLabel} · ${booking.requestedTension} lbs`;
 
   return (
-    <View className="mb-3.5">
+    <View className="mb-2">
       <AppCard variant="elevated" padding="sm" onPress={onPress}>
-        <View className="gap-3">
+        <View className="gap-2">
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1">
               <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -150,7 +151,7 @@ function AdminQueueCard({
             </View>
           </View>
 
-          <View className="flex-row items-center gap-3 rounded-[18px] border border-[#D9E6F4] bg-[#F4F8FD] px-3.5 py-2.5">
+          <View className="flex-row items-center gap-2 rounded-[10px] border border-[#D9E6F4] bg-[#F4F8FD] px-3 py-2">
             <View className="flex-1 gap-0.5">
               <HeroText className="text-[11px] font-semibold text-primary-800">
                 {getAdminActionLabel(booking.status)}
@@ -275,9 +276,9 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
         ListHeaderComponent={
-          <View className="gap-3 pb-4">
-            <AppCard variant="subtle" padding="sm">
-              <HeroText className="text-[13px] font-semibold tracking-tight text-neutral-700">
+          <View className="gap-2 pb-3">
+            <AppCard variant="subtle" padding="none" contentClassName="px-3 py-2.5">
+              <HeroText className="text-[12px] font-semibold leading-4 tracking-tight text-neutral-700">
                 Today: {todayCount} bookings · {inProgressCount} in progress · {readyCount} ready for collection
               </HeroText>
             </AppCard>
@@ -292,17 +293,15 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
               inputClassName="text-[15px] font-medium"
             />
 
-            <View className="flex-row flex-wrap gap-2">
-              {FILTER_OPTIONS.map((option) => (
-                <AppChip
-                  key={option.value}
-                  label={option.label}
-                  size="md"
-                  variant={filter === option.value ? 'primary' : 'neutral'}
-                  onPress={() => setFilter(option.value)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Booking status"
+              value={filter}
+              options={FILTER_OPTIONS.map((option) => ({
+                id: option.value,
+                label: option.label,
+              }))}
+              onChange={(id) => setFilter(id as typeof filter)}
+            />
           </View>
         }
         ListEmptyComponent={

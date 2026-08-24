@@ -40,8 +40,8 @@ export function AppIconButton({
   };
 
   const sizeStyles = {
-    md: 'h-11 w-11 rounded-[14px]',
-    lg: 'h-12 w-12 rounded-[16px]',
+    md: 'h-11 w-11 rounded-[10px]',
+    lg: 'h-12 w-12 rounded-[14px]',
   };
 
   return (
@@ -56,7 +56,8 @@ export function AppIconButton({
         'items-center justify-center border',
         sizeStyles[size],
         variantStyles[variant],
-        className
+        className,
+        size === 'lg' ? 'rounded-[14px]' : 'rounded-[10px]',
       )}
       hitSlop={6}
     >

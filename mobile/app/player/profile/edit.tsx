@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Platform, Pressable, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { AppMotion } from '../../../components/ui/AppMotion';
@@ -411,17 +412,13 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
             control={control}
             name="recentGoal"
             render={({ field: { onChange, value } }) => (
-              <View className="mt-4 flex-row flex-wrap gap-2">
-                {recentGoalOptions.map((option) => (
-                  <AppChip
-                    key={option}
-                    label={option}
-                    size="md"
-                    variant={value === option ? 'primary' : 'neutral'}
-                    onPress={() => onChange(option)}
-                  />
-                ))}
-              </View>
+              <AppSelect
+                label="Recent goal"
+                value={value}
+                options={recentGoalOptions.map((option) => ({ id: option, label: option }))}
+                onChange={onChange}
+                className="mt-4"
+              />
             )}
           />
         </AppCard>
@@ -432,30 +429,16 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
           control={control}
           name="playingStyle"
           render={({ field: { onChange, value } }) => (
-            <View className="flex-row flex-wrap gap-3">
-              {styleOptions.map((style) => (
-                <Pressable
-                  key={style.value}
-                  accessibilityRole="radio"
-                  accessibilityLabel={`${style.label}. ${style.description}`}
-                  accessibilityState={{ checked: value === style.value }}
-                  className="w-full"
-                  onPress={() => onChange(style.value)}
-                >
-                  <AppCard
-                    variant={value === style.value ? 'highlighted' : 'elevated'}
-                    padding="md"
-                  >
-                    <HeroText className="text-base font-bold tracking-tight text-neutral-950">
-                      {style.label}
-                    </HeroText>
-                    <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-                      {style.description}
-                    </HeroText>
-                  </AppCard>
-                </Pressable>
-              ))}
-            </View>
+            <AppSelect
+              label="Playing style"
+              value={value}
+              options={styleOptions.map((style) => ({
+                id: style.value,
+                label: style.label,
+                description: style.description,
+              }))}
+              onChange={onChange}
+            />
           )}
         />
       </AppSection>
@@ -466,17 +449,12 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
             control={control}
             name="skillLevel"
             render={({ field: { onChange, value } }) => (
-              <View className="flex-row flex-wrap gap-2">
-                {skillOptions.map((level) => (
-                  <AppChip
-                    key={level}
-                    label={level}
-                    size="md"
-                    variant={value === level ? 'primary' : 'neutral'}
-                    onPress={() => onChange(level)}
-                  />
-                ))}
-              </View>
+              <AppSelect
+                label="Skill level"
+                value={value}
+                options={skillOptions.map((level) => ({ id: level, label: level }))}
+                onChange={onChange}
+              />
             )}
           />
 
@@ -484,17 +462,15 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
             control={control}
             name="playFrequency"
             render={({ field: { onChange, value } }) => (
-              <View className="flex-row flex-wrap gap-2">
-                {(['Social', 'Weekly', 'Tournament'] as const).map((frequency) => (
-                  <AppChip
-                    key={frequency}
-                    label={formatPlayFrequency(frequency)}
-                    size="md"
-                    variant={value === frequency ? 'info' : 'neutral'}
-                    onPress={() => onChange(frequency)}
-                  />
-                ))}
-              </View>
+              <AppSelect
+                label="Play frequency"
+                value={value}
+                options={(['Social', 'Weekly', 'Tournament'] as const).map((frequency) => ({
+                  id: frequency,
+                  label: formatPlayFrequency(frequency),
+                }))}
+                onChange={onChange}
+              />
             )}
           />
         </View>
@@ -514,17 +490,12 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
           control={control}
           name="preferredFeel"
           render={({ field: { onChange, value } }) => (
-            <View className="flex-row flex-wrap gap-2">
-              {preferredFeelOptions.map((option) => (
-                <AppChip
-                  key={option}
-                  label={option}
-                  size="md"
-                  variant={value === option ? 'primary' : 'neutral'}
-                  onPress={() => onChange(option)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Preferred feel"
+              value={value}
+              options={preferredFeelOptions.map((option) => ({ id: option, label: option }))}
+              onChange={onChange}
+            />
           )}
         />
       </AppSection>
@@ -538,17 +509,12 @@ function ProfileEditContent({ user }: { user: PlayerProfile }) {
           control={control}
           name="preferredGauge"
           render={({ field: { onChange, value } }) => (
-            <View className="flex-row flex-wrap gap-2">
-              {preferredGaugeOptions.map((option) => (
-                <AppChip
-                  key={option}
-                  label={option}
-                  size="md"
-                  variant={value === option ? 'primary' : 'neutral'}
-                  onPress={() => onChange(option)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Preferred gauge"
+              value={value}
+              options={preferredGaugeOptions.map((option) => ({ id: option, label: option }))}
+              onChange={onChange}
+            />
           )}
         />
       </AppSection>

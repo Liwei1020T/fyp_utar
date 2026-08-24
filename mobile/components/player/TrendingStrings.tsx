@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HeroText } from '../ui/heroui';
+import { AppButton } from '../ui/AppButton';
 import { StringProductImage } from '../shared/StringProductImage';
 import { formatCurrency } from '../../lib/formatters';
 import {
@@ -37,7 +38,7 @@ export function TrendingStrings() {
   if (isHydratingConfiguredTrending) {
     return (
       <View className="mt-1 px-4">
-        <View className="rounded-[20px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
+        <View className="rounded-[14px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
           <HeroText className="text-[14px] font-semibold text-slate-900">
             Loading featured strings...
           </HeroText>
@@ -52,13 +53,20 @@ export function TrendingStrings() {
   if (trending.length === 0) {
     return (
       <View className="mt-1 px-4">
-        <View className="rounded-[20px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
+        <View className="rounded-[14px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
           <HeroText className="text-[14px] font-semibold text-slate-900">
-            No trending strings yet
+            Featured strings are being refreshed
           </HeroText>
           <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
-            This section will show only the strings that the admin marks as shown on home.
+            Browse the full catalog to explore the strings currently available in the shop.
           </HeroText>
+          <AppButton
+            label="Browse catalog"
+            variant="outline"
+            size="sm"
+            className="mt-3 self-start"
+            onPress={() => router.push('/player/strings')}
+          />
         </View>
       </View>
     );
@@ -88,8 +96,8 @@ export function TrendingStrings() {
               onPress={() => router.push(`/player/strings/${item.id}`)}
               className="w-[152px] active:opacity-80"
             >
-              <View className="overflow-hidden rounded-[18px] border border-[#DCE6F7] bg-white px-3 py-3 shadow-sm">
-                <View className={`rounded-[16px] border px-3 py-3 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E8EEF8] bg-[#F8FBFF]'}`}>
+              <View className="overflow-hidden rounded-[14px] border border-[#DCE6F7] bg-white px-3 py-3 shadow-sm">
+                <View className={`rounded-[12px] border px-3 py-3 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E8EEF8] bg-[#F8FBFF]'}`}>
                   <View className="flex-row items-start justify-between">
                     <View className={`rounded-full px-2.5 py-1 ${isTopPick ? 'bg-accent-100/80' : 'bg-white/85'}`}>
                       <HeroText className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">

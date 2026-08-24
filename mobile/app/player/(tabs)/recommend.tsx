@@ -6,6 +6,7 @@ import { HeroText } from '../../../components/ui/heroui';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import {
@@ -131,8 +132,8 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
   return (
     <AppScreen
       headerVariant="flow"
-      title="Recommendation lab"
-      subtitle="Generate a backend-scored shortlist from your saved player profile."
+      title="Find your next string"
+      subtitle="Use your saved profile to get a shortlist that fits your game."
       showBackButton={router.canGoBack()}
       onBackPress={() => router.back()}
       footer={
@@ -150,13 +151,13 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
             onPress={() => router.push('/player/profile/edit')}
           >
             <HeroText className="text-xs font-bold uppercase tracking-widest text-primary-700">
-              Edit profile and advanced preferences
+              Edit profile
             </HeroText>
           </Pressable>
         </View>
       }
     >
-      <AppCard variant="dark" className="rounded-[24px]" padding="md">
+      <AppCard variant="dark" padding="md">
         <View className="flex-row items-center justify-between gap-4">
           <View className="flex-1">
             <AppChip label="RECOMMENDATION" variant="accent" size="sm" className="self-start" />
@@ -189,7 +190,7 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
         </View>
       </AppCard>
 
-      <AppSection title="Live Profile Summary" className="mt-2">
+      <AppSection title="Your profile" className="mt-2">
         <AppCard variant="subtle" padding="sm" className="border-dashed border-neutral-200">
           <View className="flex-row flex-wrap gap-y-2">
             <View className="w-1/2 pr-2">
@@ -219,17 +220,17 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
       <AppSection title="Racket context">
         <AppCard variant="subtle" padding="sm">
           {rackets.length > 0 ? (
-            <View className="flex-row flex-wrap gap-2">
-              {rackets.map((racket) => (
-                <AppChip
-                  key={racket.id}
-                  label={`${racket.brand} ${racket.model}`}
-                  variant={selectedRacketId === racket.id ? 'primary' : 'neutral'}
-                  accessibilityState={{ selected: selectedRacketId === racket.id }}
-                  onPress={() => setSelectedRacketId(racket.id)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Racket"
+              value={selectedRacketId}
+              placeholder="Choose a saved racket"
+              options={rackets.map((racket) => ({
+                id: racket.id,
+                label: `${racket.brand} ${racket.model}`,
+                description: `${racket.nickname} · ${racket.currentTension} lbs`,
+              }))}
+              onChange={setSelectedRacketId}
+            />
           ) : (
             <HeroText className="text-sm leading-5 text-neutral-600">
               No saved racket is available. This run will use your profile only;

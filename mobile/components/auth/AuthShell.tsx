@@ -1,10 +1,10 @@
 import React from 'react';
 import { Image, View } from 'react-native';
-import { Activity, ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { AppScreen } from '../shared/AppScreen';
+import { AppBrandLogo } from '../ui/AppBrandLogo';
 import { AppIconButton } from '../ui/AppIconButton';
 import { HeroText } from '../ui/heroui';
-import { appChromeColors } from '../ui/theme';
 
 interface AuthShellProps {
   title: string;
@@ -45,19 +45,7 @@ export function AuthShell({
             className="min-w-0 flex-row items-center gap-3"
             style={{ minWidth: 0, flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}
           >
-            <View
-              className="h-12 w-12 items-center justify-center rounded-[16px] bg-[#F5D67A]"
-              style={{
-                width: 48,
-                height: 48,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 16,
-                backgroundColor: appChromeColors.accentSoftBorder,
-              }}
-            >
-              <Activity size={22} color={appChromeColors.heroDeep} />
-            </View>
+            <AppBrandLogo size={48} accessibilityLabel="StringSense brand logo" />
             <View className="min-w-0 flex-1" style={{ minWidth: 0, flex: 1 }}>
               <HeroText className="text-[17px] font-semibold tracking-tight text-white">
                 StringSense

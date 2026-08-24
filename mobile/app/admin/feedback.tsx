@@ -8,6 +8,7 @@ import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
+import { AppSelect } from '../../components/ui/AppSelect';
 import { HeroText } from '../../components/ui/heroui';
 import { formatDateTime, formatLabel } from '../../lib/formatters';
 import { BackendApiError, backendApi } from '../../services/backendApi';
@@ -35,7 +36,6 @@ export default function AdminFeedbackScreen() {
   const [stringId, setStringId] = useState<string | undefined>();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [showStringFilters, setShowStringFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [communitySummary, setCommunitySummary] = useState<
@@ -176,30 +176,20 @@ export default function AdminFeedbackScreen() {
             </View>
           ) : communitySummary ? (
             <View className="gap-4">
-              <View className="flex-row flex-wrap gap-2">
-                {communityScopes.map((scope) => {
+              <AppSelect
+                label="Evidence scope"
+                value={selectedCommunityScope}
+                options={communityScopes.map((scope) => {
                   const scopeKey = scope.racket_model_key ?? 'global';
-                  return (
-                    <AppChip
-                      key={scopeKey}
-                      label={
-                        scope.racket_model_key
-                          ? scope.racket_model_key
-                              .split(':')
-                              .map(formatLabel)
-                              .join(' · ')
-                          : 'Global strings'
-                      }
-                      variant={
-                        selectedCommunityScope === scopeKey
-                          ? 'primary'
-                          : 'neutral'
-                      }
-                      onPress={() => setSelectedCommunityScope(scopeKey)}
-                    />
-                  );
+                  return {
+                    id: scopeKey,
+                    label: scope.racket_model_key
+                      ? scope.racket_model_key.split(':').map(formatLabel).join(' · ')
+                      : 'Global strings',
+                  };
                 })}
-              </View>
+                onChange={setSelectedCommunityScope}
+              />
 
               <HeroText selectable className="text-xs leading-5 text-neutral-500">
                 Policy {activeCommunityScope?.policy_version ?? '—'} · snapshot{' '}
@@ -248,43 +238,30 @@ export default function AdminFeedbackScreen() {
       </AppSection>
 
       <AppSection eyebrow="Filters" title="Narrow feedback">
-        <View className="flex-row flex-wrap gap-2">
-          {[undefined, 1, 2, 3, 4, 5].map((value) => (
-            <AppChip
-              key={value ?? 'all'}
-              label={value == null ? 'All ratings' : `${value}/5`}
-              variant={rating === value ? 'primary' : 'neutral'}
-              onPress={() => setRating(value)}
-            />
-          ))}
-        </View>
+        <AppSelect
+          label="Rating"
+          value={rating == null ? 'all' : String(rating)}
+          options={[{ id: 'all', label: 'All ratings' }, ...[1, 2, 3, 4, 5].map((value) => ({
+            id: String(value),
+            label: `${value}/5`,
+          }))]}
+          onChange={(value) => setRating(value === 'all' ? undefined : Number(value))}
+        />
         {strings.length ? (
-          <View className="mt-3">
-            <AppButton
-              label={showStringFilters ? 'Hide string filters' : stringId ? 'Change string filter (1)' : 'Filter by string'}
-              variant="outline"
-              size="sm"
-              accessibilityState={{ expanded: showStringFilters }}
-              onPress={() => setShowStringFilters((current) => !current)}
-            />
-            {showStringFilters ? (
-              <View className="mt-3 flex-row flex-wrap gap-2">
-                <AppChip
-                  label="All strings"
-                  variant={!stringId ? 'secondary' : 'neutral'}
-                  onPress={() => setStringId(undefined)}
-                />
-                {strings.map((item) => (
-                  <AppChip
-                    key={item.id}
-                    label={`${item.brand} ${item.model}`}
-                    variant={stringId === item.id ? 'secondary' : 'neutral'}
-                    onPress={() => setStringId(item.id)}
-                  />
-                ))}
-              </View>
-            ) : null}
-          </View>
+          <AppSelect
+            label="String"
+            value={stringId ?? '__all_strings__'}
+            placeholder="All strings"
+            options={[
+              { id: '__all_strings__', label: 'All strings' },
+              ...strings.map((item) => ({
+                id: item.id,
+                label: `${item.brand} ${item.model}`,
+              })),
+            ]}
+            onChange={(id) => setStringId(id === '__all_strings__' ? undefined : id)}
+            className="mt-3"
+          />
         ) : null}
         <View className="mt-3 flex-row gap-3">
           <View className="flex-1">

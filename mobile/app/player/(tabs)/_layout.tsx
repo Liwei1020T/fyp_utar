@@ -48,7 +48,7 @@ export default function TabsLayout() {
           paddingHorizontal: 2,
           marginHorizontal: 12,
           marginBottom: bottomSpacing,
-          borderRadius: 22,
+          borderRadius: 16,
           ...(Platform.OS === 'web'
             ? { boxShadow: '0 14px 32px rgba(9, 29, 62, 0.22)' }
             : {
@@ -69,7 +69,7 @@ export default function TabsLayout() {
           minHeight: 48,
           marginHorizontal: 0,
           marginVertical: 1,
-          borderRadius: 15,
+          borderRadius: 10,
           overflow: 'hidden',
         },
       }}

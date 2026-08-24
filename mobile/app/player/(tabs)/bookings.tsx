@@ -6,8 +6,8 @@ import { Search, Info } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
-import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
 import { BookingCard } from '../../../components/booking/BookingCard';
 import {
@@ -78,6 +78,7 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
     () => bookings.filter((b) => b.playerId === user.id && b.status === 'ready_for_collection').length,
     [bookings, user.id]
   );
+  const hasActiveFilters = filter !== 'all' || search.trim().length > 0;
 
   return (
     <AppScreen
@@ -113,17 +114,15 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
               inputClassName="text-[15px] font-medium"
             />
 
-            <View className="flex-row flex-wrap gap-2">
-              {filters.map((item) => (
-                <AppChip
-                  key={item}
-                  label={item === 'all' ? 'All' : formatBookingStatus(item)}
-                  size="sm"
-                  variant={filter === item ? 'primary' : 'neutral'}
-                  onPress={() => setFilter(item)}
-                />
-              ))}
-            </View>
+            <AppSelect
+              label="Booking status"
+              value={filter}
+              options={filters.map((item) => ({
+                id: item,
+                label: item === 'all' ? 'All bookings' : formatBookingStatus(item),
+              }))}
+              onChange={(value) => setFilter(value as typeof filter)}
+            />
           </View>
         }
         renderItem={({ item }) => {
@@ -144,16 +143,30 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
         ListEmptyComponent={
           <AppCard variant="subtle" className="mt-4 items-center" padding="lg">
             <HeroText className="text-base font-semibold text-neutral-800">
-              No bookings found
+              {hasActiveFilters ? 'No bookings match these filters' : 'No bookings yet'}
             </HeroText>
             <HeroText className="mt-2 text-center text-sm leading-6 text-neutral-500">
-              Adjust your filters or start a new booking.
+              {hasActiveFilters
+                ? 'Clear a filter or search for another booking.'
+                : 'Start a booking to see your service progress here.'}
             </HeroText>
-            <AppButton
-              label="Start a booking"
-              className="mt-5"
-              onPress={() => router.push('/player/bookings/new')}
-            />
+            {hasActiveFilters ? (
+              <AppButton
+                label="Clear filters"
+                variant="outline"
+                className="mt-5"
+                onPress={() => {
+                  setFilter('all');
+                  setSearch('');
+                }}
+              />
+            ) : (
+              <AppButton
+                label="Start a booking"
+                className="mt-5"
+                onPress={() => router.push('/player/bookings/new')}
+              />
+            )}
           </AppCard>
         }
       />

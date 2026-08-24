@@ -19,29 +19,29 @@ interface AppPageHeaderProps {
 }
 
 const appHeaderMetrics = {
-  primaryMinHeight: 84,
-  secondaryMinHeight: 68,
-  flowMinHeight: 76,
+  primaryMinHeight: 68,
+  secondaryMinHeight: 58,
+  flowMinHeight: 68,
 } as const;
 
 const baseContainerStyles = 'w-full self-center overflow-hidden border';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[28px] border-[#D6E4FF] bg-[#EAF2FF] shadow-subtle',
-  secondary: 'rounded-[22px] border-[#DCE3EC] bg-white shadow-subtle',
-  flow: 'rounded-[24px] border-[#163B7A] bg-[#102F63] shadow-float',
+  primary: 'rounded-[16px] border-[#D6E4FF] bg-[#EAF2FF] shadow-subtle',
+  secondary: 'rounded-[14px] border-[#DCE3EC] bg-white shadow-subtle',
+  flow: 'rounded-[16px] border-[#163B7A] bg-[#102F63] shadow-float',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
-  primary: 'px-5 py-4',
-  secondary: 'px-4 py-3',
-  flow: 'px-4 py-4',
+  primary: 'px-4 py-3',
+  secondary: 'px-4 py-2.5',
+  flow: 'px-4 py-3',
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[27px] font-bold leading-[32px] tracking-tight text-slate-900',
-  secondary: 'text-[17px] font-semibold tracking-normal text-slate-900',
-  flow: 'text-[20px] font-bold leading-6 tracking-tight text-white',
+  primary: 'text-[20px] font-bold leading-[24px] tracking-tight text-slate-900',
+  secondary: 'text-[16px] font-semibold leading-5 tracking-normal text-slate-900',
+  flow: 'text-[18px] font-bold leading-[22px] tracking-tight text-white',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {
@@ -131,10 +131,10 @@ export function AppPageHeader({
             {subtitle ? (
               <HeroText
                 className={cn(
-                  'mt-1 text-[13px] leading-[18px]',
+                  'mt-0.5 text-[12px] leading-4',
                   variant === 'flow' ? 'text-secondary-100' : 'text-slate-600',
                 )}
-                numberOfLines={compact ? 1 : 2}
+                numberOfLines={compact && variant === 'flow' ? 1 : 2}
               >
                 {subtitle}
               </HeroText>

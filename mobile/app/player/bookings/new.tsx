@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -12,7 +12,7 @@ import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppInput } from '../../../components/ui/AppInput';
-import { AppSegmentedControl } from '../../../components/ui/AppSegmentedControl';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { SlotPicker } from '../../../components/booking/SlotPicker';
@@ -45,6 +45,8 @@ const SLOT_PERIOD_OPTIONS = [
   { id: 'afternoon', label: 'Afternoon' },
   { id: 'evening', label: 'Evening' },
 ] as const;
+
+const MANUAL_RACKET_OPTION_ID = '__manual_racket__';
 
 function getSlotPeriod(slot: BookingSlot): SlotPeriod {
   const hour = Number(slot.time.split(':')[0] ?? '0');
@@ -128,6 +130,15 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   const availableDates = Array.from(
     new Set(sourceSlots.filter((item) => item.adminId === adminId).map((item) => item.date))
   );
+  const selectDate = (date: string) => {
+    setSelectedDate(date);
+    setSelectedSlotId(
+      sourceSlots.find(
+        (item) => item.adminId === adminId && item.date === date && item.availableSpots > 0,
+      )?.id,
+    );
+    setSlotError(null);
+  };
   const selectedSlot = slots.find(
     (item) => item.id === selectedSlotId && item.availableSpots > 0
   );
@@ -535,66 +546,31 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
 
       <AppSection eyebrow="Setup" title="Racket and tension" variant="compact">
         <AppCard variant="elevated" padding="md">
-          <HeroText className="mb-2 ml-1 text-sm font-semibold text-foreground">
-            Racket passport
-          </HeroText>
-          <View className="mb-4 gap-2">
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityLabel="Enter racket manually"
-              accessibilityState={{ checked: !selectedRacket }}
-              onPress={() => setSelectedRacketId(null)}
-            >
-              <AppCard
-                variant={!selectedRacket ? 'highlighted' : 'subtle'}
-                padding="sm"
-              >
-                <HeroText className="text-sm font-semibold text-neutral-900">
-                  Manual racket entry
-                </HeroText>
-                <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
-                  Use this for a frame that is not registered yet.
-                </HeroText>
-              </AppCard>
-            </Pressable>
-            {playerRackets.map((racket) => {
-              const isSelected = racket.id === selectedRacket?.id;
-              return (
-                <Pressable
-                  key={racket.id}
-                  accessibilityRole="radio"
-                  accessibilityLabel={`${racket.nickname}, ${racket.brand} ${racket.model}`}
-                  accessibilityState={{ checked: isSelected }}
-                  onPress={() => setSelectedRacketId(racket.id)}
-                >
-                  <AppCard
-                    variant={isSelected ? 'highlighted' : 'subtle'}
-                    padding="sm"
-                  >
-                    <View className="flex-row items-center justify-between gap-3">
-                      <View className="min-w-0 flex-1">
-                        <HeroText className="text-sm font-semibold text-neutral-900">
-                          {racket.nickname}
-                        </HeroText>
-                        <HeroText className="mt-1 text-xs leading-5 text-neutral-500">
-                          {racket.brand} {racket.model}
-                        </HeroText>
-                      </View>
-                      {isSelected ? (
-                        <AppChip label="Selected" variant="primary" />
-                      ) : null}
-                    </View>
-                  </AppCard>
-                </Pressable>
-              );
-            })}
-            {playerRackets.length === 0 ? (
-              <AppCard variant="subtle" padding="sm">
-                <HeroText className="text-xs leading-5 text-neutral-500">
-                  No saved rackets yet. Continue manually or register one first.
-                </HeroText>
-              </AppCard>
-            ) : null}
+          <View className="mb-4 gap-3">
+            <AppSelect
+              label="Racket passport"
+              value={selectedRacket?.id ?? MANUAL_RACKET_OPTION_ID}
+              options={[
+                {
+                  id: MANUAL_RACKET_OPTION_ID,
+                  label: 'Manual racket entry',
+                  description: 'Use this for a frame that is not registered yet.',
+                },
+                ...playerRackets.map((racket) => ({
+                  id: racket.id,
+                  label: racket.nickname,
+                  description: `${racket.brand} ${racket.model} · ${racket.currentTension} lbs · ${racket.serviceCount} services`,
+                })),
+              ]}
+              onChange={(id) =>
+                setSelectedRacketId(id === MANUAL_RACKET_OPTION_ID ? null : id)
+              }
+              helperText={
+                playerRackets.length === 0
+                  ? 'No saved rackets yet. Continue manually or register one first.'
+                  : 'Choose a saved racket or enter the frame details manually.'
+              }
+            />
             {params.racketId && !selectedRacket ? (
               <HeroText className="text-xs font-medium leading-5 text-amber-700">
                 The requested saved racket is unavailable. Choose another racket
@@ -721,24 +697,23 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
         title="Pickup or counter drop-off"
         variant="compact"
       >
-        <View className="flex-row gap-3">
-          {[
-            ['counter_dropoff', 'Counter drop-off'],
-            ['pickup_request', 'Request pickup'],
-          ].map(([id, label]) => (
-            <View key={id} className="flex-1">
-              <AppButton
-                label={label}
-                variant={serviceMethod === id ? 'primary' : 'outline'}
-                onPress={() =>
-                  setServiceMethod(
-                    id as 'counter_dropoff' | 'pickup_request',
-                  )
-                }
-              />
-            </View>
-          ))}
-        </View>
+        <AppSelect
+          label="Service method"
+          value={serviceMethod}
+          options={[
+            {
+              id: 'counter_dropoff',
+              label: 'Counter drop-off',
+              description: 'Bring the racket to the shop service desk.',
+            },
+            {
+              id: 'pickup_request',
+              label: 'Request pickup',
+              description: 'Ask the shop to confirm pickup logistics.',
+            },
+          ]}
+          onChange={(id) => setServiceMethod(id as typeof serviceMethod)}
+        />
         <HeroText className="mt-3 text-xs leading-5 text-neutral-500">
           Pickup is a request for the selected slot; the shop confirms logistics
           through booking updates.
@@ -761,43 +736,26 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
               </HeroText>
             </AppCard>
           ) : null}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-2 pr-2"
-          >
-            {availableDates.map((date) => (
-              <AppChip
-                key={date}
-                label={formatDateLabel(date)}
-                size="md"
-                variant={selectedDate === date ? 'primary' : 'neutral'}
-                className={
-                  selectedDate === date
-                    ? 'border-primary-500 bg-primary-50 shadow-sm'
-                    : 'bg-white/95'
-                }
-                onPress={() => {
-                  setSelectedDate(date);
-                  setSelectedSlotId(
-                    sourceSlots.find(
-                      (item) =>
-                        item.adminId === adminId &&
-                        item.date === date &&
-                        item.availableSpots > 0
-                    )?.id
-                  );
-                  setSlotError(null);
-                }}
-              />
-            ))}
-          </ScrollView>
+          <AppSelect
+            label="Drop-off date"
+            value={selectedDate}
+            placeholder="Choose a date"
+            options={availableDates.map((date) => ({
+              id: date,
+              label: formatDateLabel(date),
+              description: `${sourceSlots.filter((item) => item.adminId === adminId && item.date === date && item.availableSpots > 0).length} available time slots`,
+            }))}
+            onChange={selectDate}
+          />
           {showPeriodFilter ? (
-            <AppSegmentedControl
-              options={SLOT_PERIOD_OPTIONS}
-              selectedId={selectedPeriod}
-              onSelect={setSelectedPeriod}
-              className="mt-0"
+            <AppSelect
+              label="Time of day"
+              value={selectedPeriod}
+              options={SLOT_PERIOD_OPTIONS.map((option) => ({
+                id: option.id,
+                label: option.label,
+              }))}
+              onChange={(id) => setSelectedPeriod(id as SlotPeriod)}
             />
           ) : null}
           <SlotPicker

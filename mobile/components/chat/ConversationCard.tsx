@@ -33,27 +33,27 @@ export function ConversationCard({ conversation, onPress }: ConversationCardProp
       accessibilityLabel={`${conversation.title}. ${summaryLabel}. ${conversation.statusLabel}. Updated ${updatedLabel}`}
       accessibilityHint="Open this conversation"
     >
-      <AppCard variant="elevated" padding="md">
-        <View className="flex-row items-start gap-4">
-          <View className="h-12 w-12 items-center justify-center rounded-[18px] bg-primary-50">
+      <AppCard variant="elevated" padding="sm">
+        <View className="flex-row items-start gap-3">
+          <View className="h-10 w-10 items-center justify-center rounded-[10px] bg-primary-50">
             <MessageSquareText size={20} color="#2F64B6" />
           </View>
           <View className="flex-1">
             <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1">
-                <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
+                <HeroText className="text-[15px] font-bold leading-5 tracking-tight text-neutral-950">
                   {conversation.title}
                 </HeroText>
-                <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
+                <HeroText className="mt-0.5 text-[13px] leading-[18px] text-neutral-500" numberOfLines={3}>
                   {conversation.summary}
                 </HeroText>
               </View>
               <ChevronRight size={18} color="#94A3B8" />
             </View>
-            <View className="mt-4 flex-row flex-wrap gap-2">
+            <View className="mt-2 flex-row flex-wrap gap-2">
               <AppChip label={conversation.statusLabel} variant={statusVariant} />
             </View>
-            <HeroText className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+            <HeroText className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
               Updated {updatedLabel}
             </HeroText>
           </View>

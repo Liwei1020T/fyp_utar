@@ -43,12 +43,15 @@ Semantic status colors may remain for operational clarity, but they should stay 
 
 ## Components
 
+- Brand identity uses `AppBrandLogo` everywhere an in-app logo is shown; native and web app icons use the same `assets/icon.png` source.
 - Cards use `AppCard`.
 - Buttons use `AppButton`.
 - Inputs use `AppInput`.
+- Dropdowns use `AppSelect`: closed state shows one selected value, expanded state reveals the option list in place, and the selected option uses a check mark.
+- Use `AppSelect` for single-choice fields and filters; reserve chips for multi-select tags, status badges, and quick actions.
 - Icon buttons use `AppIconButton`.
 - Use Lucide icons consistently.
-- Use 8px radius for rectangular cards, buttons, inputs, and tab surfaces.
+- Use 10px radius for controls, 14px for cards and list rows, and 16px for page headers or feature panels.
 - Pills are allowed only for chips and small labels.
 - Avoid multiple nested borders inside cards unless the inner boundary has a clear functional purpose.
 
@@ -57,7 +60,7 @@ Semantic status colors may remain for operational clarity, but they should stay 
 - Primary CTA: Apple Blue `#0071E3`, white text.
 - Secondary CTA: white surface, visible neutral border, near-black or link-blue text.
 - Dark CTA: near-black fill, white text.
-- Button corners: 8px.
+- Button corners: 10px for standard actions and 14px for large full-width actions.
 - Press feedback should be subtle opacity or a tiny scale change.
 
 ## Cards And Elevation

@@ -11,6 +11,7 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText, HeroTextField } from '../../../components/ui/heroui';
 import {
   buildStringDisplayName,
@@ -530,24 +531,21 @@ function ChoiceGroup<T extends string | boolean>({
 }) {
   return (
     <View className="mb-4">
-      <HeroText className="mb-2 ml-1 text-sm font-semibold text-foreground">
-        {label}
-      </HeroText>
-      <View className="flex-row flex-wrap gap-2">
-        {options.map((option) => (
-          <AppChip
-            key={String(option.id)}
-            label={option.label}
-            variant={value === option.id ? 'primary' : 'neutral'}
-            onPress={() => onChange(option.id)}
-          />
-        ))}
-      </View>
-      {helperText ? (
-        <HeroText className="mt-2 ml-1 text-xs leading-5 text-muted">
-          {helperText}
-        </HeroText>
-      ) : null}
+      <AppSelect
+        label={label}
+        value={String(value)}
+        options={options.map((option) => ({
+          id: String(option.id),
+          label: option.label,
+        }))}
+        onChange={(id) => {
+          const option = options.find((item) => String(item.id) === id);
+          if (option) {
+            onChange(option.id);
+          }
+        }}
+        helperText={helperText}
+      />
     </View>
   );
 }

@@ -56,7 +56,7 @@ function buildInitials(item: StringItem) {
 
 export function AdminStringThumbnail({
   item,
-  size = 64,
+  size = 56,
 }: {
   item: StringItem;
   size?: number;
@@ -67,7 +67,7 @@ export function AdminStringThumbnail({
 
   return (
     <View
-      className="items-center justify-center overflow-hidden rounded-[18px] border border-field-border bg-app-muted"
+      className="items-center justify-center overflow-hidden rounded-[10px] border border-field-border bg-app-muted"
       style={{ height: size, width: size }}
     >
       {!hasError && imageUrl ? (
@@ -157,10 +157,10 @@ export function AdminInventoryCard({
 
   return (
     <AppCard
-      padding="sm"
+      padding="none"
       variant={attentionOnly ? 'highlighted' : 'default'}
-      className={cn('rounded-[24px]', attentionOnly ? 'border-warning-100/90' : undefined)}
-      contentClassName="p-3.5"
+      className={cn(attentionOnly ? 'border-warning-100/90' : undefined)}
+      contentClassName="p-3"
     >
       <View className="flex-row gap-3">
         <AdminStringThumbnail item={item} />

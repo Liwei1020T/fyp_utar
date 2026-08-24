@@ -3,8 +3,10 @@ import { View } from 'react-native';
 import { backendApi, BackendApiError } from '../../services/backendApi';
 import type { BackendRacketModelOption } from '../../types/backend';
 import { AppButton } from '../ui/AppButton';
-import { AppChip } from '../ui/AppChip';
+import { AppSelect } from '../ui/AppSelect';
 import { HeroText } from '../ui/heroui';
+
+const OTHER_MODEL_OPTION_ID = '__other_racket_model__';
 
 interface RacketModelSelectorProps {
   token: string | null;
@@ -60,9 +62,6 @@ export function RacketModelSelector({
 
   return (
     <View className="mb-4 gap-3">
-      <HeroText className="text-sm font-semibold text-neutral-800">
-        Standard model
-      </HeroText>
       {isLoading ? (
         <HeroText className="text-sm text-neutral-500">
           Loading standard models...
@@ -81,32 +80,29 @@ export function RacketModelSelector({
           />
         </View>
       ) : null}
-      <View className="flex-row flex-wrap gap-2">
-        {options.map((option) => {
-          const isSelected = selectedKey === option.key;
-          return (
-            <AppChip
-              key={option.key}
-              label={`${option.brand} ${option.model}`}
-              variant={isSelected ? 'primary' : 'neutral'}
-              accessibilityState={{ selected: isSelected }}
-              onPress={() => onSelect(option)}
-              size="md"
-            />
-          );
-        })}
-        <AppChip
-          label="Other model"
-          variant={selectedKey === null ? 'primary' : 'neutral'}
-          accessibilityState={{ selected: selectedKey === null }}
-          onPress={() => onSelect(null)}
-          size="md"
+      {!isLoading ? (
+        <AppSelect
+          label="Standard model"
+          value={selectedKey ?? OTHER_MODEL_OPTION_ID}
+          placeholder="Choose a standard model"
+          options={[
+            ...options.map((option) => ({
+              id: option.key,
+              label: `${option.brand} ${option.model}`,
+            })),
+            {
+              id: OTHER_MODEL_OPTION_ID,
+              label: 'Other model',
+              description: 'Enter the brand and model manually.',
+            },
+          ]}
+          onChange={(id) => {
+            const selectedOption = options.find((option) => option.key === id);
+            onSelect(selectedOption ?? null);
+          }}
+          helperText="Standard models use exact shared racket evidence. Other models use global community evidence."
         />
-      </View>
-      <HeroText className="text-xs leading-5 text-neutral-500">
-        Standard models use an exact shared CF identity. Other models use global
-        community evidence without cross-model guessing.
-      </HeroText>
+      ) : null}
     </View>
   );
 }

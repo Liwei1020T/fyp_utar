@@ -24,12 +24,16 @@ export function MetricStatCard({
 
   return (
     <View style={{ width: cardWidth, minWidth: 0 }}>
-      <AppCard variant="elevated" padding="sm">
+      <AppCard
+        variant="default"
+        padding="none"
+        contentClassName="min-h-[104px] p-3"
+      >
         <View
-          className={`h-10 w-10 items-center justify-center rounded-[10px] ${accentClassName}`}
+          className={`h-9 w-9 items-center justify-center rounded-[10px] ${accentClassName}`}
           style={{
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 10,
@@ -37,23 +41,26 @@ export function MetricStatCard({
         >
           {icon}
         </View>
-        <HeroText className="mt-3 text-[12px] font-medium leading-4 tracking-normal text-slate-600">
-          {title}
-        </HeroText>
-        <HeroText
-          className={
-            value.length > 7
-              ? 'mt-1 text-[20px] font-bold tracking-tight text-slate-900'
-              : 'mt-1 text-[24px] font-bold tracking-tight text-slate-900'
-          }
-        >
-          {value}
-        </HeroText>
-        {subtitle ? (
-          <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-            {subtitle}
+        <View className="mt-2 min-w-0">
+          <HeroText className="text-[12px] font-medium leading-4 tracking-normal text-slate-600" numberOfLines={2}>
+            {title}
           </HeroText>
-        ) : null}
+          <HeroText
+            className={
+              value.length > 7
+                ? 'mt-0.5 text-[19px] font-bold tracking-tight text-slate-900'
+                : 'mt-0.5 text-[22px] font-bold tracking-tight text-slate-900'
+            }
+            numberOfLines={1}
+          >
+            {value}
+          </HeroText>
+          {subtitle ? (
+            <HeroText className="mt-0.5 text-xs leading-4 text-slate-600" numberOfLines={1}>
+              {subtitle}
+            </HeroText>
+          ) : null}
+        </View>
       </AppCard>
     </View>
   );

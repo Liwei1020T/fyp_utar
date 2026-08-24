@@ -69,7 +69,7 @@ export function AppChip({
       className={cn(
         'border',
         sizeStyles[size],
-        onPress ? 'min-h-11 min-w-11' : '',
+        onPress ? 'min-h-9 min-w-9' : '',
         variantStyles[variant],
         className
       )}

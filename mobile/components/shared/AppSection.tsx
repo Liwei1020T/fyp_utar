@@ -25,24 +25,24 @@ export function AppSection({
   ...props
 }: AppSectionProps) {
   const spacingStyles = {
-    default: 'mt-7',
-    compact: 'mt-5',
-    hero: 'mt-8',
+    default: 'mt-6',
+    compact: 'mt-4',
+    hero: 'mt-6',
   };
 
   const titleStyles = {
-    default: 'text-[19px] font-semibold tracking-tight text-slate-900 leading-tight',
-    compact: 'text-[17px] font-semibold tracking-tight text-slate-900 leading-tight',
-    hero: 'text-[24px] font-semibold tracking-tight text-slate-900 leading-tight',
+    default: 'text-[17px] font-semibold tracking-tight text-slate-900 leading-tight',
+    compact: 'text-[15px] font-semibold tracking-tight text-slate-900 leading-tight',
+    hero: 'text-[20px] font-semibold tracking-tight text-slate-900 leading-tight',
   };
 
   return (
     <View className={cn(spacingStyles[variant], className)} {...props}>
       {(title || rightAction) && (
-        <View className="mb-3.5 flex-row items-start justify-between gap-4">
+        <View className="mb-2.5 flex-row items-start justify-between gap-3">
           <View className="flex-1">
             {eyebrow ? (
-              <HeroText className="mb-1 text-[12px] font-medium tracking-normal text-primary-700">
+              <HeroText className="mb-0.5 text-[11px] font-medium tracking-normal text-primary-700">
                 {eyebrow}
               </HeroText>
             ) : null}
@@ -52,7 +52,7 @@ export function AppSection({
               </HeroText>
             )}
             {subtitle && (
-              <HeroText className="mt-1 text-[14px] leading-5 text-slate-600">
+              <HeroText className="mt-0.5 text-[13px] leading-[18px] text-slate-600">
                 {subtitle}
               </HeroText>
             )}

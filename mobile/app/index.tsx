@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import { Activity } from 'lucide-react-native';
 import { useAppStore, useCurrentUser } from '../store/appStore';
 import { getRoleHome } from '../lib/navigation';
+import { AppBrandLogo } from '../components/ui/AppBrandLogo';
 import { HeroText } from '../components/ui/heroui';
 import { appChromeColors } from '../components/ui/theme';
 
@@ -32,9 +32,7 @@ export default function IndexScreen() {
       }}
     >
       <View className="items-center" style={{ alignItems: 'center' }}>
-        <View className="h-20 w-20 items-center justify-center rounded-[20px] bg-white shadow-float">
-          <Activity size={34} color={appChromeColors.primary} strokeWidth={1.8} />
-        </View>
+        <AppBrandLogo size={80} accessibilityLabel="StringSense brand logo" />
         <HeroText className="mt-7 text-[30px] font-bold leading-[36px] tracking-normal text-[#1D1D1F]">
           StringSense
         </HeroText>

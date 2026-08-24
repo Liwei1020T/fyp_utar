@@ -60,10 +60,15 @@ export default function AdminAnalyticsScreen() {
         setPopularStrings(popular);
       } catch (loadError) {
         if (!cancelled) {
+          const statusCode = loadError instanceof BackendApiError
+            ? loadError.statusCode
+            : undefined;
           setError(
-            loadError instanceof BackendApiError
-              ? loadError.message
-              : 'Failed to load analytics.',
+            statusCode === 401
+              ? 'Your admin session has expired. Sign in again to view live analytics.'
+              : statusCode !== undefined && statusCode >= 500
+                ? 'Analytics is temporarily unavailable. Try again in a moment.'
+                : 'We could not load analytics right now. Check your connection and try again.',
           );
         }
       } finally {

@@ -5,10 +5,8 @@ import * as ImagePicker from 'expo-image-picker';
 import {
   Boxes,
   CalendarClock,
-  CheckCircle2,
   Clock3,
   Circle,
-  ChevronDown,
   Store,
   TimerReset,
   Upload,
@@ -17,6 +15,7 @@ import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
@@ -190,50 +189,6 @@ function SummaryRow({
   );
 }
 
-function SelectionField({
-  label,
-  value,
-  placeholder,
-  isOpen,
-  onPress,
-}: {
-  label: string;
-  value?: string;
-  placeholder: string;
-  isOpen: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      className={`flex-1 rounded-[20px] border px-4 py-4 ${
-        isOpen ? 'border-primary-500 bg-primary-50/50' : 'border-[#DCE6F7] bg-white'
-      }`}
-    >
-      <View className="flex-row items-start justify-between gap-3">
-        <View className="flex-1">
-          <HeroText className="text-[13px] font-semibold text-neutral-800">
-            {label}
-          </HeroText>
-          <HeroText
-            className={`mt-3 text-[16px] font-semibold ${
-              value ? 'text-neutral-900' : 'text-neutral-400'
-            }`}
-          >
-            {value ?? placeholder}
-          </HeroText>
-        </View>
-        <ChevronDown
-          size={18}
-          color={isOpen ? '#2F64B6' : '#94A3B8'}
-        />
-      </View>
-    </Pressable>
-  );
-}
-
 function AdminUpdateFeed({
   updates,
   onOpenPhoto,
@@ -332,9 +287,6 @@ export default function AdminBookingDetailScreen() {
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
   const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
   const [expectedCompletionTime, setExpectedCompletionTime] = useState('');
-  const [openExpectedCompletionSelector, setOpenExpectedCompletionSelector] = useState<
-    'date' | 'time' | null
-  >(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [updateComment, setUpdateComment] = useState('');
@@ -477,9 +429,6 @@ export default function AdminBookingDetailScreen() {
   const isStatusChangeAllowed = !isWorkflowUnchanged && allowedNextStatuses.includes(status);
   const canSaveWorkflow =
     (!isWorkflowUnchanged && isStatusChangeAllowed) || hasExpectedCompletionChange;
-  const selectedExpectedCompletionDateLabel =
-    expectedCompletionDateOptions.find((item) => item.value === expectedCompletionDate)?.label;
-
   const buildExpectedCompletionTimestamp = () => {
     const dateValue = expectedCompletionDate.trim();
     const timeValue = expectedCompletionTime.trim();
@@ -792,107 +741,56 @@ export default function AdminBookingDetailScreen() {
         variant="compact"
       >
         <View className="gap-3">
-          <View className="flex-row flex-wrap gap-2.5">
-            {WORKFLOW_STATUSES.map((item) => {
+          <AppSelect
+            label="Next workflow status"
+            value={status}
+            options={WORKFLOW_STATUSES.map((item) => {
               const isCurrent = booking.status === item;
-              const isSelected = status === item;
               const isSelectable = allowedNextStatuses.includes(item);
-
-              return (
-                <AppCard
-                  key={item}
-                  variant={isCurrent || isSelected ? 'highlighted' : 'subtle'}
-                  padding="sm"
-                  onPress={isSelectable ? () => setStatus(item) : undefined}
-                  className={`min-w-[148px] flex-1 ${!isCurrent && !isSelectable ? 'opacity-60' : ''}`}
-                >
-                  <View className="gap-1.5">
-                    <View className="flex-row items-center justify-between gap-2">
-                      <AppChip
-                        label={formatBookingStatus(item)}
-                        variant={isCurrent || isSelected ? getBookingStatusVariant(item) : 'neutral'}
-                        size="sm"
-                        style={{ pointerEvents: 'none' }}
-                      />
-                      {isCurrent ? <CheckCircle2 size={15} color="#2F64B6" /> : null}
-                    </View>
-                    <HeroText className="text-[11px] font-medium leading-4 text-neutral-500">
-                      {getWorkflowOptionHint({
-                        isBookingCompleted,
-                        isCurrent,
-                        isSelectable,
-                        isSelected,
-                      })}
-                    </HeroText>
-                  </View>
-                </AppCard>
-              );
+              return {
+                id: item,
+                label: formatBookingStatus(item),
+                description: getWorkflowOptionHint({
+                  isBookingCompleted,
+                  isCurrent,
+                  isSelectable,
+                  isSelected: status === item,
+                }),
+                disabled: !isCurrent && !isSelectable,
+              };
             })}
-          </View>
+            onChange={(value) => setStatus(value as BookingStatus)}
+          />
 
-          <View className="rounded-[22px] border border-[#DCE6F7] bg-white px-4 py-4">
+          <View className="rounded-[14px] border border-[#DCE6F7] bg-white px-3 py-3">
             <HeroText className="text-[13px] font-semibold text-neutral-800">
               Expected completion
             </HeroText>
             <HeroText className="mt-1 text-[12px] leading-5 text-neutral-500">
               Set when the racket should be ready for collection.
             </HeroText>
-            <View className="mt-3 flex-row gap-3">
-              <SelectionField
+            <View className="mt-3 gap-3">
+              <AppSelect
                 label="Date"
-                value={selectedExpectedCompletionDateLabel}
+                value={expectedCompletionDate || null}
                 placeholder="Select date"
-                isOpen={openExpectedCompletionSelector === 'date'}
-                onPress={() =>
-                  setOpenExpectedCompletionSelector((current) =>
-                    current === 'date' ? null : 'date'
-                  )
-                }
+                options={expectedCompletionDateOptions.map((option) => ({
+                  id: option.value,
+                  label: option.label,
+                }))}
+                onChange={setExpectedCompletionDate}
               />
-              <SelectionField
+              <AppSelect
                 label="Time"
-                value={expectedCompletionTime || undefined}
+                value={expectedCompletionTime || null}
                 placeholder="Select time"
-                isOpen={openExpectedCompletionSelector === 'time'}
-                onPress={() =>
-                  setOpenExpectedCompletionSelector((current) =>
-                    current === 'time' ? null : 'time'
-                  )
-                }
+                options={expectedCompletionTimeOptions.map((option) => ({
+                  id: option,
+                  label: option,
+                }))}
+                onChange={setExpectedCompletionTime}
               />
             </View>
-            {openExpectedCompletionSelector === 'date' ? (
-              <View className="mt-4 flex-row flex-wrap gap-2">
-                {expectedCompletionDateOptions.map((option) => (
-                  <AppChip
-                    key={option.value}
-                    label={option.label}
-                    variant={
-                      expectedCompletionDate === option.value ? 'primary' : 'neutral'
-                    }
-                    onPress={() => {
-                      setExpectedCompletionDate(option.value);
-                      setOpenExpectedCompletionSelector('time');
-                    }}
-                  />
-                ))}
-              </View>
-            ) : null}
-            {openExpectedCompletionSelector === 'time' ? (
-              <View className="mt-4 flex-row flex-wrap gap-2">
-                {expectedCompletionTimeOptions.map((option) => (
-                  <AppChip
-                    key={option}
-                    label={option}
-                    variant={expectedCompletionTime === option ? 'primary' : 'neutral'}
-                    onPress={() => {
-                      setExpectedCompletionTime(option);
-                      setOpenExpectedCompletionSelector(null);
-                    }}
-                  />
-                ))}
-              </View>
-            ) : null}
             {(expectedCompletionDate || expectedCompletionTime) ? (
               <View className="mt-4">
                 <AppChip
@@ -901,12 +799,11 @@ export default function AdminBookingDetailScreen() {
                   onPress={() => {
                     setExpectedCompletionDate('');
                     setExpectedCompletionTime('');
-                    setOpenExpectedCompletionSelector(null);
                   }}
                 />
               </View>
             ) : null}
-          </View>
+        </View>
 
           {error ? (
             <HeroText className="text-sm font-semibold text-danger-600">
@@ -1037,16 +934,15 @@ export default function AdminBookingDetailScreen() {
                 resizeMode="cover"
                 accessibilityLabel="Selected booking update photo"
               />
-              <View className="flex-row flex-wrap gap-2">
-                {PHOTO_TYPE_OPTIONS.map((option) => (
-                  <AppChip
-                    key={option.value}
-                    label={option.label}
-                    variant={updatePhotoType === option.value ? 'primary' : 'neutral'}
-                    onPress={() => setUpdatePhotoType(option.value)}
-                  />
-                ))}
-              </View>
+              <AppSelect
+                label="Photo type"
+                value={updatePhotoType}
+                options={PHOTO_TYPE_OPTIONS.map((option) => ({
+                  id: option.value,
+                  label: option.label,
+                }))}
+                onChange={(value) => setUpdatePhotoType(value as BackendBookingPhotoType)}
+              />
             </View>
           ) : null}
           {updateError ? (

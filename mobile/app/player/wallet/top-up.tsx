@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { QrTransferPanel } from '../../../components/payment/QrTransferPanel';
@@ -107,38 +107,33 @@ export default function WalletTopUpScreen() {
         </HeroText>
       </AppCard>
 
-      <View
-        className="mt-6 flex-row gap-2"
-        accessibilityRole="radiogroup"
-        accessibilityLabel="Top-up payment method"
-      >
-        <AppChip
-          label="QR transfer"
-          size="md"
-          variant={method === 'qr_transfer' ? 'primary' : 'neutral'}
-          onPress={() => setMethod('qr_transfer')}
-          accessibilityState={{ selected: method === 'qr_transfer' }}
-        />
-        <AppChip
-          label="Cash"
-          size="md"
-          variant={method === 'cash' ? 'primary' : 'neutral'}
-          onPress={() => setMethod('cash')}
-          accessibilityState={{ selected: method === 'cash' }}
-        />
-      </View>
+      <AppSelect
+        label="Payment method"
+        value={method}
+        options={[
+          {
+            id: 'qr_transfer',
+            label: 'QR transfer',
+            description: 'Upload payment proof for admin review.',
+          },
+          {
+            id: 'cash',
+            label: 'Cash at shop',
+            description: 'Pay at the counter and wait for admin confirmation.',
+          },
+        ]}
+        onChange={(value) => setMethod(value as typeof method)}
+        className="mt-6"
+      />
 
-      <View className="mt-6 flex-row flex-wrap gap-2">
-        {amounts.map((value) => (
-          <AppChip
-            key={value}
-            label={`RM ${value}`}
-            size="md"
-            variant={amount === value ? 'primary' : 'neutral'}
-            onPress={() => setAmount(value)}
-          />
-        ))}
-      </View>
+      <AppSelect
+        label="Quick amount"
+        value={amounts.includes(amount) ? amount : null}
+        placeholder="Choose a quick amount"
+        options={amounts.map((value) => ({ id: value, label: `RM ${value}` }))}
+        onChange={setAmount}
+        className="mt-4"
+      />
 
       <AppInput
         label="Custom amount"

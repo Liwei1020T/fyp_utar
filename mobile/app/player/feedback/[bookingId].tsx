@@ -1,15 +1,15 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import {
   useFocusEffect,
   useLocalSearchParams,
   useRouter,
 } from 'expo-router';
-import { Star } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
@@ -495,34 +495,19 @@ export default function FeedbackScreen() {
 
       <AppSection eyebrow="Service" title="Overall stringing service">
         <AppCard variant="highlighted" padding="lg">
-          <View
-            className="flex-row gap-2"
-            accessibilityRole="radiogroup"
-            accessibilityLabel="Overall service rating"
-          >
-            {[1, 2, 3, 4, 5].map((value) => (
-              <Pressable
-                key={value}
-                accessibilityRole="radio"
-                accessibilityLabel={`${value} out of 5 stars`}
-                accessibilityState={{ checked: rating === value }}
-                onPress={() => {
-                  setRating(value);
-                  markDirty('rating');
-                }}
-                className="h-12 w-12 items-center justify-center rounded-full bg-white/70"
-              >
-                <Star
-                  size={22}
-                  color={rating != null && value <= rating ? '#FBBF24' : '#CBD5E1'}
-                  fill={rating != null && value <= rating ? '#FBBF24' : 'transparent'}
-                />
-              </Pressable>
-            ))}
-          </View>
-          <HeroText className="mt-4 text-base font-semibold text-neutral-900">
-            {rating == null ? 'No service rating selected' : `Overall service: ${rating}/5`}
-          </HeroText>
+          <AppSelect
+            label="Overall service rating"
+            value={rating == null ? null : String(rating)}
+            placeholder="Choose a rating"
+            options={[1, 2, 3, 4, 5].map((value) => ({
+              id: String(value),
+              label: `${value}/5`,
+            }))}
+            onChange={(value) => {
+              setRating(Number(value));
+              markDirty('rating');
+            }}
+          />
         </AppCard>
       </AppSection>
 
@@ -543,59 +528,33 @@ export default function FeedbackScreen() {
                     : '.'}
                 </HeroText>
               ) : null}
-              <View
-                className="flex-row gap-2"
-                accessibilityRole="radiogroup"
-                accessibilityLabel={label}
-              >
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`${label} ${value} out of 5`}
-                    accessibilityState={{
-                      checked: detailRatings[key] === value,
-                      disabled: durabilityUnavailable,
-                    }}
-                    disabled={durabilityUnavailable}
-                    className={`h-11 flex-1 items-center justify-center rounded-xl ${
-                      detailRatings[key] === value
-                        ? 'bg-primary-600'
-                        : 'bg-neutral-100'
-                    }`}
-                    onPress={() => {
-                      setDetailRatings((current) => ({
-                        ...current,
-                        [key]: value,
-                      }));
-                      markDirty(DETAIL_API_KEYS[key]);
-                    }}
-                  >
-                    <HeroText
-                      className={`text-sm font-bold ${
-                        detailRatings[key] === value
-                          ? 'text-white'
-                          : 'text-neutral-600'
-                      }`}
-                    >
-                      {value}
-                    </HeroText>
-                  </Pressable>
-                ))}
-              </View>
+              <AppSelect
+                label={label}
+                value={detailRatings[key] == null ? null : String(detailRatings[key])}
+                placeholder="Not rated"
+                options={[1, 2, 3, 4, 5].map((value) => ({
+                  id: String(value),
+                  label: `${value}/5`,
+                }))}
+                onChange={(value) => {
+                  setDetailRatings((current) => ({
+                    ...current,
+                    [key]: Number(value),
+                  }));
+                  markDirty(DETAIL_API_KEYS[key]);
+                }}
+                disabled={durabilityUnavailable}
+              />
               {!durabilityUnavailable ? (
-                <Pressable
-                  accessibilityRole="button"
-                  className="mt-3 min-h-11 items-center justify-center rounded-xl border border-neutral-200"
+                <AppButton
+                  label="Not enough experience to judge"
+                  variant="ghost"
+                  size="sm"
                   onPress={() => {
                     setDetailRatings((current) => ({ ...current, [key]: null }));
                     markDirty(DETAIL_API_KEYS[key]);
                   }}
-                >
-                  <HeroText className="text-xs font-semibold text-neutral-600">
-                    Not enough experience to judge
-                  </HeroText>
-                </Pressable>
+                />
               ) : null}
             </AppCard>
             );
@@ -604,20 +563,19 @@ export default function FeedbackScreen() {
       </AppSection>
 
       <AppSection eyebrow="Reuse" title="Would you use this setup again?">
-        <View className="flex-row gap-3">
-          {[true, false].map((value) => (
-            <View key={String(value)} className="flex-1">
-              <AppButton
-                label={value ? 'Yes' : 'No'}
-                variant={wouldUseAgain === value ? 'primary' : 'outline'}
-                onPress={() => {
-                  setWouldUseAgain(value);
-                  markDirty('would_use_again');
-                }}
-              />
-            </View>
-          ))}
-        </View>
+        <AppSelect
+          label="Use this setup again"
+          value={wouldUseAgain == null ? null : String(wouldUseAgain)}
+          placeholder="Choose an answer"
+          options={[
+            { id: 'true', label: 'Yes' },
+            { id: 'false', label: 'No' },
+          ]}
+          onChange={(value) => {
+            setWouldUseAgain(value === 'true');
+            markDirty('would_use_again');
+          }}
+        />
         <AppButton
           label="Not sure"
           variant={wouldUseAgain == null ? 'primary' : 'outline'}

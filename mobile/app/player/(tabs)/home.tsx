@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Search,
   Sparkles,
-  Zap,
 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -31,12 +30,6 @@ import { formatBookingStatus, formatDateLabel } from '../../../lib/formatters';
 import type { Booking } from '../../../types/domain';
 
 const quickActions = [
-  {
-    title: 'Advisor',
-    accessibilityLabel: 'Get recommendation',
-    route: '/player/recommend',
-    icon: Zap,
-  },
   {
     title: 'Book service',
     accessibilityLabel: 'Book service',
@@ -123,7 +116,7 @@ export default function PlayerHomeScreen() {
             onPress={() => router.push('/player/tools')}
           >
             <HeroText className="text-[13px] font-semibold text-primary-700">
-              All tools
+              More
             </HeroText>
             <ChevronRight size={14} color={appChromeColors.primary} />
           </Pressable>
@@ -132,8 +125,7 @@ export default function PlayerHomeScreen() {
         <View className="flex-row items-start gap-1">
           {quickActions.map((action) => {
             const Icon = action.icon;
-            const isFeatured = action.route === '/player/recommend';
-
+            const isFeatured = action.title === 'Book service';
             return (
               <Pressable
                 key={action.title}
