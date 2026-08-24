@@ -23,6 +23,7 @@ just to find the right ownership boundary.
 | [docs/README.md](./README.md) | Workspace documentation index. | Finding existing docs. |
 | [docs/fyp1-scope.md](./fyp1-scope.md) | FYP1 included/deferred scope, recommendation positioning, and demo proof. | Changing visible demo scope or deciding whether a feature is FYP1 or FYP2. |
 | [docs/plans/mock-page-remediation.md](./plans/mock-page-remediation.md) | Current mock-data page inventory and external integration boundaries. | Checking whether a route still depends on mock or local business data. |
+| [docs/production-hardening-acceptance-2026-08-24.md](./production-hardening-acceptance-2026-08-24.md) | Production Docker/security hardening, fresh-database runtime proof, and current player/admin acceptance gates. | Preparing or reviewing the controlled Cloudflare Tunnel deployment. |
 | [docs/customer-admin-acceptance-2026-07-24.md](./customer-admin-acceptance-2026-07-24.md) | Current customer and administrator browser acceptance, cross-role persistence proof, and quality gates. | Reviewing which live reads and writes were exercised against PostgreSQL. |
 | [docs/qr-payment-acceptance-2026-08-18.md](./qr-payment-acceptance-2026-08-18.md) | QR-transfer implementation evidence, security boundaries, and unverified device/browser checks. | Reviewing the manual payment-proof flow. |
 | [docs/admin-acceptance-2026-07-23.md](./admin-acceptance-2026-07-23.md) | Historical administrator-only browser acceptance and restoration record. | Reviewing the earlier admin-specific acceptance run. |

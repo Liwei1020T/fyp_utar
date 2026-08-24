@@ -33,6 +33,7 @@ import type {
   FeedbackSentimentTag,
 } from '../../../types/domain';
 import type { BackendUpdateFeedbackPayload } from '../../../types/backend';
+import { showAlert } from '../../../lib/alerts';
 
 const SENTIMENT_OPTIONS: {
   id: FeedbackSentimentTag;
@@ -94,7 +95,6 @@ export default function FeedbackScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [canRateDurability, setCanRateDurability] = useState(false);
   const [durabilityAvailableAt, setDurabilityAvailableAt] = useState<string | null>(
     null,
@@ -214,7 +214,6 @@ export default function FeedbackScreen() {
 
     setIsSubmitting(true);
     setSubmitError(null);
-    setSuccessMessage(null);
     try {
       const allValues = {
         rating,
@@ -246,7 +245,13 @@ export default function FeedbackScreen() {
       setExistingFeedback(mapBackendFeedbackToBookingFeedback(response));
       setIsEditing(false);
       setDirtyFields(new Set());
-      setSuccessMessage('Your feedback has been saved and will update future evidence.');
+      const alertTitle = existingFeedback
+        ? 'Feedback updated'
+        : 'Feedback submitted';
+      const alertMessage = existingFeedback
+        ? 'Your changes have been saved.'
+        : 'Thank you. Your feedback has been saved.';
+      showAlert(alertTitle, alertMessage);
     } catch (error) {
       setSubmitError(
         error instanceof BackendApiError
@@ -385,11 +390,6 @@ export default function FeedbackScreen() {
           <HeroText className="mt-2 text-2xl font-bold text-neutral-950">
             {existingFeedback.rating}/5
           </HeroText>
-          {successMessage ? (
-            <HeroText className="mt-2 text-sm font-medium text-green-700">
-              {successMessage}
-            </HeroText>
-          ) : null}
         </AppCard>
         <AppSection eyebrow="Detailed scores" title="Recorded experience">
           <AppCard variant="elevated" padding="md">

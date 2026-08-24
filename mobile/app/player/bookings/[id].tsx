@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -266,32 +266,28 @@ export default function PlayerBookingDetailScreen() {
     (item) => item.bookingId === booking?.id,
   );
 
-  useEffect(() => {
-    if (!token || !params.id) {
-      return;
-    }
+  useFocusEffect(
+    useCallback(() => {
+      if (!token || !params.id) return;
 
-    const bookingId = params.id;
-    let cancelled = false;
+      const bookingId = params.id;
+      let cancelled = false;
+      void backendApi
+        .fetchBooking(token, bookingId)
+        .then((freshBooking) => {
+          if (!cancelled) {
+            upsertLiveBooking(mapBackendBookingToBooking(freshBooking));
+          }
+        })
+        .catch((error) => {
+          console.warn('Failed to refresh live player booking detail', error);
+        });
 
-    const hydrateBooking = async () => {
-      try {
-        const freshBooking = await backendApi.fetchBooking(token, bookingId);
-        if (cancelled) {
-          return;
-        }
-        upsertLiveBooking(mapBackendBookingToBooking(freshBooking));
-      } catch (error) {
-        console.warn('Failed to refresh live player booking detail', error);
-      }
-    };
-
-    void hydrateBooking();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [params.id, token, upsertLiveBooking]);
+      return () => {
+        cancelled = true;
+      };
+    }, [params.id, token, upsertLiveBooking]),
+  );
 
   useEffect(() => {
     if (!token || booking?.status !== 'completed') {

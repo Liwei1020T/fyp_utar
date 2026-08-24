@@ -1,0 +1,18 @@
+services:
+  postgres:
+    networks:
+      - database
+      - acceptance
+    ports:
+      - "127.0.0.1:${POSTGRES_ACCEPTANCE_PORT:-55433}:5432"
+
+  backend:
+    environment:
+      APP_ENV: testing
+      CORS_ORIGINS: http://127.0.0.1:8081,http://localhost:8081
+      TRUSTED_HOSTS: "*"
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001"
+
+networks:
+  acceptance:

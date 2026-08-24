@@ -63,7 +63,12 @@ export function QrTransferPanel({
               accessibilityRole="button"
               accessibilityLabel="Preview payment QR"
             >
-              <Image source={{ uri: qrUrl }} className="h-56 w-56" resizeMode="contain" />
+              <Image
+                source={{ uri: qrUrl }}
+                className="h-56 w-56"
+                resizeMode="contain"
+                accessible={false}
+              />
               <HeroText className="mt-2 text-xs font-semibold text-primary-700">
                 Tap to preview
               </HeroText>
@@ -93,7 +98,12 @@ export function QrTransferPanel({
           </HeroText>
           {proof ? (
             <View className="mt-3 rounded-[16px] bg-white p-3">
-              <Image source={{ uri: proof.uri }} className="h-40 w-full" resizeMode="contain" />
+              <Image
+                source={{ uri: proof.uri }}
+                className="h-40 w-full"
+                resizeMode="contain"
+                accessibilityLabel="Selected payment screenshot"
+              />
               <View className="mt-3 flex-row gap-2">
                 <AppButton
                   label="Replace"
@@ -137,7 +147,14 @@ export function QrTransferPanel({
             accessibilityRole="button"
             accessibilityLabel="Close QR preview"
           />
-          {qrUrl ? <Image source={{ uri: qrUrl }} className="h-[80%] w-full" resizeMode="contain" /> : null}
+          {qrUrl ? (
+            <Image
+              source={{ uri: qrUrl }}
+              className="h-[80%] w-full"
+              resizeMode="contain"
+              accessibilityLabel="Shop payment QR code"
+            />
+          ) : null}
           <AppButton
             label="Close preview"
             variant="secondary"

@@ -11,6 +11,9 @@ from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import StringInventoryItem
 from app.adapters.persistence.sqlalchemy.models import User
+from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_catalog_repository import (
+    SqlAlchemyCatalogRepository,
+)
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
     SqlAlchemyRecommendationRepository,
 )
@@ -142,6 +145,24 @@ def test_low_stock_is_sellable_but_out_of_stock_is_excluded() -> None:
             )
             == []
         )
+
+
+def test_inactive_inventory_is_excluded_from_catalog_lookup() -> None:
+    with SessionLocal() as db:
+        inventory = db.execute(
+            select(StringInventoryItem).where(
+                StringInventoryItem.catalog_id == "yonex-bg80"
+            )
+        ).scalar_one()
+        inventory.is_active = False
+        inventory.available_stock = 8
+        inventory.availability_status = "in_stock"
+        db.flush()
+
+        repository = SqlAlchemyCatalogRepository(db, APPROVED_IDS)
+
+        assert repository.get_by_id("yonex-bg80") is None
+        assert repository.get_by_id("yonex-bg80", include_inactive=True) is not None
 
 
 def test_other_strings_are_hidden_but_preserved_for_history() -> None:

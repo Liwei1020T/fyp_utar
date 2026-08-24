@@ -33,7 +33,7 @@ export function AppInput({
 }: AppInputProps) {
   const isMinimal = variant === 'minimal';
   const [isFocused, setIsFocused] = React.useState(false);
-  const focusBorder = isFocused ? 'border-primary-600' : 'border-[#DCE6F7]';
+  const focusBorder = isFocused ? 'border-primary-600' : 'border-field-border';
   const inputAccessibilityLabel = props.accessibilityLabel ?? label ?? props.placeholder;
   const inputAccessibilityHint = props.accessibilityHint ?? error ?? helperText;
   const inputAccessibilityState = {

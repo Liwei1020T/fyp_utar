@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Share, View, Pressable } from 'react-native';
+import { Share, View, Pressable } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { 
   Scale, 
@@ -23,6 +23,7 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { showAlert } from '../../../lib/alerts';
 import { StringProductImage } from '../../../components/shared/StringProductImage';
 import {
   useAppStore,
@@ -270,7 +271,7 @@ export default function StringDetailScreen() {
         ].join('\n'),
       });
     } catch {
-      Alert.alert('Share unavailable', 'This device could not open the share sheet for this item.');
+      showAlert('Share unavailable', 'This device could not open the share sheet for this item.');
     }
   };
 

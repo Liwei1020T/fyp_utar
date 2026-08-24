@@ -48,10 +48,10 @@ export function AppCard({
   };
 
   const shellStyles = {
-    default: 'bg-white border border-[#DCE3EC] shadow-none',
-    elevated: 'bg-white border border-[#DCE3EC] shadow-soft',
+    default: 'bg-white border border-field-border shadow-none',
+    elevated: 'bg-white border border-field-border shadow-soft',
     highlighted: 'bg-primary-50 border border-primary-200 shadow-none',
-    subtle: 'bg-[#F3F6FA] border border-[#E7ECF2] shadow-none',
+    subtle: 'bg-app-muted border border-separator shadow-none',
     dark: 'bg-app-hero border border-white/10 shadow-float',
   };
 

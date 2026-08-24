@@ -1,0 +1,39 @@
+FROM ghcr.io/astral-sh/uv:0.10.0 AS uv
+FROM python:3.13.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+COPY --from=uv /uv /uvx /bin/
+
+RUN groupadd --gid 10001 stringsense \
+    && useradd --uid 10001 --gid stringsense --create-home stringsense
+
+WORKDIR /srv/stringsense/backend
+
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY backend/app ./app
+COPY backend/migrations ./migrations
+COPY backend/alembic.ini ./alembic.ini
+COPY backend/data/string_catalog_db_ready.json ./data/string_catalog_db_ready.json
+COPY config/approved_string_cohort_v1.csv /srv/stringsense/config/approved_string_cohort_v1.csv
+COPY ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx /srv/stringsense/ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx
+
+RUN uv sync --frozen --no-dev --no-editable \
+    && mkdir -p /srv/stringsense/backend/var/uploads \
+    && chown -R stringsense:stringsense /srv/stringsense
+
+ENV PATH="/srv/stringsense/backend/.venv/bin:$PATH"
+
+USER stringsense
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/health', timeout=3).read()"]
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3001", "--workers", "1", "--proxy-headers", "--no-server-header"]

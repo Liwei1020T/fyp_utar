@@ -58,6 +58,55 @@ test('raw Pressable controls declare an accessibility role', async () => {
   assert.deepEqual(missingRoles, []);
 });
 
+test('images are described or hidden from assistive technology', async () => {
+  const files = (
+    await Promise.all(
+      ['app', 'components'].map((directory) =>
+        readdir(new URL(`${directory}/`, mobileRoot), { recursive: true }),
+      ),
+    )
+  ).flatMap((files, index) =>
+    files
+      .filter((file) => file.endsWith('.tsx'))
+      .map((file) => `${index === 0 ? 'app' : 'components'}/${file}`),
+  );
+  const missingSemantics = [];
+
+  for (const file of files) {
+    const source = await readFile(new URL(file, mobileRoot), 'utf8');
+    const sourceFile = ts.createSourceFile(
+      file,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    const visit = (node) => {
+      if (
+        (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+        node.tagName.getText(sourceFile) === 'Image'
+      ) {
+        const attributes = node.attributes.properties
+          .filter(ts.isJsxAttribute)
+          .map((attribute) => attribute.name.getText(sourceFile));
+        if (
+          !attributes.includes('accessibilityLabel') &&
+          !attributes.includes('accessible')
+        ) {
+          const { line } = sourceFile.getLineAndCharacterOfPosition(
+            node.getStart(sourceFile),
+          );
+          missingSemantics.push(`${file}:${line + 1}`);
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
+  }
+
+  assert.deepEqual(missingSemantics, []);
+});
+
 test('shared controls and catalog preserve recoverable UX states', async () => {
   const [button, input, screen, header, catalog] = await Promise.all(
     [
@@ -76,6 +125,20 @@ test('shared controls and catalog preserve recoverable UX states', async () => {
   assert.match(header, /\{subtitle \? \(/);
   assert.match(catalog, /label="Clear filters"/);
   assert.doesNotMatch(catalog, />\s*View All\s*</);
+});
+
+test('feedback submission uses a clear confirmation dialog', async () => {
+  const [feedback, alerts] = await Promise.all(
+    ['app/player/feedback/[bookingId].tsx', 'lib/alerts.ts'].map((file) =>
+      readFile(new URL(file, mobileRoot), 'utf8'),
+    ),
+  );
+
+  assert.match(feedback, /showAlert\(alertTitle, alertMessage\)/);
+  assert.match(alerts, /globalThis\.alert\(/);
+  assert.match(alerts, /Alert\.alert\(/);
+  assert.match(feedback, /Feedback submitted/);
+  assert.doesNotMatch(feedback, /future evidence/i);
 });
 
 test('authentication uses one account entry and routes from the backend role', async () => {

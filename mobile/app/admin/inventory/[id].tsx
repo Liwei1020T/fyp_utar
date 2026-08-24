@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { z } from 'zod';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,6 +21,7 @@ import {
   sanitizePerformanceScores,
 } from '../../../lib/inventory';
 import { formatAvailability, formatLabel } from '../../../lib/formatters';
+import { showAlert } from '../../../lib/alerts';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   mapBackendInventoryStringToStringItem,
@@ -1023,7 +1024,7 @@ export default function AdminInventoryDetailScreen() {
           tone: 'error',
           message: partialSuccessMessage,
         });
-        Alert.alert('Image not saved', partialSuccessMessage);
+        showAlert('Image not saved', partialSuccessMessage);
         return;
       }
 
@@ -1034,7 +1035,7 @@ export default function AdminInventoryDetailScreen() {
         tone: 'success',
         message: successMessage,
       });
-      Alert.alert('String saved', successMessage);
+      showAlert('String saved', successMessage);
     } catch (saveError) {
       const errorMessage =
         saveError instanceof BackendApiError

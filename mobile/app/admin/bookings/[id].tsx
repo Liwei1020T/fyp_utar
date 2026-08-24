@@ -22,6 +22,7 @@ import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { PhotoPreviewModal } from '../../../components/shared/PhotoPreviewModal';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
+import { showAlert } from '../../../lib/alerts';
 import {
   useAppStore,
   useBackendAccessToken,
@@ -302,6 +303,7 @@ function AdminUpdateFeed({
                     source={{ uri: item.photoUrl }}
                     className="h-36 w-full rounded-[22px] bg-neutral-100"
                     resizeMode="cover"
+                    accessible={false}
                   />
                   <View className="absolute bottom-2 right-2 rounded-full bg-black/55 px-3 py-1.5">
                     <HeroText className="text-[11px] font-semibold text-white">
@@ -543,7 +545,7 @@ export default function AdminBookingDetailScreen() {
         ? saveError.message
         : 'Failed to update booking status.';
       setError(message);
-      Alert.alert('Status update failed', message);
+      showAlert('Status update failed', message);
     } finally {
       setIsSaving(false);
     }
@@ -553,7 +555,7 @@ export default function AdminBookingDetailScreen() {
     setError(null);
 
     if (isBookingCompleted) {
-      Alert.alert(
+      showAlert(
         'Booking already completed',
         'Completed bookings are locked so the workflow cannot be changed accidentally.',
       );
@@ -1033,6 +1035,7 @@ export default function AdminBookingDetailScreen() {
                 source={{ uri: updatePhoto.uri }}
                 className="h-36 w-full rounded-[22px] bg-neutral-100"
                 resizeMode="cover"
+                accessibilityLabel="Selected booking update photo"
               />
               <View className="flex-row flex-wrap gap-2">
                 {PHOTO_TYPE_OPTIONS.map((option) => (

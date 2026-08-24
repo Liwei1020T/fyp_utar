@@ -9,7 +9,12 @@ InventoryAvailability = Literal["in_stock", "low_stock", "out_of_stock"]
 
 
 def inventory_availability(item: StringItem) -> InventoryAvailability:
-    if not item.is_active or item.stock_level <= 0:
+    if (
+        not item.is_active
+        or item.inventory is None
+        or not item.inventory.is_active
+        or item.stock_level <= 0
+    ):
         return "out_of_stock"
     if item.inventory and item.inventory.availability_status in {
         "in_stock",

@@ -246,6 +246,7 @@ export default function AdminPaymentsScreen() {
                     source={{ uri: item.proofUrl }}
                     className="h-40 w-full rounded-[12px] bg-white"
                     resizeMode="contain"
+                    accessible={false}
                   />
                   <HeroText className="mt-2 text-xs font-semibold text-primary-700">
                     Tap to preview payment evidence
@@ -375,7 +376,12 @@ export default function AdminPaymentsScreen() {
             accessibilityLabel="Close payment evidence preview"
           />
           {proofPreviewUrl ? (
-            <Image source={{ uri: proofPreviewUrl }} className="h-[80%] w-full" resizeMode="contain" />
+            <Image
+              source={{ uri: proofPreviewUrl }}
+              className="h-[80%] w-full"
+              resizeMode="contain"
+              accessibilityLabel="Payment evidence preview"
+            />
           ) : null}
           <AppButton
             label="Close preview"

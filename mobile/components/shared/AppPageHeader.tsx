@@ -86,6 +86,7 @@ export function AppPageHeader({
             source={require('../../assets/ui/header-string-weave.png')}
             resizeMode="cover"
             className="absolute inset-0 h-full w-full opacity-70"
+            accessible={false}
           />
         ) : null}
 

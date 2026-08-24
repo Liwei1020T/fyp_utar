@@ -10,6 +10,7 @@ import { AppInput } from '../../components/ui/AppInput';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { HeroText } from '../../components/ui/heroui';
+import { showAlert } from '../../lib/alerts';
 import { useAppStore, useBackendAccessToken, useCurrentUser, useStrings } from '../../store/appStore';
 import {
   BackendApiError,
@@ -120,9 +121,7 @@ export default function AdminSettingsScreen() {
     const message = 'Your store details and homepage trending strings have been updated.';
     setSaveSuccessMessage(message);
 
-    if (Platform.OS !== 'web') {
-      Alert.alert('Store settings saved', message);
-    }
+    showAlert('Store settings saved', message);
   };
 
   useEffect(() => {
@@ -360,7 +359,12 @@ export default function AdminSettingsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Preview payment QR"
           >
-            <Image source={{ uri: paymentQrUrl }} className="h-56 w-56" resizeMode="contain" />
+            <Image
+              source={{ uri: paymentQrUrl }}
+              className="h-56 w-56"
+              resizeMode="contain"
+              accessible={false}
+            />
             <HeroText className="mt-2 text-xs font-semibold text-primary-700">
               Tap to preview
             </HeroText>
@@ -580,7 +584,12 @@ export default function AdminSettingsScreen() {
             accessibilityLabel="Close QR preview"
           />
           {paymentQrUrl ? (
-            <Image source={{ uri: paymentQrUrl }} className="h-[80%] w-full" resizeMode="contain" />
+            <Image
+              source={{ uri: paymentQrUrl }}
+              className="h-[80%] w-full"
+              resizeMode="contain"
+              accessibilityLabel="Shop payment QR code"
+            />
           ) : null}
           <AppButton
             label="Close preview"

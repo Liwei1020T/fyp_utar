@@ -856,6 +856,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
               source={{ uri: bookingPhoto.uri }}
               className="mt-3 h-32 w-full rounded-[20px] bg-neutral-100"
               resizeMode="cover"
+              accessibilityLabel="Selected racket photo"
             />
           ) : null}
           <View className="mt-3 flex-row gap-3">

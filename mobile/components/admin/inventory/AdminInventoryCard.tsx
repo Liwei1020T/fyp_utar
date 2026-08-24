@@ -67,7 +67,7 @@ export function AdminStringThumbnail({
 
   return (
     <View
-      className="items-center justify-center overflow-hidden rounded-[18px] border border-[#D9E3EF] bg-[#F3F6FA]"
+      className="items-center justify-center overflow-hidden rounded-[18px] border border-field-border bg-app-muted"
       style={{ height: size, width: size }}
     >
       {!hasError && imageUrl ? (
@@ -112,7 +112,7 @@ function QuickAction({
           ? 'border-primary-600 bg-primary-600'
           : variant === 'ghost'
             ? 'border-transparent bg-transparent'
-            : 'border-[#D9E3EF] bg-white',
+            : 'border-field-border bg-white',
       )}
       style={({ pressed }) => (pressed ? styles.pressed : undefined)}
     >

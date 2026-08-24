@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 import re
 
+from fastapi.testclient import TestClient
+
 from app.config.settings import BACKEND_ROOT
 from app.main import app
 
@@ -22,6 +24,19 @@ REMOVED_API_OPERATIONS = {
     ("PUT", "/api/admin/strings/{string_id}"),
     ("PUT", "/api/admin/strings/{string_id}/official-performance"),
 }
+client = TestClient(app)
+
+
+def test_api_responses_include_security_headers() -> None:
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["permissions-policy"] == (
+        "camera=(), geolocation=(), microphone=()"
+    )
 
 
 def test_use_cases_do_not_import_adapters_or_runtime_config() -> None:

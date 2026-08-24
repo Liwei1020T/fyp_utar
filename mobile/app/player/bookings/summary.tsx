@@ -225,6 +225,7 @@ export default function BookingSummaryScreen() {
               source={{ uri: bookingDraft.photoUri }}
               className="h-52 w-full rounded-[24px] bg-neutral-100"
               resizeMode="cover"
+              accessibilityLabel="Attached racket photo"
             />
             <HeroText className="mt-3 text-sm leading-6 text-neutral-600">
               This photo will be uploaded to the backend after the booking is created.

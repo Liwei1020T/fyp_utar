@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { CalendarDays, Search } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -8,7 +8,15 @@ import { AppInput } from '../../../components/ui/AppInput';
 import { HeroText } from '../../../components/ui/heroui';
 import { getBookingStatusVariant } from '../../../components/ui/theme';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
-import { useBookings, useCurrentUser, useStrings } from '../../../store/appStore';
+import {
+  useAppStore,
+  useBackendAccessToken,
+  useBookings,
+  useCurrentUser,
+  useStrings,
+} from '../../../store/appStore';
+import { backendApi } from '../../../services/backendApi';
+import { mapBackendBookingToBooking } from '../../../services/backendMappers';
 import type { AdminProfile, Booking, BookingStatus } from '../../../types/domain';
 import {
   formatBookingOrderCode,
@@ -173,11 +181,35 @@ export default function AdminBookingsScreen() {
 
 function AdminBookingsContent({ user }: { user: AdminProfile }) {
   const router = useRouter();
+  const token = useBackendAccessToken();
   const bookings = useBookings();
   const strings = useStrings();
+  const setLiveBookings = useAppStore((state) => state.setLiveBookings);
   const bottomContentInset = useBottomContentInset(16);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refreshBookings = useCallback(async () => {
+    if (!token) return;
+    setIsRefreshing(true);
+    try {
+      const response = await backendApi.adminListBookings(token);
+      setLiveBookings(
+        response.items.map((item) => mapBackendBookingToBooking(item, user.id)),
+      );
+    } catch (error) {
+      console.warn('Failed to refresh live admin bookings', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [setLiveBookings, token, user.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshBookings();
+    }, [refreshBookings]),
+  );
 
   const adminBookings = useMemo(
     () => bookings.filter((item) => item.adminId === user.id && item.status !== 'cancelled'),
@@ -237,6 +269,8 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
       <FlatList
         className="flex-1"
         data={filtered}
+        refreshing={isRefreshing}
+        onRefresh={refreshBookings}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}

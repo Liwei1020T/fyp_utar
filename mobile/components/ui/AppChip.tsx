@@ -36,7 +36,7 @@ export function AppChip({
     primary: 'bg-primary-50 border-primary-200',
     secondary: 'bg-secondary-50 border-secondary-100',
     accent: 'bg-accent-100 border-accent-200',
-    neutral: 'bg-white border-[#DCE6F7]',
+    neutral: 'bg-white border-field-border',
     complete: 'bg-complete-50 border-complete-100',
     success: 'bg-success-50 border-success-100',
     warning: 'bg-warning-50 border-warning-100',

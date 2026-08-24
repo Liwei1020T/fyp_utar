@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine3.24
     container_name: stringsense-postgres
     restart: unless-stopped
     environment:
@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     ports:
-      - "55432:5432"
+      - "127.0.0.1:55432:5432"
     volumes:
       - stringsense_postgres_data:/var/lib/postgresql/data
     healthcheck:

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Banknote, QrCode, Wallet } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
@@ -21,6 +21,7 @@ import {
 import type { BackendBookingPaymentQuote } from '../../../types/backend';
 import type { BackendUploadFile } from '../../../services/backendApi';
 import { formatCurrency } from '../../../lib/formatters';
+import { showAlert } from '../../../lib/alerts';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import {
   mapBackendPaymentToPayment,
@@ -231,7 +232,7 @@ export default function PaymentScreen() {
       ) {
         setQuoteRefreshKey((value) => value + 1);
       }
-      Alert.alert('Payment unavailable', message);
+      showAlert('Payment unavailable', message);
     } finally {
       setIsProcessing(false);
     }

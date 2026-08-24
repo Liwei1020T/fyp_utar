@@ -1,0 +1,152 @@
+name: stringsense-production
+
+services:
+  postgres:
+    image: postgres:16.15-alpine3.24
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - stringsense_production_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks:
+      - database
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: stringsense-backend:production
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    environment: &backend-environment
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ISSUER: ${JWT_ISSUER:-stringsense-python-api}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      STORE_TIMEZONE: ${STORE_TIMEZONE:-Asia/Kuala_Lumpur}
+      PASSWORD_RESET_CODE_EXPIRE_MINUTES: ${PASSWORD_RESET_CODE_EXPIRE_MINUTES:-10}
+      PASSWORD_RESET_CODE_MAX_ATTEMPTS: ${PASSWORD_RESET_CODE_MAX_ATTEMPTS:-5}
+      PASSWORD_RESET_DEV_PREVIEW_ENABLED: "false"
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS}
+      APPROVED_STRINGS_SOURCE_PATH: data/string_catalog_db_ready.json
+      RECOMMENDATION_MATRIX_SOURCE_PATH: ../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx
+      UPLOAD_ROOT_PATH: var/uploads
+      SEED_ADMIN_ENABLED: ${SEED_ADMIN_ENABLED:-false}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-}
+      SEED_ADMIN_PHONE_NUMBER: ${SEED_ADMIN_PHONE_NUMBER:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-false}
+      EXPO_PUSH_ENDPOINT: ${EXPO_PUSH_ENDPOINT:-https://exp.host/--/api/v2/push/send}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      OPENWA_ENABLED: "false"
+      AGENT_ENABLED: ${AGENT_ENABLED:-false}
+      AGENT_API_KEY: ${AGENT_API_KEY:-}
+      AGENT_MODEL: ${AGENT_MODEL:-deepseek-v4-flash}
+      AGENT_BASE_URL: ${AGENT_BASE_URL:-https://api.deepseek.com}
+      AGENT_TIMEOUT_SECONDS: ${AGENT_TIMEOUT_SECONDS:-20}
+      AGENT_MAX_TOOL_ROUNDS: ${AGENT_MAX_TOOL_ROUNDS:-2}
+      FORWARDED_ALLOW_IPS: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - database
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: stringsense-backend:production
+    restart: unless-stopped
+    init: true
+    environment: *backend-environment
+    volumes:
+      - stringsense_production_uploads:/srv/stringsense/backend/var/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3001/health', timeout=3).read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - database
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.2
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --loglevel
+      - info
+      - run
+      - --token
+      - ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  stringsense_production_postgres:
+  stringsense_production_uploads:
+
+networks:
+  database:
+    internal: true
+  edge:

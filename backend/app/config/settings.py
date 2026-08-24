@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 from typing import Literal
 from zoneinfo import ZoneInfo
 from zoneinfo import ZoneInfoNotFoundError
@@ -12,6 +13,7 @@ from pydantic import SecretStr
 from pydantic import field_validator
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
+from pydantic_settings import NoDecode
 from pydantic_settings import SettingsConfigDict
 
 
@@ -74,7 +76,7 @@ class Settings(BaseSettings):
     )
     openwa_session_id: str | None = Field(default=None, alias="OPENWA_SESSION_ID")
     openwa_api_key: SecretStr | None = Field(default=None, alias="OPENWA_API_KEY")
-    cors_origins: list[str] = Field(
+    cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "http://127.0.0.1:3000",
             "http://localhost:3000",
@@ -82,6 +84,10 @@ class Settings(BaseSettings):
             "http://localhost:8081",
         ],
         alias="CORS_ORIGINS",
+    )
+    trusted_hosts: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["*"],
+        alias="TRUSTED_HOSTS",
     )
     approved_strings_source_path: str = Field(
         default="data/string_catalog_db_ready.json",
@@ -119,9 +125,9 @@ class Settings(BaseSettings):
     )
     upload_root_path_raw: str = Field(default="var/uploads", alias="UPLOAD_ROOT_PATH")
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "trusted_hosts", mode="before")
     @classmethod
-    def parse_cors_origins(cls, value: str | Sequence[str]) -> list[str]:
+    def parse_comma_separated_list(cls, value: str | Sequence[str]) -> list[str]:
         if isinstance(value, str):
             return [part.strip() for part in value.split(",") if part.strip()]
         return [str(part).strip() for part in value if str(part).strip()]
@@ -186,6 +192,32 @@ class Settings(BaseSettings):
         return raw
 
     def validate_runtime(self) -> None:
+        if self.environment == "production":
+            jwt_secret = self.jwt_secret_key or ""
+            if (
+                len(jwt_secret) < 32
+                or jwt_secret == "stringsense-local-dev-secret-key-2026"
+                or jwt_secret.startswith("replace-with")
+            ):
+                raise ValueError(
+                    "JWT_SECRET_KEY must be a non-placeholder value of at least "
+                    "32 characters in production"
+                )
+            if not self.trusted_hosts or "*" in self.trusted_hosts:
+                raise ValueError(
+                    "TRUSTED_HOSTS must list the public hostname in production"
+                )
+            insecure_origins = [
+                origin
+                for origin in self.cors_origins
+                if not origin.startswith("https://")
+            ]
+            if insecure_origins:
+                raise ValueError("CORS_ORIGINS must use HTTPS in production")
+            if self.password_reset_dev_preview_enabled:
+                raise ValueError(
+                    "PASSWORD_RESET_DEV_PREVIEW_ENABLED must be false in production"
+                )
         if self.expo_push_enabled and self.openwa_enabled:
             raise ValueError("Enable only one remote notification provider")
         if (
@@ -219,6 +251,15 @@ class Settings(BaseSettings):
                 self.seed_admin_phone_number,
                 self.seed_admin_password,
             )
+            if self.environment == "production" and (
+                self.seed_admin_password is None
+                or len(self.seed_admin_password) < 12
+                or self.seed_admin_password.startswith("replace-with")
+            ):
+                raise ValueError(
+                    "SEED_ADMIN_PASSWORD must be a non-placeholder value of at "
+                    "least 12 characters in production"
+                )
 
     @staticmethod
     def _require_seed_fields(
