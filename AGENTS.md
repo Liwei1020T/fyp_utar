@@ -57,6 +57,11 @@
 3. Do not commit secrets, local `.env` files, DB files, build artifacts, or notebook outputs.
 4. Update this file when workspace commands, structure, or ownership boundaries change.
 
+## Graphify Workflow
+
+- For every code-change task, call Graphify before editing relevant functions or fields with `graphify query`, `graphify explain`, or `graphify path` to inspect callers and dependencies; call it again after editing to verify affected relationships.
+- Query the existing `graphify-out/graph.json` for relationship checks. Do not rebuild `graphify-out` for every edit; use an incremental update only when the graph must include newly changed source, and keep generated graph output out of functional commits unless explicitly requested.
+
 ## Definition of Done
 
 1. Requested workspace behavior is implemented.
