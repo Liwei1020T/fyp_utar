@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Search } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert, Image, Modal, Platform, Pressable, View } from 'react-native';
+import { Alert, Image, Modal, Platform, Pressable, Switch, View } from 'react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
@@ -18,6 +18,7 @@ import {
   resolveBackendMediaUrl,
 } from '../../services/backendApi';
 import type { BackendUploadFile } from '../../services/backendApi';
+import type { StoreSettings } from '../../types/domain';
 
 function normalizeStorePolicyText(value: string) {
   if (/payment is completed|payment completes|full payment/i.test(value)) {
@@ -33,6 +34,17 @@ const NOTIFICATION_CATEGORIES = [
   'chat',
   'system',
 ] as const;
+
+function normalizeNotificationSettings(
+  value: StoreSettings['notificationSettings'] | undefined,
+): StoreSettings['notificationSettings'] {
+  return Object.fromEntries(
+    Object.entries(value ?? {}).map(([category, config]) => [
+      category,
+      { enabled: config.enabled },
+    ]),
+  );
+}
 
 export default function AdminSettingsScreen() {
   const router = useRouter();
@@ -51,9 +63,6 @@ export default function AdminSettingsScreen() {
   const [paymentNotes, setPaymentNotes] = useState(settings?.paymentNotes ?? '');
   const [trendingStringIds, setTrendingStringIds] = useState<string[]>(
     settings?.trendingStringIds ?? []
-  );
-  const [defaultServicePrice, setDefaultServicePrice] = useState(
-    String(settings?.defaultServicePrice ?? 0),
   );
   const [notificationSettings, setNotificationSettings] = useState(
     settings?.notificationSettings ?? {},
@@ -82,8 +91,7 @@ export default function AdminSettingsScreen() {
     setPaymentNotes(settings.paymentNotes);
     setPaymentQrUrl(settings.paymentQrUrl);
     setTrendingStringIds(settings.trendingStringIds ?? []);
-    setDefaultServicePrice(String(settings.defaultServicePrice ?? 0));
-    setNotificationSettings(settings.notificationSettings ?? {});
+    setNotificationSettings(normalizeNotificationSettings(settings.notificationSettings));
   }, [settings]);
 
   const toggleTrendingString = (stringId: string) => {
@@ -148,8 +156,9 @@ export default function AdminSettingsScreen() {
           bookingNotes: response.booking_notes,
           storePolicyText: normalizeStorePolicyText(response.store_policy_text),
           trendingStringIds: response.trending_string_ids ?? [],
-          defaultServicePrice: response.default_service_price,
-          notificationSettings: response.notification_settings,
+          notificationSettings: normalizeNotificationSettings(
+            response.notification_settings,
+          ),
         });
       } catch (loadError) {
         if (!cancelled) {
@@ -191,8 +200,7 @@ export default function AdminSettingsScreen() {
         store_policy_text: policyText,
         address,
         trending_string_ids: trendingStringIds,
-        default_service_price: Number(defaultServicePrice) || 0,
-        notification_settings: notificationSettings,
+        notification_settings: normalizeNotificationSettings(notificationSettings),
       });
       updateStoreSettings({
         storeName: response.store_name,
@@ -204,8 +212,9 @@ export default function AdminSettingsScreen() {
         bookingNotes: response.booking_notes,
         storePolicyText: normalizeStorePolicyText(response.store_policy_text),
         trendingStringIds: response.trending_string_ids ?? trendingStringIds,
-        defaultServicePrice: response.default_service_price,
-        notificationSettings: response.notification_settings,
+        notificationSettings: normalizeNotificationSettings(
+          response.notification_settings,
+        ),
       });
       showSaveSuccess();
     } catch (saveError) {
@@ -402,18 +411,9 @@ export default function AdminSettingsScreen() {
         <AppInput label="Store policy text" value={policyText} onChangeText={setPolicyText} multiline inputClassName="min-h-24" />
       </AppSection>
 
-      <AppSection eyebrow="Pricing" title="Default service price">
-        <AppInput
-          label="Service fee (RM)"
-          value={defaultServicePrice}
-          onChangeText={setDefaultServicePrice}
-          keyboardType="decimal-pad"
-        />
-      </AppSection>
-
       <AppSection
         eyebrow="Notifications"
-        title="Templates and category switches"
+        title="Notification category switches"
       >
         <View className="gap-3">
           {NOTIFICATION_CATEGORIES.map((category) => {
@@ -425,39 +425,17 @@ export default function AdminSettingsScreen() {
                   <HeroText className="text-sm font-bold capitalize text-neutral-900">
                     {category}
                   </HeroText>
-                  <AppChip
-                    label={enabled ? 'Enabled' : 'Disabled'}
-                    variant={enabled ? 'success' : 'neutral'}
-                    onPress={() =>
+                  <Switch
+                    value={enabled}
+                    onValueChange={() =>
                       setNotificationSettings((current) => ({
                         ...current,
-                        [category]: { ...config, enabled: !enabled },
+                        [category]: { enabled: !enabled },
                       }))
                     }
+                    accessibilityLabel={`${category} notifications`}
                   />
                 </View>
-                <AppInput
-                  label="Default title"
-                  value={config.title ?? ''}
-                  onChangeText={(title) =>
-                    setNotificationSettings((current) => ({
-                      ...current,
-                      [category]: { ...config, title },
-                    }))
-                  }
-                />
-                <AppInput
-                  label="Default body"
-                  value={config.body ?? ''}
-                  onChangeText={(body) =>
-                    setNotificationSettings((current) => ({
-                      ...current,
-                      [category]: { ...config, body },
-                    }))
-                  }
-                  multiline
-                  inputClassName="min-h-20"
-                />
               </AppCard>
             );
           })}

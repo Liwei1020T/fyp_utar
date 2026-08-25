@@ -23,9 +23,9 @@ export function AppBrandLogo({
       <Image
         source={require('../../assets/icon.png')}
         resizeMode="cover"
+        style={{ width: '100%', height: '100%' }}
         accessible
         accessibilityLabel={accessibilityLabel}
-        className="h-full w-full"
       />
     </View>
   );

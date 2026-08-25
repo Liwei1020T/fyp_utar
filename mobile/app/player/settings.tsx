@@ -1,12 +1,11 @@
 import Constants from 'expo-constants';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Alert, Platform, Pressable, View } from 'react-native';
+import { Alert, Platform, Switch, View } from 'react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
-import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
 import { BackendApiError, backendApi } from '../../services/backendApi';
@@ -192,28 +191,22 @@ export default function PlayerSettingsScreen() {
             ? Object.entries(privacy).map(([rawKey, enabled]) => {
                 const key = rawKey as keyof BackendPrivacySettings;
                 return (
-                  <Pressable
+                  <AppCard
                     key={key}
-                    accessibilityRole="switch"
-                    accessibilityLabel={PRIVACY_LABELS[key]}
-                    accessibilityState={{ checked: enabled }}
-                    onPress={() => void togglePrivacy(key)}
+                    variant={enabled ? 'highlighted' : 'elevated'}
+                    padding="md"
                   >
-                    <AppCard
-                      variant={enabled ? 'highlighted' : 'elevated'}
-                      padding="md"
-                    >
-                      <View className="flex-row items-center justify-between gap-3">
-                        <HeroText className="flex-1 text-sm font-semibold text-neutral-900">
-                          {PRIVACY_LABELS[key]}
-                        </HeroText>
-                        <AppChip
-                          label={enabled ? 'On' : 'Off'}
-                          variant={enabled ? 'success' : 'neutral'}
-                        />
-                      </View>
-                    </AppCard>
-                  </Pressable>
+                    <View className="flex-row items-center justify-between gap-3">
+                      <HeroText className="flex-1 text-sm font-semibold text-neutral-900">
+                        {PRIVACY_LABELS[key]}
+                      </HeroText>
+                      <Switch
+                        value={enabled}
+                        onValueChange={() => void togglePrivacy(key)}
+                        accessibilityLabel={PRIVACY_LABELS[key]}
+                      />
+                    </View>
+                  </AppCard>
                 );
               })
             : null}

@@ -114,8 +114,7 @@ class SqlAlchemyRecommendationRepository:
         )
 
     def list_community_feedback_rows(self) -> list[CommunityFeedbackRow]:
-        completed_at = self._completed_at_subquery()
-        query = select(BookingFeedback, Booking, completed_at).join(
+        query = select(BookingFeedback, Booking).join(
             Booking, Booking.id == BookingFeedback.booking_id
         )
         if self.approved_catalog_ids is not None:
@@ -133,13 +132,9 @@ class SqlAlchemyRecommendationRepository:
                     "comfort": feedback.comfort,
                     "control": feedback.control,
                     "repulsion": feedback.repulsion,
-                    "durability": feedback.durability,
                 },
-                confirmed_at=dict(feedback.structured_field_confirmed_at or {}),
-                durability_rated_at=feedback.durability_rated_at,
-                completed_at=completed,
             )
-            for feedback, booking, completed in rows
+            for feedback, booking in rows
             if booking.status == "completed"
         ]
 

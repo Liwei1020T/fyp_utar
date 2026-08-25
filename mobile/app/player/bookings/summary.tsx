@@ -74,8 +74,7 @@ export default function BookingSummaryScreen() {
         hasPrice: false,
       };
   const stringFee = stringPriceMeta.hasPrice ? stringPrice ?? 0 : null;
-  const serviceFee = storeSettings?.defaultServicePrice ?? 0;
-  const totalPayable = stringFee != null ? stringFee + serviceFee : null;
+  const totalPayable = stringFee;
 
   const handleProceed = async () => {
     if (!token) {
@@ -195,18 +194,12 @@ export default function BookingSummaryScreen() {
         />
       </AppSection>
 
-      <AppSection eyebrow="Pricing" title="Estimated service cost">
+      <AppSection eyebrow="Pricing" title="Estimated string cost">
         <AppCard variant="dark" padding="lg">
           <View className="flex-row items-center justify-between">
             <HeroText className="text-sm text-primary-100">String fee</HeroText>
             <HeroText className="text-lg font-bold text-white">
               {stringFee != null ? formatCurrency(stringFee) : stringPriceMeta.label}
-            </HeroText>
-          </View>
-          <View className="mt-3 flex-row items-center justify-between">
-            <HeroText className="text-sm text-primary-100">Service fee</HeroText>
-            <HeroText className="text-lg font-bold text-white">
-              {formatCurrency(serviceFee)}
             </HeroText>
           </View>
           <View className="mt-5 border-t border-white/10 pt-4 flex-row items-center justify-between">

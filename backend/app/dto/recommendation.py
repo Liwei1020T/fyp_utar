@@ -14,6 +14,7 @@ from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
 from app.domain.recommendation.entities import CommunitySnapshot
+from app.domain.recommendation.learning_signals import COMMUNITY_POLICY_VERSION
 from app.shared.serialization import isoformat_or_none
 
 
@@ -119,7 +120,7 @@ def community_snapshot_to_dict(
     racket_model_key: str | None,
 ) -> dict[str, object]:
     return {
-        "policy_version": "community_feedback_v1",
+        "policy_version": COMMUNITY_POLICY_VERSION,
         "snapshot_version": snapshot.snapshot_version,
         "racket_model_key": racket_model_key,
         "strings": [

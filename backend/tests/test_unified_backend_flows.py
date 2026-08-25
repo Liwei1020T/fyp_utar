@@ -849,6 +849,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert settings_response.status_code == 200
     assert settings_response.json()["store_name"] == "StringSence"
     assert settings_response.json()["trending_string_ids"] == []
+    assert "default_service_price" not in settings_response.json()
     featured_string_id = first_admin_string_id(admin_token)
 
     update_settings_response = client.put(
@@ -863,6 +864,13 @@ def test_admin_business_hours_settings_and_slots_flow():
             "store_policy_text": "Completed bookings are final after collection.",
             "address": "Utar Kampar Test Counter",
             "trending_string_ids": [featured_string_id],
+            "notification_settings": {
+                "booking": {
+                    "enabled": False,
+                    "title": "Legacy title",
+                    "body": "Legacy body",
+                }
+            },
         },
     )
     assert update_settings_response.status_code == 200
@@ -870,6 +878,9 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert update_settings_response.json()["trending_string_ids"] == [
         featured_string_id
     ]
+    assert update_settings_response.json()["notification_settings"] == {
+        "booking": {"enabled": False}
+    }
 
     public_settings_response = client.get(
         "/api/store-settings",

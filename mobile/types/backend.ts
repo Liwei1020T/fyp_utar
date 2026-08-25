@@ -540,7 +540,6 @@ export interface BackendCreateFeedbackPayload {
   comfort?: number | null;
   control?: number | null;
   repulsion?: number | null;
-  durability?: number | null;
   would_use_again?: boolean | null;
   comment?: string | null;
   string_feedback?: string | null;
@@ -549,11 +548,6 @@ export interface BackendCreateFeedbackPayload {
 }
 
 export type BackendUpdateFeedbackPayload = Partial<BackendCreateFeedbackPayload>;
-
-export interface BackendFeedbackEligibility {
-  durability_available_at: string | null;
-  can_rate_durability: boolean;
-}
 
 export interface BackendFeedback {
   id: string;
@@ -566,11 +560,6 @@ export interface BackendFeedback {
   comfort: number | null;
   control: number | null;
   repulsion: number | null;
-  durability: number | null;
-  durability_available_at: string | null;
-  can_rate_durability: boolean;
-  durability_rated_at: string | null;
-  structured_field_confirmed_at: Record<string, string>;
   would_use_again: boolean | null;
   comment: string | null;
   string_feedback: string | null;
@@ -633,7 +622,6 @@ export interface BackendPayment {
 export interface BackendBookingPaymentQuote {
   booking_id: string;
   string_fee: number;
-  service_fee: number;
   total_amount: number;
   wallet_balance: number;
   active_payment: BackendPayment | null;
@@ -687,10 +675,9 @@ export interface BackendStoreSettings {
   store_policy_text: string;
   address: string;
   trending_string_ids: string[];
-  default_service_price: number;
   notification_settings: Record<
     string,
-    { enabled?: boolean; title?: string; body?: string }
+    { enabled?: boolean }
   >;
   updated_at: string | null;
 }
@@ -704,10 +691,9 @@ export interface BackendStoreSettingsPayload {
   store_policy_text: string;
   address: string;
   trending_string_ids: string[];
-  default_service_price: number;
   notification_settings: Record<
     string,
-    { enabled?: boolean; title?: string; body?: string }
+    { enabled?: boolean }
   >;
 }
 

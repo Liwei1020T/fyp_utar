@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 from datetime import time
 from typing import Literal
+from typing import cast
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -150,6 +151,12 @@ class ServiceQueueOut(BaseModel):
     lanes: list[ServiceQueueLaneOut]
 
 
+class NotificationCategorySettingsPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    enabled: bool = True
+
+
 class StoreSettingsPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -161,8 +168,9 @@ class StoreSettingsPayload(BaseModel):
     store_policy_text: str = Field(min_length=1, max_length=2000)
     address: str = Field(min_length=1, max_length=500)
     trending_string_ids: list[str] = Field(default_factory=list, max_length=5)
-    default_service_price: float = Field(default=0, ge=0, le=1000)
-    notification_settings: dict[str, object] = Field(default_factory=dict)
+    notification_settings: dict[str, NotificationCategorySettingsPayload] = Field(
+        default_factory=dict
+    )
 
     @model_validator(mode="after")
     def validate_trending_string_ids(self) -> "StoreSettingsPayload":
@@ -241,8 +249,10 @@ def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
         store_policy_text=settings.store_policy_text,
         address=settings.address,
         trending_string_ids=settings.trending_string_ids,
-        default_service_price=settings.default_service_price,
-        notification_settings=settings.notification_settings,
+        notification_settings=cast(
+            dict[str, NotificationCategorySettingsPayload],
+            settings.notification_settings,
+        ),
         updated_at=settings.updated_at,
     )
 

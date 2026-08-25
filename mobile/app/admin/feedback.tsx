@@ -7,7 +7,7 @@ import { CommunityFeatureList } from '../../components/shared/CommunityFeatureLi
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
-import { AppInput } from '../../components/ui/AppInput';
+import { AppDatePicker } from '../../components/ui/AppDatePicker';
 import { AppSelect } from '../../components/ui/AppSelect';
 import { HeroText } from '../../components/ui/heroui';
 import { formatDateTime, formatLabel } from '../../lib/formatters';
@@ -144,14 +144,12 @@ export default function AdminFeedbackScreen() {
       tone="admin"
       headerVariant="flow"
       title="Feedback management"
-      subtitle="Review structured service feedback and low-satisfaction cases."
       showBackButton
       onBackPress={() => router.back()}
     >
       <AppSection
         eyebrow="Recommendation learning"
         title="Community calibration"
-        subtitle="Read-only evidence used by V11. Exact racket-model ratings are shown separately from global fallback evidence."
       >
         <AppCard variant="elevated" padding="md">
           {isCommunityLoading ? (
@@ -190,14 +188,6 @@ export default function AdminFeedbackScreen() {
                 })}
                 onChange={setSelectedCommunityScope}
               />
-
-              <HeroText selectable className="text-xs leading-5 text-neutral-500">
-                Policy {activeCommunityScope?.policy_version ?? '—'} · snapshot{' '}
-                {activeCommunityScope?.snapshot_version.slice(0, 10) ?? '—'}
-                {stringId
-                  ? ' · follows the selected string filter'
-                  : ' · showing one string; use the filter below to change it'}
-              </HeroText>
 
               {visibleCommunityStrings.length > 0 ? (
                 <View className="gap-3">
@@ -265,19 +255,17 @@ export default function AdminFeedbackScreen() {
         ) : null}
         <View className="mt-3 flex-row gap-3">
           <View className="flex-1">
-            <AppInput
+            <AppDatePicker
               label="From date"
-              placeholder="YYYY-MM-DD"
               value={dateFrom}
-              onChangeText={setDateFrom}
+              onChange={setDateFrom}
             />
           </View>
           <View className="flex-1">
-            <AppInput
+            <AppDatePicker
               label="To date"
-              placeholder="YYYY-MM-DD"
               value={dateTo}
-              onChangeText={setDateTo}
+              onChange={setDateTo}
             />
           </View>
         </View>

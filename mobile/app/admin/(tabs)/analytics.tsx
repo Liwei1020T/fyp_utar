@@ -1,24 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { BarChart3, Clock3, Flame, Gauge } from 'lucide-react-native';
+import { BarChart3, Clock3, Gauge } from 'lucide-react-native';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText } from '../../../components/ui/heroui';
-import { useBackendAccessToken, useCurrentUser, useStrings } from '../../../store/appStore';
+import { useBackendAccessToken, useCurrentUser } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
-import type { BackendAnalyticsSummary, BackendPopularString } from '../../../types/backend';
+import type { BackendAnalyticsSummary } from '../../../types/backend';
 
 export default function AdminAnalyticsScreen() {
   const user = useCurrentUser();
   const token = useBackendAccessToken();
-  const strings = useStrings();
   const [analytics, setAnalytics] = useState<BackendAnalyticsSummary | null>(null);
-  const [popularStrings, setPopularStrings] = useState<BackendPopularString[]>([]);
   const [isLoading, setIsLoading] = useState(Boolean(token));
   const [error, setError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -27,7 +24,6 @@ export default function AdminAnalyticsScreen() {
   useEffect(() => {
     if (!isAdmin) {
       setAnalytics(null);
-      setPopularStrings([]);
       setIsLoading(false);
       setError(null);
       return;
@@ -35,7 +31,6 @@ export default function AdminAnalyticsScreen() {
 
     if (!token) {
       setAnalytics(null);
-      setPopularStrings([]);
       setIsLoading(false);
       setError('Backend login is required to view live analytics.');
       return;
@@ -45,19 +40,14 @@ export default function AdminAnalyticsScreen() {
 
     const hydrate = async () => {
       setAnalytics(null);
-      setPopularStrings([]);
       setIsLoading(true);
       setError(null);
       try {
-        const [summary, popular] = await Promise.all([
-          backendApi.adminAnalyticsSummary(token),
-          backendApi.adminPopularStrings(token),
-        ]);
+        const summary = await backendApi.adminAnalyticsSummary(token);
         if (cancelled) {
           return;
         }
         setAnalytics(summary);
-        setPopularStrings(popular);
       } catch (loadError) {
         if (!cancelled) {
           const statusCode = loadError instanceof BackendApiError
@@ -85,22 +75,6 @@ export default function AdminAnalyticsScreen() {
     };
   }, [isAdmin, loadAttempt, token]);
 
-  const popularStringCards = useMemo(
-    () =>
-      popularStrings.map((item) => {
-        const catalogString = strings.find((entry) => entry.id === item.string_id);
-        return {
-          id: item.string_id,
-          label:
-            catalogString != null
-              ? `${catalogString.brand} ${catalogString.model}`
-              : `${item.brand} ${item.model_name}`,
-          bookingCount: item.booking_count,
-        };
-      }),
-    [popularStrings, strings],
-  );
-
   if (!isAdmin) {
     return null;
   }
@@ -111,14 +85,14 @@ export default function AdminAnalyticsScreen() {
         tone="admin"
         headerVariant="primary"
         title="Admin analytics"
-        subtitle="Operations trends, busy slots, popular strings, and payment workload."
+        subtitle="Bookings, revenue, feedback, and payment workload."
       >
         <AppCard variant="subtle" className="mt-6" padding="lg">
           <HeroText className="text-lg font-bold text-neutral-900">
             Loading live analytics...
           </HeroText>
           <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-            Pulling bookings, revenue, and popular-string activity from the backend.
+            Pulling booking, revenue, feedback, and payment activity from the backend.
           </HeroText>
         </AppCard>
       </AppScreen>
@@ -131,7 +105,7 @@ export default function AdminAnalyticsScreen() {
         tone="admin"
         headerVariant="primary"
         title="Admin analytics"
-        subtitle="Operations trends, busy slots, popular strings, and payment workload."
+        subtitle="Bookings, revenue, feedback, and payment workload."
       >
         <AppCard variant="subtle" className="mt-6 border border-red-100" padding="lg">
           <HeroText className="text-lg font-bold text-neutral-900">
@@ -158,7 +132,7 @@ export default function AdminAnalyticsScreen() {
       tone="admin"
       headerVariant="primary"
       title="Admin analytics"
-      subtitle="Operations trends, busy slots, popular strings, and payment workload."
+      subtitle="Bookings, revenue, feedback, and payment workload."
     >
       <AppSection eyebrow="Metrics" title="Shop performance">
         <View className="flex-row flex-wrap gap-3">
@@ -212,72 +186,6 @@ export default function AdminAnalyticsScreen() {
             }
             icon={<Clock3 size={20} color="#22766D" />}
           />
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="Tension" title="Requested tension distribution">
-        <View className="gap-3">
-          {Object.entries(analytics.tension_distribution).map(
-            ([tension, count]) => (
-              <AppCard key={tension} variant="elevated" padding="sm">
-                <View className="flex-row items-center justify-between">
-                  <HeroText className="text-sm font-semibold text-neutral-900">
-                    {tension}
-                  </HeroText>
-                  <AppChip label={String(count)} variant="primary" />
-                </View>
-              </AppCard>
-            ),
-          )}
-          {!Object.keys(analytics.tension_distribution).length ? (
-            <AppCard variant="subtle" padding="sm">
-              <HeroText className="text-sm text-neutral-600">
-                Tension data will appear after bookings record requested tension.
-              </HeroText>
-            </AppCard>
-          ) : null}
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="Demand" title="Popular strings">
-        <View className="gap-3">
-          {popularStringCards.map((item) => (
-            <AppCard key={item.id} variant="elevated" padding="sm">
-              <HeroText className="text-sm font-semibold text-neutral-900">
-                {item.label}
-              </HeroText>
-              <HeroText className="mt-1 text-xs font-medium text-neutral-500">
-                {item.bookingCount} booking{item.bookingCount === 1 ? '' : 's'}
-              </HeroText>
-            </AppCard>
-          ))}
-          {!isLoading && popularStringCards.length === 0 ? (
-            <AppCard variant="subtle" padding="sm">
-              <HeroText className="text-sm text-neutral-600">
-                No popular string data is available yet.
-              </HeroText>
-            </AppCard>
-          ) : null}
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="Busy slots" title="When the desk gets crowded">
-        <View className="gap-3">
-          {analytics.busy_slots.map((slot) => (
-            <AppCard key={slot} variant="highlighted" padding="sm">
-              <View className="flex-row items-center gap-3">
-                <Flame size={18} color="#C98A2E" />
-                <HeroText className="text-sm font-semibold text-neutral-900">{slot}</HeroText>
-              </View>
-            </AppCard>
-          ))}
-          {!isLoading && analytics.busy_slots.length === 0 ? (
-            <AppCard variant="subtle" padding="sm">
-              <HeroText className="text-sm text-neutral-600">
-                Busy-slot analytics will appear after more booking activity is recorded.
-              </HeroText>
-            </AppCard>
-          ) : null}
         </View>
       </AppSection>
     </AppScreen>

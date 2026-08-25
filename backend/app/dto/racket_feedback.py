@@ -92,7 +92,6 @@ class CreateFeedbackPayload(BaseModel):
     comfort: int | None = Field(default=None, ge=1, le=5, strict=True)
     control: int | None = Field(default=None, ge=1, le=5, strict=True)
     repulsion: int | None = Field(default=None, ge=1, le=5, strict=True)
-    durability: int | None = Field(default=None, ge=1, le=5, strict=True)
     would_use_again: bool | None = None
     comment: str | None = Field(default=None, min_length=1, max_length=2000)
     string_feedback: str | None = Field(
@@ -124,7 +123,6 @@ class UpdateFeedbackPayload(BaseModel):
     comfort: int | None = Field(default=None, ge=1, le=5, strict=True)
     control: int | None = Field(default=None, ge=1, le=5, strict=True)
     repulsion: int | None = Field(default=None, ge=1, le=5, strict=True)
-    durability: int | None = Field(default=None, ge=1, le=5, strict=True)
     would_use_again: bool | None = None
     comment: str | None = Field(default=None, min_length=1, max_length=2000)
     string_feedback: str | None = Field(default=None, min_length=1, max_length=2000)
@@ -155,11 +153,6 @@ class FeedbackOut(BaseModel):
     comfort: int | None
     control: int | None
     repulsion: int | None
-    durability: int | None
-    durability_available_at: str | None = None
-    can_rate_durability: bool = False
-    durability_rated_at: str | None = None
-    structured_field_confirmed_at: dict[str, str] = Field(default_factory=dict)
     would_use_again: bool | None
     comment: str | None
     string_feedback: str | None
@@ -167,11 +160,6 @@ class FeedbackOut(BaseModel):
     sentiment_tags: list[SentimentTag]
     created_at: str
     updated_at: str
-
-
-class FeedbackEligibilityOut(BaseModel):
-    durability_available_at: str | None
-    can_rate_durability: bool
 
 
 class AdminFeedbackOut(FeedbackOut):

@@ -18,7 +18,6 @@ import type {
   BackendCreateRacketPayload,
   BackendCommunitySummary,
   BackendFeedback,
-  BackendFeedbackEligibility,
   BackendForgotPasswordRequestResponse,
   BackendInventoryUpdatePayload,
   BackendMarkNotificationsReadPayload,
@@ -949,12 +948,6 @@ export const backendApi = {
     return requestJson<BackendFeedback | null>(`/bookings/${bookingId}/feedback`, {
       token,
     });
-  },
-  fetchBookingFeedbackEligibility(token: string, bookingId: string) {
-    return requestJson<BackendFeedbackEligibility>(
-      `/bookings/${bookingId}/feedback-eligibility`,
-      { token },
-    );
   },
   generateRecommendations(token: string, top_n = 3, racket_id?: string) {
     return requestJson<BackendRecommendationResponse>('/recommendations/generate', {

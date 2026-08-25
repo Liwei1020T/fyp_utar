@@ -206,7 +206,6 @@ export interface Booking {
   serviceMethod: 'counter_dropoff' | 'pickup_request';
   cancellationReason?: string;
   completionSummary?: string;
-  serviceFee: number;
   stringFee: number;
   totalAmount: number;
   amountPaid: number;
@@ -375,11 +374,6 @@ export interface BookingFeedback {
   comfort?: number;
   control?: number;
   repulsion?: number;
-  durability?: number;
-  durabilityAvailableAt?: string;
-  canRateDurability: boolean;
-  durabilityRatedAt?: string;
-  structuredFieldConfirmedAt: Record<string, string>;
   wouldUseAgain?: boolean;
   comment?: string;
   stringFeedback?: string;
@@ -396,7 +390,6 @@ export interface RacketStringLog {
   tension: number;
   installedAt: string;
   feelRating: number;
-  durabilityNote: string;
   feedback?: BookingFeedback;
 }
 
@@ -509,10 +502,9 @@ export interface StoreSettings {
   storePolicyText: string;
   address: string;
   trendingStringIds: string[];
-  defaultServicePrice: number;
   notificationSettings: Record<
     string,
-    { enabled?: boolean; title?: string; body?: string }
+    { enabled?: boolean }
   >;
 }
 

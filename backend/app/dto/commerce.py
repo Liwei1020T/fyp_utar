@@ -43,7 +43,6 @@ class PaymentOut(BaseModel):
 class BookingPaymentQuoteOut(BaseModel):
     booking_id: str
     string_fee: float
-    service_fee: float
     total_amount: float
     wallet_balance: float
     active_payment: PaymentOut | None

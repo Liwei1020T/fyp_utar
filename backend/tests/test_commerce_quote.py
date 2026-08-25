@@ -66,7 +66,7 @@ def test_booking_payment_quote_is_owned_and_uses_active_ledger_amount() -> None:
     quote = quote_response.json()
     assert quote["booking_id"] == booking_id
     assert quote["string_fee"] > 0
-    assert quote["service_fee"] == 0
+    assert "service_fee" not in quote
     assert quote["total_amount"] == quote["string_fee"]
     assert quote["wallet_balance"] == 0
     assert quote["active_payment"] is None
@@ -106,6 +106,7 @@ def test_booking_payment_quote_is_owned_and_uses_active_ledger_amount() -> None:
     )
     assert payment_response.status_code == 200
     assert payment_response.json()["method"] == "qr_transfer"
+    assert payment_response.json()["amount"] == quote["string_fee"]
     assert payment_response.json()["proof_url"]
 
     active_quote_response = client.get(

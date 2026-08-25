@@ -137,8 +137,6 @@ export default function AdminLayout() {
             bookingNotes: storeSettingsResult.value.booking_notes,
             storePolicyText: storeSettingsResult.value.store_policy_text,
             trendingStringIds: storeSettingsResult.value.trending_string_ids ?? [],
-            defaultServicePrice:
-              storeSettingsResult.value.default_service_price,
             notificationSettings:
               storeSettingsResult.value.notification_settings,
           });

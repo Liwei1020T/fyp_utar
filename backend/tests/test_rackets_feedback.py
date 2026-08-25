@@ -1,20 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
-
 from fastapi.testclient import TestClient
 from sqlalchemy import select
-from sqlalchemy import update
 
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
     SqlAlchemyRecommendationRepository,
 )
-from app.adapters.persistence.sqlalchemy.models.booking import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
-from app.domain.booking.enums import BookingStatus
 from app.main import app
 
 
@@ -405,7 +398,7 @@ def test_feedback_requires_owned_completed_booking_and_is_unique() -> None:
     assert summary["last_serviced_at"] is not None
 
 
-def test_structured_feedback_provenance_patch_and_delayed_durability() -> None:
+def test_structured_feedback_patch_without_durability_or_provenance() -> None:
     owner_token = register_customer(
         username="feedback-structured",
         phone_number="+60121110013",
@@ -418,13 +411,6 @@ def test_structured_feedback_provenance_patch_and_delayed_durability() -> None:
     booking_id = str(booking["id"])
     complete_booking(login_admin(), booking_id)
 
-    eligibility = client.get(
-        f"/api/bookings/{booking_id}/feedback-eligibility",
-        headers=headers(owner_token),
-    )
-    assert eligibility.status_code == 200
-    assert eligibility.json()["can_rate_durability"] is False
-
     created = client.post(
         f"/api/bookings/{booking_id}/feedback",
         headers=headers(owner_token),
@@ -432,7 +418,8 @@ def test_structured_feedback_provenance_patch_and_delayed_durability() -> None:
     )
     assert created.status_code == 200
     assert created.json()["comment"] is None
-    assert set(created.json()["structured_field_confirmed_at"]) == {"control"}
+    assert "durability" not in created.json()
+    assert "structured_field_confirmed_at" not in created.json()
 
     player_summary = client.get(
         "/api/strings/community-summary",
@@ -468,52 +455,16 @@ def test_structured_feedback_provenance_patch_and_delayed_durability() -> None:
         == 422
     )
 
-    previous_control_time = created.json()["structured_field_confirmed_at"]["control"]
     text_only = client.patch(
         f"/api/bookings/{booking_id}/feedback",
         headers=headers(owner_token),
         json={"string_feedback": "Still crisp."},
     )
     assert text_only.status_code == 200
-    assert (
-        text_only.json()["structured_field_confirmed_at"]["control"]
-        == previous_control_time
-    )
 
-    early_durability = client.patch(
+    removed_durability = client.patch(
         f"/api/bookings/{booking_id}/feedback",
         headers=headers(owner_token),
         json={"durability": 4},
     )
-    assert early_durability.status_code == 409
-
-    with SessionLocal() as db:
-        db.execute(
-            update(BookingStatusHistory)
-            .where(
-                BookingStatusHistory.booking_id == booking_id,
-                BookingStatusHistory.new_status == BookingStatus.COMPLETED.value,
-            )
-            .values(changed_at=datetime.now(timezone.utc) - timedelta(days=8))
-        )
-        db.commit()
-
-    eligible = client.get(
-        f"/api/bookings/{booking_id}/feedback-eligibility",
-        headers=headers(owner_token),
-    )
-    assert eligible.status_code == 200
-    assert eligible.json()["can_rate_durability"] is True
-
-    durability = client.patch(
-        f"/api/bookings/{booking_id}/feedback",
-        headers=headers(owner_token),
-        json={"durability": 4, "would_use_again": False},
-    )
-    assert durability.status_code == 200
-    assert durability.json()["durability_rated_at"] is not None
-    assert set(durability.json()["structured_field_confirmed_at"]) == {
-        "control",
-        "durability",
-        "would_use_again",
-    }
+    assert removed_durability.status_code == 422

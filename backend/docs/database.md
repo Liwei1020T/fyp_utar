@@ -286,7 +286,13 @@ brand/model, optional frame metadata, preferred use, and notes.
 Stores one structured feedback row per completed booking. The unique booking
 constraint and ownership checks prevent duplicate or cross-user submissions.
 Optional 1-to-5 detail fields store recommendation relevance, string and
-tension satisfaction, comfort, control, repulsion, and durability.
+tension satisfaction, comfort, control, and repulsion. The
+`20260825_0033` migration removes the legacy feedback durability columns and
+field-level confirmation metadata; catalogue and player-preference durability
+remain separate recommendation data.
+
+The `20260825_0034` migration removes the unused store service-price column;
+booking charges now come only from the selected string price.
 
 ### `check_in_tokens`
 

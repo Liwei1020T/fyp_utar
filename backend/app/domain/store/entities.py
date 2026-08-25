@@ -40,7 +40,6 @@ class StoreSettingsRecord:
     store_policy_text: str
     address: str
     trending_string_ids: list[str]
-    default_service_price: float
     notification_settings: dict[str, object]
     updated_at: str | None
 

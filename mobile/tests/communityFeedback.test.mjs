@@ -20,7 +20,7 @@ test('community display converts normalized scores and keeps feature order', () 
   assert.equal(formatCommunityScore(0.75), '4.0/5');
   assert.equal(formatCommunityScore(2), '5.0/5');
   const entries = communityFeatureEntries({
-    durability: {
+    control: {
       score: 1,
       distinct_users: 1,
       booking_count: 1,
@@ -39,7 +39,7 @@ test('community display converts normalized scores and keeps feature order', () 
       source_version: 'c',
     },
   });
-  assert.deepEqual(entries.map(([key]) => key), ['comfort', 'durability']);
+  assert.deepEqual(entries.map(([key]) => key), ['comfort', 'control']);
 });
 
 test('player and admin screens expose recoverable community-summary states', async () => {
@@ -59,4 +59,7 @@ test('player and admin screens expose recoverable community-summary states', asy
   assert.match(adminFeedback, /title="Community calibration"/);
   assert.match(adminFeedback, /Global strings/);
   assert.match(adminFeedback, /No eligible community ratings exist/);
+  assert.doesNotMatch(adminFeedback, /Review structured service feedback/);
+  assert.doesNotMatch(adminFeedback, /Read-only evidence used by V11/);
+  assert.doesNotMatch(adminFeedback, /Policy .*snapshot|showing one string/);
 });

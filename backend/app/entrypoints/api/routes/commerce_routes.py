@@ -136,13 +136,6 @@ def _booking_amount(booking: Booking) -> Decimal:
     return Decimal(inventory.selling_price).quantize(Decimal("0.01"))
 
 
-def _service_fee(db: Session) -> Decimal:
-    settings = db.get(StoreSettings, "main")
-    if settings is None:
-        return Decimal("0")
-    return Decimal(settings.default_service_price or 0).quantize(Decimal("0.01"))
-
-
 @router.get("/payments", response_model=list[PaymentOut])
 def list_my_payments(
     current_user: CurrentUser = Depends(get_current_customer),
@@ -183,18 +176,12 @@ def get_booking_payment_quote(
         .limit(1)
     ).scalar_one_or_none()
     string_fee = _booking_amount(booking)
-    service_fee = _service_fee(db)
-    amount = (
-        active_payment.amount
-        if active_payment is not None
-        else string_fee + service_fee
-    )
+    amount = active_payment.amount if active_payment is not None else string_fee
     wallet_balance = _wallet_balance(_wallet_transactions(db, current_user.user_id))
 
     return BookingPaymentQuoteOut(
         booking_id=booking.id,
         string_fee=float(string_fee),
-        service_fee=float(service_fee),
         total_amount=float(amount),
         wallet_balance=float(wallet_balance),
         active_payment=_payment_to_dto(active_payment)
@@ -234,7 +221,7 @@ async def create_booking_payment(
     if active_payment is not None:
         return _payment_to_dto(active_payment)
 
-    amount = _booking_amount(booking) + _service_fee(db)
+    amount = _booking_amount(booking)
     if expected_amount is not None:
         expected_amount_decimal = Decimal(str(expected_amount)).quantize(
             Decimal("0.01")

@@ -221,7 +221,6 @@ message table.
 - `GET /api/bookings/{booking_id}/feedback`
 - `POST /api/bookings/{booking_id}/feedback`
 - `PATCH /api/bookings/{booking_id}/feedback`
-- `GET /api/bookings/{booking_id}/feedback-eligibility`
 - `GET /api/admin/feedback`
 - `GET /api/admin/feedback/export`
 
@@ -237,7 +236,7 @@ canonical brand/model authoritative, and a custom model returns `model_key=null`
 so recommendation uses global community evidence and no cross-model CF.
 Structured feedback is allowed once per owned completed booking, with a
 1-to-5 overall rating plus optional relevance, string, tension, comfort,
-control, repulsion, and durability ratings. Admins can filter the persisted
+control, and repulsion ratings. Admins can filter the persisted
 records by `booking_id`, string, rating, or date, page them with `limit` and
 `offset`, and export the same fields as CSV.
 
@@ -399,9 +398,9 @@ Store-ops responses add:
 - business hours day configs in snake_case (`is_open`, `open_time`, `slot_duration_minutes`, `max_bookings_per_slot`)
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
-- single-store settings payloads for support/policy copy,
-  `default_service_price`, notification templates, `trending_string_ids`, and
-  optional `payment_qr_url`; player clients read these through
+- single-store settings payloads for support/policy copy, notification
+  category switches, `trending_string_ids`, and optional `payment_qr_url`. Player
+  clients read these through
   `GET /api/store-settings`. QR upload/replace/delete is a separate admin
   multipart operation so text settings remain JSON
 - analytics summary with store-local `today_bookings`, repeat customers,

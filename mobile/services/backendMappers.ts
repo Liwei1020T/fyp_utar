@@ -808,7 +808,6 @@ export function mapBackendBookingToBooking(
     serviceMethod: booking.service_method,
     cancellationReason: booking.cancellation_reason ?? undefined,
     completionSummary: booking.completion_summary ?? undefined,
-    serviceFee: 0,
     stringFee: 0,
     totalAmount: 0,
     amountPaid: 0,
@@ -906,11 +905,6 @@ export function mapBackendFeedbackToBookingFeedback(
     comfort: feedback.comfort ?? undefined,
     control: feedback.control ?? undefined,
     repulsion: feedback.repulsion ?? undefined,
-    durability: feedback.durability ?? undefined,
-    durabilityAvailableAt: feedback.durability_available_at ?? undefined,
-    canRateDurability: feedback.can_rate_durability,
-    durabilityRatedAt: feedback.durability_rated_at ?? undefined,
-    structuredFieldConfirmedAt: feedback.structured_field_confirmed_at,
     wouldUseAgain: feedback.would_use_again ?? undefined,
     comment: feedback.comment ?? undefined,
     stringFeedback: feedback.string_feedback ?? undefined,
@@ -937,10 +931,6 @@ export function mapBackendRacketToRacketPassport(
       tension: entry.requested_tension ?? 0,
       installedAt: entry.serviced_at,
       feelRating: feedback ? feedback.rating * 2 : 0,
-      durabilityNote:
-        feedback?.stringFeedback ??
-        feedback?.serviceFeedback ??
-        'No feedback recorded.',
       feedback,
     };
   });

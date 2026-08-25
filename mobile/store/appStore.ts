@@ -352,7 +352,6 @@ export const useAppStore = create<AppStoreState>((set) => ({
         storePolicyText: '',
         address: '',
         trendingStringIds: [],
-        defaultServicePrice: 0,
         notificationSettings: {},
         ...state.storeSettings,
         ...patch,

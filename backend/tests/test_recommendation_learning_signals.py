@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from datetime import timedelta
 from datetime import timezone
 
 import pytest
@@ -38,7 +37,6 @@ def test_community_uses_exact_context_then_global_and_averages_each_user() -> No
         _feedback("f2", "u1", 1, MODEL_KEY),
         _feedback("f3", "u2", 5, MODEL_KEY),
         _feedback("f4", "u3", 1, "victor:thruster k"),
-        _feedback("legacy", "u4", 5, MODEL_KEY, confirmed=False),
     ]
 
     exact = build_community_snapshot(rows, target_racket_model_key=MODEL_KEY)
@@ -138,8 +136,6 @@ def _feedback(
     user_id: str,
     control: int,
     model_key: str | None,
-    *,
-    confirmed: bool = True,
 ) -> CommunityFeedbackRow:
     return CommunityFeedbackRow(
         feedback_id=feedback_id,
@@ -147,9 +143,6 @@ def _feedback(
         catalog_id="yonex-bg80",
         racket_model_key=model_key,
         ratings={"control": control},
-        confirmed_at={"control": NOW.isoformat()} if confirmed else {},
-        durability_rated_at=None,
-        completed_at=NOW - timedelta(days=10),
     )
 
 

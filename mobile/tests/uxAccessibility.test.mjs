@@ -108,21 +108,30 @@ test('images are described or hidden from assistive technology', async () => {
 });
 
 test('shared controls and catalog preserve recoverable UX states', async () => {
-  const [button, input, screen, header, catalog] = await Promise.all(
+  const [button, input, select, datePicker, screen, header, logo, catalog] = await Promise.all(
     [
       'components/ui/AppButton.tsx',
       'components/ui/AppInput.tsx',
+      'components/ui/AppSelect.tsx',
+      'components/ui/AppDatePicker.tsx',
       'components/shared/AppScreen.tsx',
       'components/shared/AppPageHeader.tsx',
+      'components/ui/AppBrandLogo.tsx',
       'app/player/(tabs)/strings.tsx',
     ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
   );
 
   assert.match(button, /busy: isLoading/);
   assert.match(input, /accessibilityLiveRegion=\{error \? 'polite' : 'none'\}/);
+  assert.match(select, /position: 'absolute'/);
+  assert.match(select, /zIndex: 1000/);
+  assert.match(datePicker, /type: 'date'/);
+  assert.match(datePicker, /DateTimePicker/);
+  assert.match(datePicker, /accessibilityRole="button"/);
   assert.match(screen, /subtitle=\{subtitle\}/);
   assert.match(header, /accessibilityRole="header"/);
   assert.match(header, /\{subtitle \? \(/);
+  assert.match(logo, /style=\{\{ width: '100%', height: '100%' \}\}/);
   assert.match(catalog, /label="Clear filters"/);
   assert.doesNotMatch(catalog, />\s*View All\s*</);
 });
@@ -139,6 +148,21 @@ test('feedback submission uses a clear confirmation dialog', async () => {
   assert.match(alerts, /Alert\.alert\(/);
   assert.match(feedback, /Feedback submitted/);
   assert.doesNotMatch(feedback, /future evidence/i);
+  assert.doesNotMatch(feedback, /durability|feedback-eligibility/i);
+});
+
+test('binary preference controls use native switches', async () => {
+  const sources = await Promise.all(
+    [
+      'app/player/notifications/preferences.tsx',
+      'app/player/settings.tsx',
+      'app/admin/settings.tsx',
+    ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
+  );
+
+  for (const source of sources) {
+    assert.match(source, /<Switch/);
+  }
 });
 
 test('authentication uses one account entry and routes from the backend role', async () => {
@@ -185,7 +209,7 @@ test('reduced Agent cards hide evidence status labels', async () => {
 });
 
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
-  const [profileEdit, home, profile, tools, recommendation, results, adminDashboard] =
+  const [profileEdit, home, profile, tools, recommendation, results, adminDashboard, inventory, inventoryCard, analytics, businessHours, settings, bookingSummary, payment] =
     await Promise.all(
       [
         'app/player/profile/edit.tsx',
@@ -195,6 +219,13 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
         'app/player/(tabs)/recommend.tsx',
         'app/player/(tabs)/results.tsx',
         'app/admin/(tabs)/dashboard.tsx',
+        'app/admin/(tabs)/inventory.tsx',
+        'components/admin/inventory/AdminInventoryCard.tsx',
+        'app/admin/(tabs)/analytics.tsx',
+        'app/admin/business-hours.tsx',
+        'app/admin/settings.tsx',
+        'app/player/bookings/summary.tsx',
+        'app/player/payments/[bookingId].tsx',
       ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
     );
 
@@ -218,6 +249,24 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(tools, /title: 'Play'/);
   assert.match(tools, /title: 'Service'/);
   assert.match(tools, /title: 'Account'/);
+  assert.match(inventory, /accessibilityLabel="Show inventory filters"/);
+  assert.match(inventory, /className="mb-3 flex-row items-end gap-2"/);
+  assert.match(inventory, /headerVariant="primary"/);
+  assert.match(inventory, /adminUpdateInventoryString/);
+  assert.match(inventoryCard, /label=\{isSavingStock \? 'Saving stock' : 'Save stock'\}/);
+  assert.doesNotMatch(inventoryCard, /label: 'Notes'|label="Notes"/);
+  assert.doesNotMatch(
+    analytics,
+    /Requested tension distribution|Popular strings|When the desk gets crowded|adminPopularStrings/,
+  );
+  assert.match(businessHours, /title="Temporary closures"/);
+  assert.match(businessHours, /label="Add closed date"/);
+  assert.match(businessHours, /label="Month"/);
+  assert.doesNotMatch(businessHours, /Comma-separated YYYY-MM-DD dates/);
+  assert.doesNotMatch(settings, /Default service price|Service fee \(RM\)/);
+  assert.doesNotMatch(settings, /Default title|Default body/);
+  assert.doesNotMatch(bookingSummary, /Service fee|defaultServicePrice/);
+  assert.doesNotMatch(payment, /Service fee|service_fee/);
   assert.doesNotMatch(tools, /\/player\/profile\/edit/);
   assert.doesNotMatch(recommendation, /Saved Priority Weights/);
   assert.match(results, /StringProductImage/);

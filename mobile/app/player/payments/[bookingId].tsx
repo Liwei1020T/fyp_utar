@@ -125,7 +125,6 @@ export default function PaymentScreen() {
     booking && booking.paymentStatus === 'unpaid' && booking.totalAmount <= 0,
   );
   const stringFee = quote?.string_fee ?? null;
-  const serviceFee = quote?.service_fee ?? 0;
   const totalAmount = quote?.total_amount ?? null;
   const hasSufficientWallet =
     selectedMethod !== 'wallet_balance' ||
@@ -253,10 +252,6 @@ export default function PaymentScreen() {
           <HeroText className="text-lg font-bold text-white">
             {stringFeeLabel}
           </HeroText>
-        </View>
-        <View className="mt-2 flex-row items-center justify-between">
-          <HeroText className="text-sm text-primary-100">Service fee</HeroText>
-          <HeroText className="text-lg font-bold text-white">{formatCurrency(serviceFee)}</HeroText>
         </View>
         <View className="mt-2 flex-row items-center justify-between">
           <HeroText className="text-sm text-primary-100">Wallet balance</HeroText>

@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Minus, Plus } from 'lucide-react-native';
 import { AppCard } from '../../ui/AppCard';
 import { AppChip, type AppChipVariant } from '../../ui/AppChip';
 import { HeroText, cn } from '../../ui/heroui';
@@ -96,19 +97,25 @@ function QuickAction({
   label,
   variant = 'outline',
   onPress,
+  disabled = false,
 }: {
   label: string;
   variant?: 'primary' | 'outline' | 'ghost';
   onPress?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
       className={cn(
         'h-11 items-center justify-center rounded-[12px] border px-3',
-        variant === 'primary'
+        disabled
+          ? 'border-field-border bg-app-muted opacity-60'
+          : variant === 'primary'
           ? 'border-primary-600 bg-primary-600'
           : variant === 'ghost'
             ? 'border-transparent bg-transparent'
@@ -132,17 +139,17 @@ export function AdminInventoryCard({
   item,
   onPress,
   attentionOnly = false,
-  quickActions,
+  onSaveStock,
 }: {
   item: StringItem;
   onPress?: () => void;
   attentionOnly?: boolean;
-  quickActions?: {
-    label: string;
-    variant?: 'primary' | 'outline' | 'ghost';
-    onPress?: () => void;
-  }[];
+  onSaveStock?: (stockQty: number) => Promise<void>;
 }) {
+  const [isEditingStock, setIsEditingStock] = useState(false);
+  const [stockValue, setStockValue] = useState(String(item.inventory.stockQty));
+  const [stockError, setStockError] = useState<string | null>(null);
+  const [isSavingStock, setIsSavingStock] = useState(false);
   const price = getInventoryPriceLabel(item);
   const attentionState = getInventoryAttentionState(item);
   const detailLine = [
@@ -154,6 +161,41 @@ export function AdminInventoryCard({
   ]
     .filter(Boolean)
     .join(' \u00b7 ');
+
+  useEffect(() => {
+    if (!isEditingStock) {
+      setStockValue(String(item.inventory.stockQty));
+    }
+  }, [isEditingStock, item.inventory.stockQty]);
+
+  const adjustStock = (delta: number) => {
+    const current = Number.parseInt(stockValue, 10);
+    setStockValue(String(Math.max(0, (Number.isNaN(current) ? 0 : current) + delta)));
+    setStockError(null);
+  };
+
+  const saveStock = async () => {
+    const nextStock = Number(stockValue);
+    if (!Number.isInteger(nextStock) || nextStock < 0 || nextStock > 99999) {
+      setStockError('Enter a whole number between 0 and 99,999.');
+      return;
+    }
+    if (!onSaveStock) {
+      onPress?.();
+      return;
+    }
+
+    setIsSavingStock(true);
+    setStockError(null);
+    try {
+      await onSaveStock(nextStock);
+      setIsEditingStock(false);
+    } catch (error) {
+      setStockError(error instanceof Error ? error.message : 'Stock could not be saved.');
+    } finally {
+      setIsSavingStock(false);
+    }
+  };
 
   return (
     <AppCard
@@ -195,29 +237,80 @@ export function AdminInventoryCard({
             ) : null}
           </View>
 
-          <View className="mt-2.5 flex-row flex-wrap gap-2">
-            {(quickActions ?? [
-              {
-                label:
-                  attentionState === 'out_of_stock'
-                    ? 'Restock'
-                    : attentionState === 'price_missing'
-                      ? 'Edit price'
-                      : 'Edit stock',
-                variant: 'primary' as const,
-                onPress,
-              },
-              { label: 'Edit details', onPress },
-              { label: 'Notes', variant: 'ghost' as const, onPress },
-            ]).map((action) => (
+          {isEditingStock ? (
+            <View className="mt-3 rounded-[12px] border border-primary-100 bg-primary-50/40 p-3">
+              <HeroText className="text-[12px] font-semibold text-neutral-700">
+                Available stock
+              </HeroText>
+              <View className="mt-2 flex-row items-center gap-2">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Decrease ${item.model} stock`}
+                  onPress={() => adjustStock(-1)}
+                  className="h-11 w-11 items-center justify-center rounded-[10px] border border-field-border bg-white"
+                >
+                  <Minus size={17} color="#475569" strokeWidth={2.2} />
+                </Pressable>
+                <TextInput
+                  accessibilityLabel={`${item.model} stock quantity`}
+                  keyboardType="number-pad"
+                  value={stockValue}
+                  onChangeText={(value) => {
+                    setStockValue(value.replace(/[^0-9]/g, ''));
+                    setStockError(null);
+                  }}
+                  selectTextOnFocus
+                  className="h-11 min-w-0 flex-1 rounded-[10px] border border-field-border bg-white px-2 text-center text-[16px] font-semibold text-neutral-950 outline-none"
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Increase ${item.model} stock`}
+                  onPress={() => adjustStock(1)}
+                  className="h-11 w-11 items-center justify-center rounded-[10px] border border-field-border bg-white"
+                >
+                  <Plus size={17} color="#2F64B6" strokeWidth={2.2} />
+                </Pressable>
+              </View>
+              {stockError ? (
+                <HeroText accessibilityLiveRegion="polite" className="mt-2 text-xs text-danger">
+                  {stockError}
+                </HeroText>
+              ) : null}
+              <View className="mt-3 flex-row justify-end gap-2">
+                <QuickAction
+                  label="Cancel stock edit"
+                  onPress={() => {
+                    setStockValue(String(item.inventory.stockQty));
+                    setStockError(null);
+                    setIsEditingStock(false);
+                  }}
+                  disabled={isSavingStock}
+                />
+                <QuickAction
+                  label={isSavingStock ? 'Saving stock' : 'Save stock'}
+                  variant="primary"
+                  onPress={() => void saveStock()}
+                  disabled={isSavingStock}
+                />
+              </View>
+            </View>
+          ) : (
+            <View className="mt-2.5 flex-row flex-wrap gap-2">
               <QuickAction
-                key={action.label}
-                label={action.label}
-                variant={action.variant}
-                onPress={action.onPress}
+                label={attentionState === 'out_of_stock' ? 'Restock' : 'Edit stock'}
+                variant="primary"
+                onPress={() => {
+                  setStockValue(String(item.inventory.stockQty));
+                  setStockError(null);
+                  setIsEditingStock(true);
+                }}
               />
-            ))}
-          </View>
+              <QuickAction
+                label={attentionState === 'price_missing' ? 'Add price' : 'Edit details'}
+                onPress={onPress}
+              />
+            </View>
+          )}
         </View>
       </View>
     </AppCard>

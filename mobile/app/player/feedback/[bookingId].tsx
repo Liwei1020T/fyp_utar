@@ -52,7 +52,6 @@ const DETAIL_RATINGS = [
   ['comfort', 'Comfort'],
   ['control', 'Control'],
   ['repulsion', 'Repulsion'],
-  ['durability', 'Durability'],
 ] as const;
 
 type DetailRatingKey = (typeof DETAIL_RATINGS)[number][0];
@@ -64,7 +63,6 @@ const DETAIL_API_KEYS: Record<DetailRatingKey, string> = {
   comfort: 'comfort',
   control: 'control',
   repulsion: 'repulsion',
-  durability: 'durability',
 };
 
 function emptyDetailRatings(): Record<DetailRatingKey, number | null> {
@@ -95,10 +93,6 @@ export default function FeedbackScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [canRateDurability, setCanRateDurability] = useState(false);
-  const [durabilityAvailableAt, setDurabilityAvailableAt] = useState<string | null>(
-    null,
-  );
   const [isEditing, setIsEditing] = useState(false);
   const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
 
@@ -128,15 +122,10 @@ export default function FeedbackScreen() {
         return;
       }
 
-      const [feedback, eligibility] = await Promise.all([
-        backendApi.fetchBookingFeedback(token, bookingId),
-        backendApi.fetchBookingFeedbackEligibility(token, bookingId),
-      ]);
+      const feedback = await backendApi.fetchBookingFeedback(token, bookingId);
       setExistingFeedback(
         feedback ? mapBackendFeedbackToBookingFeedback(feedback) : null,
       );
-      setCanRateDurability(eligibility.can_rate_durability);
-      setDurabilityAvailableAt(eligibility.durability_available_at);
     } catch (error) {
       setLoadError(
         error instanceof BackendApiError
@@ -183,7 +172,6 @@ export default function FeedbackScreen() {
       comfort: existingFeedback.comfort ?? null,
       control: existingFeedback.control ?? null,
       repulsion: existingFeedback.repulsion ?? null,
-      durability: existingFeedback.durability ?? null,
     });
     setWouldUseAgain(existingFeedback.wouldUseAgain ?? null);
     setComment(existingFeedback.comment ?? '');
@@ -223,7 +211,6 @@ export default function FeedbackScreen() {
         comfort: detailRatings.comfort,
         control: detailRatings.control,
         repulsion: detailRatings.repulsion,
-        ...(canRateDurability ? { durability: detailRatings.durability } : {}),
         would_use_again: wouldUseAgain,
         comment: comment.trim() || null,
         string_feedback: stringFeedback.trim() || null,
@@ -462,7 +449,7 @@ export default function FeedbackScreen() {
           </AppSection>
         ) : null}
         <AppButton
-          label={existingFeedback.canRateDurability ? 'Edit or add durability' : 'Edit feedback'}
+          label="Edit feedback"
           className="mt-8"
           onPress={beginEdit}
         />
@@ -514,20 +501,11 @@ export default function FeedbackScreen() {
       <AppSection eyebrow="Installed setup" title="Optional playing experience">
         <View className="gap-3">
           {DETAIL_RATINGS.map(([key, label]) => {
-            const durabilityUnavailable = key === 'durability' && !canRateDurability;
             return (
             <AppCard key={key} variant="elevated" padding="md">
               <HeroText className="mb-3 text-sm font-semibold text-neutral-900">
                 {label}: {detailRatings[key] == null ? 'Not rated' : `${detailRatings[key]}/5`}
               </HeroText>
-              {durabilityUnavailable ? (
-                <HeroText className="mb-3 text-xs leading-5 text-neutral-500">
-                  Durability becomes available seven days after completion
-                  {durabilityAvailableAt
-                    ? ` (${new Date(durabilityAvailableAt).toLocaleDateString()}).`
-                    : '.'}
-                </HeroText>
-              ) : null}
               <AppSelect
                 label={label}
                 value={detailRatings[key] == null ? null : String(detailRatings[key])}
@@ -543,19 +521,16 @@ export default function FeedbackScreen() {
                   }));
                   markDirty(DETAIL_API_KEYS[key]);
                 }}
-                disabled={durabilityUnavailable}
               />
-              {!durabilityUnavailable ? (
-                <AppButton
-                  label="Not enough experience to judge"
-                  variant="ghost"
-                  size="sm"
-                  onPress={() => {
-                    setDetailRatings((current) => ({ ...current, [key]: null }));
-                    markDirty(DETAIL_API_KEYS[key]);
-                  }}
-                />
-              ) : null}
+              <AppButton
+                label="Not enough experience to judge"
+                variant="ghost"
+                size="sm"
+                onPress={() => {
+                  setDetailRatings((current) => ({ ...current, [key]: null }));
+                  markDirty(DETAIL_API_KEYS[key]);
+                }}
+              />
             </AppCard>
             );
           })}
@@ -611,7 +586,7 @@ export default function FeedbackScreen() {
           maxLength={2000}
           multiline
           inputClassName="min-h-24"
-          placeholder="Describe feel, repulsion, control, or durability..."
+          placeholder="Describe feel, repulsion, or control..."
         />
       </AppSection>
 

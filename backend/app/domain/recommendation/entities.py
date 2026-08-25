@@ -106,9 +106,6 @@ class CommunityFeedbackRow:
     catalog_id: str
     racket_model_key: str | None
     ratings: Mapping[str, int | None]
-    confirmed_at: Mapping[str, str]
-    durability_rated_at: datetime | None
-    completed_at: datetime | None
 
 
 @dataclass(frozen=True)

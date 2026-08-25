@@ -1,9 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Switch, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import {
@@ -101,41 +100,32 @@ export default function NotificationPreferencesScreen() {
           Object.entries(settings)
             .filter(([key]) => key !== 'userId')
             .map(([key, value]) => (
-              <Pressable
+              <AppCard
                 key={key}
-                accessibilityRole="switch"
-                accessibilityLabel={`${formatLabel(key)} notifications`}
-                accessibilityState={{
-                  checked: Boolean(value),
-                  disabled: savingKey !== null,
-                }}
-                disabled={savingKey !== null}
-                onPress={() =>
-                  void togglePreference(
-                    key as Exclude<keyof NotificationPreferences, 'userId'>,
-                  )
-                }
+                variant={value ? 'highlighted' : 'elevated'}
+                padding="md"
               >
-                <AppCard
-                  variant={value ? 'highlighted' : 'elevated'}
-                  padding="md"
-                >
-                  <View className="flex-row items-center justify-between gap-4">
-                    <View className="flex-1">
-                      <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
-                        {formatLabel(key)}
-                      </HeroText>
-                      <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
-                        {value ? 'Enabled for live updates.' : 'Disabled.'}
-                      </HeroText>
-                    </View>
-                    <AppChip
-                      label={value ? 'On' : 'Off'}
-                      variant={value ? 'success' : 'neutral'}
-                    />
+                <View className="flex-row items-center justify-between gap-4">
+                  <View className="flex-1">
+                    <HeroText className="text-lg font-bold tracking-tight text-neutral-950">
+                      {formatLabel(key)}
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-6 text-neutral-500">
+                      {value ? 'Enabled for live updates.' : 'Disabled.'}
+                    </HeroText>
                   </View>
-                </AppCard>
-              </Pressable>
+                  <Switch
+                    value={Boolean(value)}
+                    disabled={savingKey !== null}
+                    onValueChange={() =>
+                      void togglePreference(
+                        key as Exclude<keyof NotificationPreferences, 'userId'>,
+                      )
+                    }
+                    accessibilityLabel={`${formatLabel(key)} notifications`}
+                  />
+                </View>
+              </AppCard>
             ))
         ) : (
           <AppCard variant="subtle" padding="md">

@@ -7,15 +7,16 @@ import { AppScreen, useBottomContentInset } from '../../../components/shared/App
 import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText, cn } from '../../../components/ui/heroui';
 import { appChromeColors } from '../../../components/ui/theme';
+import { backendApi } from '../../../services/backendApi';
+import { mapBackendInventoryStringToStringItem } from '../../../services/backendMappers';
 import {
   buildStringSearchBlob,
   getInventoryAttentionState,
-  getInventoryPriceLabel,
   getInventorySummary,
   hasPendingInventoryPrice,
   inventoryAttentionScore,
 } from '../../../lib/inventory';
-import { useStrings } from '../../../store/appStore';
+import { useAppStore, useBackendAccessToken, useStrings } from '../../../store/appStore';
 import type { StringItem } from '../../../types/domain';
 
 type InventoryStatusFilter =
@@ -98,9 +99,10 @@ function SearchField({
   return (
     <View
       className={cn(
-        'h-[52px] flex-1 flex-row items-center gap-2.5 rounded-[12px] border bg-white px-4',
+        'flex-1 flex-row items-center gap-2.5 rounded-[12px] border bg-white px-4',
         isFocused ? 'border-primary-600' : 'border-[#D2D2D7]',
       )}
+      style={{ height: 52 }}
     >
       <Search
         size={20}
@@ -116,7 +118,8 @@ function SearchField({
         onFocus={() => setIsFocused(true)}
         placeholderTextColor="rgba(29,29,31,0.48)"
         selectionColor={appChromeColors.primary}
-        className="h-full flex-1 border-0 bg-transparent px-0 text-[16px] text-neutral-900 outline-none"
+        className="flex-1 border-0 bg-transparent px-0 text-[16px] text-neutral-900 outline-none"
+        style={{ height: '100%', paddingVertical: 0 }}
       />
     </View>
   );
@@ -124,12 +127,14 @@ function SearchField({
 
 function ToolbarButton({
   label,
+  accessibilityLabel,
   icon,
   isActive = false,
   onPress,
   className,
 }: {
   label: string;
+  accessibilityLabel?: string;
   icon: React.ReactNode;
   isActive?: boolean;
   onPress: () => void;
@@ -138,15 +143,15 @@ function ToolbarButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected: isActive }}
       onPress={onPress}
       className={cn(
-        'h-11 flex-row items-center gap-1.5 rounded-[10px] border px-3.5',
+        'flex-row items-center justify-center gap-1.5 rounded-[10px] border px-3.5',
         isActive ? 'border-primary-100 bg-primary-50' : 'border-[#D8E2EE] bg-white',
         className,
       )}
-      style={({ pressed }) => (pressed ? styles.pressed : undefined)}
+      style={({ pressed }) => [styles.toolbarButton, pressed ? styles.pressed : undefined]}
     >
       {icon}
       <HeroText
@@ -183,7 +188,9 @@ function SectionHeader({
 export default function AdminInventoryScreen() {
   const router = useRouter();
   const bottomContentInset = useBottomContentInset(18);
+  const token = useBackendAccessToken();
   const strings = useStrings();
+  const updateStringItem = useAppStore((state) => state.updateStringItem);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<InventoryStatusFilter>('all');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -219,10 +226,23 @@ export default function AdminInventoryScreen() {
     [filteredInventory],
   );
 
+  const saveStock = async (item: StringItem, stockQty: number) => {
+    if (!token) {
+      throw new Error('Your admin session expired. Sign in again before saving.');
+    }
+
+    const updated = await backendApi.adminUpdateInventoryString(token, item.id, {
+      stock_level: stockQty,
+      movement_type: stockQty > item.inventory.stockQty ? 'RESTOCK' : 'ADJUSTMENT',
+      reference_type: 'manual_quick_edit',
+    });
+    updateStringItem(item.id, mapBackendInventoryStringToStringItem(updated));
+  };
+
   return (
     <AppScreen
       tone="admin"
-      headerVariant="secondary"
+      headerVariant="primary"
       compactHeader
       title="Inventory"
       subtitle="Manage stock, pricing, and shop readiness."
@@ -242,45 +262,45 @@ export default function AdminInventoryScreen() {
               {summary.itemCount} items · {summary.lowStockCount} low stock · {summary.pricePendingCount} price pending
             </HeroText>
 
-            <View className="mb-3 gap-2">
+            <View className="mb-3 flex-row gap-2">
               <SearchField value={searchQuery} onChangeText={setSearchQuery} />
-              <View className="flex-row gap-2">
-                <ToolbarButton
-                  label="Filter"
-                  className="flex-1"
-                  isActive={showAdvancedFilters || Boolean(selectedBrand)}
-                  icon={
-                    <SlidersHorizontal
-                      size={16}
-                      color={showAdvancedFilters || selectedBrand ? '#2F64B6' : '#64748B'}
-                      strokeWidth={2}
-                    />
-                  }
-                  onPress={() => setShowAdvancedFilters((value) => !value)}
-                />
-                <AppSelect
-                  label="Sort order"
-                  value={sortBy}
-                  options={SORT_OPTIONS.map((option) => ({
-                    id: option.id,
-                    label: option.label,
-                  }))}
-                  onChange={(id) => setSortBy(id as InventorySort)}
-                  className="flex-1"
-                />
-              </View>
+              <ToolbarButton
+                label={selectedBrand ? 'Filters · 1' : 'Filters'}
+                accessibilityLabel="Show inventory filters"
+                isActive={showAdvancedFilters || Boolean(selectedBrand)}
+                icon={
+                  <SlidersHorizontal
+                    size={17}
+                    color={showAdvancedFilters || selectedBrand ? '#2F64B6' : '#64748B'}
+                    strokeWidth={2}
+                  />
+                }
+                onPress={() => setShowAdvancedFilters((value) => !value)}
+              />
             </View>
 
-            <AppSelect
-              label="Stock status"
-              value={selectedStatus}
-              options={STATUS_FILTERS.map((filter) => ({
-                id: filter.id,
-                label: filter.label,
-              }))}
-              onChange={(id) => setSelectedStatus(id as InventoryStatusFilter)}
-              className="mb-3"
-            />
+            <View className="mb-3 flex-row items-end gap-2">
+              <AppSelect
+                label="Stock status"
+                value={selectedStatus}
+                options={STATUS_FILTERS.map((filter) => ({
+                  id: filter.id,
+                  label: filter.label,
+                }))}
+                onChange={(id) => setSelectedStatus(id as InventoryStatusFilter)}
+                className="flex-1"
+              />
+              <AppSelect
+                label="Sort order"
+                value={sortBy}
+                options={SORT_OPTIONS.map((option) => ({
+                  id: option.id,
+                  label: option.label,
+                }))}
+                onChange={(id) => setSortBy(id as InventorySort)}
+                className="flex-1"
+              />
+            </View>
 
             {showAdvancedFilters ? (
               <View className="mb-4 rounded-[14px] border border-[#D8E2EE] bg-white px-4 py-4">
@@ -313,23 +333,7 @@ export default function AdminInventoryScreen() {
                     item={item}
                     attentionOnly
                     onPress={() => router.push(`/admin/inventory/${item.id}`)}
-                    quickActions={[
-                      {
-                        label:
-                          getInventoryAttentionState(item) === 'out_of_stock'
-                            ? 'Restock'
-                            : 'Edit stock',
-                        variant: 'primary',
-                        onPress: () => router.push(`/admin/inventory/${item.id}`),
-                      },
-                      {
-                        label:
-                          getInventoryPriceLabel(item).state === 'pending'
-                            ? 'Add price'
-                            : 'Edit price',
-                        onPress: () => router.push(`/admin/inventory/${item.id}`),
-                      },
-                    ]}
+                    onSaveStock={(stockQty) => saveStock(item, stockQty)}
                   />
                 ))}
               </View>
@@ -365,6 +369,7 @@ export default function AdminInventoryScreen() {
             <AdminInventoryCard
               item={item}
               onPress={() => router.push(`/admin/inventory/${item.id}`)}
+              onSaveStock={(stockQty) => saveStock(item, stockQty)}
             />
           </View>
         )}
@@ -374,6 +379,10 @@ export default function AdminInventoryScreen() {
 }
 
 const styles = StyleSheet.create({
+  toolbarButton: {
+    height: 52,
+    minWidth: 104,
+  },
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.99 }],

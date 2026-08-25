@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Plus } from 'lucide-react-native';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
+import { AppSelect } from '../../components/ui/AppSelect';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
@@ -21,6 +23,35 @@ import {
 } from '../../services/backendMappers';
 import type { BusinessHours } from '../../types/domain';
 
+const MONTH_OPTIONS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+].map((label, index) => ({ id: String(index + 1), label }));
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [CURRENT_YEAR, CURRENT_YEAR + 1, CURRENT_YEAR + 2].map((year) => ({
+  id: String(year),
+  label: String(year),
+}));
+
+function formatClosedDate(year: number, month: number, day: number) {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function daysInMonth(year: number, month: number) {
+  return new Date(year, month, 0).getDate();
+}
+
 export default function AdminBusinessHoursScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -28,7 +59,11 @@ export default function AdminBusinessHoursScreen() {
   const businessHours = useBusinessHoursState();
   const updateBusinessHours = useAppStore((state) => state.updateBusinessHours);
   const [localHours, setLocalHours] = useState<BusinessHours | null>(null);
-  const [closedDatesText, setClosedDatesText] = useState('');
+  const [closedDates, setClosedDates] = useState<string[]>([]);
+  const [closedDateYear, setClosedDateYear] = useState(CURRENT_YEAR);
+  const [closedDateMonth, setClosedDateMonth] = useState(new Date().getMonth() + 1);
+  const [closedDateDay, setClosedDateDay] = useState(new Date().getDate());
+  const [closedDateError, setClosedDateError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
@@ -39,7 +74,7 @@ export default function AdminBusinessHoursScreen() {
     const existing = businessHours.find((item) => item.adminId === user?.id);
     if (existing && !localHours) {
       setLocalHours(existing);
-      setClosedDatesText(existing.specialClosedDates.join(', '));
+      setClosedDates(existing.specialClosedDates);
     }
   }, [businessHours, localHours, user?.id]);
 
@@ -60,7 +95,7 @@ export default function AdminBusinessHoursScreen() {
         const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
         updateBusinessHours(user.id, mapped);
         setLocalHours(mapped);
-        setClosedDatesText(mapped.specialClosedDates.join(', '));
+        setClosedDates(mapped.specialClosedDates);
         setSaveSuccessMessage(null);
       } catch (loadError) {
         if (!cancelled) {
@@ -97,9 +132,21 @@ export default function AdminBusinessHoursScreen() {
     );
   };
 
-  const updateClosedDatesText = (value: string) => {
+  const addClosedDate = () => {
+    const dateValue = formatClosedDate(closedDateYear, closedDateMonth, closedDateDay);
+    if (closedDates.includes(dateValue)) {
+      setClosedDateError('This date has already been added.');
+      return;
+    }
     setSaveSuccessMessage(null);
-    setClosedDatesText(value);
+    setClosedDateError(null);
+    setClosedDates((current) => [...current, dateValue].sort());
+  };
+
+  const removeClosedDate = (dateValue: string) => {
+    setSaveSuccessMessage(null);
+    setClosedDateError(null);
+    setClosedDates((current) => current.filter((value) => value !== dateValue));
   };
 
   const saveBusinessHours = async () => {
@@ -112,10 +159,7 @@ export default function AdminBusinessHoursScreen() {
     }
     const nextHours = {
       ...localHours,
-      specialClosedDates: closedDatesText
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean),
+      specialClosedDates: closedDates,
     };
     setError(null);
     setIsSaving(true);
@@ -127,7 +171,7 @@ export default function AdminBusinessHoursScreen() {
       const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
       updateBusinessHours(user.id, mapped);
       setLocalHours(mapped);
-      setClosedDatesText(mapped.specialClosedDates.join(', '));
+      setClosedDates(mapped.specialClosedDates);
       setSaveSuccessMessage('Business hours saved. Player booking slots now use the updated schedule.');
     } catch (saveError) {
       setSaveSuccessMessage(null);
@@ -214,14 +258,73 @@ export default function AdminBusinessHoursScreen() {
         </View>
       </AppSection>
 
-      <AppSection eyebrow="Special dates" title="Closed dates">
+      <AppSection eyebrow="Exceptions" title="Temporary closures">
         <View className="gap-3">
-          <AppInput
-            label="Special closed dates"
-            helperText="Comma-separated YYYY-MM-DD dates."
-            value={closedDatesText}
-            onChangeText={updateClosedDatesText}
+          <HeroText className="text-sm leading-6 text-neutral-600">
+            Add dates when the shop will not accept bookings, such as public holidays or maintenance days.
+          </HeroText>
+          <View className="flex-row gap-2">
+            <AppSelect
+              label="Month"
+              value={String(closedDateMonth)}
+              options={MONTH_OPTIONS}
+              onChange={(value) => {
+                const nextMonth = Number(value);
+                setClosedDateMonth(nextMonth);
+                setClosedDateDay((current) => Math.min(current, daysInMonth(closedDateYear, nextMonth)));
+              }}
+              className="flex-[1.5]"
+            />
+            <AppSelect
+              label="Day"
+              value={String(closedDateDay)}
+              options={Array.from({ length: daysInMonth(closedDateYear, closedDateMonth) }, (_, index) => ({
+                id: String(index + 1),
+                label: String(index + 1),
+              }))}
+              onChange={(value) => setClosedDateDay(Number(value))}
+              className="flex-1"
+            />
+            <AppSelect
+              label="Year"
+              value={String(closedDateYear)}
+              options={YEAR_OPTIONS}
+              onChange={(value) => {
+                const nextYear = Number(value);
+                setClosedDateYear(nextYear);
+                setClosedDateDay((current) => Math.min(current, daysInMonth(nextYear, closedDateMonth)));
+              }}
+              className="flex-[1.2]"
+            />
+          </View>
+          <AppButton
+            label="Add closed date"
+            size="sm"
+            variant="outline"
+            leadingIcon={<Plus size={16} color="#2F64B6" />}
+            onPress={addClosedDate}
+            className="self-start"
           />
+          {closedDateError ? (
+            <HeroText accessibilityLiveRegion="polite" className="text-sm font-semibold text-danger-600">
+              {closedDateError}
+            </HeroText>
+          ) : null}
+          {closedDates.length > 0 ? (
+            <View className="flex-row flex-wrap gap-2">
+              {closedDates.map((dateValue) => (
+                <AppChip
+                  key={dateValue}
+                  label={`${dateValue} ×`}
+                  variant="primary"
+                  onPress={() => removeClosedDate(dateValue)}
+                  accessibilityLabel={`Remove temporary closure ${dateValue}`}
+                />
+              ))}
+            </View>
+          ) : (
+            <HeroText className="text-sm text-neutral-500">No temporary closures added.</HeroText>
+          )}
         </View>
       </AppSection>
 

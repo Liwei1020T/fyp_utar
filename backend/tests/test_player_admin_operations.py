@@ -114,7 +114,7 @@ def test_player_admin_operational_flow() -> None:
         },
     )
     assert feedback.status_code == 200
-    assert feedback.json()["durability"] is None
+    assert "durability" not in feedback.json()
     assert feedback.json()["control"] == 5
 
     admin_feedback = client.get(

@@ -298,6 +298,9 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
     assert "collection_datetime" in columns
     assert "cancellation_reason" in columns
     assert "completion_summary" in columns
+    assert "default_service_price" not in {
+        item["name"] for item in inspector.get_columns("store_settings")
+    }
 
     with engine.begin() as connection:
         version_row = (
@@ -305,7 +308,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260818_0032"
+        assert version_row["version_num"] == "20260825_0034"
 
         repaired_row = (
             connection.execute(
@@ -379,7 +382,7 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-    assert version == "20260818_0032"
+    assert version == "20260825_0034"
 
     matrix_columns = {
         item["name"] for item in inspector.get_columns("string_recommendation_matrix")

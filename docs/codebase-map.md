@@ -114,7 +114,7 @@ Query cache owner.
 | [mobile/app/admin/recommendations/[runId].tsx](../mobile/app/admin/recommendations/%5BrunId%5D.tsx) | Admin recommendation run detail with request/profile snapshots and score breakdown review. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Live booking service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Persisted payment monitor and verification actions. |
-| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, default service fee, notification templates, trending strings, and admin password controls. |
+| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, notification category switches, trending strings, and admin password controls. |
 | [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Admin human-support reply screen with persisted read, resolve, and close actions. |
 
 ### Mobile State, Services, And Types

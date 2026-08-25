@@ -3,7 +3,7 @@ import type {
   BackendCommunityStringSummary,
 } from '../types/backend';
 
-const FEATURE_ORDER = ['comfort', 'control', 'repulsion', 'durability'];
+const FEATURE_ORDER = ['comfort', 'control', 'repulsion'];
 
 export function communityEvidenceLabel(distinctUsers: number) {
   if (distinctUsers >= 10) return 'Established';

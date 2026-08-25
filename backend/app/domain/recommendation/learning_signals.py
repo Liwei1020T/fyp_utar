@@ -6,7 +6,6 @@ import math
 import unicodedata
 from collections import defaultdict
 from collections.abc import Iterable
-from datetime import datetime
 from datetime import timezone
 
 from app.domain.recommendation.entities import CollaborativeEvidence
@@ -16,10 +15,10 @@ from app.domain.recommendation.entities import CommunitySnapshot
 from app.domain.recommendation.entities import RecommendationInteraction
 
 
-COMMUNITY_POLICY_VERSION = "community_feedback_v1"
+COMMUNITY_POLICY_VERSION = "community_feedback_v3_no_durability_provenance"
 COMMUNITY_SHRINKAGE_K = 10
 COMMUNITY_MAX_WEIGHT = 0.30
-COMMUNITY_FEATURES = ("comfort", "control", "repulsion", "durability")
+COMMUNITY_FEATURES = ("comfort", "control", "repulsion")
 CF_POLICY_VERSION = "racket_cf_enabled_v11_v1"
 CF_SHRINKAGE_K = 10
 CF_MAX_WEIGHT = 0.20
@@ -74,24 +73,24 @@ def build_community_snapshot(
     target_racket_model_key: str | None,
 ) -> CommunitySnapshot:
     eligible = _eligible_feedback_values(rows)
-    global_buckets: dict[tuple[str, str, str], list[tuple[int, str, str]]] = (
-        defaultdict(list)
+    global_buckets: dict[tuple[str, str, str], list[tuple[int, str]]] = defaultdict(
+        list
     )
-    context_buckets: dict[tuple[str, str, str], list[tuple[int, str, str]]] = (
-        defaultdict(list)
+    context_buckets: dict[tuple[str, str, str], list[tuple[int, str]]] = defaultdict(
+        list
     )
     canonical: list[dict[str, object]] = []
 
-    for row, feature, rating, confirmed_at in eligible:
+    for row, feature, rating in eligible:
         global_buckets[(row.catalog_id, feature, row.user_id)].append(
-            (rating, row.feedback_id, confirmed_at)
+            (rating, row.feedback_id)
         )
         if (
             target_racket_model_key is not None
             and row.racket_model_key == target_racket_model_key
         ):
             context_buckets[(row.catalog_id, feature, row.user_id)].append(
-                (rating, row.feedback_id, confirmed_at)
+                (rating, row.feedback_id)
             )
         canonical.append(
             {
@@ -99,7 +98,6 @@ def build_community_snapshot(
                 "catalog_id": row.catalog_id,
                 "feature": feature,
                 "rating": rating,
-                "confirmed_at": confirmed_at,
                 "racket_model_key": row.racket_model_key,
             }
         )
@@ -226,43 +224,31 @@ def build_cf_evidence(
 
 def _eligible_feedback_values(
     rows: Iterable[CommunityFeedbackRow],
-) -> list[tuple[CommunityFeedbackRow, str, int, str]]:
-    eligible: list[tuple[CommunityFeedbackRow, str, int, str]] = []
+) -> list[tuple[CommunityFeedbackRow, str, int]]:
+    eligible: list[tuple[CommunityFeedbackRow, str, int]] = []
     for row in rows:
         for feature in COMMUNITY_FEATURES:
             rating = row.ratings.get(feature)
-            confirmed_at = row.confirmed_at.get(feature)
-            if rating is None or confirmed_at is None or not 1 <= rating <= 5:
+            if rating is None or not 1 <= rating <= 5:
                 continue
-            if feature == "durability":
-                if (
-                    row.completed_at is None
-                    or row.durability_rated_at is None
-                    or (
-                        _utc_datetime(row.durability_rated_at)
-                        - _utc_datetime(row.completed_at)
-                    ).days
-                    < 7
-                ):
-                    continue
-            eligible.append((row, feature, rating, confirmed_at))
+            eligible.append((row, feature, rating))
     return eligible
 
 
 def _aggregate_feedback_buckets(
-    buckets: dict[tuple[str, str, str], list[tuple[int, str, str]]],
+    buckets: dict[tuple[str, str, str], list[tuple[int, str]]],
     *,
     evidence_scope: str,
     racket_model_key: str | None,
 ) -> dict[tuple[str, str], CommunityFeatureAggregate]:
-    grouped_users: dict[
-        tuple[str, str], list[tuple[float, list[tuple[int, str, str]]]]
-    ] = defaultdict(list)
+    grouped_users: dict[tuple[str, str], list[tuple[float, list[tuple[int, str]]]]] = (
+        defaultdict(list)
+    )
     for (catalog_id, feature, _user_id), values in buckets.items():
         grouped_users[(catalog_id, feature)].append(
             (
-                sum(rating for rating, _, _ in values) / len(values),
-                sorted(values, key=lambda value: (value[1], value[2], value[0])),
+                sum(rating for rating, _ in values) / len(values),
+                sorted(values, key=lambda value: (value[1], value[0])),
             )
         )
 
@@ -303,12 +289,6 @@ def _normalize_identity_part(value: str | None) -> str:
             character if character.isalnum() else " " for character in normalized
         ).split()
     )
-
-
-def _utc_datetime(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
 
 
 def _cosine_similarity(left: tuple[int, ...], right: tuple[int, ...]) -> float:
