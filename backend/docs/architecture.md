@@ -108,7 +108,7 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
-The current revision chain has one head at `20260731_0026`.
+The current revision chain has one head at `20260826_0037`.
 
 ## Transaction Contract
 
@@ -128,9 +128,9 @@ The current revision chain has one head at `20260731_0026`.
 - Expected invalid reset-code attempts return an error result to the route so
   the security attempt counter is committed before the route returns HTTP 400.
 
-Fresh store defaults are deliberately non-operational: every business-hours
-day starts closed and store contact/address/pricing remain unconfigured until
-an administrator saves real values.
+Fresh store defaults come from `data/store_settings_seed.json`, which captures
+the configured single-store profile and weekly schedule. Future admin edits
+remain database-owned and are not overwritten by the startup seed.
 
 The current commerce endpoint is a compact transactional boundary in
 `commerce_routes.py`. It uses row locks around booking, user-wallet, and
@@ -188,7 +188,9 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - Core recommendation dimensions are `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, `string_movement`, and `value_for_money`.
 - Structured catalog heuristics such as gauge are excluded from PreferenceMatch and used only in RuleFit.
 - Official and NLP values use fixed equal fusion when both exist; a single available source is used directly, and the prior is used only when both are missing.
-- The scorer ranks with `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90`.
+- The scorer first calculates `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90`.
+  It blends that base score with racket-scoped CF only after the three-user
+  exact-model support gate is met; otherwise the base score is final.
 - Gauge, official feel, and structured recent goal are soft RuleFit inputs; catalog price is descriptive only.
 - Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
 - Generated recommendations are also persisted into `recommendation_runs` and `recommendation_run_items` for admin inspection and reproducibility.

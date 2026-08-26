@@ -131,11 +131,17 @@ def load_legacy_rows() -> dict[str, dict[str, Any]]:
 def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
     payload = load_catalog_source(source_path)
     legacy_rows = load_legacy_rows()
+    official_performance_by_catalog_id = payload.get("official_performance")
+    if not isinstance(official_performance_by_catalog_id, dict):
+        official_performance_by_catalog_id = {}
     mapping: dict[str, dict[str, Any]] = {}
     for row in payload["strings"]:
         item = approved_row_to_values(
             row,
             legacy_rows.get(str(row.get("original_name", "")).lower()),
+            official_performance=official_performance_by_catalog_id.get(
+                str(row.get("catalog_id", ""))
+            ),
         )
         mapping[item["normalized_name"]] = item
     return mapping
@@ -144,6 +150,8 @@ def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
 def approved_row_to_values(
     row: dict[str, Any],
     legacy_row: dict[str, Any] | None,
+    *,
+    official_performance: Any = None,
 ) -> dict[str, Any]:
     brand_name = str(row["brand_name"]).strip()
     model_name = str(row["model_name"]).strip()
@@ -154,6 +162,17 @@ def approved_row_to_values(
     tension_min_lbs, tension_max_lbs = derive_tension_range(gauge_mm)
     gauge_score = normalize_gauge(gauge_mm)
     catalog_id = str(row["catalog_id"]).strip()
+    official_values = (
+        official_performance if isinstance(official_performance, dict) else {}
+    )
+    official_status = (
+        as_string(official_values.get("status"))
+        or as_string(row.get("official_performance_status"))
+        or "pending_manual_fill"
+    )
+    official_feel = number_or_none(official_values.get("feel"))
+    if official_feel is None:
+        official_feel = OFFICIAL_FEEL_BY_CATALOG_ID.get(catalog_id)
     matrix_entries = [
         {
             "feature_key": feature_key,
@@ -197,10 +216,7 @@ def approved_row_to_values(
             "color_options_en": list(row.get("color_options_en") or []),
             "short_description": normalize_catalog_text(str(row["short_description"])),
             "full_description": normalize_catalog_text(str(row["full_description"])),
-            "official_performance_status": as_string(
-                row.get("official_performance_status")
-            )
-            or "pending_manual_fill",
+            "official_performance_status": official_status,
             "source_dataset_url": as_string(row.get("source_dataset_url")),
             "source_language": as_string(row.get("source_language")) or "en",
             "original_name": as_string(row.get("original_name")),
@@ -226,21 +242,19 @@ def approved_row_to_values(
         ],
         "official_performance": {
             "catalog_id": catalog_id,
-            "source_type": None,
-            "source_name": None,
-            "source_url": None,
-            "source_region": None,
-            "category": None,
-            "feature": None,
-            "feel": OFFICIAL_FEEL_BY_CATALOG_ID.get(catalog_id),
-            "repulsion_power": None,
-            "durability": None,
-            "hitting_sound": None,
-            "shock_absorption": None,
-            "control": None,
-            "notes": None,
-            "status": as_string(row.get("official_performance_status"))
-            or "pending_manual_fill",
+            "source_type": as_string(official_values.get("source_type")),
+            "source_name": as_string(official_values.get("source_name")),
+            "source_region": as_string(official_values.get("source_region")),
+            "category": number_or_none(official_values.get("category")),
+            "feature": number_or_none(official_values.get("feature")),
+            "feel": official_feel,
+            "repulsion_power": number_or_none(official_values.get("repulsion_power")),
+            "durability": number_or_none(official_values.get("durability")),
+            "hitting_sound": number_or_none(official_values.get("hitting_sound")),
+            "shock_absorption": number_or_none(official_values.get("shock_absorption")),
+            "control": number_or_none(official_values.get("control")),
+            "notes": as_string(official_values.get("notes")),
+            "status": official_status,
         },
         "inventory": {
             "catalog_id": catalog_id,

@@ -73,6 +73,20 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                         tzinfo=timezone.utc,
                     ),
                 ),
+                Booking(
+                    id="booking-current-period",
+                    user_id=user_id,
+                    string_id=string_id,
+                    status="awaiting_dropoff",
+                    created_at=datetime(2026, 7, 20, 16, 30, tzinfo=timezone.utc),
+                ),
+                Booking(
+                    id="booking-previous-period",
+                    user_id=user_id,
+                    string_id=string_id,
+                    status="awaiting_dropoff",
+                    created_at=datetime(2026, 7, 15, 16, 30, tzinfo=timezone.utc),
+                ),
                 Payment(
                     id="payment-pending-booking",
                     user_id=user_id,
@@ -128,6 +142,28 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                     created_at=datetime(2026, 7, 23, 16, tzinfo=timezone.utc),
                     updated_at=datetime(2026, 7, 23, 16, 10, tzinfo=timezone.utc),
                 ),
+                Payment(
+                    id="payment-current-period",
+                    user_id=user_id,
+                    method="online_banking",
+                    status="paid",
+                    amount=Decimal("10.00"),
+                    payment_type="booking_payment",
+                    reference="PAY-CURRENT-PERIOD",
+                    created_at=datetime(2026, 7, 20, 16, 30, tzinfo=timezone.utc),
+                    updated_at=datetime(2026, 7, 20, 16, 30, tzinfo=timezone.utc),
+                ),
+                Payment(
+                    id="payment-previous-period",
+                    user_id=user_id,
+                    method="online_banking",
+                    status="paid",
+                    amount=Decimal("20.00"),
+                    payment_type="booking_payment",
+                    reference="PAY-PREVIOUS-PERIOD",
+                    created_at=datetime(2026, 7, 15, 16, 30, tzinfo=timezone.utc),
+                    updated_at=datetime(2026, 7, 15, 16, 30, tzinfo=timezone.utc),
+                ),
             ]
         )
         db.commit()
@@ -143,6 +179,14 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
             "/api/admin/analytics/summary",
             headers={"Authorization": f"Bearer {token}"},
         )
+        thirty_day_response = client.get(
+            "/api/admin/analytics/summary?days=30",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        invalid_period_response = client.get(
+            "/api/admin/analytics/summary?days=14",
+            headers={"Authorization": f"Bearer {token}"},
+        )
     finally:
         app.dependency_overrides.pop(get_clock, None)
 
@@ -151,7 +195,18 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
     assert summary["today_bookings"] == 1
     assert summary["pending_payment_count"] == 2
     assert summary["today_revenue"] == 48.5
+    assert summary["period_days"] == 7
+    assert summary["period_bookings"] >= 1
+    assert summary["previous_period_bookings"] >= 1
+    assert summary["period_revenue"] >= 58.5
+    assert summary["previous_period_revenue"] >= 20.0
     assert summary["workload_mix"][0] == {
         "label": "Pending payment",
         "value": 2,
     }
+    assert thirty_day_response.status_code == 200, thirty_day_response.text
+    thirty_day_summary = thirty_day_response.json()
+    assert thirty_day_summary["period_days"] == 30
+    assert thirty_day_summary["period_bookings"] >= summary["period_bookings"] + 1
+    assert thirty_day_summary["period_revenue"] >= summary["period_revenue"] + 20.0
+    assert invalid_period_response.status_code == 422

@@ -6,6 +6,7 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { MetricStatCard } from '../../../components/analytics/MetricStatCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
+import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText } from '../../../components/ui/heroui';
 import { useBackendAccessToken, useCurrentUser } from '../../../store/appStore';
 import { formatCurrency } from '../../../lib/formatters';
@@ -16,6 +17,7 @@ export default function AdminAnalyticsScreen() {
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const [analytics, setAnalytics] = useState<BackendAnalyticsSummary | null>(null);
+  const [periodDays, setPeriodDays] = useState<7 | 30>(7);
   const [isLoading, setIsLoading] = useState(Boolean(token));
   const [error, setError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -43,7 +45,7 @@ export default function AdminAnalyticsScreen() {
       setIsLoading(true);
       setError(null);
       try {
-        const summary = await backendApi.adminAnalyticsSummary(token);
+        const summary = await backendApi.adminAnalyticsSummary(token, periodDays);
         if (cancelled) {
           return;
         }
@@ -73,7 +75,7 @@ export default function AdminAnalyticsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [isAdmin, loadAttempt, token]);
+  }, [isAdmin, loadAttempt, periodDays, token]);
 
   if (!isAdmin) {
     return null;
@@ -134,13 +136,41 @@ export default function AdminAnalyticsScreen() {
       title="Admin analytics"
       subtitle="Bookings, revenue, feedback, and payment workload."
     >
-      <AppSection eyebrow="Metrics" title="Shop performance">
+      <AppSection
+        eyebrow="Performance"
+        title={`${periodDays}-day comparison`}
+        rightAction={
+          <View className="flex-row gap-2">
+            {([7, 30] as const).map((days) => (
+              <AppChip
+                key={days}
+                label={`${days} days`}
+                variant={periodDays === days ? 'primary' : 'neutral'}
+                accessibilityState={{ selected: periodDays === days }}
+                onPress={() => setPeriodDays(days)}
+              />
+            ))}
+          </View>
+        }
+      >
         <View className="flex-row flex-wrap gap-3">
           <MetricStatCard
-            title="Weekly bookings"
-            value={String(analytics.weekly_bookings)}
+            title="Bookings"
+            value={String(analytics.period_bookings)}
+            subtitle={`Previous ${periodDays} days: ${analytics.previous_period_bookings}`}
             icon={<BarChart3 size={20} color="#2F64B6" />}
           />
+          <MetricStatCard
+            title="Revenue"
+            value={formatCurrency(analytics.period_revenue)}
+            subtitle={`Previous: ${formatCurrency(analytics.previous_period_revenue)}`}
+            icon={<BarChart3 size={20} color="#2F64B6" />}
+          />
+        </View>
+      </AppSection>
+
+      <AppSection eyebrow="Current" title="Operational snapshot">
+        <View className="flex-row flex-wrap gap-3">
           <MetricStatCard
             title="Pending payment"
             value={String(analytics.pending_payment_count)}
@@ -152,11 +182,6 @@ export default function AdminAnalyticsScreen() {
             value={String(analytics.ready_for_collection_count)}
             icon={<Gauge size={20} color="#6550B8" />}
             accentClassName="bg-[#ECE7FA]"
-          />
-          <MetricStatCard
-            title="Revenue"
-            value={formatCurrency(analytics.today_revenue)}
-            icon={<BarChart3 size={20} color="#2F64B6" />}
           />
           <MetricStatCard
             title="Repeat customers"

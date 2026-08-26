@@ -1,4 +1,4 @@
-# StringSense: AI-Driven Mobile Platform
+# StringSense Mobile App
 
 StringSense is an AI-driven React Native mobile platform for badminton racket
 string recommendation and service management. It is the mobile client for the
@@ -36,10 +36,8 @@ operations modules.
   - String Inventory Management, including atomic editor saves and media.
   - Payment verification, support reply/resolve/close, and service queue.
   - Business hours, store settings, persisted analytics, and recommendation-run audit.
-  - Read-only Admin AI for the current operations summary plus booking and
+  - Read-only Admin Agent for the current operations summary plus booking and
     inventory lookup; confirmed-action implementations remain preserved but inactive.
-- **Future extension:**
-  - Advanced Recommendation Engine with NLP/DL.
 
 ## Project Structure
 - `app/`: Expo Router screens and layouts.
@@ -63,9 +61,10 @@ operations modules.
    npm install
    ```
 
-   Copy `.env.example` to an untracked `.env` and set the EAS project UUID as
-   `EXPO_PUBLIC_EAS_PROJECT_ID`. The project UUID is public; the Expo access
-   token belongs only in `backend/.env`.
+   Copy `.env.example` to an untracked `.env`. `EXPO_PUBLIC_API_BASE_URL` is
+   required for a real backend; set `EXPO_PUBLIC_EAS_PROJECT_ID` only when
+   configuring an EAS build. The project UUID is public; the Expo access token
+   belongs only in `backend/.env`.
 
 3. **Run the App in a browser:**
    ```bash
@@ -75,7 +74,7 @@ operations modules.
 4. **Run on Expo Go using a physical phone:**
    Start the backend from `../backend` with `--host 0.0.0.0`, then find the Mac Wi-Fi IP:
    ```bash
-   rtk ifconfig en0
+   ifconfig en0
    ```
 
    Use the `inet` value as `<MAC_WIFI_IP>`:
@@ -128,12 +127,12 @@ operations modules.
 ```bash
 npx tsc --noEmit
 npm run lint -- --max-warnings=0
-npx expo export --platform web --output-dir /tmp/stringsense-web-export
+npm test
 ```
 
-The latest complete customer and administrator browser acceptance is recorded
-in
-[`../docs/customer-admin-acceptance-2026-07-24.md`](../docs/customer-admin-acceptance-2026-07-24.md).
+For a UI-flow change, also run `npm run web` and check the touched route. Dated
+browser acceptance records in [`../docs/README.md`](../docs/README.md) are
+historical evidence, not proof of the current local or deployed runtime.
 
 ---
 Built for FYP 2026.

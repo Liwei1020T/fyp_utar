@@ -156,7 +156,10 @@ export default function AdminDashboardScreen() {
     analytics &&
       ((awaitingDropOffCount ?? 0) > 0 ||
         (readyForCollectionCount ?? 0) > 0 ||
-        analytics.pending_feedback_count > 0),
+        analytics.pending_feedback_count > 0 ||
+        analytics.pending_payment_count > 0 ||
+        analytics.low_stock_count > 0 ||
+        analytics.unread_chats > 0),
   );
 
   return (
@@ -304,10 +307,79 @@ export default function AdminDashboardScreen() {
                   </View>
                   <View className="min-w-0 flex-1">
                     <HeroText className="text-[15px] font-semibold text-slate-900">
-                      Review {analytics?.pending_feedback_count} feedback item{analytics?.pending_feedback_count === 1 ? '' : 's'}
+                      {analytics?.pending_feedback_count} completed order{analytics?.pending_feedback_count === 1 ? '' : 's'} still need feedback
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
                       Start with low-satisfaction cases that need follow-up.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={17} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
+
+            {(analytics?.pending_payment_count ?? 0) > 0 ? (
+              <AppCard
+                variant="elevated"
+                padding="md"
+                onPress={() => router.push('/admin/payments')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-warning-50">
+                    <CreditCard size={19} color={appChromeColors.warning} />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                      Verify {analytics?.pending_payment_count} pending payment{analytics?.pending_payment_count === 1 ? '' : 's'}
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Open the payment queue to review each request.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={17} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
+
+            {(analytics?.low_stock_count ?? 0) > 0 ? (
+              <AppCard
+                variant="elevated"
+                padding="md"
+                onPress={() => router.push('/admin/inventory')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-warning-50">
+                    <Boxes size={19} color={appChromeColors.warning} />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                      {analytics?.low_stock_count} string{analytics?.low_stock_count === 1 ? '' : 's'} below the reorder level
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Open inventory to review available and reserved stock.
+                    </HeroText>
+                  </View>
+                  <ArrowRight size={17} color={appChromeColors.textMuted} />
+                </View>
+              </AppCard>
+            ) : null}
+
+            {(analytics?.unread_chats ?? 0) > 0 ? (
+              <AppCard
+                variant="elevated"
+                padding="md"
+                onPress={() => router.push('/admin/chat')}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50">
+                    <MessageSquareText size={19} color={appChromeColors.primary} />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                      Reply to {analytics?.unread_chats} unread conversation{analytics?.unread_chats === 1 ? '' : 's'}
+                    </HeroText>
+                    <HeroText className="mt-1 text-sm leading-5 text-slate-600">
+                      Open support and respond to waiting players.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />
@@ -321,7 +393,7 @@ export default function AdminDashboardScreen() {
                   The counter is clear.
                 </HeroText>
                 <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                  No drop-offs, collections, or feedback reviews need immediate action.
+                  No drop-offs, collections, payments, stock alerts, feedback follow-ups, or unread conversations need action.
                 </HeroText>
               </AppCard>
             ) : null}

@@ -20,6 +20,7 @@ COPY backend/app ./app
 COPY backend/migrations ./migrations
 COPY backend/alembic.ini ./alembic.ini
 COPY backend/data/string_catalog_db_ready.json ./data/string_catalog_db_ready.json
+COPY backend/data/store_settings_seed.json ./data/store_settings_seed.json
 COPY config/approved_string_cohort_v1.csv /srv/stringsense/config/approved_string_cohort_v1.csv
 COPY ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx /srv/stringsense/ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx
 

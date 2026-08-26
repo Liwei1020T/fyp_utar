@@ -105,6 +105,11 @@ class AnalyticsSummary:
     low_stock_count: int
     unread_chats: int
     today_revenue: float
+    period_days: int
+    period_bookings: int
+    previous_period_bookings: int
+    period_revenue: float
+    previous_period_revenue: float
     repeat_customer_count: int
     pending_feedback_count: int
     average_feedback_score: float | None

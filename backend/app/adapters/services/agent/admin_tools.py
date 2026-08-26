@@ -55,7 +55,7 @@ ALL_ADMIN_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
     },
     {
         "name": "find_admin_inventory",
-        "description": "Find up to ten inventory items by name or availability and return live stock values.",
+        "description": "Find all matching inventory items by name or availability and return live stock values.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -278,7 +278,12 @@ class AdminAgentToolbox(AgentToolbox):
             for item in page.items
         ]
         return AgentToolResult(
-            data={"bookings": bookings, "total": page.total},
+            data={
+                "bookings": bookings,
+                "returned_count": len(bookings),
+                "total": page.total,
+                "is_truncated": len(bookings) < page.total,
+            },
             sources=[
                 {
                     "source_type": "booking",
@@ -300,7 +305,7 @@ class AdminAgentToolbox(AgentToolbox):
             brand=None,
             search=search,
             availability=availability,
-            limit=10,
+            limit=None,
             offset=0,
         )
         return AgentToolResult(

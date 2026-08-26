@@ -79,18 +79,18 @@
 ## Quick Start
 
 - Local Postgres:
-  - `rtk docker compose up -d postgres`
+  - `docker compose up -d postgres`
 - Backend:
   - `cd backend && cp .env.example .env`
-  - `cd backend && rtk uv sync --extra dev`
-  - `cd backend && rtk ./scripts/alembic upgrade head`
-  - Browser-only local run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
-  - Expo Go phone run: `cd backend && rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload`
+  - `cd backend && uv sync --extra dev`
+  - `cd backend && ./scripts/alembic upgrade head`
+  - Browser-only local run: `cd backend && ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 3001 --reload`
+  - Expo Go phone run: `cd backend && ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload`
 - Mobile:
   - `cd mobile && nvm use`
   - `cd mobile && npm install`
   - Browser web: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
-  - Expo Go: run `rtk ifconfig en0`, copy the `inet` Wi-Fi IP, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
+  - Expo Go: run `ifconfig en0`, copy the `inet` Wi-Fi IP, then `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://<MAC_WIFI_IP>:3001/api npm run start -- --lan`
   - Do not use `localhost` or `127.0.0.1` for Expo Go on a physical phone; those point to the phone, not the Mac.
 - NLP:
   - `cd ml/nlp-workbench-latest && ./scripts/bootstrap.sh`

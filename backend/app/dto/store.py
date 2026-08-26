@@ -205,6 +205,11 @@ class AnalyticsSummaryOut(BaseModel):
     low_stock_count: int
     unread_chats: int
     today_revenue: float
+    period_days: int
+    period_bookings: int
+    previous_period_bookings: int
+    period_revenue: float
+    previous_period_revenue: float
     repeat_customer_count: int
     pending_feedback_count: int
     average_feedback_score: float | None
@@ -273,6 +278,11 @@ def analytics_summary_to_dto(summary: AnalyticsSummary) -> AnalyticsSummaryOut:
         low_stock_count=summary.low_stock_count,
         unread_chats=summary.unread_chats,
         today_revenue=summary.today_revenue,
+        period_days=summary.period_days,
+        period_bookings=summary.period_bookings,
+        previous_period_bookings=summary.previous_period_bookings,
+        period_revenue=summary.period_revenue,
+        previous_period_revenue=summary.previous_period_revenue,
         repeat_customer_count=summary.repeat_customer_count,
         pending_feedback_count=summary.pending_feedback_count,
         average_feedback_score=summary.average_feedback_score,

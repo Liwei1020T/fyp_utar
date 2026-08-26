@@ -175,7 +175,6 @@ class StringOfficialPerformance(Base):
     )
     source_type: Mapped[str | None] = mapped_column(SAString(40), nullable=True)
     source_name: Mapped[str | None] = mapped_column(SAString(160), nullable=True)
-    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_region: Mapped[str | None] = mapped_column(SAString(60), nullable=True)
     category: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     feature: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)

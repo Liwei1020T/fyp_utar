@@ -10,6 +10,8 @@ export const countryDialCodes = [
   { value: '+62', label: '+62', caption: 'Indonesia' },
 ] as const;
 
+export const LOCAL_PHONE_DIGIT_LIMIT = 10;
+
 export function normalizePhoneNumber(value: string) {
   return value.replace(/\D/g, '');
 }
@@ -61,7 +63,7 @@ export function PhoneNumberField({
   label = 'Phone number',
   onChangeCountryCode,
   onChangePhoneNumber,
-  placeholder = '123456789',
+  placeholder = '1234567890',
   value,
 }: PhoneNumberFieldProps) {
   const [isCountryPickerOpen, setIsCountryPickerOpen] = useState(false);
@@ -109,9 +111,12 @@ export function PhoneNumberField({
           accessibilityHint={error ?? helperText}
           placeholder={placeholder}
           keyboardType="phone-pad"
+          maxLength={LOCAL_PHONE_DIGIT_LIMIT}
           value={value}
           onChangeText={(nextValue) =>
-            onChangePhoneNumber(normalizePhoneNumber(nextValue))
+            onChangePhoneNumber(
+              normalizePhoneNumber(nextValue).slice(0, LOCAL_PHONE_DIGIT_LIMIT),
+            )
           }
           placeholderTextColor="rgba(29,29,31,0.48)"
           selectionColor={appChromeColors.primary}

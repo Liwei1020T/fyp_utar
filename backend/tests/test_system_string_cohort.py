@@ -190,16 +190,37 @@ def test_backend_and_nlp_read_the_same_versioned_cohort() -> None:
     assert cohort_path.is_file()
 
 
-def test_all_approved_strings_have_a_seeded_feel_category() -> None:
+def test_all_approved_strings_have_seeded_official_performance() -> None:
     settings = get_settings()
     rows = seed_catalog_rows(settings.approved_strings_path)["items"]
-    feel_values = {
-        row["catalog"]["catalog_id"]: row["official_performance"]["feel"]
+    approved_rows = {
+        row["catalog"]["catalog_id"]: row
         for row in rows
         if row["catalog"]["catalog_id"] in APPROVED_IDS
     }
 
-    assert set(feel_values) == APPROVED_IDS
+    assert set(approved_rows) == APPROVED_IDS
+    assert all(
+        row["catalog"]["official_performance_status"] == "manual_reviewed"
+        and row["official_performance"]["status"] == "manual_reviewed"
+        and all(
+            row["official_performance"][field] is not None
+            for field in (
+                "feel",
+                "repulsion_power",
+                "durability",
+                "hitting_sound",
+                "shock_absorption",
+                "control",
+            )
+        )
+        for row in approved_rows.values()
+    )
+
+    feel_values = {
+        catalog_id: row["official_performance"]["feel"]
+        for catalog_id, row in approved_rows.items()
+    }
     assert {"soft": 3, "medium": 7, "hard": 2} == {
         "soft": sum(value <= 4 for value in feel_values.values()),
         "medium": sum(4 < value <= 6.5 for value in feel_values.values()),

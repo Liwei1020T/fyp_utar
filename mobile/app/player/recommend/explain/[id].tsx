@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { HeroText } from '../../../../components/ui/heroui';
+import { agentResponseToHistoryContent } from '../../../../lib/agentHistory';
 import { AgentAnswerCard } from '../../../../components/agent/AgentAnswerCard';
 import { AppButton } from '../../../../components/ui/AppButton';
 import { AppCard } from '../../../../components/ui/AppCard';
@@ -329,7 +330,10 @@ export default function RecommendationExplanationScreen() {
         setAgentHistory((current) => [
           ...current,
           { role: 'user' as const, content: question },
-          { role: 'assistant' as const, content: response.answer },
+          {
+            role: 'assistant' as const,
+            content: agentResponseToHistoryContent(response),
+          },
         ].slice(-12));
         setAgentDraft('');
       } catch (error) {

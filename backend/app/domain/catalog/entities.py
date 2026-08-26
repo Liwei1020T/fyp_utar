@@ -24,7 +24,6 @@ class StringOfficialPerformance:
     catalog_id: str
     source_type: str | None
     source_name: str | None
-    source_url: str | None
     source_region: str | None
     category: float | None
     feature: float | None

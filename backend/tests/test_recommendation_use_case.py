@@ -1077,7 +1077,6 @@ def _candidate_with_core_scores(
         catalog_id=catalog_id,
         source_type="curated",
         source_name="test",
-        source_url=None,
         source_region=None,
         category=None,
         feature=None,

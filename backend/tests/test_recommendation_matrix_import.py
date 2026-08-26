@@ -179,7 +179,7 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
     assert detail_response.status_code == 200
     detail = detail_response.json()
     assert detail["catalog_id"] == "yonex-bg80"
-    assert detail["official_performance"]["status"] == "pending_manual_fill"
+    assert detail["official_performance"]["status"] == "manual_reviewed"
     assert "nlp_review" in detail["matrix_by_source"]
     assert detail["effective_scores"]["sound"] == pytest.approx(0.9562, abs=1e-4)
 

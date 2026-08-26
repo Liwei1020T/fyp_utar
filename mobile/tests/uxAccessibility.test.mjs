@@ -195,10 +195,11 @@ test('headers keep only task-critical copy', async () => {
 });
 
 test('reduced Agent cards hide evidence status labels', async () => {
-  const [answerCard, chatbot] = await Promise.all(
+  const [answerCard, chatbot, adminAssistant] = await Promise.all(
     [
       'components/agent/AgentAnswerCard.tsx',
       'app/player/chatbot.tsx',
+      'app/admin/assistant.tsx',
     ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
   );
 
@@ -206,6 +207,21 @@ test('reduced Agent cards hide evidence status labels', async () => {
   assert.match(answerCard, /showEvidenceStatus \?/);
   assert.match(chatbot, /label="Contact human support"/);
   assert.match(chatbot, /router\.push\('\/player\/chat'\)/);
+  assert.match(adminAssistant, /label="Generate daily briefing"/);
+  assert.match(adminAssistant, /DAILY_BRIEFING_PROMPT/);
+});
+
+test('admin recommendation details hide internal provenance noise', async () => {
+  const detail = await readFile(
+    new URL('app/admin/recommendations/[runId].tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.doesNotMatch(
+    detail,
+    /Rationale summary|community_snapshot_version|cf_shadow|sha256|Algorithm Family/,
+  );
+  assert.match(detail, /Score breakdown/);
 });
 
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
@@ -259,8 +275,12 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
     analytics,
     /Requested tension distribution|Popular strings|When the desk gets crowded|adminPopularStrings/,
   );
+  assert.match(analytics, /7-day comparison|30 days|previous_period_bookings/);
+  assert.match(adminDashboard, /pending_payment_count|low_stock_count|unread_chats/);
+  assert.match(adminDashboard, /\/admin\/payments|\/admin\/inventory|\/admin\/chat/);
   assert.match(businessHours, /title="Temporary closures"/);
   assert.match(businessHours, /label="Add closed date"/);
+  assert.match(businessHours, /Only today or future dates can be added/);
   assert.match(businessHours, /label="Month"/);
   assert.doesNotMatch(businessHours, /Comma-separated YYYY-MM-DD dates/);
   assert.doesNotMatch(settings, /Default service price|Service fee \(RM\)/);

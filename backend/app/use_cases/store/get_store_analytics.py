@@ -44,6 +44,7 @@ class GetStoreAnalyticsUseCase:
         feedback: list[AnalyticsFeedback],
         unread_chats: int,
         store_timezone: str,
+        period_days: int = 7,
     ) -> AnalyticsSummary:
         bookings = self.booking_repository.list_all_for_analytics()
         strings = self.catalog_repository.list_inventory(
@@ -56,6 +57,8 @@ class GetStoreAnalyticsUseCase:
         now = normalize_datetime(self.clock.now(), store_timezone)
         assert now is not None
         week_ago = now - timedelta(days=7)
+        period_start = now - timedelta(days=period_days)
+        previous_period_start = period_start - timedelta(days=period_days)
         today = now.date()
 
         weekly_bookings = 0
@@ -66,6 +69,10 @@ class GetStoreAnalyticsUseCase:
         completed_today = 0
         pending_payment_count = 0
         today_revenue = 0.0
+        period_bookings = 0
+        previous_period_bookings = 0
+        period_revenue = 0.0
+        previous_period_revenue = 0.0
         slot_counter: Counter[str] = Counter()
         string_counter: Counter[str] = Counter()
         customer_completed_counter: Counter[str] = Counter()
@@ -73,18 +80,32 @@ class GetStoreAnalyticsUseCase:
         completion_hours: list[float] = []
 
         for payment in payments:
+            paid_at = normalize_datetime(payment.updated_at, store_timezone)
             if payment.status == "pending":
                 pending_payment_count += 1
             elif payment.status == "paid" and payment.payment_type == "booking_payment":
-                paid_at = normalize_datetime(payment.updated_at, store_timezone)
                 if paid_at is not None and paid_at.date() == today:
                     today_revenue += payment.amount
+                if paid_at is not None and period_start <= paid_at <= now:
+                    period_revenue += payment.amount
+                elif (
+                    paid_at is not None
+                    and previous_period_start <= paid_at < period_start
+                ):
+                    previous_period_revenue += payment.amount
 
         for booking in bookings:
             created_at = normalize_datetime(booking.created_at, store_timezone)
             updated_at = normalize_datetime(booking.updated_at, store_timezone)
             if created_at is not None and created_at >= week_ago:
                 weekly_bookings += 1
+            if created_at is not None and period_start <= created_at <= now:
+                period_bookings += 1
+            elif (
+                created_at is not None
+                and previous_period_start <= created_at < period_start
+            ):
+                previous_period_bookings += 1
 
             if booking.status == BookingStatus.AWAITING_DROPOFF.value:
                 awaiting_dropoff_count += 1
@@ -151,6 +172,11 @@ class GetStoreAnalyticsUseCase:
             low_stock_count=low_stock_count,
             unread_chats=unread_chats,
             today_revenue=round(today_revenue, 2),
+            period_days=period_days,
+            period_bookings=period_bookings,
+            previous_period_bookings=previous_period_bookings,
+            period_revenue=round(period_revenue, 2),
+            previous_period_revenue=round(previous_period_revenue, 2),
             repeat_customer_count=sum(
                 1 for count in customer_completed_counter.values() if count >= 2
             ),

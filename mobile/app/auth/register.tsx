@@ -9,6 +9,8 @@ import { AuthShell } from '../../components/auth/AuthShell';
 import {
   composePhoneIdentifier,
   countryDialCodes,
+  LOCAL_PHONE_DIGIT_LIMIT,
+  normalizePhoneNumber,
   PhoneNumberField,
 } from '../../components/auth/PhoneNumberField';
 import { AppButton } from '../../components/ui/AppButton';
@@ -17,6 +19,7 @@ import { HeroText } from '../../components/ui/heroui';
 import { useAppStore } from '../../store/appStore';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 import { mapBackendUserToPlayerProfile } from '../../services/backendMappers';
+import { showAlert } from '../../lib/alerts';
 
 const registerSchema = z
   .object({
@@ -26,6 +29,10 @@ const registerSchema = z
       .string()
       .trim()
       .min(7, 'Enter your phone number')
+      .max(
+        LOCAL_PHONE_DIGIT_LIMIT,
+        `Use no more than ${LOCAL_PHONE_DIGIT_LIMIT} digits`,
+      )
       .regex(/^\d[\d\s-]*$/, 'Use numbers only'),
     password: z
       .string()
@@ -67,6 +74,14 @@ export default function RegisterScreen() {
 
   const onSubmit = async (data: RegisterForm) => {
     setFormError(null);
+    const normalizedPhoneNumber = normalizePhoneNumber(data.phoneNumber);
+    if (normalizedPhoneNumber.startsWith('0')) {
+      showAlert(
+        'Check phone number',
+        'Remove the leading 0 after selecting a country code, then submit again.',
+      );
+      return;
+    }
     try {
       const auth = await backendApi.registerPlayer({
         username: data.username,
@@ -140,7 +155,7 @@ export default function RegisterScreen() {
             onChangeCountryCode={(nextCode) =>
               setValue('countryCode', nextCode, { shouldValidate: true })
             }
-            placeholder="123456789"
+            placeholder="1234567890"
             error={
               errors.countryCode?.message ??
               errors.phoneNumber?.message ??

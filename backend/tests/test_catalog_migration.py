@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from alembic import command
@@ -90,6 +91,11 @@ def test_catalog_normalization_migration_preserves_existing_booking(
     assert "strings" in table_names
     assert "inventory_items" in table_names
     assert "string_recommendation_matrix" in table_names
+    official_performance_columns = {
+        column["name"]
+        for column in inspector.get_columns("string_official_performance")
+    }
+    assert "source_url" not in official_performance_columns
 
     with engine.begin() as connection:
         string_row = (
@@ -107,9 +113,31 @@ def test_catalog_normalization_migration_preserves_existing_booking(
             .one()
         )
         assert string_row["display_name"] == "Yonex BG80"
-        assert string_row["official_performance_status"] == "pending_manual_fill"
+        assert string_row["official_performance_status"] == "manual_reviewed"
         assert string_row["tension_min_lbs"] == 23
         assert string_row["tension_max_lbs"] == 28
+
+        official_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT status, feel, repulsion_power, durability,
+                           hitting_sound, shock_absorption, control
+                    FROM string_official_performance
+                    WHERE catalog_id = 'yonex-bg80'
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        assert official_row["status"] == "manual_reviewed"
+        assert official_row["feel"] == 8
+        assert official_row["repulsion_power"] == 8
+        assert official_row["durability"] == 6
+        assert official_row["hitting_sound"] == 7
+        assert official_row["shock_absorption"] == 6
+        assert official_row["control"] == 6
 
         booking_row = (
             connection.execute(
@@ -308,7 +336,52 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260825_0034"
+        assert version_row["version_num"] == "20260826_0037"
+
+        store_settings_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT store_name, store_contact, address,
+                           trending_string_ids, notification_settings
+                    FROM store_settings
+                    WHERE id = 'main'
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        assert store_settings_row["store_name"] == "StringSence"
+        assert store_settings_row["store_contact"] == "+60 11 3160 9008"
+        assert store_settings_row["address"] == "Utar Kampar"
+        assert json.loads(store_settings_row["trending_string_ids"]) == [
+            "yonex-bg66-ultimax",
+            "yonex-exbolt-63",
+            "kumpoo-js-63",
+            "gosen-ryzonic-65",
+            "victor-vbs-66-nano",
+        ]
+        assert json.loads(store_settings_row["notification_settings"]) == {}
+
+        business_hours_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT days_json, special_closed_dates
+                    FROM store_business_hours
+                    WHERE id = 'main'
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        days = json.loads(business_hours_row["days_json"])
+        assert len(days) == 7
+        assert days[0]["open_time"] == "11:00"
+        assert days[4]["max_bookings_per_slot"] == 4
+        assert json.loads(business_hours_row["special_closed_dates"]) == []
 
         repaired_row = (
             connection.execute(
@@ -382,7 +455,7 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-    assert version == "20260825_0034"
+    assert version == "20260826_0037"
 
     matrix_columns = {
         item["name"] for item in inspector.get_columns("string_recommendation_matrix")

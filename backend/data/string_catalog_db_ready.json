@@ -5,7 +5,7 @@
   "notes": [
     "Database-ready normalized catalog derived from the user's 33-string source dataset.",
     "English names, descriptions, and normalized fields are provided.",
-    "Official performance fields remain pending for later manual entry from official sources.",
+    "Official performance values for the approved 12-string cohort are manually reviewed and stored below; non-approved historical rows may remain pending.",
     "NLP matrix scores are intentionally excluded from the catalog and should stay in the recommendation pipeline."
   ],
   "brands": [
@@ -34,6 +34,188 @@
       "brand_name": "Yonex"
     }
   ],
+  "official_performance": {
+    "gosen-ryzonic-65": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 10.0,
+      "durability": 6.0,
+      "hitting_sound": 8.0,
+      "shock_absorption": 7.0,
+      "control": 9.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "kumpoo-js-63": {
+      "source_type": "manufacturer_chart_screenshot",
+      "source_name": "Kumpoo JS-63 product chart supplied by project owner",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 10.0,
+      "durability": 7.0,
+      "hitting_sound": 10.0,
+      "shock_absorption": 8.0,
+      "control": 9.0,
+      "notes": "Evidence run official-performance-manual-review-20260811-v1; manufacturer label impact resistance mapped to the system shock-absorption axis.",
+      "status": "manual_reviewed"
+    },
+    "li-ning-n65": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 3.0,
+      "repulsion_power": 10.0,
+      "durability": 7.0,
+      "hitting_sound": 10.0,
+      "shock_absorption": 8.0,
+      "control": 8.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "li-ning-no1": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 10.0,
+      "durability": 7.0,
+      "hitting_sound": 8.0,
+      "shock_absorption": 7.0,
+      "control": 8.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "victor-vbs-66-nano": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 9.0,
+      "durability": 8.0,
+      "hitting_sound": 7.0,
+      "shock_absorption": 8.0,
+      "control": 7.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "victor-vbs-68-power": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 3.0,
+      "repulsion_power": 9.0,
+      "durability": 8.0,
+      "hitting_sound": 7.0,
+      "shock_absorption": 7.0,
+      "control": 7.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "yonex-aerobite": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 10.0,
+      "durability": 6.0,
+      "hitting_sound": 9.0,
+      "shock_absorption": 8.0,
+      "control": 10.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "yonex-bg65": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 3.0,
+      "repulsion_power": 7.0,
+      "durability": 10.0,
+      "hitting_sound": 6.0,
+      "shock_absorption": 6.0,
+      "control": 6.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "yonex-bg66-ultimax": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 10.0,
+      "durability": 6.0,
+      "hitting_sound": 10.0,
+      "shock_absorption": 8.0,
+      "control": 10.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "yonex-bg80": {
+      "source_type": "admin_manual",
+      "source_name": "Admin editor",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 8.0,
+      "repulsion_power": 8.0,
+      "durability": 6.0,
+      "hitting_sound": 7.0,
+      "shock_absorption": 6.0,
+      "control": 6.0,
+      "notes": null,
+      "status": "manual_reviewed"
+    },
+    "yonex-bg80-power": {
+      "source_type": "manufacturer_chart_screenshot",
+      "source_name": "Yonex BG80 POWER product chart supplied by project owner",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 8.0,
+      "repulsion_power": 9.0,
+      "durability": 7.0,
+      "hitting_sound": 7.0,
+      "shock_absorption": 6.0,
+      "control": 6.0,
+      "notes": "Evidence run official-performance-manual-review-20260811-v1; manufacturer chart values copied without transformation.",
+      "status": "manual_reviewed"
+    },
+    "yonex-exbolt-63": {
+      "source_type": "manufacturer_chart_screenshot",
+      "source_name": "Yonex EXBOLT 63 product chart supplied by project owner",
+      "source_region": null,
+      "category": null,
+      "feature": null,
+      "feel": 5.0,
+      "repulsion_power": 10.0,
+      "durability": 7.0,
+      "hitting_sound": 10.0,
+      "shock_absorption": 7.0,
+      "control": 10.0,
+      "notes": "Evidence run official-performance-manual-review-20260811-v1; raw manufacturer quick-repulsion value 11 capped at the system 0-10 maximum.",
+      "status": "manual_reviewed"
+    }
+  },
   "strings": [
     {
       "catalog_id": "yonex-bg80",
@@ -79,7 +261,7 @@
           "tag_count": 246
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=715",
       "source_language": "en",
       "original_name": "BG-80",
@@ -133,7 +315,7 @@
           "tag_count": 45
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=401",
       "source_language": "en",
       "original_name": "BG-65",
@@ -250,7 +432,7 @@
           "tag_count": 79
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=4146",
       "source_language": "en",
       "original_name": "BG66 ULTIMAX",
@@ -305,7 +487,7 @@
           "tag_count": 77
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6667",
       "source_language": "en",
       "original_name": "BG80 POWER",
@@ -473,7 +655,7 @@
           "tag_count": 72
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6935",
       "source_language": "en",
       "original_name": "AEROBITE",
@@ -587,7 +769,7 @@
           "tag_count": 212
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=8887",
       "source_language": "en",
       "original_name": "EXBOLT 63",
@@ -763,7 +945,7 @@
           "tag_count": 15
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=17014",
       "source_language": "en",
       "original_name": "RYZONIC 65",
@@ -818,7 +1000,7 @@
           "tag_count": 88
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=6652",
       "source_language": "en",
       "original_name": "VBS-66 NANO",
@@ -1154,7 +1336,7 @@
           "tag_count": 14
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7219",
       "source_language": "en",
       "original_name": "VBS-68 Power",
@@ -1208,7 +1390,7 @@
           "tag_count": 83
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=7015",
       "source_language": "en",
       "original_name": "李宁1号线",
@@ -1270,7 +1452,7 @@
           "tag_count": 45
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=9285",
       "source_language": "en",
       "original_name": "N65",
@@ -1549,7 +1731,7 @@
           "tag_count": 6
         }
       ],
-      "official_performance_status": "pending_manual_fill",
+      "official_performance_status": "manual_reviewed",
       "source_dataset_url": "https://www.badmintoncn.com/cbo_eq/view.php?eid=22513",
       "source_language": "en",
       "original_name": "JS-63",

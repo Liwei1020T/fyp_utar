@@ -46,6 +46,10 @@ in `../config/approved_string_cohort_v1.csv`. Other master-data rows remain
 persisted for historical booking and audit references, but catalog, inventory,
 editing, booking selection, and recommendation APIs do not expose them.
 
+The configured single-store profile and business-hours snapshot are stored in
+`data/store_settings_seed.json` and are inserted by the startup seed/migration
+when those rows are missing. Existing administrator edits are preserved.
+
 
 Keep `EXPO_ACCESS_TOKEN` in the deployment secret store or untracked
 `backend/.env`. Never put it in the mobile app or use an `EXPO_PUBLIC_*` name.
@@ -116,86 +120,21 @@ cd backend
 ./.venv/bin/pytest -v
 ```
 
-## API Summary
+## API Contract
 
-Public unified Python endpoints:
+The running backend's OpenAPI document is the authoritative endpoint list:
 
-- `GET /health`
-- `GET /api/health`
-- `GET /api/media/{media_path}`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/forgot-password/request-code`
-- `POST /api/auth/forgot-password/reset`
-- `GET /api/auth/me`
-- `GET /api/profile`
-- `PUT /api/profile`
-- `GET /api/notifications`
-- `PATCH /api/notifications/read`
-- `GET /api/notifications/preferences`
-- `PUT /api/notifications/preferences`
-- `GET /api/conversations`
-- `POST /api/bookings/{id}/support`
-- `GET /api/conversations/{id}`
-- `POST /api/conversations/{id}/messages`
-- `POST /api/conversations/{id}/read`
-- `GET /api/rackets`
-- `POST /api/rackets`
-- `GET /api/rackets/{id}`
-- `PATCH /api/rackets/{id}`
-- `GET /api/bookings/{id}/feedback`
-- `POST /api/bookings/{id}/feedback`
-- `GET /api/strings`
-- `POST /api/bookings`
-- `GET /api/bookings`
-- `GET /api/bookings/{id}`
-- `POST /api/bookings/{id}/updates`
-- `GET /api/payments`
-- `GET /api/payments/bookings/{id}/quote`
-- `POST /api/payments/bookings/{id}`
-- `GET /api/wallet`
-- `POST /api/wallet/top-ups`
-- `POST /api/recommendations/generate`
-- `GET /api/recommendations/{user_id}`
-- `GET /api/recommendations/{user_id}/{catalog_id}`
-- `POST /api/agent/query`
-- `POST /api/admin/strings/{id}/image`
-- `DELETE /api/admin/strings/{id}/image`
-- `GET /api/admin/inventory/strings`
-- `GET /api/admin/inventory/strings/{id}`
-- `PATCH /api/admin/inventory/strings/{id}`
-- `PUT /api/admin/inventory/strings/{id}/editor` (atomic catalog, official-performance, and inventory update)
-- `GET /api/admin/strings/{id}/official-performance`
-- `GET /api/admin/strings/{id}/recommendation-matrix`
-- `POST /api/admin/recommendation-matrix/import`
-- `GET /api/admin/bookings`
-- `GET /api/admin/bookings/{id}`
-- `PATCH /api/admin/bookings/{id}/status`
-- `POST /api/admin/bookings/{id}/updates`
-- `POST /api/admin/bookings/{id}/photos`
-- `GET /api/admin/business-hours`
-- `PUT /api/admin/business-hours`
-- `GET /api/slots`
-- `GET /api/store-settings`
-- `GET /api/admin/check-in/lookup`
-- `POST /api/admin/check-in`
-- `GET /api/admin/service-queue`
-- `GET /api/admin/store-settings`
-- `PUT /api/admin/store-settings`
-- `GET /api/admin/analytics/summary`
-- `GET /api/admin/analytics/popular-strings`
-- `GET /api/admin/payments`
-- `PATCH /api/admin/payments/{id}`
-- `GET /api/admin/conversations`
-- `GET /api/admin/conversations/{id}`
-- `POST /api/admin/conversations/{id}/messages`
-- `POST /api/admin/conversations/{id}/read`
-- `POST /api/admin/conversations/{id}/resolve`
-- `POST /api/admin/conversations/{id}/close`
-- `GET /api/admin/recommendations/runs`
-- `GET /api/admin/recommendations/runs/{run_id}`
+- interactive documentation: `http://127.0.0.1:3001/docs`
+- machine-readable contract: `http://127.0.0.1:3001/openapi.json`
 
-More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-contract.md](./docs/api-contract.md), and [docs/database.md](./docs/database.md).
+The routes are assembled in `app/entrypoints/api/router.py`. For stable request,
+response, authorization, and workflow rules, read
+[docs/api-contract.md](./docs/api-contract.md); update that contract and its
+focused tests when a public API changes instead of maintaining a second
+hand-copied endpoint list here.
+
+More implementation context is in [docs/architecture.md](./docs/architecture.md)
+and [docs/database.md](./docs/database.md).
 
 ## Catalog Refactor Notes
 
@@ -203,7 +142,7 @@ More detail is in [docs/architecture.md](./docs/architecture.md), [docs/api-cont
 - Community metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
 - The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate.
-- Official performance rows are created as `pending_manual_fill`; missing values are intentionally not guessed.
+- The approved 12-string cohort is seeded with the manually reviewed official performance values from `backend/data/string_catalog_db_ready.json`; non-approved historical rows can remain `pending_manual_fill`.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
 - The backend imports the canonical recommendation artifact into `string_recommendation_matrix` with `source_layer='nlp_review'`; each import fully replaces that source layer and records a SHA-256 source version.
 
@@ -214,7 +153,10 @@ The current design review found that the backend already had the right normalize
 Final score:
 
 ```text
-FinalScore = (0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90
+BaseScore = (0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90
+
+FinalScore = blend(BaseScore, racket-scoped CF evidence) when at least three
+independent supporters exist; otherwise FinalScore = BaseScore.
 ```
 
 - `PreferenceMatch` compares normalized 1-to-10 user priorities against effective item features.
@@ -223,4 +165,7 @@ FinalScore = (0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90
 - `RuleFit` applies badminton-specific logic such as beginner thin-gauge support, high-tension/high-frequency thick-gauge support, and attacking/control bonuses.
 - NLP/review signals are imported from the independent 12-by-9 MacBERT workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings`, `string_official_performance`, or the protected V9 workbook.
 - Matrix rows contain only scoring values and optional evidence notes; confidence, review-count, reference, and per-row artifact metadata are not persisted.
+- Community feedback calibrates eligible feature signals within bounded support
+  and a racket-model scope. The final collaborative-filter blend is gated by
+  independent support; insufficient evidence keeps the base score unchanged.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

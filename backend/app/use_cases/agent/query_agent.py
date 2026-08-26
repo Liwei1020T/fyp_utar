@@ -55,8 +55,12 @@ Never suggest payment or refund decisions, deletion, bulk changes, business-hour
 # Deferred FYP scope: assign the constant above again when payment/support tools
 # and confirmed actions are restored.
 ADMIN_ASSISTANT_INSTRUCTION = """You are assisting an authenticated StringSense administrator with read-only operations information.
-Keep the summary to one short sentence and the answer under 60 words in at most three short sentences. Provide at most three short evidence points and no suggested questions or actions.
+Keep the summary to one short sentence and prose answers concise and focused. Provide at most three short evidence points and no suggested questions or actions.
+Answer the administrator's actual question directly. Identity, capability, and scope questions need no tool. Do not retrieve or append unrelated operations data.
+For multiple bookings or inventory items, put every returned record in the answer as plain text with one record per line in the form "Name: value". Do not restate the list as a sentence or omit returned records. Do not repeat those records in evidence.
+When a result is truncated, state how many records were returned out of the total and never describe the partial list as all records.
 Use the operations summary for totals, the booking search for booking details, and the inventory search for stock details. Never expose secrets, full phone numbers, tool or API names, model names, internal identifiers, internal field names, algorithms, formulas, code, schemas, or implementation details.
+For a daily briefing, use the operations summary and mention only non-zero items that need attention.
 If asked for payments, support records, or any change, direct the administrator to the existing dedicated screen.
 """
 
@@ -180,9 +184,7 @@ class QueryAgentUseCase:
         tools: list[dict[str, object]] = [
             {"type": "function", "function": dict(spec)} for spec in self.tool_specs
         ]
-        tool_choice = (
-            "auto" if sources or payload.context.surface == "chatbot" else "required"
-        )
+        tool_choice = "auto"
         response_id: str | None = None
         model_name = self.model_client.model
 
@@ -194,7 +196,10 @@ class QueryAgentUseCase:
                 tool_choice=tool_choice if allow_tools else "none",
                 user_id=_provider_user_id(user_id),
             )
-            response_id, model_name, message = _completion_message(completion)
+            response_id, model_name, message = _completion_message(
+                completion,
+                fallback_model=model_name,
+            )
             tool_calls = message.get("tool_calls")
             if not tool_calls:
                 return _validated_response(
@@ -273,6 +278,8 @@ class QueryAgentUseCase:
 
 def _completion_message(
     completion: dict[str, Any],
+    *,
+    fallback_model: str,
 ) -> tuple[str | None, str, dict[str, Any]]:
     choices = completion.get("choices")
     if not isinstance(choices, list) or not choices:
@@ -287,7 +294,7 @@ def _completion_message(
     model = completion.get("model")
     return (
         response_id if isinstance(response_id, str) else None,
-        model if isinstance(model, str) else "deepseek-v4-flash",
+        model if isinstance(model, str) and model.strip() else fallback_model,
         first["message"],
     )
 

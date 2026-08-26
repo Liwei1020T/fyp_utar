@@ -10,15 +10,15 @@ the approved 12-string cohort.
 | Gauge metadata | 12/12 |
 | Material metadata | 12/12 |
 | Official-performance source URLs | 0/12 |
-| Official-performance status | 12/12 `pending_manual_fill` |
-| Populated performance dimensions | 12/12 have `feel` only |
+| Official-performance status | 12/12 `manual_reviewed` |
+| Populated performance dimensions | 12/12 have all six runtime dimensions |
 
-The catalog has descriptive and structured product metadata, but it does not
-yet contain source-backed official performance ratings. The populated `feel`
-values come from the bounded seed map in
-`backend/app/adapters/persistence/sqlalchemy/catalog_seed.py`; they must not be
-presented as manufacturer ratings. Recommendation/NLP/community values remain
-separate evidence layers.
+The approved cohort now contains the manually reviewed official performance
+values in the canonical seed source
+`backend/data/string_catalog_db_ready.json`. The runtime seed preserves the
+source metadata and six performance dimensions without reintroducing the
+removed official-performance `source_url` field. Recommendation/NLP/community
+values remain separate evidence layers.
 
 The audit also found duplicated punctuation in generated descriptions. Migration
 `20260817_0031` repairs existing rows, and the seed normalizer prevents the same

@@ -52,6 +52,44 @@ function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate();
 }
 
+function todayDateValue() {
+  const today = new Date();
+  return formatClosedDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
+}
+
+function minimumClosedDay(year: number, month: number) {
+  const today = new Date();
+  return year === today.getFullYear() && month === today.getMonth() + 1
+    ? today.getDate()
+    : 1;
+}
+
+function closedMonthOptions(year: number) {
+  const today = new Date();
+  return MONTH_OPTIONS.filter(
+    (_, index) => year > today.getFullYear() || index + 1 >= today.getMonth() + 1,
+  );
+}
+
+function closedDayOptions(year: number, month: number) {
+  const minimumDay = minimumClosedDay(year, month);
+  return Array.from({ length: daysInMonth(year, month) }, (_, index) => index + 1)
+    .filter((day) => day >= minimumDay)
+    .map((day) => ({ id: String(day), label: String(day) }));
+}
+
+function normalizeClosedDates(values: string[]) {
+  const today = todayDateValue();
+  return values.filter((value) => value >= today).sort();
+}
+
+function clampClosedDay(year: number, month: number, day: number) {
+  return Math.min(
+    Math.max(day, minimumClosedDay(year, month)),
+    daysInMonth(year, month),
+  );
+}
+
 export default function AdminBusinessHoursScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -73,8 +111,9 @@ export default function AdminBusinessHoursScreen() {
   useEffect(() => {
     const existing = businessHours.find((item) => item.adminId === user?.id);
     if (existing && !localHours) {
-      setLocalHours(existing);
-      setClosedDates(existing.specialClosedDates);
+      const futureClosedDates = normalizeClosedDates(existing.specialClosedDates);
+      setLocalHours({ ...existing, specialClosedDates: futureClosedDates });
+      setClosedDates(futureClosedDates);
     }
   }, [businessHours, localHours, user?.id]);
 
@@ -93,9 +132,11 @@ export default function AdminBusinessHoursScreen() {
           return;
         }
         const mapped = mapBackendBusinessHoursToBusinessHours(response, user.id);
-        updateBusinessHours(user.id, mapped);
-        setLocalHours(mapped);
-        setClosedDates(mapped.specialClosedDates);
+        const futureClosedDates = normalizeClosedDates(mapped.specialClosedDates);
+        const normalized = { ...mapped, specialClosedDates: futureClosedDates };
+        updateBusinessHours(user.id, normalized);
+        setLocalHours(normalized);
+        setClosedDates(futureClosedDates);
         setSaveSuccessMessage(null);
       } catch (loadError) {
         if (!cancelled) {
@@ -134,6 +175,10 @@ export default function AdminBusinessHoursScreen() {
 
   const addClosedDate = () => {
     const dateValue = formatClosedDate(closedDateYear, closedDateMonth, closedDateDay);
+    if (dateValue < todayDateValue()) {
+      setClosedDateError('Closed dates must be today or later.');
+      return;
+    }
     if (closedDates.includes(dateValue)) {
       setClosedDateError('This date has already been added.');
       return;
@@ -263,25 +308,27 @@ export default function AdminBusinessHoursScreen() {
           <HeroText className="text-sm leading-6 text-neutral-600">
             Add dates when the shop will not accept bookings, such as public holidays or maintenance days.
           </HeroText>
+          <HeroText className="text-sm text-neutral-500">
+            Only today or future dates can be added.
+          </HeroText>
           <View className="flex-row gap-2">
             <AppSelect
               label="Month"
               value={String(closedDateMonth)}
-              options={MONTH_OPTIONS}
+              options={closedMonthOptions(closedDateYear)}
               onChange={(value) => {
                 const nextMonth = Number(value);
                 setClosedDateMonth(nextMonth);
-                setClosedDateDay((current) => Math.min(current, daysInMonth(closedDateYear, nextMonth)));
+                setClosedDateDay((current) =>
+                  clampClosedDay(closedDateYear, nextMonth, current),
+                );
               }}
               className="flex-[1.5]"
             />
             <AppSelect
               label="Day"
               value={String(closedDateDay)}
-              options={Array.from({ length: daysInMonth(closedDateYear, closedDateMonth) }, (_, index) => ({
-                id: String(index + 1),
-                label: String(index + 1),
-              }))}
+              options={closedDayOptions(closedDateYear, closedDateMonth)}
               onChange={(value) => setClosedDateDay(Number(value))}
               className="flex-1"
             />
@@ -291,8 +338,17 @@ export default function AdminBusinessHoursScreen() {
               options={YEAR_OPTIONS}
               onChange={(value) => {
                 const nextYear = Number(value);
+                const nextMonthOptions = closedMonthOptions(nextYear);
+                const nextMonth = nextMonthOptions.some(
+                  (option) => Number(option.id) === closedDateMonth,
+                )
+                  ? closedDateMonth
+                  : Number(nextMonthOptions[0]?.id ?? closedDateMonth);
                 setClosedDateYear(nextYear);
-                setClosedDateDay((current) => Math.min(current, daysInMonth(nextYear, closedDateMonth)));
+                setClosedDateMonth(nextMonth);
+                setClosedDateDay((current) =>
+                  clampClosedDay(nextYear, nextMonth, current),
+                );
               }}
               className="flex-[1.2]"
             />

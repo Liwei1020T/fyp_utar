@@ -295,7 +295,7 @@ any active payment so checkout never trusts a stale catalog snapshot.
 - `PUT /api/admin/store-settings`
 - `POST /api/admin/store-settings/payment-qr`
 - `DELETE /api/admin/store-settings/payment-qr`
-- `GET /api/admin/analytics/summary`
+- `GET /api/admin/analytics/summary?days=7|30` (defaults to 7 and includes the matching previous-period booking and revenue totals)
 - `GET /api/admin/analytics/popular-strings`
 
 Only approved catalog strings from `backend/data/string_catalog_db_ready.json`
@@ -355,7 +355,6 @@ Official performance responses include:
 
 - `source_type`
 - `source_name`
-- `source_url`
 - `source_region`
 - `category`
 - `feature`
@@ -566,14 +565,19 @@ questions/actions, and a source list constructed by the backend. The reduced
 mobile UI hides source and suggested-question chips, while server-side provenance
 remains available for audit. DeepSeek output cannot supply or override the source
 list, and resource actions with identifiers absent from verified data are dropped.
+Within the current page session, mobile sends at most 12 recent user messages and
+assistant summary/answer/evidence payloads for follow-up context. Internal tool
+payloads and source identifiers are not copied into that history, and Agent chat
+history is not persisted.
 
-The active FYP player tools cover string details, V11 What-if previews, and
-verified in-stock alternatives. Exact owned recommendation-run and string context
+The active FYP player tools cover string details, exact two-or-three-string
+comparisons, live store information, V11 What-if previews, and verified in-stock
+alternatives. Exact owned recommendation-run and string context
 is preloaded by the backend for the explanation surface without exposing a
 general run-lookup tool to the model. Guided previews may apply a temporary RM
-budget and do not update the saved profile or recommendation cache. Completed
-comparison, review, store, booking, latest-recommendation, and human-handoff code
-remains preserved but inactive.
+budget and do not update the saved profile or recommendation cache. Review,
+booking, latest-recommendation, and human-handoff code remains preserved but
+inactive.
 
 Provider configuration is server-only. With `AGENT_ENABLED=false` or a missing
 key, the endpoint returns `503`; no model fallback invents an explanation.
@@ -589,11 +593,13 @@ An authenticated admin uses the same endpoint with:
 ```
 
 Player and admin surfaces have separate role checks and tool allowlists. The
-active admin allowlist exposes only the read-only current operations summary and
-returns no actions. Completed booking, inventory, payment, and support lookup
-tools plus booking-status, stock-count, and support-reply handlers remain
-preserved behind commented inactive registrations. Re-enable all matching tool,
-action, prompt, mobile, test, and documentation entries together.
+active admin allowlist exposes read-only current operations, booking lookup, and
+inventory lookup tools and returns no actions. Booking lookup returns the ten most
+recent matching records with explicit returned and total counts; inventory lookup
+returns all matching approved-catalog records. Payment and support lookup tools
+plus booking-status, stock-count, and support-reply handlers remain preserved
+behind commented inactive registrations. Re-enable all matching tool, action,
+prompt, mobile, test, and documentation entries together.
 
 ### Bookings
 

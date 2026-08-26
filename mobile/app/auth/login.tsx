@@ -9,6 +9,8 @@ import { AuthShell } from '../../components/auth/AuthShell';
 import {
   composePhoneIdentifier,
   countryDialCodes,
+  LOCAL_PHONE_DIGIT_LIMIT,
+  normalizePhoneNumber,
   PhoneNumberField,
   splitPhoneIdentifier,
 } from '../../components/auth/PhoneNumberField';
@@ -17,6 +19,7 @@ import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
 import { useAppStore } from '../../store/appStore';
 import { getRoleHome } from '../../lib/navigation';
+import { showAlert } from '../../lib/alerts';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 import {
   mapBackendUserToAdminProfile,
@@ -29,6 +32,10 @@ const loginSchema = z.object({
     .string()
     .trim()
     .min(7, 'Enter your phone number')
+    .max(
+      LOCAL_PHONE_DIGIT_LIMIT,
+      `Use no more than ${LOCAL_PHONE_DIGIT_LIMIT} digits`,
+    )
     .regex(/^\d[\d\s-]*$/, 'Use numbers only'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
@@ -76,6 +83,14 @@ export default function LoginScreen() {
 
   const onSubmit = async (data: LoginForm) => {
     setFormError(null);
+    const normalizedPhoneNumber = normalizePhoneNumber(data.phoneNumber);
+    if (normalizedPhoneNumber.startsWith('0')) {
+      showAlert(
+        'Check phone number',
+        'Remove the leading 0 after selecting a country code, then submit again.',
+      );
+      return;
+    }
     const phoneIdentifier = composePhoneIdentifier(data.countryCode, data.phoneNumber);
 
     try {
@@ -150,7 +165,7 @@ export default function LoginScreen() {
               onChangeCountryCode={(nextCode) =>
                 setValue('countryCode', nextCode, { shouldValidate: true })
               }
-              placeholder="123456789"
+              placeholder="1234567890"
               error={
                 errors.countryCode?.message ??
                 errors.phoneNumber?.message

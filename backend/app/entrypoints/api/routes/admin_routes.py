@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from datetime import date
+from datetime import datetime
 from typing import Literal
 from typing import cast
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -116,6 +119,12 @@ def _prepare_string_values() -> PrepareStringValuesUseCase:
         approved_catalog_ids=approved_catalog_ids(settings.approved_string_cohort_path),
         merge_defaults=merge_with_approved_defaults,
     )
+
+
+def _validate_closed_dates_not_in_past(special_closed_dates: list[str]) -> None:
+    today = datetime.now(ZoneInfo(get_settings().store_timezone)).date()
+    if any(date.fromisoformat(value) < today for value in special_closed_dates):
+        raise BadRequestError("Closed dates must be today or later")
 
 
 async def read_upload_bytes_limited(
@@ -564,6 +573,7 @@ def admin_update_business_hours(
     _: CurrentUser = Depends(get_current_admin),
     store_repository=Depends(get_store_repository),
 ) -> StoreBusinessHoursOut:
+    _validate_closed_dates_not_in_past(payload.special_closed_dates)
     hours = UpdateBusinessHoursUseCase(store_repository=store_repository).execute(
         days=[day.model_dump() for day in payload.days],
         special_closed_dates=payload.special_closed_dates,

@@ -38,6 +38,11 @@ The active migration sequence is:
 - [20260817_0030_general_support_conversations.py](../migrations/versions/20260817_0030_general_support_conversations.py)
 - [20260817_0031_clean_catalog_descriptions.py](../migrations/versions/20260817_0031_clean_catalog_descriptions.py)
 - [20260818_0032_qr_payment_proofs.py](../migrations/versions/20260818_0032_qr_payment_proofs.py)
+- [20260825_0033_remove_feedback_durability.py](../migrations/versions/20260825_0033_remove_feedback_durability.py)
+- [20260825_0034_remove_unused_store_service_price.py](../migrations/versions/20260825_0034_remove_unused_store_service_price.py)
+- [20260825_0035_remove_official_performance_source_url.py](../migrations/versions/20260825_0035_remove_official_performance_source_url.py)
+- [20260826_0036_seed_official_performance.py](../migrations/versions/20260826_0036_seed_official_performance.py)
+- [20260826_0037_seed_store_settings.py](../migrations/versions/20260826_0037_seed_store_settings.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -144,7 +149,7 @@ Important rule:
 
 ### `string_official_performance`
 
-Stores only official or manually curated performance values. Missing values stay null and rows default to `pending_manual_fill`.
+Stores official or manually curated performance values. The approved 12-string cohort is seeded with complete `manual_reviewed` values; missing values for other historical rows stay null and default to `pending_manual_fill`.
 
 ### `inventory_items`
 
@@ -234,13 +239,14 @@ and source versions, racket context, CF shadow evidence, rule events, and reason
 
 ### `store_business_hours`
 
-Stores the single-store weekly schedule plus special closed dates used to generate booking slot availability.
+Stores the single-store weekly schedule plus special closed dates used to generate booking slot availability. A configured snapshot is kept in `data/store_settings_seed.json` for fresh database rebuilds.
 
 ### `store_settings`
 
 Stores the single-store support copy, policy text, contact details, booking
-notes, persisted `trending_string_ids` used by the player home screen, and the
-optional server-owned `payment_qr_path` used for manual QR transfers.
+notes, persisted `trending_string_ids` used by the player home screen, notification
+switches, and the optional server-owned `payment_qr_path` used for manual QR
+transfers. The configured snapshot is seeded only when the row is missing.
 
 ### `bookings`
 
@@ -293,6 +299,16 @@ remain separate recommendation data.
 
 The `20260825_0034` migration removes the unused store service-price column;
 booking charges now come only from the selected string price.
+
+The `20260825_0035` migration removes the unused official-performance source URL;
+catalog and NLP provenance remain separate.
+
+The `20260826_0036` migration seeds the manually reviewed official performance
+values for the approved 12-string cohort from the canonical catalog source.
+
+The `20260826_0037` migration seeds the configured single-store settings and
+business-hours snapshot from `data/store_settings_seed.json`. It only inserts
+missing rows, so later administrator edits are not overwritten during upgrades.
 
 ### `check_in_tokens`
 

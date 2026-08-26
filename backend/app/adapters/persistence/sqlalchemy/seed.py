@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
+from typing import Any
 from xml.etree import ElementTree
 from zipfile import BadZipFile
 
@@ -40,54 +42,20 @@ from app.shared.errors import ConflictError
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_BUSINESS_HOURS_DAYS = [
-    {
-        "day": day,
-        "is_open": False,
-        "open_time": "09:00",
-        "close_time": "17:00",
-        "break_start": None,
-        "break_end": None,
-        "slot_duration_minutes": 30,
-        "max_bookings_per_slot": 1,
-    }
-    for day in (
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-    )
-]
+STORE_SETTINGS_SEED_PATH = (
+    Path(__file__).resolve().parents[4] / "data" / "store_settings_seed.json"
+)
 
-DEFAULT_SPECIAL_CLOSED_DATES: list[str] = []
 
-DEFAULT_STORE_SETTINGS = {
-    "store_name": "StringSence",
-    "store_contact": "Not configured",
-    "support_text": (
-        "Ask us about tension pairing, string feel, or drop-off timing and "
-        "we will reply from the admin operations desk."
-    ),
-    "payment_notes": ("External payments require shop verification."),
-    "booking_notes": (
-        "Drop-off slots are generated from business hours and slot capacity settings."
-    ),
-    "store_policy_text": (
-        "Reschedule or cancellation is allowed before the admin starts work on the racket."
-    ),
-    "address": "Not configured",
-    "trending_string_ids": [],
-    "notification_settings": {
-        "booking": {"enabled": True},
-        "payment": {"enabled": True},
-        "service": {"enabled": True},
-        "chat": {"enabled": True},
-        "system": {"enabled": True},
-    },
-}
+def _load_store_seed() -> dict[str, Any]:
+    payload = json.loads(STORE_SETTINGS_SEED_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Store settings seed must be a JSON object")
+    if not isinstance(payload.get("store_settings"), dict):
+        raise ValueError("Store settings seed is missing store_settings")
+    if not isinstance(payload.get("business_hours"), dict):
+        raise ValueError("Store settings seed is missing business_hours")
+    return payload
 
 
 def ensure_seed_users(db: Session) -> None:
@@ -196,18 +164,23 @@ def _import_startup_recommendation_matrix(db: Session, source_path: Path) -> Non
 
 
 def ensure_store_defaults(db: Session) -> None:
-    business_hours = db.get(StoreBusinessHours, "main")
+    seed = _load_store_seed()
+    store_id = str(seed.get("store_id", "main"))
+    business_hours_seed = seed["business_hours"]
+    store_settings_seed = seed["store_settings"]
+
+    business_hours = db.get(StoreBusinessHours, store_id)
     if business_hours is None:
         db.add(
             StoreBusinessHours(
-                id="main",
-                days_json=DEFAULT_BUSINESS_HOURS_DAYS,
-                special_closed_dates=DEFAULT_SPECIAL_CLOSED_DATES,
+                id=store_id,
+                days_json=business_hours_seed["days"],
+                special_closed_dates=business_hours_seed["special_closed_dates"],
             )
         )
 
-    store_settings = db.get(StoreSettings, "main")
+    store_settings = db.get(StoreSettings, store_id)
     if store_settings is None:
-        db.add(StoreSettings(id="main", **DEFAULT_STORE_SETTINGS))
+        db.add(StoreSettings(id=store_id, **store_settings_seed))
 
     db.flush()

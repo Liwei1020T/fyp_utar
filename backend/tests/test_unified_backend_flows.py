@@ -529,7 +529,7 @@ def test_admin_can_persist_official_performance_and_inventory_history():
         headers=headers(admin_token),
     )
     assert official_before.status_code == 200
-    assert official_before.json()["status"] == "pending_manual_fill"
+    assert official_before.json()["status"] == "manual_reviewed"
 
     official_update = client.put(
         f"/api/admin/inventory/strings/{string_id}/editor",
@@ -848,7 +848,13 @@ def test_admin_business_hours_settings_and_slots_flow():
     )
     assert settings_response.status_code == 200
     assert settings_response.json()["store_name"] == "StringSence"
-    assert settings_response.json()["trending_string_ids"] == []
+    assert settings_response.json()["trending_string_ids"] == [
+        "yonex-bg66-ultimax",
+        "yonex-exbolt-63",
+        "kumpoo-js-63",
+        "gosen-ryzonic-65",
+        "victor-vbs-66-nano",
+    ]
     assert "default_service_price" not in settings_response.json()
     featured_string_id = first_admin_string_id(admin_token)
 
@@ -1021,6 +1027,19 @@ def test_business_hours_reject_invalid_schedule_shapes():
         },
     )
     assert duplicate_close_response.status_code == 422
+
+    past_close_response = client.put(
+        "/api/admin/business-hours",
+        headers=headers(admin_token),
+        json={
+            "days": valid_days,
+            "special_closed_dates": [(date.today() - timedelta(days=1)).isoformat()],
+        },
+    )
+    assert past_close_response.status_code == 400
+    assert past_close_response.json()["error"]["message"] == (
+        "Closed dates must be today or later"
+    )
 
 
 def test_admin_check_in_and_service_queue_flow():

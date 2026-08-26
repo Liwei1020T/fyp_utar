@@ -106,7 +106,6 @@ class OfficialPerformanceOut(BaseModel):
     catalog_id: str
     source_type: str | None = None
     source_name: str | None = None
-    source_url: str | None = None
     source_region: str | None = None
     category: float | None = None
     feature: float | None = None
@@ -251,7 +250,6 @@ class OfficialPerformancePayload(BaseModel):
 
     source_type: str | None = Field(default=None, max_length=40)
     source_name: str | None = Field(default=None, max_length=160)
-    source_url: str | None = Field(default=None, max_length=2000)
     source_region: str | None = Field(default=None, max_length=60)
     category: float | None = Field(default=None, ge=0, le=10)
     feature: float | None = Field(default=None, ge=0, le=10)
@@ -382,7 +380,6 @@ def official_performance_to_dto(
         catalog_id=item.catalog_id,
         source_type=item.source_type,
         source_name=item.source_name,
-        source_url=item.source_url,
         source_region=item.source_region,
         category=item.category,
         feature=item.feature,

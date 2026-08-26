@@ -43,26 +43,6 @@ function buildSnapshotItems(snapshot: Record<string, unknown>) {
   }));
 }
 
-function buildRationaleSummary(rationale: Record<string, unknown>) {
-  const summaryKeys = [
-    'algorithm_family',
-    'primary_fit_angle',
-    'trade_off_summary',
-    'community_calibration_used',
-    'community_snapshot_version',
-    'collaborative_filtering_used',
-    'racket_context',
-    'cf_shadow',
-  ] as const;
-
-  return summaryKeys
-    .filter((key) => key in rationale && rationale[key] != null)
-    .map((key) => ({
-      label: formatLabel(key),
-      value: formatScalarValue(rationale[key]),
-    }));
-}
-
 function ScoreBreakdownRows({ item }: { item: BackendRecommendationRunItem }) {
   return (
     <View className="gap-2.5">
@@ -228,7 +208,6 @@ export default function AdminRecommendationRunDetailScreen() {
           >
             <View className="gap-3">
               {run.items.map((item, index) => {
-                const rationaleSummary = buildRationaleSummary(item.rationale);
                 const stringLabel = getStringLabel(strings, item.catalog_id);
 
                 return (
@@ -251,27 +230,6 @@ export default function AdminRecommendationRunDetailScreen() {
                       </View>
 
                       <ScoreBreakdownRows item={item} />
-
-                      {rationaleSummary.length > 0 ? (
-                        <View className="gap-2.5">
-                          <HeroText className="text-[12px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
-                            Rationale summary
-                          </HeroText>
-                          {rationaleSummary.map((summaryItem) => (
-                            <View
-                              key={summaryItem.label}
-                              className="flex-row items-start justify-between gap-4"
-                            >
-                              <HeroText className="max-w-[42%] text-sm text-neutral-500">
-                                {summaryItem.label}
-                              </HeroText>
-                              <HeroText className="flex-1 text-right text-sm font-semibold leading-5 text-neutral-900">
-                                {summaryItem.value}
-                              </HeroText>
-                            </View>
-                          ))}
-                        </View>
-                      ) : null}
                     </View>
                   </AppCard>
                 );

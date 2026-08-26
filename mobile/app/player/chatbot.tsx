@@ -9,6 +9,7 @@ import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
+import { agentResponseToHistoryContent } from '../../lib/agentHistory';
 import { backendApi, BackendApiError } from '../../services/backendApi';
 import {
   useBackendAccessToken,
@@ -56,7 +57,10 @@ export default function PlayerAgentScreen() {
       .map((entry): BackendAgentMessage =>
         entry.role === 'user'
           ? { role: 'user', content: entry.content }
-          : { role: 'assistant', content: entry.response.answer },
+          : {
+              role: 'assistant',
+              content: agentResponseToHistoryContent(entry.response),
+            },
       )
       .slice(-12);
     const requestId = `${Date.now()}-${entries.length}`;

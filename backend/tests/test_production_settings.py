@@ -23,6 +23,22 @@ def test_production_accepts_explicit_tunnel_security_config() -> None:
     production_settings().validate_runtime()
 
 
+def test_development_cors_defaults_include_common_expo_web_ports() -> None:
+    settings = Settings(
+        _env_file=None,
+        DATABASE_URL="sqlite+pysqlite:///:memory:",
+    )  # type: ignore[call-arg]
+
+    assert settings.cors_origins == [
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+        "http://127.0.0.1:8081",
+        "http://localhost:8081",
+        "http://127.0.0.1:8089",
+        "http://localhost:8089",
+    ]
+
+
 def test_comma_separated_lists_are_read_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv(

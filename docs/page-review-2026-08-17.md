@@ -169,7 +169,7 @@ and replied to the same persisted thread. Screenshots are in
 
 1. The React Navigation Web route-transition focus warning remains a minor
    accessibility follow-up; it does not block the reviewed flows.
-2. Fresh demo configuration should set the store address, business hours, and
-   trending strings before a presentation.
+2. Fresh demo databases now restore the configured store address, business
+   hours, and trending strings from the checked-in store seed.
 3. Real OpenWA/Expo delivery and external payment gateway receipts remain
    provider/device boundaries, not local page defects.

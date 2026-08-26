@@ -662,10 +662,11 @@ export const backendApi = {
       token,
     });
   },
-  adminAnalyticsSummary(token: string) {
-    return requestJson<BackendAnalyticsSummary>('/admin/analytics/summary', {
-      token,
-    });
+  adminAnalyticsSummary(token: string, days: 7 | 30 = 7) {
+    return requestJson<BackendAnalyticsSummary>(
+      `/admin/analytics/summary?days=${days}`,
+      { token },
+    );
   },
   adminPopularStrings(token: string, limit = 5) {
     const searchParams = new URLSearchParams({ limit: String(limit) });

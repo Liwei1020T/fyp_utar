@@ -190,7 +190,6 @@ export interface BackendOfficialPerformance {
   catalog_id: string;
   source_type: string | null;
   source_name: string | null;
-  source_url: string | null;
   source_region: string | null;
   category: number | null;
   feature: number | null;
@@ -713,6 +712,11 @@ export interface BackendAnalyticsSummary {
   low_stock_count: number;
   unread_chats: number;
   today_revenue: number;
+  period_days: number;
+  period_bookings: number;
+  previous_period_bookings: number;
+  period_revenue: number;
+  previous_period_revenue: number;
   repeat_customer_count: number;
   pending_feedback_count: number;
   average_feedback_score: number | null;

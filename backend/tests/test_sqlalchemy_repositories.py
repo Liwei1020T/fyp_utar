@@ -91,6 +91,11 @@ def test_catalog_editor_rolls_back_every_section_after_validation_failure() -> N
         repository = SqlAlchemyCatalogRepository(db)
         string_item = repository.list_active_catalog()[0]
         original_description = string_item.short_description
+        original_source_name = (
+            string_item.official_performance.source_name
+            if string_item.official_performance is not None
+            else None
+        )
 
         with pytest.raises(BadRequestError, match="Unsupported pricing mode"):
             repository.update_editor(
@@ -112,4 +117,4 @@ def test_catalog_editor_rolls_back_every_section_after_validation_failure() -> N
         assert persisted is not None
         assert persisted.short_description == original_description
         assert persisted.official_performance is not None
-        assert persisted.official_performance.source_name is None
+        assert persisted.official_performance.source_name == original_source_name

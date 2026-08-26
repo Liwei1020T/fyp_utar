@@ -247,11 +247,12 @@ reuse seam.
 | [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, conversations, notifications, rackets/feedback, commerce, business hours, settings, recommendation logs/runs, and password reset codes. |
 | [backend/app/adapters/persistence/sqlalchemy/repositories](../backend/app/adapters/persistence/sqlalchemy/repositories) | Concrete repository implementations and ORM-domain mappers. |
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
-| [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults. |
+| [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults from the checked-in snapshots. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260818_0032`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260826_0037`. |
 | [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
 | [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
+| [backend/data/store_settings_seed.json](../backend/data/store_settings_seed.json) | Rebuildable single-store profile and business-hours snapshot. |
 
 
 ### Backend Tests

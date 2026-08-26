@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import IntEnum
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Query
@@ -33,8 +35,14 @@ from app.use_cases.store.get_store_analytics import GetStoreAnalyticsUseCase
 router = APIRouter(prefix="/admin/analytics", tags=["admin"])
 
 
+class AnalyticsPeriodDays(IntEnum):
+    WEEK = 7
+    MONTH = 30
+
+
 @router.get("/summary", response_model=AnalyticsSummaryOut)
 def admin_analytics_summary(
+    days: AnalyticsPeriodDays = Query(default=AnalyticsPeriodDays.WEEK),
     _: CurrentUser = Depends(get_current_admin),
     booking_repository=Depends(get_booking_repository),
     catalog_repository=Depends(get_catalog_repository),
@@ -97,6 +105,7 @@ def admin_analytics_summary(
         ],
         unread_chats=booking_unread_chats + general_unread_chats,
         store_timezone=get_settings().store_timezone,
+        period_days=int(days),
     )
     return analytics_summary_to_dto(summary)
 

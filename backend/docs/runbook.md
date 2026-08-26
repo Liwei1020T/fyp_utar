@@ -46,7 +46,10 @@ cd backend
 - The default approved source is `backend/data/string_catalog_db_ready.json`.
 - Relative `RECOMMENDATION_MATRIX_SOURCE_PATH` values also resolve from the backend root.
 - The default NLP review matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; V9 remains separate.
-- Recommendation generation uses `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90` with fixed official/NLP fusion and no confidence or review-count weighting.
+- Recommendation generation uses `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90`
+  as its base score with fixed official/NLP fusion and no confidence or
+  review-count weighting. It blends racket-scoped CF only after the three-user
+  exact-model support gate; otherwise the base score is final.
 - Complete profile saves and `POST /api/recommendations/generate` persist raw 1-to-10 scores plus normalized weights in `user_preference_matrix` with `source_layer='profile'`.
 - Generated profile recommendations are cached in `recommendation_score_cache` and can be inspected through `GET /api/recommendations/{user_id}` and `GET /api/recommendations/{user_id}/{catalog_id}`.
 - Startup seeding imports the independent MacBERT workbook into `string_recommendation_matrix` with `source_layer='nlp_review'` whenever the workbook exists. A missing workbook does not prevent startup: persisted matrix rows remain usable, and health reports `catalog_fallback` only when no NLP rows exist.
@@ -55,7 +58,7 @@ cd backend
 - `value_for_money` is the ninth weighted preference feature; catalog price is descriptive and is not scored.
 - Structured gauge and official feel categories are soft RuleFit inputs and never remove candidates.
 - Admin string write operations still require approved catalog membership.
-- Official performance rows are seeded as `pending_manual_fill` and can be updated later through admin endpoints.
+- The approved 12-string cohort is seeded as `manual_reviewed` with its official performance values. Non-approved historical rows may remain `pending_manual_fill` and can be updated later through admin endpoints.
 - NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.
 - Admin debug support:
   - `GET /api/admin/strings/{id}/recommendation-matrix` shows effective scores plus raw matrix rows grouped by source layer.

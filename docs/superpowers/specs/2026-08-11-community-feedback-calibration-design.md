@@ -1,5 +1,12 @@
 # Community Feedback Calibration Development Design
 
+> **Status: partly superseded for the current implementation.** This document
+> preserves the 2026-08-11 design rationale. Migration `20260825_0033` removed
+> delayed feedback durability and field-level confirmation metadata; use the
+> current backend models, migrations, and `backend/docs/database.md` for runtime
+> behavior. Historical references below intentionally retain the original
+> proposal terminology.
+
 ## Document Status
 
 | Field | Value |
@@ -1013,7 +1020,7 @@ cd backend
 ./scripts/alembic upgrade head
 ./.venv/bin/ruff check .
 ./.venv/bin/ruff format --check .
-./.venv/bin/mypy app ai_service tests
+./.venv/bin/mypy app tests
 ./.venv/bin/pytest -v
 
 cd ../mobile

@@ -9,6 +9,7 @@ import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
 import { AppInput } from '../../components/ui/AppInput';
 import { HeroText } from '../../components/ui/heroui';
+import { agentResponseToHistoryContent } from '../../lib/agentHistory';
 import { backendApi, BackendApiError } from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
@@ -27,8 +28,10 @@ import type {
   BackendAgentResponse,
 } from '../../types/backend';
 
+const DAILY_BRIEFING_PROMPT =
+  "Give me today's daily operations briefing and list only items that need attention.";
+
 const starterQuestions = [
-  "Summarize today's operations.",
   'Show low-stock strings.',
   'Which bookings need attention?',
   // Deferred FYP scope; uncomment with the matching admin tool.
@@ -77,7 +80,10 @@ export default function AdminAgentScreen() {
       .map((entry): BackendAgentMessage =>
         entry.role === 'user'
           ? { role: 'user', content: entry.content }
-          : { role: 'assistant', content: entry.response.answer },
+          : {
+              role: 'assistant',
+              content: agentResponseToHistoryContent(entry.response),
+            },
       )
       .slice(-12);
     const requestId = `${Date.now()}-${entries.length}`;
@@ -212,14 +218,14 @@ export default function AdminAgentScreen() {
       tone="admin"
       headerVariant="secondary"
       title="Admin AI"
-      subtitle="Read-only daily operations summary."
+      subtitle="Read-only booking, inventory, and operations answers."
       showBackButton
       onBackPress={() => router.back()}
       footer={
         <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
           <AppInput
             className="mb-0"
-            placeholder="Ask for today's operations summary..."
+            placeholder="Ask about bookings, inventory, or operations..."
             accessibilityLabel="Question for Admin AI"
             value={draft}
             onChangeText={setDraft}
@@ -252,6 +258,15 @@ export default function AdminAgentScreen() {
           </View>
           <ShieldCheck size={21} color="#DCE8FF" />
         </View>
+        <AppButton
+          className="mt-4"
+          label="Generate daily briefing"
+          variant="secondary"
+          size="sm"
+          isLoading={isSending}
+          isDisabled={!token || isActing}
+          onPress={() => void sendQuestion(DAILY_BRIEFING_PROMPT)}
+        />
       </AppCard>
 
       {entries.length === 0 ? (

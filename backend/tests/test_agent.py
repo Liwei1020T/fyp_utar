@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.adapters.services.agent.admin_tools import ADMIN_AGENT_TOOL_SPECS
+from app.adapters.services.agent.admin_tools import AdminAgentToolbox
 from app.adapters.services.agent.deepseek import DeepSeekAgentClient
 from app.domain.profile.entities import PlayerProfile
 from app.domain.recommendation.entities import RecommendationResponseModel
@@ -31,6 +32,7 @@ from app.ports.repositories.recommendation_repository import RecommendationRepos
 from app.ports.repositories.store_repository import StoreRepository
 from app.shared.errors import NotFoundError
 from app.shared.errors import ServiceUnavailableError
+from app.shared.pagination import Page
 from app.use_cases.agent.query_agent import ACTIVE_AGENT_ACTIONS
 from app.use_cases.agent.query_agent import QueryAgentUseCase
 from app.use_cases.agent.tools import AGENT_TOOL_SPECS
@@ -130,6 +132,79 @@ def test_fyp_agent_scope_exposes_only_active_tools_and_string_action() -> None:
         "find_admin_inventory",
     }
     assert ACTIVE_AGENT_ACTIONS == {"open_string"}
+
+
+def test_admin_inventory_tool_returns_every_matching_string() -> None:
+    class Catalogs:
+        def list_inventory(self, **kwargs: object) -> Page[SimpleNamespace]:
+            assert kwargs["limit"] is None
+            items = [
+                SimpleNamespace(
+                    id=f"string-{index}",
+                    display_name=f"String {index}",
+                    current_stock=8,
+                    reserved_stock=0,
+                    available_stock=8,
+                    reorder_level=2,
+                    inventory=SimpleNamespace(availability_status="in_stock"),
+                    selling_price=35.0,
+                    updated_at=None,
+                )
+                for index in range(12)
+            ]
+            return Page(items=items, total=len(items), limit=None, offset=0)
+
+    toolbox = cast(
+        AdminAgentToolbox,
+        SimpleNamespace(catalog_repository=Catalogs()),
+    )
+
+    result = AdminAgentToolbox.find_admin_inventory(
+        toolbox,
+        availability=None,
+        search=None,
+    )
+
+    assert result.data["total"] == 12
+    assert len(cast(list[object], result.data["inventory"])) == 12
+
+
+def test_admin_booking_tool_discloses_truncated_result_count() -> None:
+    class Bookings:
+        def list_admin(self, **kwargs: object) -> Page[SimpleNamespace]:
+            assert kwargs["limit"] == 10
+            items = [
+                SimpleNamespace(
+                    id=f"booking-{index}",
+                    order_code=f"ORD-{index}",
+                    status="awaiting_dropoff",
+                    string_name="Yonex BG80",
+                    customer_username="Player",
+                    customer_phone_number="+60123456789",
+                    racket_brand="Yonex",
+                    racket_model="Astrox",
+                    requested_tension=26,
+                    drop_off_datetime=None,
+                    updated_at=None,
+                )
+                for index in range(10)
+            ]
+            return Page(items=items, total=12, limit=10, offset=0)
+
+    toolbox = cast(
+        AdminAgentToolbox,
+        SimpleNamespace(booking_repository=Bookings()),
+    )
+
+    result = AdminAgentToolbox.find_admin_bookings(
+        toolbox,
+        status=None,
+        search=None,
+    )
+
+    assert result.data["returned_count"] == 10
+    assert result.data["total"] == 12
+    assert result.data["is_truncated"] is True
 
 
 def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
@@ -839,6 +914,38 @@ def test_agent_endpoint_accepts_validated_fake_model_response() -> None:
     assert response.json()["evidence_status"] == "insufficient_evidence"
 
 
+def test_agent_uses_configured_model_when_provider_omits_model_name() -> None:
+    fake_client = FakeModelClient(
+        [
+            {
+                "id": "response-without-model",
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {
+                            "role": "assistant",
+                            "content": _answer_content(),
+                        },
+                    }
+                ],
+            }
+        ]
+    )
+    fake_client.model = "configured-agent-model"
+
+    response = QueryAgentUseCase(
+        toolbox=cast(AgentToolbox, FakeToolbox()),
+        model_client=fake_client,
+    ).execute(
+        payload=AgentQueryDto.model_validate(
+            {"message": "hello", "context": {"surface": "chatbot"}}
+        ),
+        user_id="user-1",
+    )
+
+    assert response.model == "configured-agent-model"
+
+
 def test_admin_agent_uses_enabled_read_tools_and_filters_all_actions() -> None:
     fake_client = FakeModelClient(
         [
@@ -910,13 +1017,21 @@ def test_admin_agent_uses_enabled_read_tools_and_filters_all_actions() -> None:
         "find_admin_bookings",
         "find_admin_inventory",
     }
+    assert fake_client.calls[0]["tool_choice"] == "auto"
     assert any(
         "read-only operations information" in message.get("content", "")
         for message in fake_client.calls[0]["messages"]
         if isinstance(message.get("content"), str)
     )
     assert any(
-        "answer under 60 words" in message.get("content", "")
+        "prose answers concise and focused" in message.get("content", "")
+        and "Answer the administrator's actual question directly"
+        in message.get("content", "")
+        and "Do not retrieve or append unrelated operations data"
+        in message.get("content", "")
+        and "one record per line" in message.get("content", "")
+        and "Do not repeat those records in evidence" in message.get("content", "")
+        and "state how many records were returned" in message.get("content", "")
         and "Never expose secrets" in message.get("content", "")
         and "booking search" in message.get("content", "")
         and "inventory search" in message.get("content", "")

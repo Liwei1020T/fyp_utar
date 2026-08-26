@@ -221,14 +221,18 @@ Catalog price remains available for display but is not a ranking input.
 
 ## 8. Final Score and Ranking
 
-Final score preserves the previous 5:1 preference-to-rule ratio and normalizes
-the two ranking components back to the 0-to-1 range:
+The base score preserves the 5:1 preference-to-rule ratio and normalizes the
+two ranking components back to the 0-to-1 range:
 
 $$
-\text{FinalScore} =
+\text{BaseScore} =
 \frac{0.75 \cdot \text{PreferenceMatch}
 + 0.15 \cdot \text{RuleFit}}{0.90}
 $$
+
+When exact-racket CF has at least three independent supporters, the scorer
+uses its bounded, shrunk weight to blend `BaseScore` with the CF score. When it
+does not, the CF weight is zero and `FinalScore = BaseScore`.
 
 Ranking is then sorted by:
 

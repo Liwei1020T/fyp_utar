@@ -49,7 +49,6 @@ def _item_payload(item: StringItem) -> dict[str, object]:
                 "catalog_id": official.catalog_id,
                 "source_type": official.source_type,
                 "source_name": official.source_name,
-                "source_url": official.source_url,
                 "source_region": official.source_region,
                 "category": official.category,
                 "feature": official.feature,

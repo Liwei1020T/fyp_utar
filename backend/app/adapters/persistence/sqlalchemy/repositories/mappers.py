@@ -223,7 +223,6 @@ def to_official_performance(
         catalog_id=item.catalog_id,
         source_type=item.source_type,
         source_name=item.source_name,
-        source_url=item.source_url,
         source_region=item.source_region,
         category=number_to_float(item.category),
         feature=number_to_float(item.feature),

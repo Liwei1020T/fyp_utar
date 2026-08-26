@@ -326,7 +326,7 @@ cd mobile && PATH=/Users/lwt/.nvm/versions/node/v24.18.0/bin:$PATH npm test
 Full gates:
 
 ```bash
-cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app ai_service tests && ./.venv/bin/pytest -v
+cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app tests && ./.venv/bin/pytest -v
 cd mobile && PATH=/Users/lwt/.nvm/versions/node/v24.18.0/bin:$PATH npm run lint -- --max-warnings=0
 cd mobile && PATH=/Users/lwt/.nvm/versions/node/v24.18.0/bin:$PATH npx tsc --noEmit
 git diff --check

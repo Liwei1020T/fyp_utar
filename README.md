@@ -25,12 +25,24 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
   12-by-9 Matrix is promoted into the backend `nlp_review` layer; this promotion
   does not turn Silver validation into Gold, human accuracy, or Kappa evidence.
 
+## Documentation Map
+
+- Start with [AGENTS.md](./AGENTS.md) for repository rules, ownership
+  boundaries, and validation commands.
+- Use [docs/README.md](./docs/README.md) to find current architecture and
+  operations guides. Dated acceptance records and plans are evidence of a past
+  check or decision; they are not a replacement for the current README or
+  source code.
+- Use [deploy/README.md](./deploy/README.md) only for the controlled Docker and
+  Cloudflare deployment path. It is not a statement that a live public tunnel
+  or provider integration has been verified.
+
 ## Quick Start
 
 ### 1. Start Postgres
 
 ```bash
-rtk docker compose up -d postgres
+docker compose up -d postgres
 ```
 
 ### 2. Start the backend
@@ -40,9 +52,9 @@ For browser-only testing on the same Mac, `127.0.0.1` is enough. For Expo Go on 
 ```bash
 cd backend
 cp .env.example .env
-rtk uv sync --extra dev
-rtk ./scripts/alembic upgrade head
-rtk ./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload
+uv sync --extra dev
+./scripts/alembic upgrade head
+./.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload
 ```
 
 ### 3. Start the mobile app in a browser
@@ -61,7 +73,7 @@ The mobile workspace pins Node `24.18.0` via `mobile/.nvmrc` and `mobile/package
 Find the Mac Wi-Fi IP first. On this machine it usually appears as the `inet` value under `en0`.
 
 ```bash
-rtk ifconfig en0
+ifconfig en0
 ```
 
 Then start Expo in LAN mode. Replace `<MAC_WIFI_IP>` with the IP from the previous command, for example `192.168.0.80`.
@@ -98,7 +110,7 @@ Experiment outputs are never promoted automatically. The human-approved runtime 
 - `backend/.env.example` sets `RECOMMENDATION_MATRIX_SOURCE_PATH` to `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 - The unified FastAPI app uses the in-process scorer in `backend/app/domain/recommendation/scoring.py`
 - If the NLP workbook does not exist, startup keeps persisted matrix rows when present and otherwise serves catalog/official-performance recommendations with health status `catalog_fallback`
-- Fresh databases start with all business days closed and store identity, contact, address, and pricing explicitly unconfigured until an admin saves real values
+- Fresh databases restore the configured single-store profile and weekly schedule from `backend/data/store_settings_seed.json`; later admin edits remain database-owned
 
 ## Validation
 
@@ -106,4 +118,8 @@ Experiment outputs are never promoted automatically. The human-approved runtime 
 - Backend: `cd backend && ./.venv/bin/ruff check . && ./.venv/bin/ruff format --check . && ./.venv/bin/mypy app tests && ./.venv/bin/pytest -v`
 - NLP: `cd ml/nlp-workbench-latest && .venv/bin/python -m pytest -q tests && .venv/bin/python scripts/run_experiment.py --run-id <experiment-id> --repeat 2`
 
-More detail lives in [docs/README.md](./docs/README.md), [mobile/README.md](./mobile/README.md), and [backend/README.md](./backend/README.md). The current mock-data remediation status is recorded in [docs/plans/mock-page-remediation.md](./docs/plans/mock-page-remediation.md), and the latest complete customer and administrator browser evidence is in [docs/customer-admin-acceptance-2026-07-24.md](./docs/customer-admin-acceptance-2026-07-24.md). The earlier administrator-only acceptance remains in [docs/admin-acceptance-2026-07-23.md](./docs/admin-acceptance-2026-07-23.md), and the pre-FYP2 remediation gate remains preserved in [docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md](./docs/plans/fyp2-readiness/04-remediation-results-and-readiness.md).
+More detail lives in [docs/README.md](./docs/README.md),
+[mobile/README.md](./mobile/README.md), and
+[backend/README.md](./backend/README.md). The dated acceptance records and
+plans linked from the docs index remain useful evidence, but do not establish
+current device, provider, tunnel, or deployment availability.
