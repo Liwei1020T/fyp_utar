@@ -27,29 +27,29 @@ export function MetricStatCard({
       <AppCard
         variant="default"
         padding="none"
-        contentClassName="min-h-[104px] p-3"
+        contentClassName="min-h-[92px] p-2.5"
       >
         <View
-          className={`h-9 w-9 items-center justify-center rounded-[10px] ${accentClassName}`}
+          className={`h-8 w-8 items-center justify-center rounded-[9px] ${accentClassName}`}
           style={{
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: 10,
+            borderRadius: 9,
           }}
         >
           {icon}
         </View>
-        <View className="mt-2 min-w-0">
+        <View className="mt-1.5 min-w-0">
           <HeroText className="text-[12px] font-medium leading-4 tracking-normal text-slate-600" numberOfLines={2}>
             {title}
           </HeroText>
           <HeroText
             className={
               value.length > 7
-                ? 'mt-0.5 text-[19px] font-bold tracking-tight text-slate-900'
-                : 'mt-0.5 text-[22px] font-bold tracking-tight text-slate-900'
+                ? 'mt-0.5 text-[18px] font-bold tracking-tight text-slate-900'
+                : 'mt-0.5 text-[20px] font-bold tracking-tight text-slate-900'
             }
             numberOfLines={1}
           >

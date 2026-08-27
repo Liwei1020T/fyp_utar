@@ -79,8 +79,8 @@ export function AppButton({
 
   const sizeStyles = {
     sm: 'h-11 px-4 py-2 rounded-[10px]',
-    md: 'h-[50px] px-5 py-2.5 rounded-[10px]',
-    lg: 'h-[56px] px-6 py-3 rounded-[14px]',
+    md: 'h-12 px-5 py-2.5 rounded-[10px]',
+    lg: 'h-[52px] px-6 py-2.5 rounded-[14px]',
   };
 
   const content = children ?? (

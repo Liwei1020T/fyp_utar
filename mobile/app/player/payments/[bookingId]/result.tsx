@@ -156,27 +156,27 @@ export default function PaymentResultScreen() {
     >
       <AppCard variant={meta.variant} className="rounded-[32px]" padding="lg">
         <View className="items-center">
-          <View className={`h-20 w-20 items-center justify-center rounded-full ${status === 'paid' ? 'bg-white/10' : 'bg-white/70'}`}>
+          <View className={`h-16 w-16 items-center justify-center rounded-full ${status === 'paid' ? 'bg-white/10' : 'bg-white/70'}`}>
             {meta.icon}
           </View>
-          <HeroText className={`mt-5 text-center text-[28px] font-bold tracking-tight ${status === 'paid' ? 'text-white' : 'text-neutral-950'}`}>
+          <HeroText className={`mt-4 text-center text-[24px] font-bold tracking-tight ${status === 'paid' ? 'text-white' : 'text-neutral-950'}`}>
             {meta.title}
           </HeroText>
           <HeroText className={`mt-2 text-center text-sm leading-6 ${status === 'paid' ? 'text-primary-100' : 'text-neutral-500'}`}>
             {meta.body}
           </HeroText>
           {status === 'paid' && booking ? (
-            <View className="mt-5 w-full rounded-[22px] bg-white/10 px-4 py-4">
+            <View className="mt-4 w-full rounded-[14px] bg-white/10 px-3 py-3">
               <HeroText className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-100">
                 Booking reference
               </HeroText>
               <HeroText className="mt-2 text-center text-sm leading-6 text-white">
                 {orderCode} • {payment?.reference}
               </HeroText>
-              <HeroText className="mt-3 text-center text-sm leading-6 text-white">
+              <HeroText className="mt-2 text-center text-sm leading-5 text-white">
                 Paid amount {formatCurrency(payment.amount)}
               </HeroText>
-              <HeroText className="mt-3 text-center text-sm leading-6 text-white">
+              <HeroText className="mt-2 text-center text-sm leading-5 text-white">
                 Drop off your racket on {booking.dropOffDate} at {booking.dropOffTime}. Your next step is to show the booking token during check-in.
               </HeroText>
             </View>
@@ -184,7 +184,7 @@ export default function PaymentResultScreen() {
         </View>
       </AppCard>
 
-      <View className="mb-12 mt-8 gap-3">
+      <View className="mb-10 mt-6 gap-2.5">
         {booking ? (
           <>
             <AppButton label="Open booking detail" size="lg" onPress={() => router.replace(`/player/bookings/${booking.id}`)} />

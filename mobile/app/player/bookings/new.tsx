@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { CalendarClock, ChevronDown, ChevronUp, Minus, Plus, Store, Upload } from 'lucide-react-native';
@@ -39,6 +39,13 @@ const bookingSchema = z.object({
 type BookingForm = z.infer<typeof bookingSchema>;
 type BookingFormInput = z.input<typeof bookingSchema>;
 type SlotPeriod = 'morning' | 'afternoon' | 'evening';
+type BookingStep = 1 | 2 | 3;
+
+const BOOKING_STEPS = [
+  { id: 1, label: 'String' },
+  { id: 2, label: 'Setup' },
+  { id: 3, label: 'Drop-off' },
+] as const;
 
 const SLOT_PERIOD_OPTIONS = [
   { id: 'morning', label: 'Morning' },
@@ -85,6 +92,7 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   const [selectedRacketId, setSelectedRacketId] = useState<string | null>(
     params.racketId ?? null,
   );
+  const [currentStep, setCurrentStep] = useState<BookingStep>(1);
   const selectedRacket = playerRackets.find(
     (item) => item.id === selectedRacketId,
   );
@@ -155,9 +163,17 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     ? slots.filter((item) => getSlotPeriod(item) === selectedPeriod)
     : slots;
 
+  const openRacketRegistration = () => {
+    const stringQuery = requestedStringId
+      ? `&stringId=${encodeURIComponent(requestedStringId)}`
+      : '';
+    router.push(`/player/rackets/new?returnTo=booking${stringQuery}`);
+  };
+
   const {
     control,
     handleSubmit,
+    trigger,
     formState: { errors, isSubmitting },
     setValue,
   } = useForm<BookingFormInput, unknown, BookingForm>({
@@ -169,8 +185,6 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
       notes: '',
     },
   });
-  const watchedTension = useWatch({ control, name: 'requestedTension' });
-
   useEffect(() => {
     if (!selectedString) {
       return;
@@ -180,11 +194,10 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
   }, [selectedString?.id, selectedString, setValue]);
 
   useEffect(() => {
-    if (!selectedRacket) {
-      return;
+    if (selectedRacket) {
+      setValue('racketBrand', selectedRacket.brand, { shouldValidate: true });
+      setValue('racketModel', selectedRacket.model, { shouldValidate: true });
     }
-    setValue('racketBrand', selectedRacket.brand, { shouldValidate: true });
-    setValue('racketModel', selectedRacket.model, { shouldValidate: true });
   }, [selectedRacket, setValue]);
 
   useEffect(() => {
@@ -339,6 +352,38 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     });
   };
 
+  const currentStepLabel = BOOKING_STEPS[currentStep - 1]?.label ?? 'String';
+
+  const goBackStep = () => {
+    if (currentStep === 1) {
+      router.back();
+      return;
+    }
+    setCurrentStep((step) => (step - 1) as BookingStep);
+  };
+
+  const advanceStep = async () => {
+    if (currentStep === 1) {
+      setCurrentStep(2);
+      return;
+    }
+
+    if (currentStep === 2) {
+      const isSetupValid = await trigger([
+        'racketBrand',
+        'racketModel',
+        'requestedTension',
+      ]);
+      if (!isSetupValid) {
+        return;
+      }
+      setCurrentStep(3);
+      return;
+    }
+
+    await handleSubmit(onSubmit)();
+  };
+
   if (requestedStringId && !requestedString && strings.length === 0 && token) {
     return (
       <AppScreen
@@ -402,10 +447,6 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
     );
   }
 
-  const tensionValue =
-    typeof watchedTension === 'number' && Number.isFinite(watchedTension)
-      ? watchedTension
-      : recommendedMin;
   const selectedDateLabel = formatDateLabel(selectedSlot?.date ?? selectedDate);
   const selectedTimeLabel = selectedSlot?.label ?? 'Select a slot';
   const slotSupportCopy = slotsError
@@ -420,22 +461,67 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
       headerVariant="flow"
       compactHeader
       title="New booking"
-      subtitle="Configure your restring request."
+      subtitle={`Step ${currentStep} of ${BOOKING_STEPS.length} · ${currentStepLabel}`}
       showBackButton
       onBackPress={() => router.back()}
       footer={
-        <View className="border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
           <AppButton
-            label="Continue to summary"
+            label={
+              currentStep === 1
+                ? 'Continue to setup'
+                : currentStep === 2
+                  ? 'Continue to drop-off'
+                  : 'Review booking'
+            }
             size="lg"
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => void advanceStep()}
             isLoading={isSubmitting}
-            isDisabled={!selectedSlot}
+            isDisabled={currentStep === 3 && !selectedSlot}
           />
+          {currentStep > 1 ? (
+            <AppButton
+              label="Back"
+              variant="outline"
+              size="lg"
+              onPress={goBackStep}
+            />
+          ) : null}
         </View>
       }
     >
-      <AppCard variant="highlighted" className="rounded-[28px]" padding="md">
+      <View
+        className="mb-4"
+        accessibilityRole="progressbar"
+        accessibilityLabel="Booking progress"
+        accessibilityValue={{
+          min: 1,
+          max: BOOKING_STEPS.length,
+          now: currentStep,
+        }}
+      >
+        <View className="flex-row gap-1.5">
+          {BOOKING_STEPS.map((step) => (
+            <View key={step.id} className="flex-1 gap-1">
+              <View
+                className={`h-1 rounded-full ${
+                  step.id <= currentStep ? 'bg-primary-600' : 'bg-primary-100'
+                }`}
+              />
+              <HeroText
+                className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                  step.id === currentStep ? 'text-primary-700' : 'text-slate-400'
+                }`}
+              >
+                {step.id}. {step.label}
+              </HeroText>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {currentStep === 1 ? (
+        <AppCard variant="highlighted" className="rounded-[28px]" padding="md">
         <View className="flex-row items-start justify-between gap-3">
           <View className="min-w-0 flex-1">
             <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-700">
@@ -524,9 +610,11 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
             </View>
           </View>
         ) : null}
-      </AppCard>
+        </AppCard>
+      ) : null}
 
-      <AppSection eyebrow="Store" title="Service desk" variant="compact">
+      {currentStep === 3 ? (
+        <AppSection eyebrow="Store" title="Service desk" variant="compact">
         <AppCard variant="elevated" padding="md">
           <View className="flex-row items-start gap-3">
             <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50">
@@ -542,9 +630,11 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
             </View>
           </View>
         </AppCard>
-      </AppSection>
+        </AppSection>
+      ) : null}
 
-      <AppSection eyebrow="Setup" title="Racket and tension" variant="compact">
+      {currentStep === 2 ? (
+        <AppSection eyebrow="Setup" title="Racket and tension" variant="compact">
         <AppCard variant="elevated" padding="md">
           <View className="mb-4 gap-3">
             <AppSelect
@@ -562,12 +652,17 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
                   description: `${racket.brand} ${racket.model} · ${racket.currentTension} lbs · ${racket.serviceCount} services`,
                 })),
               ]}
-              onChange={(id) =>
-                setSelectedRacketId(id === MANUAL_RACKET_OPTION_ID ? null : id)
-              }
+              onChange={(id) => {
+                const nextRacketId = id === MANUAL_RACKET_OPTION_ID ? null : id;
+                setSelectedRacketId(nextRacketId);
+                if (!nextRacketId) {
+                  setValue('racketBrand', '', { shouldValidate: true });
+                  setValue('racketModel', '', { shouldValidate: true });
+                }
+              }}
               helperText={
                 playerRackets.length === 0
-                  ? 'No saved rackets yet. Continue manually or register one first.'
+                  ? 'No saved rackets yet. Continue manually or register this frame here.'
                   : 'Choose a saved racket or enter the frame details manually.'
               }
             />
@@ -578,9 +673,9 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
               </HeroText>
             ) : null}
             <AppButton
-              label="Register another racket"
+              label={playerRackets.length === 0 ? 'Register this racket' : 'Register another racket'}
               variant="outline"
-              onPress={() => router.push('/player/rackets/new')}
+              onPress={openRacketRegistration}
             />
           </View>
           <Controller
@@ -690,13 +785,15 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
             )}
           />
         </AppCard>
-      </AppSection>
+        </AppSection>
+      ) : null}
 
-      <AppSection
-        eyebrow="Handover"
-        title="Pickup or counter drop-off"
-        variant="compact"
-      >
+      {currentStep === 3 ? (
+        <AppSection
+          eyebrow="Handover"
+          title="Pickup or counter drop-off"
+          variant="compact"
+        >
         <AppSelect
           label="Service method"
           value={serviceMethod}
@@ -718,9 +815,11 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
           Pickup is a request for the selected slot; the shop confirms logistics
           through booking updates.
         </HeroText>
-      </AppSection>
+        </AppSection>
+      ) : null}
 
-      <AppSection eyebrow="Drop-off" title="Date and time" variant="compact">
+      {currentStep === 3 ? (
+        <AppSection eyebrow="Drop-off" title="Date and time" variant="compact">
         <View className="gap-4">
           {slotsError && !isLoadingSlots ? (
             <AppCard variant="highlighted" padding="sm">
@@ -788,23 +887,11 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
               : 'Select a time slot to continue'}
           </HeroText>
         </View>
-      </AppSection>
+        </AppSection>
+      ) : null}
 
-      <AppSection eyebrow="Summary" title="Booking summary" variant="compact">
-        <AppCard variant="subtle" padding="md">
-          <HeroText className="text-[15px] font-semibold tracking-tight text-neutral-950">
-            {selectedString.brand} {selectedString.model} · {tensionValue} lbs
-          </HeroText>
-          <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-            {selectedDateLabel} · {selectedTimeLabel}
-          </HeroText>
-          <HeroText className="mt-1 text-sm leading-5 text-neutral-500">
-            {selectedAdminName}
-          </HeroText>
-        </AppCard>
-      </AppSection>
-
-      <AppSection eyebrow="Photo" title="Optional photo" variant="compact">
+      {currentStep === 3 ? (
+        <AppSection eyebrow="Photo" title="Optional photo" variant="compact">
         <AppCard variant="elevated" padding="md">
           <HeroText className="text-sm leading-5 text-neutral-600">
             Add a racket photo for admin review.
@@ -835,7 +922,8 @@ function NewBookingContent({ user }: { user: PlayerProfile }) {
             ) : null}
           </View>
         </AppCard>
-      </AppSection>
+        </AppSection>
+      ) : null}
 
     </AppScreen>
   );

@@ -26,6 +26,7 @@ interface BookingCardProps {
   stringLabel: string;
   adminLabel?: string;
   onPress?: () => void;
+  onNextStepPress?: () => void;
 }
 
 const getNextStep = (status: BookingStatus, date?: string, time?: string): string => {
@@ -118,7 +119,13 @@ const getStatusStripTone = (status: BookingStatus) => {
   }
 };
 
-export function BookingCard({ booking, stringLabel, adminLabel, onPress }: BookingCardProps) {
+export function BookingCard({
+  booking,
+  stringLabel,
+  adminLabel,
+  onPress,
+  onNextStepPress,
+}: BookingCardProps) {
   const orderCode = booking.orderCode ?? formatBookingOrderCode(booking.id);
   const stripTone = getStatusStripTone(booking.status);
   const StatusIcon = stripTone.Icon;
@@ -126,76 +133,112 @@ export function BookingCard({ booking, stringLabel, adminLabel, onPress }: Booki
   const racketName = `${booking.racketBrand} ${booking.racketModel}`;
   const bookingDateLabel = formatDateLabel(booking.dropOffDate);
   const priceLabel = getBookingPriceLabel(booking);
+  const nextStepAction = onNextStepPress ?? onPress;
+  const nextStepLabel =
+    onNextStepPress &&
+    (booking.status === 'confirmed' || booking.status === 'awaiting_dropoff')
+      ? `Show check-in before ${booking.dropOffTime || 'scheduled time'}`
+      : getNextStep(booking.status, booking.dropOffDate, booking.dropOffTime);
+  const mainContent = (
+    <>
+      <View className="flex-row items-start justify-between gap-2.5">
+        <HeroText className="flex-1 pr-2 text-[10px] font-semibold uppercase tracking-normal text-neutral-400">
+          #{orderCode}
+        </HeroText>
+        <AppChip
+          label={formatBookingStatus(booking.status)}
+          variant={getBookingStatusVariant(booking.status)}
+          size="sm"
+          className="shrink-0"
+        />
+      </View>
+
+      <View className="gap-1.5">
+        <View className="min-w-0">
+          <HeroText className="text-[16px] font-bold tracking-normal text-neutral-950">
+            {racketName}
+          </HeroText>
+          <HeroText className="mt-0.5 text-[12px] font-medium text-neutral-600">
+            {stringSpec}
+          </HeroText>
+          {adminLabel ? (
+            <HeroText className="mt-1 text-[11px] font-medium text-neutral-500">
+              {adminLabel}
+            </HeroText>
+          ) : null}
+        </View>
+        <View className="flex-row items-center gap-1.5">
+          <HeroText className="text-[12px] font-semibold text-neutral-700">
+            {priceLabel}
+          </HeroText>
+          <HeroText className="text-[11px] font-semibold text-neutral-300">
+            •
+          </HeroText>
+          <CalendarDays size={11} color="#94A3B8" />
+          <HeroText className="text-[11px] font-semibold text-neutral-500">
+            {bookingDateLabel}
+          </HeroText>
+        </View>
+      </View>
+    </>
+  );
+  const nextStepContent = (
+    <>
+      <StatusIcon size={14} color={stripTone.iconColor} />
+      <HeroText className={`flex-1 text-[11px] font-semibold ${stripTone.text}`}>
+        {nextStepLabel}
+      </HeroText>
+      {nextStepAction ? <ChevronRight size={14} color={stripTone.iconColor} /> : null}
+    </>
+  );
   const content = (
     <AppCard variant="elevated" padding="sm">
-      <View className="gap-2.5">
-        <View className="flex-row items-start justify-between gap-3">
-          <HeroText className="flex-1 pr-2 text-[10px] font-semibold uppercase tracking-normal text-neutral-400">
-            #{orderCode}
-          </HeroText>
-          <AppChip
-            label={formatBookingStatus(booking.status)}
-            variant={getBookingStatusVariant(booking.status)}
-            size="sm"
-            className="shrink-0"
-          />
-        </View>
-
-        <View className="gap-1.5">
-          <View className="min-w-0">
-            <HeroText className="text-[17px] font-bold tracking-normal text-neutral-950">
-              {racketName}
-            </HeroText>
-            <HeroText className="mt-0.5 text-[12px] font-medium text-neutral-600">
-              {stringSpec}
-            </HeroText>
-            {adminLabel ? (
-              <HeroText className="mt-1 text-[11px] font-medium text-neutral-500">
-                {adminLabel}
-              </HeroText>
-            ) : null}
+      <View className="gap-2">
+        {onPress ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Booking ${orderCode}, ${racketName}, ${formatBookingStatus(booking.status)}`}
+            accessibilityHint="Open booking details"
+            onPress={onPress}
+            className="gap-2"
+          >
+            {mainContent}
+          </Pressable>
+        ) : (
+          <View className="gap-2">{mainContent}</View>
+        )}
+        {nextStepAction ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              onNextStepPress
+                ? `Show check-in for booking ${orderCode}`
+                : `Open booking ${orderCode} details`
+            }
+            accessibilityHint={
+              onNextStepPress
+                ? 'Open the secure check-in reference'
+                : 'Open booking details'
+            }
+            onPress={nextStepAction}
+            className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-2.5 py-1.5 ${stripTone.container}`}
+          >
+            {nextStepContent}
+          </Pressable>
+        ) : (
+          <View
+            className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-2.5 py-1.5 ${stripTone.container}`}
+          >
+            {nextStepContent}
           </View>
-          <View className="flex-row items-center gap-1.5">
-            <HeroText className="text-[12px] font-semibold text-neutral-700">
-              {priceLabel}
-            </HeroText>
-            <HeroText className="text-[11px] font-semibold text-neutral-300">
-              •
-            </HeroText>
-            <CalendarDays size={11} color="#94A3B8" />
-            <HeroText className="text-[11px] font-semibold text-neutral-500">
-              {bookingDateLabel}
-            </HeroText>
-          </View>
-        </View>
-
-        <View
-          className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-3 py-2 ${stripTone.container}`}
-        >
-          <StatusIcon size={14} color={stripTone.iconColor} />
-          <HeroText className={`flex-1 text-[11px] font-semibold ${stripTone.text}`}>
-            {getNextStep(booking.status, booking.dropOffDate, booking.dropOffTime)}
-          </HeroText>
-          {onPress ? <ChevronRight size={14} color={stripTone.iconColor} /> : null}
-        </View>
+        )}
       </View>
     </AppCard>
   );
 
-  if (!onPress) {
+  if (!onPress && !onNextStepPress) {
     return content;
   }
 
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Booking ${orderCode}, ${racketName}, ${formatBookingStatus(booking.status)}`}
-      accessibilityHint="Open booking details"
-      onPress={onPress}
-    >
-      <View className="mb-3">
-        {content}
-      </View>
-    </Pressable>
-  );
+  return <View className="mb-2.5">{content}</View>;
 }

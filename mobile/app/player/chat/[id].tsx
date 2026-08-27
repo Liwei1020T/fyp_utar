@@ -40,8 +40,9 @@ function hasUnreadAdminMessages(conversation: BackendBookingConversation) {
 
 export default function PlayerChatDetailScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; draft?: string }>();
   const conversationId = params.id;
+  const draftParam = typeof params.draft === 'string' ? params.draft : '';
   const user = useCurrentUser();
   const conversations = useConversations();
   const bookings = useBookings();
@@ -52,7 +53,7 @@ export default function PlayerChatDetailScreen() {
   const conversation = conversations.find(
     (item) => item.id === conversationId && item.playerId === user?.id,
   );
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(draftParam);
   const [isLoading, setIsLoading] = useState(
     Boolean(token && conversationId && !conversation),
   );
@@ -198,7 +199,6 @@ export default function PlayerChatDetailScreen() {
 
   const isClosed =
     conversation.mode === 'resolved' || conversation.mode === 'closed';
-  const canReply = Boolean(token && !isClosed && !isSending);
 
   return (
     <AppScreen
@@ -245,24 +245,6 @@ export default function PlayerChatDetailScreen() {
           ) : null}
         </AppCard>
       ) : null}
-
-      <AppSection
-        eyebrow="Quick prompts"
-        title="Suggested next messages"
-        variant="compact"
-      >
-        <View className="flex-row flex-wrap gap-2">
-          {conversation.quickPrompts.map((item) => (
-            <AppChip
-              key={item}
-              label={item}
-              size="md"
-              variant="neutral"
-              onPress={canReply ? () => void sendMessage(item) : undefined}
-            />
-          ))}
-        </View>
-      </AppSection>
 
       <AppSection eyebrow="Messages" title="Thread activity">
         <View className="gap-4">

@@ -37,25 +37,25 @@ import type { BackendAnalyticsSummary } from '../../../types/backend';
 const PRIMARY_ACTIONS = [
   {
     title: 'Admin AI',
-    subtitle: 'Review a read-only summary of current operations.',
+    subtitle: 'Review live operations.',
     route: '/admin/assistant',
     icon: Bot,
   },
   {
     title: 'Check-in',
-    subtitle: 'Receive a racket at the counter.',
+    subtitle: 'Receive a racket.',
     route: '/admin/check-in',
     icon: Undo2,
   },
   {
     title: 'Service queue',
-    subtitle: 'View jobs by service stage.',
+    subtitle: 'Move jobs through stages.',
     route: '/admin/service-queue',
     icon: ListTodo,
   },
   {
     title: 'Bookings',
-    subtitle: 'Update orders and status.',
+    subtitle: 'Update orders.',
     route: '/admin/bookings',
     icon: CalendarRange,
   },
@@ -67,37 +67,37 @@ const PRIMARY_ACTIONS = [
   },
   {
     title: 'Inventory',
-    subtitle: 'Manage strings and stock.',
+    subtitle: 'Manage stock.',
     route: '/admin/inventory',
     icon: Boxes,
   },
   {
     title: 'Feedback',
-    subtitle: 'Review player ratings.',
+    subtitle: 'Review ratings.',
     route: '/admin/feedback',
     icon: MessageSquareText,
   },
   {
     title: 'Notifications',
-    subtitle: 'Send player updates.',
+    subtitle: 'Send updates.',
     route: '/admin/notifications',
     icon: BellRing,
   },
   {
     title: 'Recommendation runs',
-    subtitle: 'Audit saved AI results.',
+    subtitle: 'Audit saved results.',
     route: '/admin/recommendations',
     icon: ScanSearch,
   },
   {
     title: 'Business hours',
-    subtitle: 'Adjust shop availability.',
+    subtitle: 'Set shop availability.',
     route: '/admin/business-hours',
     icon: Clock3,
   },
   {
     title: 'Store settings',
-    subtitle: 'Edit details and policies.',
+    subtitle: 'Edit store details.',
     route: '/admin/settings',
     icon: Settings2,
   },
@@ -181,7 +181,7 @@ export default function AdminDashboardScreen() {
         />
       }
     >
-      <View className="gap-5">
+      <View className="gap-4">
         {analyticsError ? (
           <AppCard variant="subtle" padding="sm">
             <HeroText className="text-sm text-neutral-700">
@@ -206,11 +206,11 @@ export default function AdminDashboardScreen() {
               <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
                 Today’s work
               </HeroText>
-              <HeroText className="mt-3 text-[26px] font-bold leading-[31px] tracking-tight text-white">
-                {analytics ? `${inProgressCount} jobs on the bench` : 'Live service status'}
+              <HeroText className="mt-2 text-[24px] font-bold leading-[29px] tracking-tight text-white">
+                {analytics ? `${inProgressCount} jobs on bench` : 'Live service status'}
               </HeroText>
-              <HeroText className="mt-1.5 text-[13px] leading-[19px] text-secondary-100">
-                Open the service queue to move work through each stage.
+              <HeroText className="mt-1 text-[13px] leading-[18px] text-secondary-100">
+                Move work through each stage.
               </HeroText>
             </View>
             <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-white/10">
@@ -218,8 +218,8 @@ export default function AdminDashboardScreen() {
             </View>
           </View>
 
-          <View className="mt-5 flex-row gap-2">
-            <View className="flex-1 rounded-[14px] bg-white/10 px-3 py-2.5">
+          <View className="mt-4 flex-row gap-2">
+            <View className="flex-1 rounded-[12px] bg-white/10 px-3 py-2">
               <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-secondary-100">
                 Awaiting
               </HeroText>
@@ -227,7 +227,7 @@ export default function AdminDashboardScreen() {
                 {analytics ? awaitingDropOffCount : '—'}
               </HeroText>
             </View>
-            <View className="flex-1 rounded-[14px] bg-white/10 px-3 py-2.5">
+            <View className="flex-1 rounded-[12px] bg-white/10 px-3 py-2">
               <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-secondary-100">
                 Ready
               </HeroText>
@@ -255,16 +255,16 @@ export default function AdminDashboardScreen() {
                 padding="md"
                 onPress={() => router.push('/admin/check-in')}
               >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-primary-600">
-                    <Undo2 size={19} color="#FFFFFF" />
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-primary-600">
+                    <Undo2 size={18} color="#FFFFFF" />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                    <HeroText className="text-sm font-semibold text-slate-900">
                       Receive {awaitingDropOffCount} waiting racket{awaitingDropOffCount === 1 ? '' : 's'}
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Open check-in and move each booking onto the service bench.
+                      Move waiting jobs to the service bench.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.primary} />
@@ -278,16 +278,16 @@ export default function AdminDashboardScreen() {
                 padding="md"
                 onPress={() => router.push('/admin/service-queue')}
               >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-[16px] border border-primary-200 bg-primary-50">
-                    <TimerReset size={19} color={appChromeColors.primary} />
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] border border-primary-200 bg-primary-50">
+                    <TimerReset size={18} color={appChromeColors.primary} />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                    <HeroText className="text-sm font-semibold text-slate-900">
                       {readyForCollectionCount} order{readyForCollectionCount === 1 ? '' : 's'} ready for collection
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Confirm handover and keep the player updated.
+                      Confirm the handover.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />
@@ -301,16 +301,16 @@ export default function AdminDashboardScreen() {
                 padding="md"
                 onPress={() => router.push('/admin/feedback')}
               >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-warning-50">
-                    <MessageSquareText size={19} color={appChromeColors.warning} />
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-warning-50">
+                    <MessageSquareText size={18} color={appChromeColors.warning} />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                    <HeroText className="text-sm font-semibold text-slate-900">
                       {analytics?.pending_feedback_count} completed order{analytics?.pending_feedback_count === 1 ? '' : 's'} still need feedback
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Start with low-satisfaction cases that need follow-up.
+                      Review player ratings.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />
@@ -324,16 +324,16 @@ export default function AdminDashboardScreen() {
                 padding="md"
                 onPress={() => router.push('/admin/payments')}
               >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-warning-50">
-                    <CreditCard size={19} color={appChromeColors.warning} />
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-warning-50">
+                    <CreditCard size={18} color={appChromeColors.warning} />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                    <HeroText className="text-sm font-semibold text-slate-900">
                       Verify {analytics?.pending_payment_count} pending payment{analytics?.pending_payment_count === 1 ? '' : 's'}
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Open the payment queue to review each request.
+                      Verify the pending request.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />
@@ -347,16 +347,16 @@ export default function AdminDashboardScreen() {
                 padding="md"
                 onPress={() => router.push('/admin/inventory')}
               >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-warning-50">
-                    <Boxes size={19} color={appChromeColors.warning} />
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-warning-50">
+                    <Boxes size={18} color={appChromeColors.warning} />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                    <HeroText className="text-sm font-semibold text-slate-900">
                       {analytics?.low_stock_count} string{analytics?.low_stock_count === 1 ? '' : 's'} below the reorder level
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Open inventory to review available and reserved stock.
+                      Review low stock.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />
@@ -370,16 +370,16 @@ export default function AdminDashboardScreen() {
                 padding="md"
                 onPress={() => router.push('/admin/chat')}
               >
-                <View className="flex-row items-center gap-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-primary-50">
-                    <MessageSquareText size={19} color={appChromeColors.primary} />
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-primary-50">
+                    <MessageSquareText size={18} color={appChromeColors.primary} />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold text-slate-900">
+                    <HeroText className="text-sm font-semibold text-slate-900">
                       Reply to {analytics?.unread_chats} unread conversation{analytics?.unread_chats === 1 ? '' : 's'}
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Open support and respond to waiting players.
+                      Reply to waiting players.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />
@@ -402,8 +402,8 @@ export default function AdminDashboardScreen() {
 
         <AppSection
           eyebrow="ALL TOOLS"
-          title="Find every operation"
-          subtitle="Search the complete workspace without hunting through tabs."
+          title="All tools"
+          subtitle="Search every operation."
           rightAction={
             <AppChip
               label={`${filteredActions.length} tools`}
@@ -413,10 +413,12 @@ export default function AdminDashboardScreen() {
           }
           variant="compact"
         >
-          <View className="gap-4">
+          <View className="gap-3">
             <AppInput
+              variant="minimal"
+              className="mb-0"
               label="Search tools"
-              placeholder="Try inventory, payments, or hours"
+              placeholder="Search tools, inventory, or hours"
               value={toolQuery}
               onChangeText={setToolQuery}
               leftAdornment={<Search size={18} color={appChromeColors.textMuted} />}
@@ -431,23 +433,23 @@ export default function AdminDashboardScreen() {
                   variant={action.title === 'Check-in' ? 'highlighted' : 'elevated'}
                   padding="sm"
                   className="w-full"
-                  contentClassName="min-h-[72px] flex-row items-center gap-3"
+                  contentClassName="min-h-[64px] flex-row items-center gap-2.5"
                   onPress={() => router.push(action.route as never)}
                 >
                   <View
                     className={
                       action.title === 'Check-in'
-                        ? 'h-11 w-11 items-center justify-center rounded-[16px] bg-primary-600'
-                        : 'h-11 w-11 items-center justify-center rounded-[16px] border border-primary-200 bg-primary-50'
+                        ? 'h-10 w-10 items-center justify-center rounded-[12px] bg-primary-600'
+                        : 'h-10 w-10 items-center justify-center rounded-[12px] border border-primary-200 bg-primary-50'
                     }
                   >
                     <Icon
-                      size={19}
+                      size={18}
                       color={action.title === 'Check-in' ? '#FFFFFF' : appChromeColors.primary}
                     />
                   </View>
                   <View className="min-w-0 flex-1">
-                    <HeroText className="text-[15px] font-semibold leading-5 tracking-tight text-slate-900">
+                    <HeroText className="text-sm font-semibold leading-5 tracking-tight text-slate-900">
                       {action.title}
                     </HeroText>
                     <HeroText className="mt-1 text-[12px] leading-[17px] text-slate-600" numberOfLines={2}>

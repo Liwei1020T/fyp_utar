@@ -26,7 +26,7 @@ function StandardTabIcon({
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const bottomSpacing = Math.max(insets.bottom, 10);
-  const tabBarHeight = 66 + bottomSpacing;
+  const tabBarHeight = 60 + bottomSpacing;
 
   return (
     <Tabs
@@ -44,31 +44,31 @@ export default function TabsLayout() {
           borderTopWidth: 0,
           height: tabBarHeight,
           paddingBottom: bottomSpacing,
-          paddingTop: 8,
+          paddingTop: 4,
           paddingHorizontal: 2,
-          marginHorizontal: 12,
+          marginHorizontal: 10,
           marginBottom: bottomSpacing,
-          borderRadius: 16,
+          borderRadius: 14,
           ...(Platform.OS === 'web'
-            ? { boxShadow: '0 14px 32px rgba(9, 29, 62, 0.22)' }
+            ? { boxShadow: '0 10px 24px rgba(9, 29, 62, 0.16)' }
             : {
                 shadowColor: '#091D3E',
-                shadowOpacity: 0.2,
-                shadowOffset: { width: 0, height: 10 },
-                shadowRadius: 20,
-                elevation: 12,
+                shadowOpacity: 0.16,
+                shadowOffset: { width: 0, height: 8 },
+                shadowRadius: 16,
+                elevation: 10,
               }),
           overflow: 'hidden',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
           marginTop: 0,
         },
         tabBarItemStyle: {
-          minHeight: 48,
+          minHeight: 46,
           marginHorizontal: 0,
-          marginVertical: 1,
+          marginVertical: 0,
           borderRadius: 10,
           overflow: 'hidden',
         },

@@ -8,8 +8,9 @@ admin operations surface:
 - `/player/chatbot`: asks exactly one question at a time for playing style,
   preferred feel, durability importance, and maximum RM budget, then returns up
   to three recommendation-preview results. It compares two or three approved
-  strings, answers live customer-facing store information, and provides a direct
-  user-owned entry to the existing human support screen.
+  strings, introduces an exact catalog string when the detail page supplies its
+  verified context, answers live customer-facing store information, and provides
+  a direct user-owned entry to the existing human support screen.
 - `/player/recommend/explain/[id]`: explains the exact owned recommendation run
   in short player-friendly language and offers verified in-stock alternatives
   when the selected string is unavailable.

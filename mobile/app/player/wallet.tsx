@@ -79,12 +79,12 @@ export default function PlayerWalletScreen() {
         refreshing={isRefreshing}
         onRefresh={() => void refreshWallet()}
         ListHeaderComponent={
-          <View className="gap-6 pb-6">
+          <View className="gap-4 pb-4">
             <AppCard variant="dark" padding="lg">
               <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-100">
                 Available balance
               </HeroText>
-              <HeroText className="mt-3 text-[30px] font-bold tracking-tight text-white">
+              <HeroText className="mt-2 text-[26px] font-bold tracking-tight text-white">
                 {formatCurrency(wallet?.availableBalance ?? 0)}
               </HeroText>
               <HeroText className="mt-2 text-sm leading-6 text-primary-100">
@@ -105,8 +105,8 @@ export default function PlayerWalletScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <AppCard variant="elevated" className="mb-4" padding="md">
-            <View className="flex-row items-start justify-between gap-4">
+          <AppCard variant="elevated" className="mb-3" padding="md">
+            <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1">
                 <HeroText className="text-base font-semibold text-neutral-900">
                   {item.description}
@@ -133,7 +133,7 @@ export default function PlayerWalletScreen() {
           </AppCard>
         }
         ListFooterComponent={
-          <View className="gap-4">
+          <View className="gap-3">
             {loadError ? (
               <AppCard variant="subtle" className="border border-red-100" padding="md">
                 <HeroText className="text-sm font-medium text-red-600">
@@ -147,7 +147,7 @@ export default function PlayerWalletScreen() {
               onPress={() => router.push('/player/bookings')}
             >
               <AppCard variant="subtle" padding="md">
-              <View className="flex-row items-center justify-between gap-4">
+              <View className="flex-row items-center justify-between gap-3">
                 <View className="flex-1">
                   <HeroText className="text-base font-semibold text-neutral-900">
                     Use wallet in checkout

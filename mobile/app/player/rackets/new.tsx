@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,8 +9,15 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { RacketModelSelector } from '../../../components/rackets/RacketModelSelector';
+import {
+  racketBalancePointOptions,
+  racketGripSizeOptions,
+  racketWeightClassOptions,
+  toRacketSpecValue,
+} from '../../../components/rackets/racketSpecOptions';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import type { BackendRacketModelOption } from '../../../types/backend';
 import { mapBackendRacketToRacketPassport } from '../../../services/backendMappers';
@@ -27,7 +34,6 @@ const racketSchema = z.object({
   weightClass: z.string().trim().max(30),
   balancePoint: z.string().trim().max(50),
   gripSize: z.string().trim().max(30),
-  preferredUse: z.string().trim().max(120),
   notes: z.string().trim().max(1000),
 });
 
@@ -35,6 +41,7 @@ type RacketFormInput = z.input<typeof racketSchema>;
 type RacketForm = z.output<typeof racketSchema>;
 
 export default function NewRacketScreen() {
+  const params = useLocalSearchParams<{ returnTo?: string; stringId?: string }>();
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
@@ -55,7 +62,6 @@ export default function NewRacketScreen() {
       weightClass: '',
       balancePoint: '',
       gripSize: '',
-      preferredUse: '',
       notes: '',
     },
   });
@@ -80,11 +86,17 @@ export default function NewRacketScreen() {
         weight_class: data.weightClass || null,
         balance_point: data.balancePoint || null,
         grip_size: data.gripSize || null,
-        preferred_use: data.preferredUse || null,
         notes: data.notes || null,
       });
       const created = mapBackendRacketToRacketPassport(response);
       upsertLiveRacket(created);
+      if (params.returnTo === 'booking') {
+        const stringQuery = params.stringId
+          ? `&stringId=${encodeURIComponent(params.stringId)}`
+          : '';
+        router.replace(`/player/bookings/new?racketId=${created.id}${stringQuery}`);
+        return;
+      }
       router.replace(`/player/rackets/${created.id}`);
     } catch (error) {
       setSubmitError(
@@ -197,13 +209,13 @@ export default function NewRacketScreen() {
             control={control}
             name="weightClass"
             render={({ field: { onChange, value } }) => (
-              <AppInput
+              <AppSelect
                 label="Weight class"
-                placeholder="3U or 4U"
+                placeholder="Choose weight class"
                 value={value}
-                onChangeText={onChange}
-                error={errors.weightClass?.message}
-                maxLength={30}
+                options={racketWeightClassOptions}
+                onChange={(id) => onChange(toRacketSpecValue(id))}
+                className="mb-3"
               />
             )}
           />
@@ -211,13 +223,13 @@ export default function NewRacketScreen() {
             control={control}
             name="balancePoint"
             render={({ field: { onChange, value } }) => (
-              <AppInput
+              <AppSelect
                 label="Balance point"
-                placeholder="Head heavy, even, or head light"
+                placeholder="Choose balance point"
                 value={value}
-                onChangeText={onChange}
-                error={errors.balancePoint?.message}
-                maxLength={50}
+                options={racketBalancePointOptions}
+                onChange={(id) => onChange(toRacketSpecValue(id))}
+                className="mb-3"
               />
             )}
           />
@@ -225,27 +237,13 @@ export default function NewRacketScreen() {
             control={control}
             name="gripSize"
             render={({ field: { onChange, value } }) => (
-              <AppInput
+              <AppSelect
                 label="Grip size"
-                placeholder="G5"
+                placeholder="Choose grip size"
                 value={value}
-                onChangeText={onChange}
-                error={errors.gripSize?.message}
-                maxLength={30}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="preferredUse"
-            render={({ field: { onChange, value } }) => (
-              <AppInput
-                label="Preferred use"
-                placeholder="Attack-heavy doubles"
-                value={value}
-                onChangeText={onChange}
-                error={errors.preferredUse?.message}
-                maxLength={120}
+                options={racketGripSizeOptions}
+                onChange={(id) => onChange(toRacketSpecValue(id))}
+                className="mb-3"
               />
             )}
           />

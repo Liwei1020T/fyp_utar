@@ -137,20 +137,21 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
       showBackButton={router.canGoBack()}
       onBackPress={() => router.back()}
       footer={
-        <View className="gap-2 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-3">
+        <View className="gap-1 border-t border-[#DCE6F7] bg-[#F7FAFF] pt-2">
           <AppButton
             label="Generate recommendation"
-            size="lg"
+            size="md"
+            textClassName="text-[15px]"
             onPress={handleGenerate}
             isLoading={isGenerating}
           />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Edit profile and advanced preferences"
-            className="min-h-11 items-center justify-center"
+            className="min-h-10 items-center justify-center"
             onPress={() => router.push('/player/profile/edit')}
           >
-            <HeroText className="text-xs font-bold uppercase tracking-widest text-primary-700">
+            <HeroText className="text-[11px] font-bold uppercase tracking-widest text-primary-700">
               Edit profile
             </HeroText>
           </Pressable>
@@ -158,7 +159,7 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
       }
     >
       <AppCard variant="dark" padding="md">
-        <View className="flex-row items-center justify-between gap-4">
+        <View className="flex-row items-center justify-between gap-3">
           <View className="flex-1">
             <AppChip label="RECOMMENDATION" variant="accent" size="sm" className="self-start" />
             <HeroText className="mt-2 text-xl font-bold tracking-tight text-white">
@@ -170,8 +171,8 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
           </View>
         </View>
 
-        <View className="mt-4 flex-row gap-2">
-          <View className="flex-1 rounded-2xl border border-white/18 bg-white/8 p-3">
+        <View className="mt-3 flex-row gap-2">
+          <View className="flex-1 rounded-xl border border-white/18 bg-white/8 p-2.5">
             <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/75">
               Tension
             </HeroText>
@@ -179,7 +180,7 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
               {user.preferredTension} lbs
             </HeroText>
           </View>
-          <View className="flex-1 rounded-2xl border border-white/18 bg-white/8 p-3">
+          <View className="flex-1 rounded-xl border border-white/18 bg-white/8 p-2.5">
             <HeroText className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-100/75">
               Priority
             </HeroText>
@@ -245,10 +246,9 @@ function RecommendationInputContent({ user }: { user: PlayerProfile }) {
           <View className="flex-row items-center gap-2">
             <Info size={14} color="#2F64B6" />
             <HeroText className="flex-1 text-[13px] leading-5 text-neutral-600">
-              Recommendations combine your preferences with verified string
-              evidence and local structured feedback. Collaborative racket–string
-              evidence is applied only when at least three independent users support
-              the same exact racket model and string; sparse cases keep the base score.
+              Recommendations combine your preferences with verified string evidence.
+              Racket evidence is used only when three independent users support the
+              same model and string.
             </HeroText>
           </View>
         </AppCard>

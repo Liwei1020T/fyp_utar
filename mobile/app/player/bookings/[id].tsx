@@ -226,11 +226,11 @@ function normalizeStoreText(value: unknown) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-start justify-between gap-4 py-3">
-      <HeroText className="text-[13px] text-neutral-500">
+    <View className="flex-row items-start justify-between gap-3 py-2">
+      <HeroText className="text-[12px] leading-4 text-neutral-500">
         {label}
       </HeroText>
-      <HeroText className="max-w-[58%] text-right text-[13px] font-semibold leading-5 text-neutral-950">
+      <HeroText className="max-w-[58%] text-right text-[12px] font-semibold leading-4 text-neutral-950">
         {value}
       </HeroText>
     </View>
@@ -437,7 +437,8 @@ export default function PlayerBookingDetailScreen() {
       title={`Booking ${orderCode}`}
       subtitle="Track booking info and live progress."
       showBackButton
-      onBackPress={() => router.back()}
+      backAccessibilityLabel="Back to bookings"
+      onBackPress={() => router.replace('/player/bookings')}
       contentContainerClassName="pt-3"
     >
       {showPhotoUploadWarning ? (
@@ -447,53 +448,54 @@ export default function PlayerBookingDetailScreen() {
           </HeroText>
         </AppCard>
       ) : null}
-      <View className="gap-4">
-        <AppCard variant="dark" className="rounded-[28px]" padding="md">
-          <View className="gap-3">
-            <View className="gap-3">
-              <View className="flex-row items-start justify-between gap-3">
+      <View className="gap-3">
+        <AppCard variant="dark" className="rounded-[28px]" padding="sm">
+          <View className="gap-2.5">
+            <View className="gap-2.5">
+              <View className="flex-row items-start justify-between gap-2.5">
                 <HeroText className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-100">
                   Status overview
                 </HeroText>
                 <AppChip
                   label={formatBookingStatus(booking.status)}
                   variant={getBookingStatusVariant(booking.status)}
+                  size="sm"
                   className={heroStatusChip.className}
                   textClassName={heroStatusChip.textClassName}
                 />
               </View>
               <HeroText
-                className="text-[26px] font-bold tracking-tight text-white"
-                style={{ fontSize: 30, lineHeight: 36, fontWeight: '800' }}
+                className="text-[24px] font-bold tracking-tight text-white"
+                style={{ fontSize: 26, lineHeight: 31, fontWeight: '800' }}
               >
                 {getHeroStatusLabel(booking.status)}
               </HeroText>
             </View>
 
-            <View className="rounded-[20px] bg-white/10 px-4 py-3">
-              <HeroText className="text-sm text-primary-100">
+            <View className="rounded-[16px] bg-white/10 px-3 py-2">
+              <HeroText className="text-[13px] leading-5 text-primary-100">
                 Drop-off on {formatDropOffDateTime(booking)}
               </HeroText>
-              <HeroText className="mt-2 text-sm font-medium leading-6 text-white">
+              <HeroText className="mt-1.5 text-[13px] font-medium leading-5 text-white">
                 Next: {getNextStepLabel(booking.status)}
               </HeroText>
             </View>
           </View>
         </AppCard>
 
-        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
-          <View className="gap-1">
+        <AppCard variant="elevated" padding="sm" className="rounded-[24px]">
+          <View className="gap-0.5">
             <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
               Booking details
             </HeroText>
-            <View className="mt-2">
+            <View className="mt-1.5">
               <DetailRow label="Vendor" value={vendorLabel} />
               <View className="h-px bg-[#EEF3F8]" />
-              <View className="py-3">
-                <HeroText className="text-[13px] text-neutral-500">
+              <View className="py-2">
+                <HeroText className="text-[12px] leading-4 text-neutral-500">
                   Shop address
                 </HeroText>
-                <HeroText className="mt-1 text-[13px] leading-5 text-neutral-900">
+                <HeroText className="mt-0.5 text-[12px] leading-4 text-neutral-900">
                   {shopAddress}
                 </HeroText>
               </View>
@@ -531,14 +533,14 @@ export default function PlayerBookingDetailScreen() {
           </View>
         </AppCard>
 
-        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
-          <View className="gap-3">
-            <View className="flex-row items-start justify-between gap-3">
+        <AppCard variant="elevated" padding="sm" className="rounded-[24px]">
+          <View className="gap-2.5">
+            <View className="flex-row items-start justify-between gap-2.5">
               <View className="min-w-0 flex-1">
                 <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
                   Progress
                 </HeroText>
-                <HeroText className="mt-1 text-[15px] font-bold tracking-tight text-neutral-950">
+                <HeroText className="mt-0.5 text-[14px] font-bold tracking-tight text-neutral-950">
                   Progress preview
                 </HeroText>
               </View>
@@ -550,7 +552,7 @@ export default function PlayerBookingDetailScreen() {
               />
             </View>
 
-            <View className="gap-2">
+            <View className="gap-1.5">
               {TRACKING_STAGES.map((stage) => {
                 const state = getStageState(stage.key, booking);
                 const isCurrent = state === 'current';
@@ -559,7 +561,7 @@ export default function PlayerBookingDetailScreen() {
                 return (
                   <View
                     key={stage.key}
-                    className={`flex-row items-center gap-3 rounded-[18px] px-3 py-2 ${
+                    className={`flex-row items-center gap-2.5 rounded-[14px] px-2.5 py-1.5 ${
                       isCurrent ? 'bg-primary-50/80' : ''
                     }`}
                   >
@@ -573,7 +575,7 @@ export default function PlayerBookingDetailScreen() {
                       )}
                     </View>
                     <HeroText
-                      className={`text-[14px] leading-6 ${
+                      className={`text-[13px] leading-5 ${
                         isCurrent
                           ? 'font-semibold text-primary-700'
                           : isComplete
@@ -590,36 +592,38 @@ export default function PlayerBookingDetailScreen() {
           </View>
         </AppCard>
 
-        <AppCard variant="subtle" padding="md" className="rounded-[24px]">
-          <View className="flex-row items-start gap-3">
+        <AppCard variant="subtle" padding="sm" className="rounded-[24px]">
+          <View className="flex-row items-start gap-2.5">
             <CalendarClock size={18} color="#2F64B6" />
             <View className="min-w-0 flex-1">
-              <HeroText className="text-[14px] font-semibold tracking-tight text-neutral-950">
+              <HeroText className="text-[13px] font-semibold tracking-tight text-neutral-950">
                 Show your order ID at the counter during drop-off.
               </HeroText>
-              <HeroText className="mt-1 text-[13px] leading-5 text-neutral-600">
+              <HeroText className="mt-0.5 text-[12px] leading-4 text-neutral-600">
                 The vendor uses the order ID to verify the booking and proceed with drop-off confirmation.
               </HeroText>
             </View>
           </View>
         </AppCard>
 
-        <AppCard variant="elevated" padding="md" className="rounded-[24px]">
-          <View className="gap-3">
-            <View className="flex-row items-start justify-between gap-3">
+        <AppCard variant="elevated" padding="sm" className="rounded-[24px]">
+          <View className="gap-2.5">
+            <View className="flex-row items-start justify-between gap-2.5">
               <AppChip label={latestUpdate.label} variant="primary" />
               <HeroText className="text-[12px] text-neutral-500">
                 {formatTrackingDateTime(latestUpdate.at)}
               </HeroText>
             </View>
-            <HeroText className="text-[14px] leading-6 text-neutral-700">
+            <HeroText className="text-[13px] leading-5 text-neutral-700">
               {latestUpdate.message}
             </HeroText>
           </View>
         </AppCard>
 
-        <View className="pt-1">
-          {booking.totalAmount > 0 && activePayment?.status !== 'paid' ? (
+        <View>
+          {booking.status !== 'cancelled' &&
+          booking.paymentStatus !== 'paid' &&
+          activePayment?.status !== 'paid' ? (
             <AppButton
               label={
                 activePayment?.status === 'pending'
@@ -635,10 +639,11 @@ export default function PlayerBookingDetailScreen() {
           ) : null}
           {canCheckIn ? (
             <AppButton
-              label="Show check-in reference"
+              label="Show check-in"
               variant="outline"
               size="lg"
               className="mb-3"
+              accessibilityHint="Open the secure check-in reference"
               onPress={() =>
                 router.push(`/player/check-in?bookingId=${booking.id}`)
               }

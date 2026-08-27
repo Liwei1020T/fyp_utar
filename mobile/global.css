@@ -6,12 +6,12 @@
 
 @layer theme {
   @variant light {
-    --background: #F3F6FA;
+    --background: #F7F8FA;
     --foreground: #0F172A;
 
-    --app-page: #F3F6FA;
+    --app-page: #F7F8FA;
     --app-page-auth: #F4F6F9;
-    --app-page-admin: #F1F4F8;
+    --app-page-admin: #F4F6F9;
     --app-surface: #FCFDFE;
     --app-surface-elevated: #FCFDFE;
     --app-muted: #F3F6FA;
@@ -59,12 +59,12 @@
   }
 
   @variant dark {
-    --background: #F3F6FA;
+    --background: #F7F8FA;
     --foreground: #0F172A;
 
-    --app-page: #F3F6FA;
+    --app-page: #F7F8FA;
     --app-page-auth: #F4F6F9;
-    --app-page-admin: #F1F4F8;
+    --app-page-admin: #F4F6F9;
     --app-surface: #FCFDFE;
     --app-surface-elevated: #FCFDFE;
     --app-muted: #F3F6FA;

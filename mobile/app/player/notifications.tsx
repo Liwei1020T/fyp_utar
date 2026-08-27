@@ -1,10 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ChevronRight, Settings2 } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppButton } from '../../components/ui/AppButton';
-import { AppIconButton } from '../../components/ui/AppIconButton';
 import { HeroText } from '../../components/ui/heroui';
 import { AppScreen, useBottomContentInset } from '../../components/shared/AppScreen';
 import {
@@ -102,13 +101,6 @@ export default function NotificationsScreen() {
       subtitle="In-app alerts for bookings, payments, chat replies, and recommendation nudges."
       showBackButton
       onBackPress={() => router.back()}
-      headerRight={
-        <AppIconButton
-          icon={<Settings2 size={20} color="#475569" />}
-          accessibilityLabel="Open notification preferences"
-          onPress={() => router.push('/player/notifications/preferences')}
-        />
-      }
       scrollable={false}
     >
       <FlatList
@@ -174,14 +166,6 @@ export default function NotificationsScreen() {
                 : 'Booking, payment, chat, and recommendation updates will appear here.'}
             </HeroText>
           </AppCard>
-        }
-        ListFooterComponent={
-          <AppButton
-            label="Notification preferences"
-            variant="outline"
-            size="lg"
-            onPress={() => router.push('/player/notifications/preferences')}
-          />
         }
       />
     </AppScreen>

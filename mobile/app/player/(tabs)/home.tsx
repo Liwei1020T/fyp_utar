@@ -83,7 +83,7 @@ export default function PlayerHomeScreen() {
       headerVariant="primary"
       compactHeader
       title={`Welcome back, ${greetingName}`}
-      subtitle="Recommendations, bookings, and service updates in one place."
+      subtitle="Recommendations, bookings, and updates."
       headerRight={
         <AppIconButton
           icon={
@@ -112,7 +112,7 @@ export default function PlayerHomeScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open all player features"
-            className="min-h-11 flex-row items-center gap-1 rounded-[14px] border border-primary-100 bg-white px-3"
+            className="min-h-11 flex-row items-center gap-1 rounded-[10px] border border-primary-100 bg-white px-3"
             onPress={() => router.push('/player/tools')}
           >
             <HeroText className="text-[13px] font-semibold text-primary-700">
@@ -132,7 +132,7 @@ export default function PlayerHomeScreen() {
                 onPress={() => router.push(action.route as never)}
                 accessibilityRole="button"
                 accessibilityLabel={action.accessibilityLabel}
-                className="min-h-[84px] flex-1 items-center rounded-[14px] px-1 py-1.5"
+                className="min-h-[76px] flex-1 items-center rounded-[12px] px-1 py-1"
                 style={({ pressed }) => ({
                   opacity: pressed ? 0.72 : 1,
                   transform: [{ scale: pressed ? 0.97 : 1 }],
@@ -144,16 +144,16 @@ export default function PlayerHomeScreen() {
                       ? appChromeColors.primary
                       : appChromeColors.primarySoft,
                   }}
-                  className="h-11 w-11 items-center justify-center rounded-[15px]"
+                  className="h-10 w-10 items-center justify-center rounded-[12px]"
                 >
                   <Icon
-                    size={20}
+                    size={18}
                     color={isFeatured ? '#F5D67A' : appChromeColors.primary}
                     strokeWidth={2.1}
                   />
                 </View>
                 <HeroText
-                  className="mt-2 text-center text-[12px] font-semibold leading-[15px] text-slate-800"
+                  className="mt-1.5 text-center text-[12px] font-semibold leading-[15px] text-slate-800"
                   numberOfLines={2}
                 >
                   {action.title}
@@ -165,7 +165,7 @@ export default function PlayerHomeScreen() {
       </AppSection>
 
       {activeBooking && latestString ? (
-        <AppMotion className="mt-5">
+        <AppMotion className="mt-4">
           <AppCard variant="dark" className="overflow-hidden rounded-[24px]" padding="lg">
             <View className="flex-row items-start justify-between gap-3">
               <View className="min-w-0 flex-1">
@@ -174,22 +174,22 @@ export default function PlayerHomeScreen() {
                   variant={getBookingStatusVariant(activeBooking.status)}
                   className="self-start"
                 />
-                <HeroText className="mt-4 text-[25px] font-bold leading-[30px] tracking-tight text-white">
+                <HeroText className="mt-3 text-[22px] font-bold leading-[27px] tracking-tight text-white">
                   Your restring is moving.
                 </HeroText>
-                <HeroText className="mt-2 text-sm leading-5 text-secondary-100">
+                <HeroText className="mt-1.5 text-sm leading-5 text-secondary-100">
                   {latestString.brand} {latestString.model} • {activeBooking.requestedTension} lbs
                 </HeroText>
               </View>
-              <View className="h-11 w-11 items-center justify-center rounded-[16px] bg-white/10">
-                <Activity size={20} color="#FFFFFF" />
+              <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-white/10">
+                <Activity size={18} color="#FFFFFF" />
               </View>
             </View>
-            <View className="mt-5 rounded-[16px] border border-white/15 bg-white/10 px-4 py-3">
+            <View className="mt-4 rounded-[14px] border border-white/15 bg-white/10 px-3 py-2.5">
               <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
                 Next step
               </HeroText>
-              <HeroText className="mt-1.5 text-sm leading-5 text-white">
+              <HeroText className="mt-1 text-sm leading-5 text-white">
                 {getNextBookingStep(activeBooking.status, activeBooking.dropOffDate)}
               </HeroText>
             </View>
@@ -197,14 +197,14 @@ export default function PlayerHomeScreen() {
               label="Open service progress"
               variant="accent"
               size="md"
-              className="mt-4 w-full"
+              className="mt-3 w-full"
               trailingIcon={<ArrowRight size={16} color="#9A6700" />}
               onPress={() => router.push(`/player/bookings/${activeBooking.id}/tracking`)}
             />
           </AppCard>
         </AppMotion>
       ) : (
-        <View className="mt-5">
+        <View className="mt-4">
           <AppCard variant="dark" className="overflow-hidden rounded-[20px]" padding="md">
             <View
               style={{ pointerEvents: 'none' }}
@@ -212,10 +212,10 @@ export default function PlayerHomeScreen() {
             />
             <View className="flex-row items-start justify-between gap-3">
               <View className="min-w-0 flex-1">
-                <HeroText className="text-[22px] font-bold leading-[27px] tracking-tight text-white">
+                <HeroText className="text-[20px] font-bold leading-[24px] tracking-tight text-white">
                   Find your next string
                 </HeroText>
-                <HeroText className="mt-1.5 text-[13px] leading-[18px] text-secondary-100">
+                <HeroText className="mt-1 text-[13px] leading-[18px] text-secondary-100">
                   Based on your game and {user.preferredTension} lbs preference.
                 </HeroText>
               </View>
@@ -228,7 +228,7 @@ export default function PlayerHomeScreen() {
               label="Get recommendation"
               variant="accent"
               size="sm"
-              className="mt-4 w-full"
+              className="mt-3 w-full"
               trailingIcon={<ChevronRight size={16} color="#9A6700" strokeWidth={2.5} />}
               onPress={() => router.push('/player/recommend')}
             />
@@ -238,8 +238,8 @@ export default function PlayerHomeScreen() {
 
       <AppSection
         title="Trending Strings"
-        subtitle="Popular setups players are browsing this week."
-        className="mt-5"
+        subtitle="Popular setups this week."
+        className="mt-4"
         rightAction={
           <Pressable
             accessibilityRole="button"
@@ -260,14 +260,14 @@ export default function PlayerHomeScreen() {
         <AppSection
           title="Latest Booking"
           subtitle="Your current restring progress at a glance."
-          className="mt-5"
+          className="mt-4"
           variant="compact"
         >
           <AppCard variant="elevated" padding="md">
-            <View className="flex-row items-start justify-between gap-3">
-              <View className="flex-1 flex-row items-start gap-3">
-                <View className="h-11 w-11 items-center justify-center rounded-xl border border-primary-200 bg-primary-50">
-                  <Activity size={20} color={appChromeColors.primary} />
+            <View className="flex-row items-start justify-between gap-2.5">
+              <View className="flex-1 flex-row items-start gap-2.5">
+                <View className="h-10 w-10 items-center justify-center rounded-[10px] border border-primary-200 bg-primary-50">
+                  <Activity size={18} color={appChromeColors.primary} />
                 </View>
                 <View className="min-w-0 flex-1">
                   <HeroText className="text-[15px] font-semibold leading-[20px] tracking-normal text-slate-900">
@@ -285,10 +285,10 @@ export default function PlayerHomeScreen() {
               />
             </View>
 
-            <View className="my-4 h-px w-full bg-[#E2E8F0]" />
+            <View className="my-3 h-px w-full bg-[#E2E8F0]" />
 
-            <View className="flex-row gap-3">
-              <View className="flex-1 rounded-xl bg-[#F8FBFF] px-3 py-2.5">
+            <View className="flex-row gap-2">
+              <View className="flex-1 rounded-xl bg-[#F8FBFF] px-3 py-2">
                 <HeroText className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                   {latestBooking.status === 'ready_for_collection' ? 'Pickup by' : 'Expected ready'}
                 </HeroText>
@@ -296,7 +296,7 @@ export default function PlayerHomeScreen() {
                   {formatDateLabel(latestBooking.dropOffDate)}
                 </HeroText>
               </View>
-              <View className="flex-1 rounded-xl bg-[#F8FBFF] px-3 py-2.5">
+              <View className="flex-1 rounded-xl bg-[#F8FBFF] px-3 py-2">
                 <HeroText className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                   Price status
                 </HeroText>
@@ -306,7 +306,7 @@ export default function PlayerHomeScreen() {
               </View>
             </View>
 
-            <View className="mt-4 rounded-xl border border-primary-200 bg-primary-50 px-3.5 py-3">
+            <View className="mt-3 rounded-xl border border-primary-200 bg-primary-50 px-3 py-2.5">
               <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
                 Next step
               </HeroText>
@@ -319,7 +319,7 @@ export default function PlayerHomeScreen() {
               label="Open Booking"
               variant="outline"
               size="md"
-              className="mt-4 w-full"
+              className="mt-3 w-full"
               textClassName="text-slate-900"
               trailingIcon={<ArrowRight size={16} color="#0F172A" />}
               onPress={() => router.push(`/player/bookings/${latestBooking.id}`)}

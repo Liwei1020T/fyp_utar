@@ -5,10 +5,17 @@ import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppInput } from '../../../components/ui/AppInput';
+import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import { RacketModelSelector } from '../../../components/rackets/RacketModelSelector';
+import {
+  racketBalancePointOptions,
+  racketGripSizeOptions,
+  racketWeightClassOptions,
+  toRacketSpecValue,
+} from '../../../components/rackets/racketSpecOptions';
 import {
   useAppStore,
   useBackendAccessToken,
@@ -30,7 +37,6 @@ interface RacketEditFields {
   weightClass: string;
   balancePoint: string;
   gripSize: string;
-  preferredUse: string;
   notes: string;
 }
 
@@ -45,8 +51,6 @@ function editFieldsFor(racket: RacketPassport): RacketEditFields {
     balancePoint:
       racket.balancePoint === 'Not recorded' ? '' : racket.balancePoint,
     gripSize: racket.gripSize === 'Not recorded' ? '' : racket.gripSize,
-    preferredUse:
-      racket.preferredUse === 'Not recorded' ? '' : racket.preferredUse,
     notes: racket.notes,
   };
 }
@@ -233,7 +237,6 @@ export default function RacketPassportDetailScreen() {
         weight_class: editFields.weightClass.trim() || null,
         balance_point: editFields.balancePoint.trim() || null,
         grip_size: editFields.gripSize.trim() || null,
-        preferred_use: editFields.preferredUse.trim() || null,
         notes: editFields.notes.trim() || null,
       });
       const updatedBase = mapBackendRacketToRacketPassport(response);
@@ -414,29 +417,35 @@ export default function RacketPassportDetailScreen() {
                 />
               </>
             ) : null}
-            <AppInput
+            <AppSelect
               label="Weight class"
               value={editFields.weightClass}
-              onChangeText={(value) => patchEditField('weightClass', value)}
-              maxLength={30}
+              options={racketWeightClassOptions}
+              placeholder="Choose weight class"
+              onChange={(value) =>
+                patchEditField('weightClass', toRacketSpecValue(value))
+              }
+              className="mb-3"
             />
-            <AppInput
+            <AppSelect
               label="Balance point"
               value={editFields.balancePoint}
-              onChangeText={(value) => patchEditField('balancePoint', value)}
-              maxLength={50}
+              options={racketBalancePointOptions}
+              placeholder="Choose balance point"
+              onChange={(value) =>
+                patchEditField('balancePoint', toRacketSpecValue(value))
+              }
+              className="mb-3"
             />
-            <AppInput
+            <AppSelect
               label="Grip size"
               value={editFields.gripSize}
-              onChangeText={(value) => patchEditField('gripSize', value)}
-              maxLength={30}
-            />
-            <AppInput
-              label="Preferred use"
-              value={editFields.preferredUse}
-              onChangeText={(value) => patchEditField('preferredUse', value)}
-              maxLength={120}
+              options={racketGripSizeOptions}
+              placeholder="Choose grip size"
+              onChange={(value) =>
+                patchEditField('gripSize', toRacketSpecValue(value))
+              }
+              className="mb-3"
             />
             <AppInput
               label="Notes"
@@ -472,8 +481,6 @@ export default function RacketPassportDetailScreen() {
             {racket.currentTension > 0
               ? `Current tension: ${racket.currentTension} lbs`
               : 'Current tension will appear after the first completed service.'}
-            {' • '}
-            Preferred use: {racket.preferredUse}
           </HeroText>
         </AppCard>
       </AppSection>

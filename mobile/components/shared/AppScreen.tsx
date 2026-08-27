@@ -58,9 +58,7 @@ export function AppScreen({
     admin: appChromeColors.pageAdmin,
   };
 
-  const insets = useSafeAreaInsets();
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);
-  const tabBarHeight = React.useContext(BottomTabBarHeightContext) ?? 0;
   const { width } = useWindowDimensions();
   let pagePadding: number = appLayoutMetrics.pagePadding;
   if (width >= 1024) {
@@ -104,14 +102,14 @@ export function AppScreen({
           >
             <AppMotion
               delay={40}
-              className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
+              className={cn('flex-1 w-full self-center px-4 pt-2', contentContainerClassName)}
               style={{
                 flex: 1,
                 width: '100%',
                 alignSelf: 'center',
                 maxWidth: appLayoutMetrics.contentMaxWidth,
                 paddingHorizontal: pagePadding,
-                paddingTop: 12,
+                paddingTop: 8,
               }}
             >
               {children}
@@ -130,14 +128,14 @@ export function AppScreen({
           >
             <AppMotion
               delay={40}
-              className={cn('flex-1 w-full self-center px-4 pt-4', contentContainerClassName)}
+              className={cn('flex-1 w-full self-center px-4 pt-2', contentContainerClassName)}
               style={{
                 flex: 1,
                 width: '100%',
                 alignSelf: 'center',
                 maxWidth: appLayoutMetrics.contentMaxWidth,
                 paddingHorizontal: pagePadding,
-                paddingTop: 12,
+                paddingTop: 8,
               }}
             >
               {children}
@@ -149,7 +147,7 @@ export function AppScreen({
             className="w-full self-center px-4"
             style={{ 
               maxWidth: appLayoutMetrics.contentMaxWidth,
-              marginBottom: Math.max(insets.bottom, tabBarHeight) + 16,
+              marginBottom: 4,
             }}
           >
             {footer}

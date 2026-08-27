@@ -2,9 +2,9 @@ import type { BookingStatus, PaymentStatus } from '../../types/domain';
 import type { AppChipVariant } from './AppChip';
 
 export const appChromeColors = {
-  page: '#F3F6FA',
+  page: '#F7F8FA',
   pageAuth: '#F4F6F9',
-  pageAdmin: '#F1F4F8',
+  pageAdmin: '#F4F6F9',
   surface: '#FCFDFE',
   surfaceElevated: '#FCFDFE',
   surfaceMuted: '#F3F6FA',

@@ -47,10 +47,10 @@ export function AppInput({
 
   if (isMinimal) {
     return (
-      <View className={cn('mb-4', className)}>
+      <View className={cn('mb-3', className)}>
         <View
           className={cn(
-          'h-12 flex-row items-center gap-3 rounded-[10px] border bg-white px-4',
+            'h-12 flex-row items-center gap-2.5 rounded-[10px] border bg-white px-3.5',
             error ? 'border-danger/30' : focusBorder,
             containerClassName,
             innerContainerClassName,
@@ -88,9 +88,9 @@ export function AppInput({
   }
 
   return (
-    <View className={cn('mb-4', className)}>
+    <View className={cn('mb-3', className)}>
       {label && (
-        <HeroText className="mb-2 ml-1 text-sm font-semibold text-foreground">
+        <HeroText className="mb-1.5 ml-1 text-sm font-semibold text-foreground">
           {label}
         </HeroText>
       )}
@@ -104,7 +104,7 @@ export function AppInput({
       >
         <View
           className={cn(
-            'min-h-[52px] flex-row items-center gap-3 rounded-[10px] px-4 py-1',
+            'min-h-[48px] flex-row items-center gap-2.5 rounded-[10px] px-3.5 py-1',
             error ? 'bg-danger/5' : 'bg-field-background',
             innerContainerClassName,
             'rounded-[10px]',
@@ -141,7 +141,7 @@ export function AppInput({
         <HeroText
           accessibilityLiveRegion={error ? 'polite' : 'none'}
           className={cn(
-            'mt-2 ml-1 text-xs leading-5',
+            'mt-1.5 ml-1 text-xs leading-5',
             error ? 'text-danger' : 'text-muted'
           )}
         >

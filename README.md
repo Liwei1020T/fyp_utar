@@ -39,6 +39,24 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 
 ## Quick Start
 
+### Run the full application with Docker
+
+This starts PostgreSQL, the FastAPI backend, Alembic migration, and Expo Web
+in Docker containers. Keep `backend/.env` configured for local development.
+
+```bash
+DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend
+docker compose -p stringsence -f compose.yaml -f compose.local.yaml ps
+curl http://127.0.0.1:3001/health
+```
+
+Open [http://127.0.0.1:8081](http://127.0.0.1:8081) for the frontend. Stop the
+containers without deleting the database volume with:
+
+```bash
+docker compose -p stringsence -f compose.yaml -f compose.local.yaml down
+```
+
 ### 1. Start Postgres
 
 ```bash

@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Minus, Plus } from 'lucide-react-native';
 import { AppCard } from '../../ui/AppCard';
 import { AppChip, type AppChipVariant } from '../../ui/AppChip';
 import { HeroText, cn } from '../../ui/heroui';
+import { StringProductImage } from '../../shared/StringProductImage';
 import { formatAvailability, formatLabel } from '../../../lib/formatters';
 import {
   buildStringDisplayName,
@@ -46,49 +47,31 @@ function getAttentionChipVariant(item: StringItem): AppChipVariant {
   return 'warning';
 }
 
-function buildInitials(item: StringItem) {
-  return item.brand
-    .split(/\s+/)
-    .map((token) => token[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 export function AdminStringThumbnail({
   item,
-  size = 56,
+  size = 48,
 }: {
   item: StringItem;
   size?: number;
 }) {
-  const [hasError, setHasError] = useState(false);
   const imageUrl = item.catalog.imageUrl ?? item.imageUrl;
-  const initials = useMemo(() => buildInitials(item), [item]);
 
   return (
     <View
       className="items-center justify-center overflow-hidden rounded-[10px] border border-field-border bg-app-muted"
       style={{ height: size, width: size }}
     >
-      {!hasError && imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          resizeMode="contain"
-          accessibilityLabel={`${buildStringDisplayName(item)} thumbnail`}
-          onError={() => setHasError(true)}
-          style={styles.thumbnailImage}
-        />
-      ) : (
-        <View className="items-center justify-center">
-          <HeroText className="text-sm font-bold tracking-[0.12em] text-primary-700">
-            {initials}
-          </HeroText>
-          <HeroText className="mt-1 text-[10px] font-medium text-neutral-400">
-            No photo
-          </HeroText>
-        </View>
-      )}
+      <StringProductImage
+        imageUrl={imageUrl}
+        brand={item.brand}
+        model={item.model}
+        gauge={item.gauge}
+        accessibilityLabel={`${buildStringDisplayName(item)} thumbnail`}
+        className="h-full w-full"
+        fallbackClassName="h-full w-full rounded-[10px] border-0 bg-primary-50 shadow-none"
+        fallbackTextClassName="px-0 text-center text-[10px] leading-3 tracking-tight text-primary-700"
+        fallbackGaugeClassName="mt-1 px-1 py-0"
+      />
     </View>
   );
 }
@@ -202,14 +185,14 @@ export function AdminInventoryCard({
       padding="none"
       variant={attentionOnly ? 'highlighted' : 'default'}
       className={cn(attentionOnly ? 'border-warning-100/90' : undefined)}
-      contentClassName="p-3"
+      contentClassName="p-2.5"
     >
-      <View className="flex-row gap-3">
+      <View className="flex-row gap-2.5">
         <AdminStringThumbnail item={item} />
         <View className="min-w-0 flex-1">
           <View className="flex-row items-start gap-2">
             <View className="min-w-0 flex-1">
-              <HeroText className="text-[15px] font-bold tracking-tight text-neutral-950" numberOfLines={1}>
+              <HeroText className="text-[14px] font-bold tracking-tight text-neutral-950" numberOfLines={1}>
                 {item.model}
               </HeroText>
               <HeroText className="mt-0.5 text-[12px] font-semibold text-neutral-500" numberOfLines={1}>
@@ -222,11 +205,11 @@ export function AdminInventoryCard({
             />
           </View>
 
-          <HeroText className="mt-1.5 text-[12px] leading-4 text-neutral-600" numberOfLines={2}>
+          <HeroText className="mt-1 text-[12px] leading-4 text-neutral-600" numberOfLines={2}>
             {detailLine}
           </HeroText>
 
-          <View className="mt-2 flex-row flex-wrap gap-1.5">
+          <View className="mt-1.5 flex-row flex-wrap gap-1.5">
             <AppChip label={`Stock ${item.inventory.stockQty}`} variant="neutral" />
             <AppChip label={price.label} variant={getPriceChipVariant(item)} />
             {attentionState !== 'ready' ? (
@@ -238,7 +221,7 @@ export function AdminInventoryCard({
           </View>
 
           {isEditingStock ? (
-            <View className="mt-3 rounded-[12px] border border-primary-100 bg-primary-50/40 p-3">
+            <View className="mt-2 rounded-[12px] border border-primary-100 bg-primary-50/40 p-2.5">
               <HeroText className="text-[12px] font-semibold text-neutral-700">
                 Available stock
               </HeroText>
@@ -295,7 +278,7 @@ export function AdminInventoryCard({
               </View>
             </View>
           ) : (
-            <View className="mt-2.5 flex-row flex-wrap gap-2">
+            <View className="mt-2 flex-row flex-wrap gap-2">
               <QuickAction
                 label={attentionState === 'out_of_stock' ? 'Restock' : 'Edit stock'}
                 variant="primary"
@@ -355,10 +338,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.99 }],
-  },
-  thumbnailImage: {
-    ...StyleSheet.absoluteFillObject,
-    height: '100%',
-    width: '100%',
   },
 });

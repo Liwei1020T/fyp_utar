@@ -1,19 +1,15 @@
-import React, { useCallback, useState } from 'react';
-import { Share, View, Pressable } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Share, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { 
   Scale, 
   Share2, 
   Sparkles, 
-  TrendingUp, 
   Zap, 
   ShieldCheck, 
   Volume2, 
   Heart,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  BrainCircuit,
   Target
 } from 'lucide-react-native';
 import { HeroText } from '../../../components/ui/heroui';
@@ -23,12 +19,12 @@ import { AppChip } from '../../../components/ui/AppChip';
 import { AppIconButton } from '../../../components/ui/AppIconButton';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
+import { AgentAnswerCard } from '../../../components/agent/AgentAnswerCard';
 import { showAlert } from '../../../lib/alerts';
 import { StringProductImage } from '../../../components/shared/StringProductImage';
 import {
   useAppStore,
   useBackendAccessToken,
-  useCurrentUser,
   useLiveRecommendationResults,
   useStrings,
 } from '../../../store/appStore';
@@ -37,7 +33,7 @@ import { formatTensionRange, getInventoryPriceLabel } from '../../../lib/invento
 import { AppRadarChart } from '../../../components/ui/AppRadarChart';
 import { CommunityFeatureList } from '../../../components/shared/CommunityFeatureList';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
-import type { BackendCommunityStringSummary } from '../../../types/backend';
+import type { BackendAgentAction, BackendAgentResponse, BackendCommunityStringSummary } from '../../../types/backend';
 
 const FEATURE_LABELS: Record<string, string> = {
   attack: 'Power',
@@ -89,44 +85,29 @@ function toSentiment(score?: number | null): 'Positive' | 'Mixed' | 'Neutral' {
   return 'Neutral';
 }
 
-function describeTensionFit(
-  minimum: number | null,
-  maximum: number | null,
-  preferred: number | undefined,
-) {
-  if (minimum == null || maximum == null) {
-    return 'No catalog tension range is recorded for this string.';
-  }
-
-  const range = formatTensionRange(minimum, maximum);
-  if (preferred == null) {
-    return `The recorded catalog range is ${range}.`;
-  }
-
-  const relation = preferred >= minimum && preferred <= maximum
-    ? 'inside'
-    : 'outside';
-  return `${preferred} lbs is ${relation} the recorded ${range} catalog range.`;
-}
-
 export default function StringDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const strings = useStrings();
   const selectedString = strings.find((item) => item.id === params.id);
-  const user = useCurrentUser();
   const token = useBackendAccessToken();
-  const playerUser = user?.role === 'player' ? user : null;
   const liveResults = useLiveRecommendationResults();
   const compareSelection = useAppStore((state) => state.compareSelection);
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
 
-  const [isExplainOpen, setIsExplainOpen] = useState(false);
   const [communitySummary, setCommunitySummary] = useState<
     BackendCommunityStringSummary | null
   >(null);
   const [isCommunityLoading, setIsCommunityLoading] = useState(Boolean(token));
   const [communityError, setCommunityError] = useState<string | null>(null);
+  const [agentResponse, setAgentResponse] = useState<BackendAgentResponse | null>(null);
+  const [isAgentLoading, setIsAgentLoading] = useState(Boolean(token));
+  const [agentError, setAgentError] = useState<string | null>(null);
+
+  const selectedStringId = selectedString?.id;
+  const selectedStringLabel = selectedString
+    ? `${selectedString.brand} ${selectedString.model}`
+    : null;
 
   const loadCommunitySummary = useCallback(async () => {
     if (!token || !params.id) {
@@ -157,6 +138,47 @@ export default function StringDetailScreen() {
       void loadCommunitySummary();
     }, [loadCommunitySummary]),
   );
+
+  useEffect(() => {
+    if (!token || !selectedStringId || !selectedStringLabel) {
+      setIsAgentLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsAgentLoading(true);
+    setAgentError(null);
+    setAgentResponse(null);
+
+    void backendApi
+      .queryAgent(token, {
+        message: `Introduce ${selectedStringLabel} in simple player-friendly language. Explain what it is, its standout traits, who it may suit, and one practical trade-off. Use only verified catalog facts. Do not mention algorithms or internal data.`,
+        context: { surface: 'chatbot', catalog_id: selectedStringId },
+      })
+      .then((response) => {
+        if (isMounted) {
+          setAgentResponse(response);
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setAgentError(
+            error instanceof BackendApiError
+              ? error.message
+              : 'The AI introduction is temporarily unavailable.',
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsAgentLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedStringId, selectedStringLabel, token]);
 
   if (!selectedString) {
     return (
@@ -230,28 +252,10 @@ export default function StringDetailScreen() {
   const reviewSummary =
     rationale?.nlp_review_summary ??
     'No review-derived evidence is available for this item.';
-  const scorerReasons = rationale?.top_reasons ?? liveResult?.reasons ?? [];
-  const savedTradeOff =
-    rationale?.trade_off_summary ?? liveResult?.tradeOffSummary ?? null;
-  const savedReasoningParagraphs = [
-    ...scorerReasons.slice(0, 2),
-    rationale?.nlp_review_summary ?? null,
-    savedTradeOff,
-  ].filter((paragraph): paragraph is string => Boolean(paragraph?.trim()));
-  const deepReasoningParagraphs = savedReasoningParagraphs.length > 0
-    ? savedReasoningParagraphs
-    : ['No saved recommendation rationale is available for this catalog view.'];
-
   const tensionLabel = formatTensionRange(
     selectedString.tensionMinLbs,
     selectedString.tensionMaxLbs,
     'Tension guidance unavailable',
-  );
-  const preferredTension = playerUser?.preferredTension;
-  const tensionFitCopy = describeTensionFit(
-    selectedString.tensionMinLbs,
-    selectedString.tensionMaxLbs,
-    preferredTension,
   );
   const priceLabel = getInventoryPriceLabel(selectedString).label;
 
@@ -272,6 +276,12 @@ export default function StringDetailScreen() {
       });
     } catch {
       showAlert('Share unavailable', 'This device could not open the share sheet for this item.');
+    }
+  };
+
+  const handleAgentAction = (action: BackendAgentAction) => {
+    if (action.action === 'open_string' && action.parameters.catalog_id) {
+      router.push(`/player/strings/${action.parameters.catalog_id}`);
     }
   };
 
@@ -308,8 +318,8 @@ export default function StringDetailScreen() {
       }
     >
       {/* 0. Product Visual Section */}
-      <View className="items-center justify-center pt-2 pb-8">
-        <View className="w-full aspect-[4/3] bg-neutral-50 rounded-[40px] items-center justify-center overflow-hidden border border-neutral-200/50 shadow-sm">
+      <View className="items-center justify-center pb-2">
+        <View className="w-full aspect-[3/2] items-center justify-center overflow-hidden rounded-[18px] border border-neutral-200/50 bg-neutral-50 shadow-sm">
           <StringProductImage
             imageUrl={selectedString.imageUrl}
             brand={selectedString.brand}
@@ -323,19 +333,19 @@ export default function StringDetailScreen() {
       </View>
 
       {/* 1. Hero Summary */}
-      <AppCard variant="dark" className="rounded-[32px] overflow-hidden" padding="none">
-        <View className="p-6">
-          <View className="flex-row justify-between items-start">
-            <View className="flex-1 mr-4">
+      <AppCard variant="dark" className="overflow-hidden rounded-[22px]" padding="none">
+        <View className="p-3">
+          <View className="flex-row items-start justify-between">
+            <View className="mr-2.5 flex-1">
               <HeroText className="text-[11px] font-bold uppercase tracking-[0.24em] text-secondary-100">
                 {selectedString.brand}
               </HeroText>
-              <HeroText className="mt-1 text-[32px] font-black tracking-tight text-white">
+              <HeroText className="mt-1 text-[26px] font-black tracking-tight text-white">
                 {selectedString.model}
               </HeroText>
             </View>
             {liveResult && (
-              <View className="rounded-full border border-white/12 bg-primary-600 px-3 py-1.5 flex-row items-center gap-1.5 shadow-soft">
+              <View className="flex-row items-center gap-1 rounded-full border border-white/12 bg-primary-600 px-2.5 py-1 shadow-soft">
                 <Sparkles size={12} color="white" />
                 <HeroText className="text-[10px] font-bold text-white uppercase tracking-wider">
                   {liveResult.matchScore.toFixed(0)}% MATCH
@@ -344,11 +354,11 @@ export default function StringDetailScreen() {
             )}
           </View>
 
-          <HeroText className="mt-4 text-[13px] leading-5 text-primary-100" numberOfLines={2}>
+          <HeroText className="mt-2 text-[13px] leading-5 text-primary-100" numberOfLines={2}>
             {selectedString.description}
           </HeroText>
 
-          <View className="mt-6 flex-row flex-wrap gap-2">
+          <View className="mt-3 flex-row flex-wrap gap-1.5">
             <AppChip
               label={formatLabel(selectedString.category)}
               variant="neutral"
@@ -372,36 +382,36 @@ export default function StringDetailScreen() {
       </AppCard>
 
       {/* 2. Specs - 2x2 scannable grid */}
-      <AppSection eyebrow="Specs" title="Technical profile" variant="compact">
-        <AppCard variant="elevated" padding="md">
+      <AppSection eyebrow="Specs" title="Technical profile" variant="compact" className="mt-2">
+        <AppCard variant="elevated" padding="sm">
           <View className="flex-row flex-wrap">
-            <View className="w-1/2 mb-4 pr-2">
+            <View className="mb-2 w-1/2 pr-1.5">
               <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Gauge</HeroText>
-              <HeroText className="text-sm font-semibold text-neutral-900 mt-1">{selectedString.gauge}</HeroText>
+              <HeroText className="mt-0.5 text-sm font-semibold text-neutral-900">{selectedString.gauge}</HeroText>
             </View>
-            <View className="w-1/2 mb-4 pl-2">
+            <View className="mb-2 w-1/2 pl-1.5">
               <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Material</HeroText>
-              <HeroText className="text-sm font-semibold text-neutral-900 mt-1" numberOfLines={1}>{selectedString.material.split(' ')[0]}</HeroText>
+              <HeroText className="mt-0.5 text-sm font-semibold text-neutral-900" numberOfLines={1}>{selectedString.material.split(' ')[0]}</HeroText>
             </View>
-            <View className="w-1/2 pr-2">
+            <View className="w-1/2 pr-1.5">
               <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Category</HeroText>
-              <HeroText className="text-sm font-semibold text-neutral-900 mt-1">{formatLabel(selectedString.category)}</HeroText>
+              <HeroText className="mt-0.5 text-sm font-semibold text-neutral-900">{formatLabel(selectedString.category)}</HeroText>
             </View>
-            <View className="w-1/2 pl-2">
+            <View className="w-1/2 pl-1.5">
               <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Tension Fit</HeroText>
-              <HeroText className="text-sm font-semibold text-neutral-900 mt-1">{tensionLabel}</HeroText>
+              <HeroText className="mt-0.5 text-sm font-semibold text-neutral-900">{tensionLabel}</HeroText>
             </View>
           </View>
         </AppCard>
       </AppSection>
 
       {/* 3. Performance Profile */}
-      <AppSection eyebrow="Performance" title="Aspect profile" variant="compact">
+      <AppSection eyebrow="Performance" title="Aspect profile" variant="compact" className="mt-2">
         <AppCard variant="elevated" padding="none" className="overflow-hidden">
-          <AppRadarChart data={selectedString.ratings} />
+          <AppRadarChart data={selectedString.ratings} size={260} />
           
-          <View className="bg-neutral-50 px-5 py-4 border-t border-neutral-100 flex-row items-center gap-2.5">
-            <Sparkles size={16} color="#3B82F6" />
+          <View className="flex-row items-center gap-2 border-t border-neutral-100 bg-neutral-50 px-3 py-2.5">
+            <Sparkles size={14} color="#3B82F6" />
             <HeroText className="text-sm font-medium text-neutral-600 italic flex-1">
               {getInsightSentence()}
             </HeroText>
@@ -409,122 +419,71 @@ export default function StringDetailScreen() {
         </AppCard>
       </AppSection>
 
-      {/* 4. The Match Logic (Combined Why + Explain) */}
-      <AppSection 
-        eyebrow="Intelligence" 
-        title="The match logic" 
+      {/* 4. Grounded Agent Introduction */}
+      <AppSection
+        eyebrow="StringSense AI"
+        title="About this string"
+        subtitle="A plain-language introduction from the verified catalog."
         variant="compact"
-        rightAction={
-          <View className="bg-primary-100 px-2.5 py-1 rounded-md flex-row items-center gap-1.5">
-            <BrainCircuit size={12} color="#1E3A8A" />
-            <HeroText className="text-[10px] font-bold text-primary-900 uppercase">
-              {liveResult ? 'SAVED SCORING' : 'CATALOG ONLY'}
-            </HeroText>
-          </View>
-        }
+        className="mt-2"
       >
-        <AppCard variant="highlighted" padding="none" className="border-primary-100 bg-primary-50/20 overflow-hidden">
-          <View className="p-5 gap-5">
-            <View className="flex-row gap-4 items-start">
-              <View className="p-2.5 bg-blue-50 rounded-xl border border-blue-100 items-center justify-center">
-                <TrendingUp size={18} color="#059669" />
+        {agentResponse ? (
+          <AgentAnswerCard response={agentResponse} onAction={handleAgentAction} />
+        ) : (
+          <AppCard variant={agentError ? 'subtle' : 'highlighted'} padding="sm">
+            <View className="flex-row items-start gap-2.5">
+              <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-100">
+                <Sparkles size={17} color="#2563EB" />
               </View>
               <View className="flex-1">
-                <HeroText className="text-sm font-bold text-neutral-900">Saved scorer reason</HeroText>
-                <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  {scorerReasons[0] ?? 'No personalized scorer reason is available for this catalog view.'}
+                <HeroText className="text-sm font-bold text-neutral-900">
+                  {isAgentLoading ? 'Preparing a simple introduction' : 'AI introduction unavailable'}
+                </HeroText>
+                <HeroText className="mt-0.5 text-xs leading-5 text-neutral-600">
+                  {isAgentLoading
+                    ? 'Reading the verified catalog details for this string.'
+                    : agentError ?? 'The catalog summary above remains available.'}
                 </HeroText>
               </View>
             </View>
-
-            <View className="flex-row gap-4 items-start">
-              <View className="p-2.5 bg-blue-50 rounded-xl border border-blue-100 items-center justify-center">
-                <Zap size={18} color="#2563EB" />
-              </View>
-              <View className="flex-1">
-                <HeroText className="text-sm font-bold text-neutral-900">Priority Alignment</HeroText>
-                <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  {scorerReasons[1] ?? 'No separate priority-alignment reason was saved.'}
-                </HeroText>
-              </View>
-            </View>
-
-            <View className="flex-row gap-4 items-start">
-              <View className="p-2.5 bg-blue-50 rounded-xl border border-blue-100 items-center justify-center">
-                <Target size={18} color="#3B82F6" />
-              </View>
-              <View className="flex-1">
-                <HeroText className="text-sm font-bold text-neutral-900">Tension Fit</HeroText>
-                <HeroText className="text-xs leading-5 text-neutral-600 mt-1">
-                  {tensionFitCopy}
-                </HeroText>
-              </View>
-            </View>
-          </View>
-
-          <Pressable 
-            accessibilityRole="button"
-            accessibilityLabel={isExplainOpen ? 'Hide deep reasoning' : 'Show deep reasoning'}
-            accessibilityState={{ expanded: isExplainOpen }}
-            onPress={() => setIsExplainOpen(!isExplainOpen)}
-            className="bg-white border-t border-primary-100 p-4 flex-row items-center justify-between"
-          >
-            <View className="flex-row items-center gap-2">
-              <Sparkles size={14} color="#3B82F6" />
-              <HeroText className="text-sm font-bold text-primary-700">Deep Reasoning</HeroText>
-            </View>
-            {isExplainOpen ? <ChevronUp size={18} color="#3B82F6" /> : <ChevronDown size={18} color="#3B82F6" />}
-          </Pressable>
-          
-          {isExplainOpen && (
-            <View className="bg-white px-5 pb-6 pt-2">
-              {deepReasoningParagraphs.map((paragraph, index) => (
-                <HeroText
-                  key={`${paragraph}-${index}`}
-                  className={`text-sm leading-6 text-neutral-700 ${index > 0 ? 'mt-4' : ''}`}
-                >
-                  {paragraph}
-                </HeroText>
-              ))}
-            </View>
-          )}
-        </AppCard>
+          </AppCard>
+        )}
       </AppSection>
 
       {/* 5. Community Intelligence (Combined NLP + Sentiment) */}
-      <AppSection eyebrow="Community" title="Review intelligence" variant="compact">
+      <AppSection eyebrow="Community" title="Review intelligence" variant="compact" className="mt-2">
         <AppCard variant="elevated" padding="none" className="overflow-hidden">
-          <View className="p-5">
+          <View className="p-2.5">
             {evidenceSignals.length > 0 ? (
               <>
-                <View className="flex-row justify-between mb-6">
-                  <View className="flex-1 mr-4">
-                    <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Highest review signal</HeroText>
+                <View className="mb-3 flex-row justify-between">
+                  <View className="mr-2.5 flex-1">
+                    <HeroText className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">Highest review signal</HeroText>
                     <HeroText className="text-sm font-bold text-neutral-900">{highlightedStrength}</HeroText>
                   </View>
                   <View className="flex-1">
-                    <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Lowest recorded signal</HeroText>
+                    <HeroText className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">Lowest recorded signal</HeroText>
                     <HeroText className="text-sm font-bold text-neutral-900">{highlightedTradeOff}</HeroText>
                   </View>
                 </View>
 
-                <HeroText className="mb-4 text-xs leading-5 text-neutral-500">
+                <HeroText className="mb-2.5 text-xs leading-5 text-neutral-500">
                   {reviewSummary}
                 </HeroText>
 
-                <View className="flex-row flex-wrap gap-2 mb-6">
+                <View className="mb-3 flex-row flex-wrap gap-1.5">
                   {reviewThemes.map((theme) => (
-                    <View key={theme} className="bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100 flex-row items-center gap-1.5">
+                    <View key={theme} className="flex-row items-center gap-1.5 rounded-lg border border-neutral-100 bg-neutral-50 px-2.5 py-1">
                       <CheckCircle2 size={12} color="#10B981" />
                       <HeroText className="text-[11px] font-bold text-neutral-700 uppercase">{theme}</HeroText>
                     </View>
                   ))}
                 </View>
 
-                <HeroText className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Review-derived aspect signal</HeroText>
+                <HeroText className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">Review-derived aspect signal</HeroText>
                 <View className="flex-row flex-wrap gap-2">
                   {sentimentSignals.map((item) => (
-                    <View key={item.aspect} className={`${getSentimentBg(item.sentiment)} px-3 py-1.5 rounded-full border border-neutral-100 flex-row items-center gap-1.5`}>
+                    <View key={item.aspect} className={`${getSentimentBg(item.sentiment)} flex-row items-center gap-1.5 rounded-full border border-neutral-100 px-2.5 py-1`}>
                       <View className={`h-1.5 w-1.5 rounded-full ${item.sentiment === 'Positive' ? 'bg-green-500' : item.sentiment === 'Mixed' ? 'bg-amber-500' : 'bg-neutral-300'}`} />
                       <HeroText className={`text-[10px] font-bold ${getSentimentColor(item.sentiment)}`}>
                         {item.aspect.toUpperCase()}: {item.sentiment.toUpperCase()}
@@ -547,8 +506,9 @@ export default function StringDetailScreen() {
         title="Local player feedback"
         subtitle="Verified completed bookings only. These ratings calibrate future recommendations without replacing official specifications."
         variant="compact"
+        className="mt-2"
       >
-        <AppCard variant="elevated" padding="md">
+        <AppCard variant="elevated" padding="sm">
           {isCommunityLoading ? (
             <HeroText className="text-sm text-neutral-600">
               Loading local feedback evidence...
@@ -580,7 +540,7 @@ export default function StringDetailScreen() {
       </AppSection>
 
       {/* 8. Sticky CTA Area */}
-      <View className="mb-12 mt-10 flex-row gap-3">
+      <View className="mb-8 mt-6 flex-row gap-2.5">
         <AppButton
           label="Book this string"
           className="flex-[2.5]"

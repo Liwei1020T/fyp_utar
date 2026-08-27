@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -10,37 +10,11 @@ import { AppDetailList } from '../../../components/shared/AppDetailList';
 import { useBackendAccessToken, useCurrentUser, useStrings } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import type { BackendRecommendationRun, BackendRecommendationRunItem } from '../../../types/backend';
-import { formatDateTime, formatLabel } from '../../../lib/formatters';
-
-function formatScalarValue(value: unknown) {
-  if (value == null) {
-    return 'Unavailable';
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
-  }
-  if (typeof value === 'number') {
-    return Number.isInteger(value) ? String(value) : value.toFixed(2);
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.length > 0 ? value.join(', ') : 'None';
-  }
-  return JSON.stringify(value);
-}
+import { formatDateTime } from '../../../lib/formatters';
 
 function getStringLabel(strings: ReturnType<typeof useStrings>, catalogId: string) {
   const match = strings.find((item) => item.id === catalogId);
   return match ? `${match.brand} ${match.model}` : catalogId;
-}
-
-function buildSnapshotItems(snapshot: Record<string, unknown>) {
-  return Object.entries(snapshot).map(([key, value]) => ({
-    label: formatLabel(key),
-    value: formatScalarValue(value),
-  }));
 }
 
 function ScoreBreakdownRows({ item }: { item: BackendRecommendationRunItem }) {
@@ -129,15 +103,6 @@ export default function AdminRecommendationRunDetailScreen() {
     };
   }, [runId, token, user]);
 
-  const requestItems = useMemo(
-    () => (run ? buildSnapshotItems(run.request_snapshot) : []),
-    [run],
-  );
-  const profileItems = useMemo(
-    () => (run ? buildSnapshotItems(run.profile_snapshot) : []),
-    [run],
-  );
-
   if (!user || user.role !== 'admin') {
     return null;
   }
@@ -147,7 +112,7 @@ export default function AdminRecommendationRunDetailScreen() {
       tone="admin"
       headerVariant="secondary"
       title="Run detail"
-      subtitle="Inspect the exact scoring inputs and ranked output for one saved recommendation run."
+      subtitle="Inspect saved metadata, scores, and ranked output for one recommendation run."
       showBackButton
       onBackPress={() => router.back()}
     >
@@ -163,14 +128,14 @@ export default function AdminRecommendationRunDetailScreen() {
             Loading recommendation run...
           </HeroText>
           <HeroText className="mt-2 text-sm leading-6 text-neutral-500">
-            Pulling the request snapshot, profile snapshot, and ranked output from the backend.
+            Pulling run metadata and ranked output from the backend.
           </HeroText>
         </AppCard>
       ) : null}
 
       {run ? (
         <View className="gap-6">
-          <AppSection eyebrow="Summary" title="Run metadata">
+          <AppSection eyebrow="Summary" title="Run metadata" variant="compact">
             <AppDetailList
               items={[
                 {
@@ -191,14 +156,6 @@ export default function AdminRecommendationRunDetailScreen() {
                 },
               ]}
             />
-          </AppSection>
-
-          <AppSection eyebrow="Request" title="Submitted recommendation request">
-            <AppDetailList items={requestItems} />
-          </AppSection>
-
-          <AppSection eyebrow="Profile" title="Resolved profile snapshot">
-            <AppDetailList items={profileItems} />
           </AppSection>
 
           <AppSection

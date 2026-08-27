@@ -328,6 +328,55 @@ def test_recommendation_explanation_requests_short_non_technical_copy() -> None:
     assert "find_in_stock_alternatives" in instruction
 
 
+def test_catalog_context_requests_grounded_string_introduction() -> None:
+    class CatalogContextToolbox(FakeToolbox):
+        def get_string_details(self, catalog_id: str) -> AgentToolResult:
+            assert catalog_id == "yonex-bg66-ultimax"
+            return AgentToolResult(
+                data={
+                    "string": {
+                        "id": catalog_id,
+                        "display_name": "Yonex BG66 ULTIMAX",
+                        "short_description": "Thin-gauge repulsion string.",
+                    }
+                },
+                sources=[
+                    {
+                        "source_type": "catalog",
+                        "source_id": catalog_id,
+                        "label": "Yonex BG66 ULTIMAX",
+                        "version": None,
+                    }
+                ],
+            )
+
+    client = FakeModelClient(
+        [_completion({"role": "assistant", "content": _answer_content()}, "stop")]
+    )
+    payload = AgentQueryDto.model_validate(
+        {
+            "message": "Introduce this string.",
+            "context": {
+                "surface": "chatbot",
+                "catalog_id": "yonex-bg66-ultimax",
+            },
+        }
+    )
+
+    response = QueryAgentUseCase(
+        toolbox=cast(AgentToolbox, CatalogContextToolbox()),
+        model_client=client,
+    ).execute(payload=payload, user_id="user-1")
+
+    assert response.sources[0].source_id == "yonex-bg66-ultimax"
+    instruction = client.calls[0]["messages"][-2]["content"]
+    assert "catalog introductions" in instruction
+    assert "one practical consideration" in instruction
+    assert "do not ask the guided-selection questions" in instruction
+    assert "A catalog introduction is not a personalized recommendation" in instruction
+    assert "yonex-bg66-ultimax" in client.calls[0]["messages"][-1]["content"]
+
+
 def test_agent_drops_action_with_unverified_resource_id() -> None:
     client = FakeModelClient(
         [

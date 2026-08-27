@@ -19,29 +19,29 @@ interface AppPageHeaderProps {
 }
 
 const appHeaderMetrics = {
-  primaryMinHeight: 68,
-  secondaryMinHeight: 58,
-  flowMinHeight: 68,
+  primaryMinHeight: 64,
+  secondaryMinHeight: 54,
+  flowMinHeight: 64,
 } as const;
 
 const baseContainerStyles = 'w-full self-center overflow-hidden border';
 
 const variantStyles: Record<AppHeaderVariant, string> = {
-  primary: 'rounded-[16px] border-[#D6E4FF] bg-[#EAF2FF] shadow-subtle',
+  primary: 'rounded-[14px] border-[#D6E4FF] bg-[#EAF2FF] shadow-subtle',
   secondary: 'rounded-[14px] border-[#DCE3EC] bg-white shadow-subtle',
-  flow: 'rounded-[16px] border-[#163B7A] bg-[#102F63] shadow-float',
+  flow: 'rounded-[14px] border-[#163B7A] bg-[#102F63] shadow-float',
 };
 
 const contentStyles: Record<AppHeaderVariant, string> = {
-  primary: 'px-4 py-3',
-  secondary: 'px-4 py-2.5',
-  flow: 'px-4 py-3',
+  primary: 'px-3 py-2.5',
+  secondary: 'px-3 py-2',
+  flow: 'px-3 py-2.5',
 };
 
 const titleStyles: Record<AppHeaderVariant, string> = {
-  primary: 'text-[20px] font-bold leading-[24px] tracking-tight text-slate-900',
-  secondary: 'text-[16px] font-semibold leading-5 tracking-normal text-slate-900',
-  flow: 'text-[18px] font-bold leading-[22px] tracking-tight text-white',
+  primary: 'text-[18px] font-bold leading-[22px] tracking-tight text-slate-900',
+  secondary: 'text-[15px] font-semibold leading-[19px] tracking-normal text-slate-900',
+  flow: 'text-[17px] font-bold leading-[21px] tracking-tight text-white',
 };
 
 const minHeights: Record<AppHeaderVariant, number> = {
@@ -92,10 +92,10 @@ export function AppPageHeader({
 
         <View
           className={cn(
-            'flex-row items-center gap-3',
+            'flex-row items-center gap-2.5',
             contentStyles[variant],
-            compact && variant === 'primary' ? 'py-3.5' : undefined,
-            compact && variant === 'secondary' ? 'py-2.5' : undefined
+            compact && variant === 'primary' ? 'py-2.5' : undefined,
+            compact && variant === 'secondary' ? 'py-2' : undefined
           )}
         >
           {showBackButton ? (

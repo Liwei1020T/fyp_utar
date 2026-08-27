@@ -9,7 +9,7 @@ import { useBottomContentInset } from './AppScreen';
 
 export function FloatingCompareTray() {
   const router = useRouter();
-  const bottomContentInset = useBottomContentInset(-8);
+  const bottomContentInset = useBottomContentInset(-4);
   const compareSelection = useAppStore((state) => state.compareSelection);
   const clearCompareSelection = useAppStore((state) => state.clearCompareSelection);
 
@@ -17,36 +17,36 @@ export function FloatingCompareTray() {
 
   return (
     <View 
-      className="absolute left-4 right-4 z-50 bg-[#0F172A] rounded-[28px] shadow-2xl px-4 py-3 flex-row items-center justify-between border border-white/5"
+      className="absolute left-3 right-3 z-50 flex-row items-center justify-between rounded-[20px] border border-white/10 bg-[#0F172A] px-3 py-2 shadow-2xl"
       style={{ bottom: bottomContentInset }}
     >
-      <View className="flex-row items-center gap-3">
+      <View className="min-w-0 flex-1 flex-row items-center gap-2">
         {/* Count Badge */}
-        <View className="h-8 w-8 rounded-full bg-primary-600 items-center justify-center">
+        <View className="h-8 w-8 items-center justify-center rounded-full bg-primary-600">
           <HeroText className="text-[12px] font-bold text-white leading-none">
             {compareSelection.length}
           </HeroText>
         </View>
         
         {/* Text Area */}
-        <View>
-          <HeroText className="text-[14px] font-bold text-white leading-tight">
-            Shortlist Ready
+        <View className="min-w-0 flex-1">
+          <HeroText className="text-[13px] font-bold leading-4 text-white" numberOfLines={1}>
+            Compare shortlist
           </HeroText>
-          <HeroText className="text-[10px] text-slate-400 font-medium mt-0.5">
-            Open side-by-side compare
+          <HeroText className="mt-0.5 text-[10px] font-medium leading-4 text-slate-400" numberOfLines={1}>
+            {compareSelection.length} strings ready to compare
           </HeroText>
         </View>
       </View>
 
-      <View className="flex-row items-center gap-2">
+      <View className="ml-2 flex-row items-center gap-1.5">
         {/* Close Button */}
         <Pressable 
           accessibilityRole="button"
           accessibilityLabel="Clear comparison shortlist"
           accessibilityHint="Remove all selected strings"
           onPress={clearCompareSelection}
-          className="h-11 w-11 items-center justify-center rounded-full bg-white/12 border border-white/5"
+          className="h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10"
           hitSlop={6}
         >
           <X size={18} color="white" strokeWidth={2.5} />
@@ -57,7 +57,8 @@ export function FloatingCompareTray() {
           label="Compare" 
           size="sm" 
           variant="primary" 
-          className="h-11 px-5 rounded-full bg-primary-600"
+          textClassName="text-[13px]"
+          className="h-10 min-w-[84px] rounded-[10px] bg-primary-600 px-3"
           onPress={() => router.push('/player/strings/compare')}
         />
       </View>

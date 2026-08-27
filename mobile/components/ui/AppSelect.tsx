@@ -44,7 +44,7 @@ export function AppSelect({
   const { height: windowHeight } = useWindowDimensions();
   const selectedOption = options.find((option) => option.id === value);
   const displayValue = selectedOption?.label ?? placeholder;
-  const menuHeight = Math.min(options.length * 52, 256);
+  const menuHeight = Math.min(options.length * 48, 240);
   const spaceBelow = windowHeight - anchor.y - anchor.height - 8;
   const menuTop = spaceBelow >= menuHeight
     ? anchor.y + anchor.height + 6
@@ -64,7 +64,7 @@ export function AppSelect({
 
   return (
     <>
-      <View className={cn('gap-2', className)}>
+      <View className={cn('gap-1.5', className)}>
         <HeroText className="ml-1 text-sm font-semibold text-foreground">
           {label}
         </HeroText>
@@ -76,7 +76,7 @@ export function AppSelect({
           disabled={disabled}
           onPress={toggleMenu}
           className={cn(
-            'min-h-[52px] flex-row items-center justify-between gap-3 rounded-[10px] border px-3.5 py-2.5',
+            'min-h-[48px] flex-row items-center justify-between gap-2.5 rounded-[10px] border px-3 py-2',
             isOpen ? 'border-primary-500 bg-primary-50/50' : 'border-field-border bg-white',
             disabled ? 'opacity-60' : undefined,
           )}
@@ -142,7 +142,7 @@ export function AppSelect({
                       setIsOpen(false);
                     }}
                     className={cn(
-                      'min-h-[52px] flex-row items-center justify-between gap-3 border-b border-[#EEF2F7] px-3.5 py-2.5 last:border-b-0',
+                      'min-h-[48px] flex-row items-center justify-between gap-2.5 border-b border-[#EEF2F7] px-3 py-2 last:border-b-0',
                       isSelected ? 'bg-primary-50' : 'bg-white',
                       option.disabled ? 'opacity-50' : undefined,
                     )}

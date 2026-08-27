@@ -25,21 +25,21 @@ export function AppSection({
   ...props
 }: AppSectionProps) {
   const spacingStyles = {
-    default: 'mt-6',
-    compact: 'mt-4',
-    hero: 'mt-6',
+    default: 'mt-5',
+    compact: 'mt-3',
+    hero: 'mt-5',
   };
 
   const titleStyles = {
-    default: 'text-[17px] font-semibold tracking-tight text-slate-900 leading-tight',
+    default: 'text-[16px] font-semibold tracking-tight text-slate-900 leading-tight',
     compact: 'text-[15px] font-semibold tracking-tight text-slate-900 leading-tight',
-    hero: 'text-[20px] font-semibold tracking-tight text-slate-900 leading-tight',
+    hero: 'text-[18px] font-semibold tracking-tight text-slate-900 leading-tight',
   };
 
   return (
     <View className={cn(spacingStyles[variant], className)} {...props}>
       {(title || rightAction) && (
-        <View className="mb-2.5 flex-row items-start justify-between gap-3">
+        <View className="mb-2 flex-row items-start justify-between gap-2.5">
           <View className="flex-1">
             {eyebrow ? (
               <HeroText className="mb-0.5 text-[11px] font-medium tracking-normal text-primary-700">

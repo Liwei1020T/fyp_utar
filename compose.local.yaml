@@ -1,0 +1,58 @@
+x-backend-environment: &backend-environment
+  APP_ENV: development
+  DATABASE_URL: postgresql+psycopg://admin:admin@postgres:5432/stringsense
+  CORS_ORIGINS: "${CORS_ORIGINS:-http://127.0.0.1:8081,http://localhost:8081}"
+  TRUSTED_HOSTS: "${TRUSTED_HOSTS:-*}"
+  PORT: "3001"
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: stringsense-backend:local
+    restart: "no"
+    env_file:
+      - ./backend/.env
+    environment: *backend-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: stringsense-backend:local
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./backend/.env
+    environment: *backend-environment
+    ports:
+      - "0.0.0.0:3001:3001"
+    volumes:
+      - stringsense_local_uploads:/srv/stringsense/backend/var/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile.web
+    image: stringsense-frontend:local
+    restart: unless-stopped
+    environment:
+      EXPO_PUBLIC_API_BASE_URL: "${EXPO_PUBLIC_API_BASE_URL:-http://127.0.0.1:3001/api}"
+    ports:
+      - "0.0.0.0:8081:8081"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  stringsense_local_uploads:

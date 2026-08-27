@@ -543,10 +543,13 @@ The returned `algorithm_version` is read from the cached recommendation row, not
 
 - `POST /api/agent/query`
 
-This authenticated endpoint serves the player chatbot, recommendation
-explanation page, and admin assistant. Recommendation explanation context requires
-both the exact `run_id` and `catalog_id`; the backend rejects a run belonging to
-another player.
+This authenticated endpoint serves the player chatbot, catalog detail
+introduction, recommendation explanation page, and admin assistant.
+Recommendation explanation context requires both the exact `run_id` and
+`catalog_id`; the backend rejects a run belonging to another player. A catalog
+detail introduction may provide only `surface: "chatbot"` and the exact
+`catalog_id`; the backend preloads that verified catalog record and the response
+is descriptive, not a personalized recommendation.
 
 ```json
 {

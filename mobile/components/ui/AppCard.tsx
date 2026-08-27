@@ -42,9 +42,9 @@ export function AppCard({
 
   const paddingStyles = {
     none: 'p-0',
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-5',
+    sm: 'p-2',
+    md: 'p-2.5',
+    lg: 'p-3',
   };
 
   const shellStyles = {

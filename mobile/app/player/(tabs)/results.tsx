@@ -130,7 +130,7 @@ export default function RecommendationResultsScreen() {
         subtitle="Start with the best fit, then open the evidence only when you need it."
       >
         {!isLive ? (
-          <AppCard variant="subtle" className="mt-6" padding="lg">
+          <AppCard variant="subtle" className="mt-4" padding="lg">
             <HeroText className="text-lg font-bold text-neutral-900">
               Backend login required
             </HeroText>
@@ -144,7 +144,7 @@ export default function RecommendationResultsScreen() {
             />
           </AppCard>
         ) : isWaitingForInitialResults ? (
-          <AppCard variant="subtle" className="mt-6" padding="lg">
+          <AppCard variant="subtle" className="mt-4" padding="lg">
             <HeroText className="text-lg font-bold text-neutral-900">
               Loading backend recommendations...
             </HeroText>
@@ -153,7 +153,7 @@ export default function RecommendationResultsScreen() {
             </HeroText>
           </AppCard>
         ) : !hasResults ? (
-          <AppCard variant="subtle" className="mt-6" padding="lg">
+          <AppCard variant="subtle" className="mt-4" padding="lg">
             <HeroText className="text-lg font-bold text-neutral-900">
               No backend results yet.
             </HeroText>
@@ -169,7 +169,7 @@ export default function RecommendationResultsScreen() {
         ) : null}
 
         <AppSection eyebrow="PERSONALISED" title="Best matches">
-          <View className="gap-5 pb-36">
+          <View className="gap-3 pb-36">
             {hasResults &&
               liveResults.map((item, index) => {
                 const isSelected = item.stringId ? compareSelection.includes(item.stringId) : false;
@@ -190,14 +190,14 @@ export default function RecommendationResultsScreen() {
                 return (
                   <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md" className="rounded-[30px]">
                     <View className="flex-row items-start gap-3">
-                      <View className="h-20 w-20 overflow-hidden rounded-[20px] bg-neutral-950">
+                      <View className="h-[72px] w-[72px] overflow-hidden rounded-[16px] bg-neutral-950">
                         <StringProductImage
                           imageUrl={stringItem?.imageUrl}
                           brand={item.brand}
                           model={item.modelName}
                           gauge={stringItem?.gauge ?? 'String'}
-                          className="h-20 w-20"
-                          fallbackClassName="h-20 w-20 rounded-[20px] border-0"
+                          className="h-[72px] w-[72px]"
+                          fallbackClassName="h-[72px] w-[72px] rounded-[16px] border-0"
                           fallbackTextClassName="px-2 text-[11px] leading-[13px]"
                           fallbackGaugeClassName="mt-2 px-2 py-0.5"
                         />
@@ -216,7 +216,7 @@ export default function RecommendationResultsScreen() {
                             {item.brand}
                           </HeroText>
                         </View>
-                        <HeroText className="mt-2 text-xl font-bold tracking-tight text-neutral-950">
+                        <HeroText className="mt-1.5 text-lg font-bold tracking-tight text-neutral-950">
                           {item.modelName}
                         </HeroText>
                         <HeroText className="mt-1 text-sm font-semibold text-primary-700">
@@ -227,36 +227,36 @@ export default function RecommendationResultsScreen() {
                         <HeroText className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                           Rank
                         </HeroText>
-                        <View className="rounded-2xl bg-white/80 px-3 py-2">
-                          <HeroText className="text-lg font-black text-primary-700">
+                        <View className="rounded-xl bg-white/80 px-2.5 py-1.5">
+                          <HeroText className="text-base font-black text-primary-700">
                             #{index + 1}
                           </HeroText>
                         </View>
                       </View>
                     </View>
 
-                    <View className="mt-4 rounded-2xl bg-white/70 p-3">
+                    <View className="mt-3 rounded-xl bg-white/70 p-2.5">
                       <HeroText className="text-[10px] font-bold uppercase tracking-widest text-primary-700">
                         Why this one
                       </HeroText>
-                      <HeroText className="mt-2 text-sm leading-5 text-neutral-700">
+                      <HeroText className="mt-1.5 text-sm leading-5 text-neutral-700">
                         {item.reasons[0] ?? 'No scorer reason was returned.'}
                       </HeroText>
                     </View>
 
-                    <View className="mt-4 flex-row flex-wrap gap-2">
+                    <View className="mt-3 flex-row flex-wrap gap-1.5">
                       {topAspectLabels.map((label) => (
                         <AppChip key={label} label={humanizeFeature(label)} variant="primary" size="sm" />
                       ))}
                     </View>
 
-                    <View className="mt-4 rounded-xl bg-neutral-50 px-3 py-2">
+                    <View className="mt-3 rounded-xl bg-neutral-50 px-3 py-1.5">
                       <HeroText className="text-xs text-neutral-500">
                         Suggested tension: <HeroText className="font-bold text-neutral-700">{item.suggestedTensionRange}</HeroText>
                       </HeroText>
                     </View>
 
-                    <View className="mt-5 gap-3">
+                    <View className="mt-4 gap-2.5">
                       <AppButton
                         label={isOutOfStock ? 'Find in-stock alternatives' : 'Book this string'}
                         variant={isTop ? 'primary' : 'outline'}

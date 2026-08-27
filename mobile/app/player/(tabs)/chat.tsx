@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { MessageCircleMore, Sparkles } from 'lucide-react-native';
+import { ChevronRight, MessageCircleMore } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppScreen, useBottomContentInset } from '../../../components/shared/AppScreen';
@@ -17,6 +17,21 @@ import {
 } from '../../../store/appStore';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
 import { mapBackendConversationToConversation } from '../../../services/backendMappers';
+
+const quickPrompts = [
+  {
+    label: 'Ask about my booking',
+    message: 'Can you help me with my booking?',
+  },
+  {
+    label: 'Ask about pickup',
+    message: 'Can you confirm my pickup or drop-off details?',
+  },
+  {
+    label: 'Get payment help',
+    message: 'I need help with my booking payment.',
+  },
+] as const;
 
 export default function PlayerChatThreadsScreen() {
   const router = useRouter();
@@ -72,11 +87,22 @@ export default function PlayerChatThreadsScreen() {
   }
 
   const playerConversations = conversations.filter((item) => item.playerId === user.id);
+  const openConversation = playerConversations.find(
+    (item) => item.mode !== 'resolved' && item.mode !== 'closed',
+  );
 
-  const openHumanSupport = async () => {
-    const latest = playerConversations[0];
-    if (latest) {
-      router.push(`/player/chat/${latest.id}`);
+  const routeToConversation = (conversationId: string, message?: string) => {
+    const draft = message?.trim();
+    router.push(
+      draft
+        ? `/player/chat/${conversationId}?draft=${encodeURIComponent(draft)}`
+        : `/player/chat/${conversationId}`,
+    );
+  };
+
+  const openSupportThread = async (message?: string) => {
+    if (openConversation) {
+      routeToConversation(openConversation.id, message);
       return;
     }
     if (!token) {
@@ -89,7 +115,7 @@ export default function PlayerChatThreadsScreen() {
       const response = await backendApi.requestGeneralSupport(token);
       const mapped = mapBackendConversationToConversation(response, undefined);
       upsertLiveConversation(mapped);
-      router.push(`/player/chat/${mapped.id}`);
+      routeToConversation(mapped.id, message);
     } catch (supportError) {
       setError(
         supportError instanceof BackendApiError
@@ -154,41 +180,41 @@ export default function PlayerChatThreadsScreen() {
                 </View>
               </View>
               <AppButton
-                label={playerConversations.length > 0 ? 'Open latest thread' : 'Contact human support'}
+                label={openConversation ? 'Open support thread' : 'Contact human support'}
                 variant="secondary"
                 size="sm"
                 className="mt-6 self-start"
                 isLoading={isRequestingSupport}
-                onPress={() => void openHumanSupport()}
+                onPress={() => void openSupportThread()}
               />
             </AppCard>
 
             <AppSection eyebrow="Quick start" title="Prompt ideas" variant="compact" className="mt-0">
-              <View className="flex-row flex-wrap gap-2">
-                {['Explain my recommendation', 'Ask admin about pickup', 'Need help with payment'].map((item) => (
-                  <Pressable
-                    key={item}
-                    accessibilityRole="button"
-                    accessibilityLabel={item}
-                    accessibilityHint="Open the latest booking support conversation"
-                    accessibilityState={{ disabled: playerConversations.length === 0 }}
-                    disabled={playerConversations.length === 0}
-                    onPress={() => {
-                      const latest = playerConversations[0];
-                      if (latest) {
-                        router.push(`/player/chat/${latest.id}`);
-                      }
-                    }}
+              <AppCard variant="subtle" padding="none">
+                {quickPrompts.map((prompt, index) => (
+                  <View
+                    key={prompt.label}
+                    className={index < quickPrompts.length - 1 ? 'border-b border-separator' : ''}
                   >
-                    <AppCard variant="subtle" padding="sm">
-                      <View className="flex-row items-center gap-2">
-                        <Sparkles size={14} color="#2F64B6" />
-                        <HeroText className="text-sm font-medium text-neutral-700">{item}</HeroText>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={prompt.label}
+                      accessibilityHint="Open support with this message ready to review"
+                      disabled={isRequestingSupport}
+                      onPress={() => void openSupportThread(prompt.message)}
+                      className="min-h-12 flex-row items-center gap-3 px-3 py-2"
+                    >
+                      <View className="h-8 w-8 items-center justify-center rounded-full bg-primary-50">
+                        <MessageCircleMore size={16} color="#2F64B6" />
                       </View>
-                    </AppCard>
-                  </Pressable>
+                      <HeroText className="flex-1 text-sm font-semibold text-neutral-800">
+                        {prompt.label}
+                      </HeroText>
+                      <ChevronRight size={18} color="#94A3B8" />
+                    </Pressable>
+                  </View>
                 ))}
-              </View>
+              </AppCard>
             </AppSection>
           </View>
         }

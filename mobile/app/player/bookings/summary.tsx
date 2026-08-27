@@ -115,8 +115,9 @@ export default function BookingSummaryScreen() {
 
       upsertLiveBooking(mappedBooking);
       clearBookingDraft();
+      const paymentPath = `/player/payments/${booking.id}`;
       router.replace(
-        `/player/bookings/${booking.id}${photoUploadFailed ? '?photoUpload=failed' : ''}`,
+        photoUploadFailed ? `${paymentPath}?photoUpload=failed` : paymentPath,
       );
     } catch (error) {
       setSubmitError(
@@ -231,9 +232,7 @@ export default function BookingSummaryScreen() {
         <AppCard variant="subtle" padding="md">
           <HeroText className="text-sm leading-6 text-neutral-600">
             {token
-              ? stringFee != null
-                ? 'The booking is saved to the live backend. Continue from its booking detail to submit payment.'
-                : 'The booking is saved to the live backend. Payment unlocks after the shop confirms the final string quote.'
+              ? 'The booking is saved to the live backend first. Next, choose wallet, QR transfer, or cash payment.'
               : 'Sign in to confirm this booking with the shop.'}
           </HeroText>
         </AppCard>
@@ -249,7 +248,7 @@ export default function BookingSummaryScreen() {
 
       <View className="mb-12 mt-8 gap-3">
         <AppButton
-          label="Confirm booking"
+          label="Confirm booking & pay"
           size="lg"
           onPress={handleProceed}
           isLoading={isSubmitting}

@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
-import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { Alert, Platform, Switch, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { View } from 'react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { AppButton } from '../../components/ui/AppButton';
@@ -14,41 +14,15 @@ import {
   useBackendAccessToken,
   useCurrentUser,
 } from '../../store/appStore';
-import type { BackendPrivacySettings } from '../../types/backend';
-
-const PRIVACY_LABELS: Record<keyof BackendPrivacySettings, string> = {
-  analytics_consent: 'Anonymous usage analytics',
-  personalization_consent: 'Profile personalization',
-  marketing_consent: 'Marketing messages',
-};
-
 export default function PlayerSettingsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
   const logout = useAppStore((state) => state.logout);
-  const [privacy, setPrivacy] = useState<BackendPrivacySettings | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [deletionReason, setDeletionReason] = useState('');
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!token) return;
-      void backendApi
-        .fetchPrivacySettings(token)
-        .then(setPrivacy)
-        .catch((error: unknown) =>
-          setMessage(
-            error instanceof BackendApiError
-              ? error.message
-              : 'Failed to load privacy settings.',
-          ),
-        );
-    }, [token]),
-  );
 
   if (!user || user.role !== 'player') {
     return null;
@@ -76,70 +50,11 @@ export default function PlayerSettingsScreen() {
     }
   };
 
-  const togglePrivacy = async (key: keyof BackendPrivacySettings) => {
-    if (!token || !privacy) return;
-    const previous = privacy;
-    const next = { ...privacy, [key]: !privacy[key] };
-    setPrivacy(next);
-    setMessage(null);
-    try {
-      setPrivacy(await backendApi.updatePrivacySettings(token, next));
-    } catch (error) {
-      setPrivacy(previous);
-      setMessage(
-        error instanceof BackendApiError
-          ? error.message
-          : 'Failed to save privacy settings.',
-      );
-    }
-  };
-
-  const submitDeletionRequest = () => {
-    if (!token) return;
-    const submit = () => {
-      setBusyAction('delete');
-      setMessage(null);
-      void backendApi
-        .requestAccountDeletion(token, deletionReason)
-        .then(() => setMessage('Account deletion request submitted for review.'))
-        .catch((error: unknown) =>
-          setMessage(
-            error instanceof BackendApiError
-              ? error.message
-              : 'Failed to submit deletion request.',
-          ),
-        )
-        .finally(() => setBusyAction(null));
-    };
-    if (Platform.OS === 'web') {
-      if (
-        globalThis.confirm?.(
-          'Request account deletion?\n\nThe admin will review this request. Your account is not deleted immediately.',
-        )
-      ) {
-        submit();
-      }
-      return;
-    }
-    Alert.alert(
-      'Request account deletion?',
-      'The admin will review this request. Your account is not deleted immediately.',
-      [
-        { text: 'Keep account', style: 'cancel' },
-        {
-          text: 'Submit request',
-          style: 'destructive',
-          onPress: submit,
-        },
-      ],
-    );
-  };
-
   return (
     <AppScreen
       headerVariant="flow"
       title="Settings"
-      subtitle="Manage your account, privacy, notifications, and app session."
+      subtitle="Keep your password current and manage your session."
       showBackButton
       onBackPress={() => router.back()}
     >
@@ -175,58 +90,6 @@ export default function PlayerSettingsScreen() {
             onPress={() => void changePassword()}
           />
         </View>
-      </AppSection>
-
-      <AppSection eyebrow="Notifications" title="Delivery preferences">
-        <AppButton
-          label="Open notification preferences"
-          variant="outline"
-          onPress={() => router.push('/player/notifications/preferences')}
-        />
-      </AppSection>
-
-      <AppSection eyebrow="Privacy" title="Data choices">
-        <View className="gap-3">
-          {privacy
-            ? Object.entries(privacy).map(([rawKey, enabled]) => {
-                const key = rawKey as keyof BackendPrivacySettings;
-                return (
-                  <AppCard
-                    key={key}
-                    variant={enabled ? 'highlighted' : 'elevated'}
-                    padding="md"
-                  >
-                    <View className="flex-row items-center justify-between gap-3">
-                      <HeroText className="flex-1 text-sm font-semibold text-neutral-900">
-                        {PRIVACY_LABELS[key]}
-                      </HeroText>
-                      <Switch
-                        value={enabled}
-                        onValueChange={() => void togglePrivacy(key)}
-                        accessibilityLabel={PRIVACY_LABELS[key]}
-                      />
-                    </View>
-                  </AppCard>
-                );
-              })
-            : null}
-        </View>
-      </AppSection>
-
-      <AppSection eyebrow="Account removal" title="Delete account request">
-        <AppInput
-          label="Reason (optional)"
-          value={deletionReason}
-          onChangeText={setDeletionReason}
-          multiline
-          inputClassName="min-h-20"
-        />
-        <AppButton
-          label="Request account deletion"
-          variant="outline"
-          isLoading={busyAction === 'delete'}
-          onPress={submitDeletionRequest}
-        />
       </AppSection>
 
       {message ? (

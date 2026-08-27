@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View, Pressable } from 'react-native';
+import { Platform, ScrollView, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HeroText } from '../ui/heroui';
 import { AppButton } from '../ui/AppButton';
@@ -18,6 +18,14 @@ const categoryLabels = {
   durable: 'Durable',
 } as const;
 
+type PointerDragEvent = {
+  nativeEvent: {
+    clientX?: number;
+    pageX?: number;
+  };
+  preventDefault?: () => void;
+};
+
 export function TrendingStrings() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -29,16 +37,57 @@ export function TrendingStrings() {
     .map((id) => strings.find((item) => item.id === id))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
   const trending = configuredTrending.slice(0, 5);
+  const scrollRef = React.useRef<ScrollView>(null);
+  const scrollOffset = React.useRef(0);
+  const dragStart = React.useRef<{ pointerX: number; scrollX: number } | null>(null);
+  const didDrag = React.useRef(false);
   const isHydratingConfiguredTrending =
     hasHydrated &&
     user?.role === 'player' &&
     configuredTrendingIds.length > 0 &&
     strings.length === 0;
 
+  const getPointerX = (event: PointerDragEvent) =>
+    event.nativeEvent.clientX ?? event.nativeEvent.pageX ?? null;
+
+  const handlePointerDown = (event: PointerDragEvent) => {
+    if (Platform.OS !== 'web') return;
+    const pointerX = getPointerX(event);
+    if (pointerX == null) return;
+    didDrag.current = false;
+    dragStart.current = { pointerX, scrollX: scrollOffset.current };
+  };
+
+  const handlePointerMove = (event: PointerDragEvent) => {
+    if (Platform.OS !== 'web' || !dragStart.current) return;
+    const pointerX = getPointerX(event);
+    if (pointerX == null) return;
+    const deltaX = pointerX - dragStart.current.pointerX;
+    if (!didDrag.current && Math.abs(deltaX) < 6) return;
+    didDrag.current = true;
+    event.preventDefault?.();
+    scrollRef.current?.scrollTo({
+      x: Math.max(0, dragStart.current.scrollX - deltaX),
+      animated: false,
+    });
+  };
+
+  const handlePointerEnd = () => {
+    dragStart.current = null;
+  };
+
+  const handleCardPress = (catalogId: string) => {
+    if (didDrag.current) {
+      didDrag.current = false;
+      return;
+    }
+    router.push(`/player/strings/${catalogId}`);
+  };
+
   if (isHydratingConfiguredTrending) {
     return (
       <View className="mt-1 px-4">
-        <View className="rounded-[14px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
+        <View className="rounded-[14px] border border-[#DCE6F7] bg-[#F8FBFF] px-3.5 py-3">
           <HeroText className="text-[14px] font-semibold text-slate-900">
             Loading featured strings...
           </HeroText>
@@ -53,7 +102,7 @@ export function TrendingStrings() {
   if (trending.length === 0) {
     return (
       <View className="mt-1 px-4">
-        <View className="rounded-[14px] border border-[#DCE6F7] bg-[#F8FBFF] px-4 py-4">
+        <View className="rounded-[14px] border border-[#DCE6F7] bg-[#F8FBFF] px-3.5 py-3">
           <HeroText className="text-[14px] font-semibold text-slate-900">
             Featured strings are being refreshed
           </HeroText>
@@ -75,7 +124,15 @@ export function TrendingStrings() {
   return (
     <View className="mt-1">
       <ScrollView
+        ref={scrollRef}
         horizontal
+        onScroll={(event) => {
+          scrollOffset.current = event.nativeEvent.contentOffset?.x ?? scrollOffset.current;
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -93,11 +150,11 @@ export function TrendingStrings() {
               accessibilityRole="button"
               accessibilityLabel={`${item.brand} ${item.model}, ${item.gauge}`}
               accessibilityHint="Open string details"
-              onPress={() => router.push(`/player/strings/${item.id}`)}
+              onPress={() => handleCardPress(item.id)}
               className="w-[152px] active:opacity-80"
             >
-              <View className="overflow-hidden rounded-[14px] border border-[#DCE6F7] bg-white px-3 py-3 shadow-sm">
-                <View className={`rounded-[12px] border px-3 py-3 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E8EEF8] bg-[#F8FBFF]'}`}>
+              <View className="overflow-hidden rounded-[14px] border border-[#DCE6F7] bg-white px-2.5 py-2.5 shadow-sm">
+                <View className={`rounded-[12px] border px-2.5 py-2.5 ${isTopPick ? 'border-primary-100 bg-primary-50' : 'border-[#E8EEF8] bg-[#F8FBFF]'}`}>
                   <View className="flex-row items-start justify-between">
                     <View className={`rounded-full px-2.5 py-1 ${isTopPick ? 'bg-accent-100/80' : 'bg-white/85'}`}>
                       <HeroText className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
@@ -111,7 +168,7 @@ export function TrendingStrings() {
                     </View>
                   </View>
 
-                  <View className="mt-4 h-[92px] overflow-hidden rounded-[14px] bg-white">
+                  <View className="mt-3 h-[80px] overflow-hidden rounded-[14px] bg-white">
                     <StringProductImage
                       imageUrl={item.imageUrl}
                       brand={item.brand}
@@ -125,7 +182,7 @@ export function TrendingStrings() {
                   </View>
                 </View>
 
-                <View className="mt-3 min-h-[70px] gap-1">
+                <View className="mt-2.5 min-h-[64px] gap-1">
                   <HeroText
                     className="text-[14px] font-semibold leading-[18px] tracking-normal text-slate-900"
                     numberOfLines={2}

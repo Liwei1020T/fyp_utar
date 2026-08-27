@@ -1,0 +1,14 @@
+FROM node:24-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY . .
+
+ENV EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api
+
+EXPOSE 8081
+
+CMD ["npm", "run", "web", "--", "--host", "lan"]

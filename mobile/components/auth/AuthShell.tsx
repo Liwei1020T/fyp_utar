@@ -22,17 +22,17 @@ export function AuthShell({
   return (
     <AppScreen
       tone="auth"
-      contentContainerClassName="justify-center py-8"
+      contentContainerClassName="justify-center py-6"
     >
       <View className="w-full self-center" style={{ width: '100%', alignSelf: 'center', maxWidth: 430 }}>
         <View
-          className="mb-8 flex-row items-center justify-between gap-4 overflow-hidden rounded-[28px] border border-[#163B7A] bg-app-hero px-5 py-5 shadow-float"
+          className="mb-6 flex-row items-center justify-between gap-3 overflow-hidden rounded-2xl border border-[#163B7A] bg-app-hero px-4 py-4 shadow-float"
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: 16,
-            marginBottom: 32,
+            gap: 12,
+            marginBottom: 24,
           }}
         >
           <Image
@@ -66,7 +66,7 @@ export function AuthShell({
         <View className="mb-6" style={{ marginBottom: 24 }}>
           <HeroText
             accessibilityRole="header"
-            className="text-[34px] font-bold leading-[39px] tracking-tight text-[#1D1D1F]"
+            className="text-[30px] font-bold leading-[35px] tracking-tight text-[#1D1D1F]"
           >
             {title}
           </HeroText>

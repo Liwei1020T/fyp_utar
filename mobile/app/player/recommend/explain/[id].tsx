@@ -98,7 +98,7 @@ function MatchReasonCard({
   Icon: LucideIcon;
 }) {
   return (
-    <View className="flex-row items-start gap-3 rounded-[22px] border border-[#E7EEF8] bg-white px-4 py-3.5">
+    <View className="flex-row items-start gap-2.5 rounded-[14px] border border-[#E7EEF8] bg-white px-3 py-3">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-50">
         <Icon size={18} color="#2F64B6" strokeWidth={2.3} />
       </View>
@@ -139,7 +139,7 @@ function ScoreBlock({
   };
 
   return (
-    <View className="min-w-[145px] flex-1 rounded-[22px] border border-[#E5EDF7] bg-white px-4 py-4">
+    <View className="min-w-[145px] flex-1 rounded-[14px] border border-[#E5EDF7] bg-white px-3 py-3">
       <View className="flex-row items-start justify-between gap-2">
         <HeroText className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-400">
           {label}
@@ -150,7 +150,7 @@ function ScoreBlock({
           </HeroText>
         </View>
       </View>
-      <HeroText className="mt-3 text-[13px] leading-5 text-neutral-500">
+      <HeroText className="mt-2 text-[13px] leading-5 text-neutral-500">
         {note}
       </HeroText>
     </View>
@@ -169,7 +169,7 @@ function ReviewStrength({
   const percent = clampPercent(score);
 
   return (
-    <View className="rounded-[20px] border border-[#E6EEF8] bg-white px-4 py-3.5">
+    <View className="rounded-[14px] border border-[#E6EEF8] bg-white px-3 py-3">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
           <HeroText className="text-sm font-bold tracking-tight text-neutral-950">
@@ -184,7 +184,7 @@ function ReviewStrength({
         ) : null}
       </View>
       {score != null ? (
-        <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-primary-50">
+        <View className="mt-2 h-1.5 overflow-hidden rounded-full bg-primary-50">
           <View className="h-full rounded-full bg-primary-600" style={{ width: `${percent}%` }} />
         </View>
       ) : null}
@@ -445,48 +445,48 @@ export default function RecommendationExplanationScreen() {
       subtitle="A grounded explanation of fit, evidence, and the main compromise."
       showBackButton
       onBackPress={() => router.back()}
-      contentContainerClassName="pt-3"
+        contentContainerClassName="pt-2"
     >
       <AppCard variant="dark" className="rounded-[30px]" padding="lg">
-        <View className="flex-row items-start justify-between gap-4">
+        <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
             <HeroText className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-100">
               {stringItem?.brand ?? detailResult?.brand ?? 'StringSense'}
             </HeroText>
-            <HeroText className="mt-2 text-[29px] font-black leading-[34px] tracking-tight text-white">
+            <HeroText className="mt-1.5 text-[25px] font-black leading-[30px] tracking-tight text-white">
               {stringItem?.model ?? detailResult?.model_name ?? detailResult?.string_name}
             </HeroText>
           </View>
           {matchScore != null ? (
-            <View className="min-w-[74px] rounded-[20px] bg-white/14 px-3 py-2.5">
+            <View className="min-w-[68px] rounded-[14px] bg-white/14 px-2.5 py-2">
               <HeroText className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-100">
                 Score
               </HeroText>
-              <HeroText className="mt-1 text-2xl font-black text-white">{matchScore}%</HeroText>
+              <HeroText className="mt-1 text-xl font-black text-white">{matchScore}%</HeroText>
             </View>
           ) : null}
         </View>
 
-        <View className="mt-4 flex-row flex-wrap gap-2">
+        <View className="mt-3 flex-row flex-wrap gap-1.5">
           <AppChip label={rationale?.primary_fit_angle ?? liveResult?.fitAngle ?? 'Fit angle unavailable'} variant="accent" />
           <AppChip label={suggestedTensionRange} variant="info" />
           <AppChip label={topPriorityLabels[0] ?? 'No saved priority'} variant="secondary" />
         </View>
 
-        <HeroText className="mt-4 text-sm leading-6 text-primary-100">
+        <HeroText className="mt-3 text-sm leading-5 text-primary-100">
           {recommendationSummary}
         </HeroText>
 
-        <View className="mt-4 rounded-[22px] border border-white/10 bg-white/10 px-4 py-3.5">
+        <View className="mt-3 rounded-[14px] border border-white/10 bg-white/10 px-3 py-3">
           <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-100">
             Best reason
           </HeroText>
-          <HeroText className="mt-1.5 text-base font-bold leading-6 text-white">
+          <HeroText className="mt-1 text-base font-bold leading-5 text-white">
             {bestReason}.
           </HeroText>
         </View>
 
-        <View className="mt-5 gap-3">
+        <View className="mt-4 gap-2.5">
           <AppButton
             label={canBook ? 'Book this string' : 'Currently out of stock'}
             className="border-white bg-white"
@@ -505,7 +505,7 @@ export default function RecommendationExplanationScreen() {
       </AppCard>
 
       {detailError ? (
-        <View className="mt-4 rounded-[20px] border border-warning-100 bg-warning-50 px-4 py-3">
+          <View className="mt-3 rounded-[14px] border border-warning-100 bg-warning-50 px-3 py-2.5">
           <HeroText className="text-xs leading-5 text-warning-700">
             Fresh recommendation details are unavailable, so this page is using the latest saved result.
           </HeroText>
@@ -530,7 +530,7 @@ export default function RecommendationExplanationScreen() {
         )}
 
         {agentError && agentResponse ? (
-          <View className="mt-3 rounded-[18px] border border-warning-100 bg-warning-50 px-4 py-3">
+          <View className="mt-3 rounded-[14px] border border-warning-100 bg-warning-50 px-3 py-2.5">
             <HeroText className="text-xs leading-5 text-warning-700">{agentError}</HeroText>
           </View>
         ) : null}
@@ -602,7 +602,7 @@ export default function RecommendationExplanationScreen() {
 
       <AppSection title="Review support" variant="compact">
         <View className="gap-3">
-          <View className="rounded-[24px] border border-primary-100 bg-primary-50 px-4 py-4">
+            <View className="rounded-[14px] border border-primary-100 bg-primary-50 px-3 py-3">
             <View className="flex-row items-start gap-3">
               <View className="h-9 w-9 items-center justify-center rounded-full bg-white">
                 <CheckCircle2 size={18} color="#2F64B6" strokeWidth={2.3} />
@@ -634,7 +634,7 @@ export default function RecommendationExplanationScreen() {
       </AppSection>
 
       <AppSection title="Trade-off" variant="compact">
-        <View className="rounded-[24px] border border-warning-100 bg-warning-50 px-4 py-4">
+        <View className="rounded-[14px] border border-warning-100 bg-warning-50 px-3 py-3">
           <View className="flex-row items-start gap-3">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
               <AlertTriangle size={19} color="#B67D21" strokeWidth={2.4} />
@@ -657,7 +657,7 @@ export default function RecommendationExplanationScreen() {
       </AppSection>
 
       <AppSection title="Next step" variant="compact">
-        <View className="rounded-[26px] border border-[#E5EDF7] bg-white px-4 py-4">
+        <View className="rounded-[14px] border border-[#E5EDF7] bg-white px-3 py-3">
           <View className="flex-row items-start gap-3">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50">
               <Target size={19} color="#2F64B6" strokeWidth={2.4} />
@@ -669,7 +669,7 @@ export default function RecommendationExplanationScreen() {
             </View>
           </View>
 
-          <View className="mt-4 gap-3">
+          <View className="mt-3 gap-2.5">
             <AppButton
               label="Book this string"
               leadingIcon={<WalletCards size={17} color="#FFFFFF" strokeWidth={2.4} />}

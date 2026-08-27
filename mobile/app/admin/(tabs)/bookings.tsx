@@ -115,8 +115,8 @@ function AdminQueueCard({
   return (
     <View className="mb-2">
       <AppCard variant="elevated" padding="sm" onPress={onPress}>
-        <View className="gap-2">
-          <View className="flex-row items-start justify-between gap-3">
+        <View className="gap-1.5">
+          <View className="flex-row items-start justify-between gap-2.5">
             <View className="flex-1">
               <HeroText className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
                 Order {orderCode}
@@ -131,7 +131,7 @@ function AdminQueueCard({
           </View>
 
           <View className="gap-1.5">
-            <HeroText className="text-[17px] font-bold tracking-tight text-neutral-950">
+            <HeroText className="text-[16px] font-bold tracking-tight text-neutral-950">
               {booking.racketBrand} {booking.racketModel}
             </HeroText>
             <HeroText className="text-[12px] font-medium leading-5 text-neutral-600">
@@ -151,7 +151,7 @@ function AdminQueueCard({
             </View>
           </View>
 
-          <View className="flex-row items-center gap-2 rounded-[10px] border border-[#D9E6F4] bg-[#F4F8FD] px-3 py-2">
+          <View className="flex-row items-center gap-2 rounded-[10px] border border-[#D9E6F4] bg-[#F4F8FD] px-2.5 py-1.5">
             <View className="flex-1 gap-0.5">
               <HeroText className="text-[11px] font-semibold text-primary-800">
                 {getAdminActionLabel(booking.status)}
@@ -277,7 +277,7 @@ function AdminBookingsContent({ user }: { user: AdminProfile }) {
         contentContainerStyle={{ paddingBottom: bottomContentInset, paddingTop: 2 }}
         ListHeaderComponent={
           <View className="gap-2 pb-3">
-            <AppCard variant="subtle" padding="none" contentClassName="px-3 py-2.5">
+            <AppCard variant="subtle" padding="none" contentClassName="px-2.5 py-2">
               <HeroText className="text-[12px] font-semibold leading-4 tracking-tight text-neutral-700">
                 Today: {todayCount} bookings · {inProgressCount} in progress · {readyCount} ready for collection
               </HeroText>

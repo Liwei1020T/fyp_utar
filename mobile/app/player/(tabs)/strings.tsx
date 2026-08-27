@@ -149,18 +149,41 @@ export default function StringsCatalogScreen() {
 
   const renderHeaderComponent = () => (
     <View className="pb-3">
-      <AppSelect
-        label="Catalog view"
-        value={displayMode}
-        options={modeOptions.map((option) => ({
-          id: option.id,
-          label: option.label,
-        }))}
-        onChange={(id) => setDisplayMode(id as DisplayMode)}
-        className="mb-4"
-      />
+      <View className="mb-2 flex-row items-center justify-between gap-2">
+        <HeroText className="ml-1 text-[12px] font-semibold text-slate-500">
+          Catalog view
+        </HeroText>
+        <View className="flex-row rounded-[10px] border border-neutral-200 bg-white p-0.5">
+          {modeOptions.map((option) => {
+            const isActive = option.id === displayMode;
 
-      <View className="flex-row items-center gap-3 mb-5">
+            return (
+              <Pressable
+                key={option.id}
+                accessibilityRole="tab"
+                accessibilityLabel={`Catalog view: ${option.label}`}
+                accessibilityState={{ selected: isActive }}
+                onPress={() => setDisplayMode(option.id)}
+                className={cn(
+                  'min-h-9 rounded-[8px] px-3 items-center justify-center',
+                  isActive ? 'bg-primary-600' : 'bg-transparent',
+                )}
+              >
+                <HeroText
+                  className={cn(
+                    'text-[11px] font-semibold',
+                    isActive ? 'text-white' : 'text-slate-500',
+                  )}
+                >
+                  {option.label === 'All Strings' ? 'All strings' : 'By brand'}
+                </HeroText>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View className="mb-2 flex-row items-center gap-2">
         <AppInput
           variant="minimal"
           accessibilityLabel="Search string catalog"
@@ -184,7 +207,7 @@ export default function StringsCatalogScreen() {
       </View>
 
       {showFilters && (
-        <View className="mb-4 rounded-[14px] border border-neutral-100 bg-white/40 p-3">
+        <View className="mb-3 rounded-[14px] border border-neutral-100 bg-white/40 p-2.5">
           <AppSection eyebrow="Collection" title="Category" variant="compact" className="mt-0">
             <AppSelect
               label="String category"
@@ -197,7 +220,7 @@ export default function StringsCatalogScreen() {
             />
           </AppSection>
 
-          <View className="h-px bg-neutral-100 my-4" />
+          <View className="my-3 h-px bg-neutral-100" />
 
           <AppSection eyebrow="Price" title="Price range" variant="compact" className="mt-0">
             <AppSelect
@@ -213,7 +236,7 @@ export default function StringsCatalogScreen() {
             />
           </AppSection>
 
-          <View className="h-px bg-neutral-100 my-4" />
+          <View className="my-3 h-px bg-neutral-100" />
 
           <AppSection eyebrow="Specification" title="Gauge" variant="compact" className="mt-0">
             <AppSelect
@@ -228,7 +251,7 @@ export default function StringsCatalogScreen() {
             />
           </AppSection>
 
-          <View className="h-px bg-neutral-100 my-4" />
+          <View className="my-3 h-px bg-neutral-100" />
 
           <AppSection eyebrow="Strength" title="Feature score 8+" variant="compact" className="mt-0">
             <AppSelect
@@ -247,7 +270,7 @@ export default function StringsCatalogScreen() {
             />
           </AppSection>
 
-          <View className="h-px bg-neutral-100 my-4" />
+          <View className="my-3 h-px bg-neutral-100" />
 
           {displayMode === 'all' && (
             <AppSection eyebrow="Sort" title="Sort by" variant="compact" className="mt-0">
@@ -283,29 +306,29 @@ export default function StringsCatalogScreen() {
 
     return (
       <AppCard 
-        className="mb-2 shadow-none" 
+        className="mb-1.5 shadow-none"
         variant="default" 
         padding="sm"
       >
-        <View className="flex-row items-center gap-3">
+        <View className="flex-row items-center gap-2">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${item.brand} ${item.model}, ${item.gauge}, ${formatLabel(item.category)}`}
             accessibilityHint="Open string details"
-            className="min-w-0 flex-1 flex-row items-center gap-3 rounded-lg"
+            className="min-w-0 flex-1 flex-row items-center gap-2 rounded-lg"
             onPress={() => router.push(`/player/strings/${item.id}`)}
           >
-            <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+            <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-[10px] border border-slate-100 bg-slate-50">
               <StringProductImage
                 imageUrl={item.imageUrl}
                 brand={item.brand}
                 model={item.model}
                 gauge={item.gauge}
                 className="h-full w-full"
-                fallbackClassName="h-12 w-9 rounded-xl border-[3px]"
-                fallbackTextClassName="px-2 text-[8px]"
-                fallbackGaugeClassName="mt-2 px-2 py-1"
-                resizeMode="cover"
+                fallbackClassName="h-11 w-8 rounded-xl border-[3px]"
+                fallbackTextClassName="px-1 text-[7px]"
+                fallbackGaugeClassName="mt-1 px-1.5 py-0.5"
+                resizeMode="contain"
               />
             </View>
 
@@ -313,7 +336,7 @@ export default function StringsCatalogScreen() {
               <HeroText className="text-[10px] font-bold uppercase tracking-wider text-primary-600">
                 {item.brand}
               </HeroText>
-              <HeroText className="text-[15px] font-bold leading-tight text-slate-900" numberOfLines={2}>
+              <HeroText className="text-[13px] font-bold leading-tight text-slate-900" numberOfLines={2}>
                 {item.model}
               </HeroText>
               <HeroText className="mt-0.5 text-[11px] font-bold text-slate-500">
@@ -326,7 +349,7 @@ export default function StringsCatalogScreen() {
             <ChevronRight size={16} color="#94A3B8" />
           </Pressable>
 
-          <View className="items-end gap-1.5">
+          <View className="items-end gap-1">
             <HeroText
               className={cn(
                 'text-[10px] font-bold',
@@ -341,12 +364,12 @@ export default function StringsCatalogScreen() {
               accessibilityState={{ selected: isSelected }}
               onPress={() => toggleCompareSelection(item.id)}
               className={cn(
-                "min-h-11 min-w-[76px] flex-row items-center justify-center gap-1 rounded-full border px-2.5 py-1",
+                "min-h-10 min-w-[72px] flex-row items-center justify-center gap-1 rounded-full border px-2 py-1",
                 isSelected ? "bg-primary-600 border-primary-600" : "bg-white border-slate-200"
               )}
             >
               {isSelected ? <Check size={12} color="white" strokeWidth={3} /> : <Plus size={12} color="#64748B" strokeWidth={3} />}
-              <HeroText className={cn("text-[11px] font-bold", isSelected ? "text-white" : "text-slate-600")}>
+              <HeroText className={cn("text-[10px] font-bold leading-4", isSelected ? "text-white" : "text-slate-600")}>
                 {isSelected ? 'Compared' : 'Compare'}
               </HeroText>
             </Pressable>
@@ -357,7 +380,7 @@ export default function StringsCatalogScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#F8FAFC]">
+    <View className="flex-1 bg-app-page">
       <AppScreen
         headerVariant="primary"
         title="String catalog"
@@ -371,7 +394,10 @@ export default function StringsCatalogScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           scrollIndicatorInsets={{ bottom: bottomContentInset + 60 }}
-          contentContainerStyle={{ paddingBottom: bottomContentInset + 48, paddingTop: 4 }}
+          contentContainerStyle={{
+            paddingBottom: bottomContentInset + (compareSelection.length >= 2 ? 72 : 24),
+            paddingTop: 4,
+          }}
           ListHeaderComponent={renderHeaderComponent}
           ListEmptyComponent={
             <AppCard variant="subtle" padding="lg" className="mt-2">
@@ -379,7 +405,7 @@ export default function StringsCatalogScreen() {
                 <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-50">
                   <SearchX size={20} color="#2563EB" />
                 </View>
-                <HeroText className="mt-4 text-center text-lg font-bold text-slate-900">
+                <HeroText className="mt-3 text-center text-lg font-bold text-slate-900">
                   {hasActiveFilters ? 'No strings match' : 'No strings available'}
                 </HeroText>
                 <HeroText className="mt-1 max-w-[320px] text-center text-sm leading-5 text-slate-600">
@@ -392,7 +418,7 @@ export default function StringsCatalogScreen() {
                     label="Clear filters"
                     variant="outline"
                     size="sm"
-                    className="mt-4"
+                    className="mt-3"
                     onPress={clearFilters}
                   />
                 ) : null}
@@ -403,8 +429,8 @@ export default function StringsCatalogScreen() {
             if (isBrandGroup(item)) {
               const group = item;
               return (
-                <View className="mb-4">
-                  <View className="flex-row items-center justify-between mb-1.5 px-1">
+                <View className="mb-3">
+                  <View className="mb-1.5 flex-row items-center justify-between px-1">
                     <HeroText className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
                       {group.name}
                     </HeroText>

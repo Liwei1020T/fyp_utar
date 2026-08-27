@@ -96,8 +96,8 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
         scrollIndicatorInsets={{ bottom: bottomContentInset }}
         contentContainerStyle={{ paddingBottom: bottomContentInset }}
         ListHeaderComponent={
-          <View className="gap-3 pb-4">
-            <View className="flex-row items-center gap-2 rounded-2xl border border-secondary-100 bg-secondary-50 px-4 py-2">
+          <View className="gap-2 pb-3">
+            <View className="flex-row items-center gap-2 rounded-[14px] border border-secondary-100 bg-secondary-50 px-3 py-1.5">
               <Info size={14} color="#2F64B6" />
               <HeroText className="text-[11px] font-semibold text-primary-900">
                 {activeCount} active bookings • {readyCount} ready for collection
@@ -137,11 +137,16 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
               stringLabel={stringItem ? `${stringItem.brand} ${stringItem.model}` : 'Selected string'}
               adminLabel={adminLabel}
               onPress={() => router.push(`/player/bookings/${item.id}`)}
+              onNextStepPress={
+                item.status === 'confirmed' || item.status === 'awaiting_dropoff'
+                  ? () => router.push(`/player/check-in?bookingId=${item.id}`)
+                  : undefined
+              }
             />
           );
         }}
         ListEmptyComponent={
-          <AppCard variant="subtle" className="mt-4 items-center" padding="lg">
+            <AppCard variant="subtle" className="mt-3 items-center" padding="lg">
             <HeroText className="text-base font-semibold text-neutral-800">
               {hasActiveFilters ? 'No bookings match these filters' : 'No bookings yet'}
             </HeroText>
@@ -154,7 +159,7 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
               <AppButton
                 label="Clear filters"
                 variant="outline"
-                className="mt-5"
+                className="mt-4"
                 onPress={() => {
                   setFilter('all');
                   setSearch('');
@@ -163,7 +168,7 @@ function BookingsListContent({ user }: { user: PlayerProfile }) {
             ) : (
               <AppButton
                 label="Start a booking"
-                className="mt-5"
+                className="mt-4"
                 onPress={() => router.push('/player/bookings/new')}
               />
             )}

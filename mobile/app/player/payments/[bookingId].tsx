@@ -54,7 +54,10 @@ const paymentOptions: {
 ];
 
 export default function PaymentScreen() {
-  const params = useLocalSearchParams<{ bookingId?: string }>();
+  const params = useLocalSearchParams<{
+    bookingId?: string;
+    photoUpload?: string;
+  }>();
   const router = useRouter();
   const user = useCurrentUser();
   const token = useBackendAccessToken();
@@ -73,6 +76,7 @@ export default function PaymentScreen() {
   const [quote, setQuote] = useState<BackendBookingPaymentQuote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [quoteRefreshKey, setQuoteRefreshKey] = useState(0);
+  const showPhotoUploadWarning = params.photoUpload === 'failed';
 
   const booking = bookings.find((item) => item.id === params.bookingId);
   const activeString = booking
@@ -238,8 +242,15 @@ export default function PaymentScreen() {
       title="Payment"
       subtitle="Pay by QR transfer, cash, or wallet balance."
       showBackButton
-      onBackPress={() => router.back()}
+      onBackPress={() => router.replace(`/player/bookings/${booking.id}`)}
     >
+      {showPhotoUploadWarning ? (
+        <AppCard variant="subtle" className="border border-warning-100" padding="md">
+          <HeroText className="text-sm leading-6 text-warning-700">
+            Booking created successfully, but the optional racket photo could not be uploaded. You can continue with payment and add it later if needed.
+          </HeroText>
+        </AppCard>
+      ) : null}
       <AppCard variant="dark" className="rounded-[32px]" padding="lg">
         <HeroText className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-100">
           Payment summary
@@ -323,7 +334,7 @@ export default function PaymentScreen() {
           label="Back to booking"
           variant="outline"
           size="lg"
-          onPress={() => router.back()}
+          onPress={() => router.replace(`/player/bookings/${booking.id}`)}
         />
       </View>
     </AppScreen>

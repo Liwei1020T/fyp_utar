@@ -99,13 +99,13 @@ function SearchField({
   return (
     <View
       className={cn(
-        'flex-1 flex-row items-center gap-2.5 rounded-[12px] border bg-white px-4',
+        'flex-1 flex-row items-center gap-2 rounded-[10px] border bg-white px-3.5',
         isFocused ? 'border-primary-600' : 'border-[#D2D2D7]',
       )}
-      style={{ height: 52 }}
+      style={{ height: 48 }}
     >
       <Search
-        size={20}
+        size={18}
         color={isFocused ? appChromeColors.primary : 'rgba(29,29,31,0.48)'}
         strokeWidth={2}
       />
@@ -147,7 +147,7 @@ function ToolbarButton({
       accessibilityState={{ selected: isActive }}
       onPress={onPress}
       className={cn(
-        'flex-row items-center justify-center gap-1.5 rounded-[10px] border px-3.5',
+        'flex-row items-center justify-center gap-1.5 rounded-[10px] border px-3',
         isActive ? 'border-primary-100 bg-primary-50' : 'border-[#D8E2EE] bg-white',
         className,
       )}
@@ -259,7 +259,7 @@ export default function AdminInventoryScreen() {
         ListHeaderComponent={
           <View className="pb-2">
             <HeroText className="mb-3 text-[13px] font-semibold tracking-tight text-neutral-700">
-              {summary.itemCount} items · {summary.lowStockCount} low stock · {summary.pricePendingCount} price pending
+              {summary.itemCount} items · {summary.lowStockCount} low stock · {summary.pricePendingCount} pending
             </HeroText>
 
             <View className="mb-3 flex-row gap-2">
@@ -303,7 +303,7 @@ export default function AdminInventoryScreen() {
             </View>
 
             {showAdvancedFilters ? (
-              <View className="mb-4 rounded-[14px] border border-[#D8E2EE] bg-white px-4 py-4">
+              <View className="mb-3 rounded-[14px] border border-[#D8E2EE] bg-white px-3.5 py-3">
                 <HeroText className="text-[12px] font-bold uppercase tracking-[0.18em] text-primary-700">
                   Filters
                 </HeroText>
@@ -338,7 +338,7 @@ export default function AdminInventoryScreen() {
                 ))}
               </View>
             ) : (
-              <View className="mb-3 rounded-[22px] border border-[#D8E2EE] bg-white px-4 py-4">
+              <View className="mb-3 rounded-[14px] border border-[#D8E2EE] bg-white px-3.5 py-3">
                 <HeroText className="text-[14px] font-semibold text-neutral-900">
                   No urgent stock or pricing issues in this view.
                 </HeroText>
@@ -355,7 +355,7 @@ export default function AdminInventoryScreen() {
           </View>
         }
         ListEmptyComponent={
-          <View className="rounded-[22px] border border-[#D8E2EE] bg-white px-4 py-4">
+          <View className="rounded-[14px] border border-[#D8E2EE] bg-white px-3.5 py-3">
             <HeroText className="text-[14px] font-semibold text-neutral-900">
               No inventory matches these filters.
             </HeroText>
@@ -380,8 +380,8 @@ export default function AdminInventoryScreen() {
 
 const styles = StyleSheet.create({
   toolbarButton: {
-    height: 52,
-    minWidth: 104,
+    height: 48,
+    minWidth: 96,
   },
   pressed: {
     opacity: 0.94,
