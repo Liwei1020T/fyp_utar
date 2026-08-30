@@ -134,7 +134,7 @@ class StringItem:
     original_series: str | None
     original_material: str | None
     original_color: str | None
-    community_rating: float | None
+    feedback_rating: float | None
     want_count: int
     used_count: int
     review_count: int

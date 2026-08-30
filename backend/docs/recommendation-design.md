@@ -1,12 +1,12 @@
-# Recommendation Design (FYP1)
+# Recommendation Design (Current Runtime)
 
 ## 1. Scope
 
 This document describes the current recommendation runtime in `backend/app/domain/recommendation/scoring.py`.
 
-Algorithm version:
+Persisted algorithm identifier:
 
-- `fyp1_similarity_preferences_community_racket_cf_v11`
+- `fyp1_weighted_preferences_feedback_racket_cf_v13`
 
 Design style:
 
@@ -27,9 +27,9 @@ users on the exact normalized racket model. Sparse cases preserve the v10 score.
 flowchart TD
     A[Client Request: preview/profile] --> B[GenerateRecommendationUseCase]
     B --> C[Load Owned Racket Context]
-    C --> D[Build Community Snapshot + CF Shadow]
+    C --> D[Build Feedback Snapshot + CF Shadow]
     D --> E[Load String Item + Official Performance + Matrix Entries]
-    E --> F[Fyp1ContentRecommendationScorer]
+    E --> F[ContentRecommendationScorer]
     F --> G[Per-Candidate Scoring]
     G --> H[Rank + Top N]
     H --> I[Persist Run + Log]
@@ -59,7 +59,7 @@ Note:
 - Matrix rows (`string_recommendation_matrix`) by `source_layer`, especially:
     - `nlp_review` (primary matrix source used by core-feature fusion)
     - `hybrid_derived` (used in auxiliary/support feature fallback)
-    - `community_signal` (optional auxiliary/support feature fallback)
+    - `feedback_signal` (catalog feedback-derived auxiliary/support feature fallback)
     - `catalog_structured` (metadata-oriented; generally not used directly in core content fusion)
 
 ### 3.3 Feature mapping note
@@ -135,25 +135,29 @@ Catalog review counts are not recommendation inputs.
 - Exact normalized racket-model evidence is preferred; global string evidence is
   the fallback. Influence is shrunk with `K=10` and capped at `0.30` per feature.
 - Completed bookings from similar users on the exact racket model produce a
-  tension-aware CF shadow score. Its runtime weight remains `0.0`.
+  tension-aware CF score. Its runtime weight remains `0.0` below three distinct
+  supporters and is otherwise dynamically shrunk and capped at `0.20`.
 - Snapshot/source hashes are stored in rationale and checked on cached reads.
 
 ### 4.4 PreferenceMatch calculation
 
-PreferenceMatch combines:
-
-- weighted shape similarity between user vector and item feature shape
-- top-priority feature alignment
-
-High-level composition:
+PreferenceMatch is the weighted absolute score across the nine effective item
+features. Feedback calibration is applied to those features before this step.
 
 $$
-\text{PreferenceMatch} = 0.75 \cdot \text{ShapeSimilarity} + 0.25 \cdot \text{TopAlignment}
+\text{PreferenceMatch} =
+\frac{\sum_i w_i \cdot \text{EffectiveFeatureScore}_i}{\sum_i w_i}
 $$
+
+This keeps the score on `0..1` while avoiding the high cosine similarity caused
+by comparing two positive, similarly shaped vectors.
 
 ## 5. Rule-Based Design
 
 RuleFit starts from baseline `0.55` and applies incremental deltas based on profile context and item behavior.
+
+An explicit gauge preference takes precedence over the gauge inferred from
+skill, tension, and playing frequency, so the same gauge is never scored twice.
 
 ### 5.1 Rule categories
 
@@ -249,7 +253,7 @@ For each result, scorer stores:
 - score breakdown (`preference_match`, `rule_fit`, descriptive `value_for_money`, optional `nlp_review_score`)
 - top reasons and rule events
 - feature evidence rows with official value, NLP value, fixed NLP contribution, and effective score
-- community scope, counts, bounded weight, and source/snapshot versions
+- feedback scope, counts, bounded weight, and source/snapshot versions
 - selected racket context and gated CF evidence with base/final score audit fields
 
 Persistence behavior by request type:
@@ -269,7 +273,23 @@ The current design is a hybrid recommender:
 - Rule-based enforces profile-aware domain constraints
 - Value for money is a first-class weighted preference
 - Official and NLP feature values use fixed, inspectable fusion
-- Eligible community feedback calibrates features within a fixed bound
+- Eligible feedback calibrates features within a fixed bound
 - Racket-conditioned CF is auditable and affects ranking only after its support gate
 
 This keeps recommendations explainable, tunable, and stable for FYP use while still allowing NLP-derived signals to improve personalization dynamically.
+
+## 11. FYP2 Architecture Conformance (2026-08-30)
+
+| Boundary | Review result | Evidence in the current runtime |
+| --- | --- | --- |
+| Single ranking owner | **Pass** | Mobile calls the recommendation API; `GenerateRecommendationUseCase` builds evidence and `ContentRecommendationScorer` owns scoring and Top-N ordering. The Agent explains or compares results but does not rank strings. |
+| Feedback learning loop | **Pass** | Completed feature-rating fields in `booking_feedback` are exposed as `FeedbackRow`, aggregated by `build_feedback_snapshot`, applied once by `_apply_feedback`, and recorded with policy/source versions. Eligible feature changes invalidate the active cache version; text-only feedback remains non-ranking. |
+| CF boundary | **Pass** | Completed interactions use exact canonical racket-model keys, exclude the current user, include missing-tension peers only in the denominator, gate influence at three distinct supporters, and cap the blend at 20%. |
+| NLP boundary | **Pass** | The reviewed MacBERT/NLP workbook is an offline matrix source. Runtime feedback changes bounded feature calibration; it does not retrain or promote an NLP model. |
+| Cohort and cold start | **Pass** | Repository candidate filtering remains bounded to the approved 12-string cohort and inventory availability; absent feedback or unsupported CF returns the content/rule baseline. |
+| Explainability and audit | **Pass** | Response rationale includes feature evidence, feedback scope/weight/version, racket context, CF support, fallback reason, and base/final scores. |
+| Academic effectiveness claim | **Not claimed** | No expert gold labels, NDCG/hit-rate evaluation, or production-accuracy claim is introduced by this change. The current evidence demonstrates signal influence and safe fallbacks only. |
+
+The active runtime name is `fyp1_weighted_preferences_feedback_racket_cf_v13`.
+Catalog feedback metrics are descriptive provenance and are not a second ranking
+signal; current ranking uses the bounded feedback snapshot and CF evidence.

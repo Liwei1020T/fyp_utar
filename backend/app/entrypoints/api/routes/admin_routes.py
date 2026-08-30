@@ -57,6 +57,7 @@ from app.dto.store import StoreSettingsOut
 from app.dto.store import StoreSettingsPayload
 from app.dto.store import business_hours_to_dto
 from app.dto.store import settings_to_dto
+from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
@@ -450,12 +451,7 @@ def admin_update_booking_status(
     if payload.status == "completed":
         db.execute(
             delete(RecommendationScoreCache).where(
-                RecommendationScoreCache.algorithm_version.in_(
-                    {
-                        "fyp1_similarity_preferences_community_v10",
-                        "fyp1_similarity_preferences_community_racket_cf_v11",
-                    }
-                )
+                RecommendationScoreCache.algorithm_version == ALGORITHM_VERSION
             )
         )
     return booking_to_dto(booking, include_user=True, include_history=True)

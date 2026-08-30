@@ -8,6 +8,7 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_
     SqlAlchemyRecommendationRepository,
 )
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
+from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.main import app
 
 
@@ -123,9 +124,7 @@ def test_standard_racket_catalog_and_server_owned_identity() -> None:
             RecommendationScoreCache(
                 user_id=str(standard["user_id"]),
                 catalog_id=first_string_id(token),
-                algorithm_version=(
-                    "fyp1_similarity_preferences_community_racket_cf_v11"
-                ),
+                algorithm_version=ALGORITHM_VERSION,
                 final_score=0.9,
                 rank_position=1,
                 rationale={},
@@ -422,10 +421,17 @@ def test_structured_feedback_patch_without_durability_or_provenance() -> None:
     assert "structured_field_confirmed_at" not in created.json()
 
     player_summary = client.get(
-        "/api/strings/community-summary",
+        "/api/strings/feedback-summary",
         headers=headers(owner_token),
     )
     assert player_summary.status_code == 200
+    assert (
+        client.get(
+            "/api/strings/community-summary",
+            headers=headers(owner_token),
+        ).status_code
+        == 404
+    )
     summary_string = next(
         item
         for item in player_summary.json()["strings"]
@@ -434,11 +440,18 @@ def test_structured_feedback_patch_without_durability_or_provenance() -> None:
     assert summary_string["features"]["control"]["distinct_users"] == 1
 
     admin_summary = client.get(
-        "/api/admin/feedback/community-summary",
+        "/api/admin/feedback/summary",
         headers=headers(login_admin()),
     )
     assert admin_summary.status_code == 200
     assert admin_summary.json()["racket_contexts"]
+    assert (
+        client.get(
+            "/api/admin/feedback/community-summary",
+            headers=headers(login_admin()),
+        ).status_code
+        == 404
+    )
 
     forbidden = client.patch(
         f"/api/bookings/{booking_id}/feedback",

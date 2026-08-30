@@ -136,7 +136,7 @@ class StringCatalogMetric(Base):
         ForeignKey("strings.catalog_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    community_rating: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
+    feedback_rating: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     want_count: Mapped[int] = mapped_column(Integer, default=0)
     used_count: Mapped[int] = mapped_column(Integer, default=0)
     review_count: Mapped[int] = mapped_column(Integer, default=0)

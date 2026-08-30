@@ -15,14 +15,15 @@ from app.domain.catalog.recommendation_features import (
 )
 from app.domain.recommendation.entities import CachedRecommendationRecord
 from app.domain.recommendation.entities import CollaborativeEvidence
-from app.domain.recommendation.entities import CommunityFeatureAggregate
-from app.domain.recommendation.entities import CommunitySnapshot
+from app.domain.recommendation.entities import FeedbackFeatureAggregate
+from app.domain.recommendation.entities import FeedbackSnapshot
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
-from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
+from app.domain.recommendation.scoring import ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
+from app.domain.recommendation.scoring import _preference_match_score
 from app.dto.profile import ProfilePayload
 from app.dto.recommendation import RecommendationRequestDto
 from app.shared.errors import NotFoundError
@@ -114,7 +115,7 @@ class FakeRecommendationRepository:
     ):
         return None
 
-    def list_community_feedback_rows(self):
+    def list_feedback_rows(self):
         return []
 
     def list_recommendation_interactions(self):
@@ -256,12 +257,12 @@ class FakeRecommendationLogRepository:
         raise NotImplementedError
 
 
-def test_fyp1_scorer_uses_required_formula_and_explainability() -> None:
+def test_scorer_uses_required_formula_and_explainability() -> None:
     candidate = FakeRecommendationRepository().list_active_candidates()[0]
     request = _attacking_request()
 
     result = (
-        Fyp1ContentRecommendationScorer()
+        ContentRecommendationScorer()
         .score_candidates(
             candidates=[candidate],
             request=request,
@@ -295,7 +296,7 @@ def test_fixed_fusion_ignores_review_popularity_and_removed_metadata() -> None:
     def score_for_review_count(review_count: int) -> RecommendationResultModel:
         candidate = replace(base, item=replace(base.item, review_count=review_count))
         result = (
-            Fyp1ContentRecommendationScorer()
+            ContentRecommendationScorer()
             .score_candidates(
                 candidates=[candidate],
                 request=_attacking_request(),
@@ -326,8 +327,8 @@ def test_fixed_fusion_ignores_review_popularity_and_removed_metadata() -> None:
     )
 
 
-def test_zero_community_feedback_preserves_baseline_scores_and_order() -> None:
-    scorer = Fyp1ContentRecommendationScorer()
+def test_zero_feedback_preserves_baseline_scores_and_order() -> None:
+    scorer = ContentRecommendationScorer()
     candidates = FakeRecommendationRepository().list_active_candidates()
     request = _attacking_request()
 
@@ -340,7 +341,7 @@ def test_zero_community_feedback_preserves_baseline_scores_and_order() -> None:
         candidates=candidates,
         request=request,
         top_n=2,
-        community_snapshot=CommunitySnapshot(
+        feedback_snapshot=FeedbackSnapshot(
             by_catalog={},
             snapshot_version="sha256:empty",
         ),
@@ -354,8 +355,75 @@ def test_zero_community_feedback_preserves_baseline_scores_and_order() -> None:
     ]
 
 
-def test_community_and_enabled_cf_are_bounded() -> None:
-    scorer = Fyp1ContentRecommendationScorer()
+def test_feedback_calibration_alone_changes_feature_and_final_score() -> None:
+    scorer = ContentRecommendationScorer()
+    candidate = FakeRecommendationRepository().list_active_candidates()[0]
+    request = _attacking_request()
+    baseline = scorer.score_candidates(
+        candidates=[candidate], request=request, top_n=1
+    )[0].result
+    feedback = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+        feedback_snapshot=FeedbackSnapshot(
+            by_catalog={
+                candidate.item.id: {
+                    "repulsion": FeedbackFeatureAggregate(
+                        normalized_score=0.0,
+                        distinct_users=100,
+                        booking_count=100,
+                        confidence=1.0,
+                        weight=0.30,
+                        evidence_scope="global_string",
+                        racket_model_key=None,
+                        source_version="sha256:feedback",
+                    )
+                }
+            },
+            snapshot_version="sha256:snapshot",
+        ),
+    )[0].result
+
+    assert feedback.score < baseline.score
+    evidence = {
+        row["feature_key"]: row
+        for row in (feedback.rationale_payload or {})["feature_evidence"]
+    }
+    assert evidence["repulsion"]["feedback_weight"] == pytest.approx(0.30)
+    assert (feedback.rationale_payload or {})["feedback_calibration_used"] is True
+
+
+def test_cf_alone_changes_final_score_after_support_gate() -> None:
+    scorer = ContentRecommendationScorer()
+    candidate = FakeRecommendationRepository().list_active_candidates()[0]
+    request = _attacking_request()
+    baseline = scorer.score_candidates(
+        candidates=[candidate], request=request, top_n=1
+    )[0].result
+    cf_result = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+        cf_evidence=CollaborativeEvidence(
+            score_by_catalog={candidate.item.id: 1.0},
+            supporting_users_by_catalog={candidate.item.id: 3},
+            source_version="sha256:cf",
+            eligible_interaction_count=3,
+            eligible_peer_count=3,
+            fallback_reason=None,
+        ),
+    )[0].result
+
+    assert cf_result.score > baseline.score
+    cf_shadow = (cf_result.rationale_payload or {})["cf_shadow"]
+    assert cf_shadow["mode"] == "enabled"
+    assert cf_shadow["cf_weight"] == pytest.approx(0.0462)
+    assert (cf_result.rationale_payload or {})["collaborative_filtering_used"] is True
+
+
+def test_feedback_and_enabled_cf_are_bounded() -> None:
+    scorer = ContentRecommendationScorer()
     candidate = FakeRecommendationRepository().list_active_candidates()[0]
     request = _attacking_request()
     baseline = scorer.score_candidates(
@@ -363,7 +431,7 @@ def test_community_and_enabled_cf_are_bounded() -> None:
         request=request,
         top_n=1,
     )[0].result
-    aggregate = CommunityFeatureAggregate(
+    aggregate = FeedbackFeatureAggregate(
         normalized_score=0.0,
         distinct_users=100,
         booking_count=100,
@@ -371,9 +439,9 @@ def test_community_and_enabled_cf_are_bounded() -> None:
         weight=0.30,
         evidence_scope="global_string",
         racket_model_key=None,
-        source_version="sha256:community",
+        source_version="sha256:feedback",
     )
-    snapshot = CommunitySnapshot(
+    snapshot = FeedbackSnapshot(
         by_catalog={candidate.item.id: {"repulsion": aggregate}},
         snapshot_version="sha256:snapshot",
     )
@@ -381,7 +449,7 @@ def test_community_and_enabled_cf_are_bounded() -> None:
         candidates=[candidate],
         request=request,
         top_n=1,
-        community_snapshot=snapshot,
+        feedback_snapshot=snapshot,
         cf_evidence=CollaborativeEvidence(
             score_by_catalog={candidate.item.id: 1.0},
             supporting_users_by_catalog={candidate.item.id: 20},
@@ -396,7 +464,7 @@ def test_community_and_enabled_cf_are_bounded() -> None:
         row["feature_key"]: row
         for row in (calibrated.rationale_payload or {})["feature_evidence"]
     }
-    assert evidence["repulsion"]["community_weight"] == pytest.approx(0.30)
+    assert evidence["repulsion"]["feedback_weight"] == pytest.approx(0.30)
     assert calibrated.score != baseline.score
     cf_evidence = (calibrated.rationale_payload or {})["cf_shadow"]
     assert cf_evidence["mode"] == "enabled"
@@ -405,7 +473,7 @@ def test_community_and_enabled_cf_are_bounded() -> None:
 
 
 def test_insufficient_cf_support_preserves_exact_base_score() -> None:
-    scorer = Fyp1ContentRecommendationScorer()
+    scorer = ContentRecommendationScorer()
     candidate = FakeRecommendationRepository().list_active_candidates()[0]
     request = _attacking_request()
     baseline = scorer.score_candidates(
@@ -431,7 +499,7 @@ def test_insufficient_cf_support_preserves_exact_base_score() -> None:
 
 
 def test_enabled_cf_can_change_ranking() -> None:
-    scorer = Fyp1ContentRecommendationScorer()
+    scorer = ContentRecommendationScorer()
     candidates = FakeRecommendationRepository().list_active_candidates()
     request = _attacking_request()
     baseline = scorer.score_candidates(candidates=candidates, request=request, top_n=2)
@@ -643,11 +711,12 @@ def test_cached_recommendation_detail_returns_rationale() -> None:
     assert detail.result.score_breakdown["nlp_review_score"] is not None
     assert detail.result.score_breakdown["final_score"] == detail.result.score
     assert repository.last_cache_algorithm_version == ALGORITHM_VERSION
+    assert ALGORITHM_VERSION == "fyp1_weighted_preferences_feedback_racket_cf_v13"
 
 
 def test_preference_vector_uses_defined_storage_feature_keys() -> None:
     defined_keys = {item["feature_key"] for item in RECOMMENDATION_FEATURE_DEFINITIONS}
-    vector_rows = Fyp1ContentRecommendationScorer().build_preference_vector(
+    vector_rows = ContentRecommendationScorer().build_preference_vector(
         user_id="user-1",
         request=_attacking_request(),
     )
@@ -667,7 +736,7 @@ def test_preference_weight_exponent_sharpens_priorities_without_changing_raw_sco
     None
 ):
     request = _attacking_request(pref_attack=10, pref_comfort=5)
-    rows = Fyp1ContentRecommendationScorer(
+    rows = ContentRecommendationScorer(
         preference_weight_exponent=2.0
     ).build_preference_vector(user_id="offline-user", request=request)
     by_feature = {str(row["feature_key"]): row for row in rows}
@@ -681,7 +750,27 @@ def test_preference_weight_exponent_sharpens_priorities_without_changing_raw_sco
 
 def test_preference_weight_exponent_must_be_positive_and_finite() -> None:
     with pytest.raises(ValueError, match="positive and finite"):
-        Fyp1ContentRecommendationScorer(preference_weight_exponent=0)
+        ContentRecommendationScorer(preference_weight_exponent=0)
+
+
+def test_preference_match_is_weighted_absolute_feature_score() -> None:
+    effective_scores = {"repulsion": 0.9, "control": 0.4}
+    preference_rows: list[dict[str, float | str | None]] = [
+        {"feature_key": "repulsion", "preference_weight": 0.75},
+        {"feature_key": "control", "preference_weight": 0.25},
+    ]
+
+    assert _preference_match_score(
+        effective_scores=effective_scores,
+        preference_rows=preference_rows,
+    ) == pytest.approx(0.775)
+
+
+def test_preference_match_without_weight_returns_neutral_fallback() -> None:
+    assert _preference_match_score(
+        effective_scores={},
+        preference_rows=[{"feature_key": "repulsion", "preference_weight": 0.0}],
+    ) == pytest.approx(0.5)
 
 
 def test_elasticity_preference_can_change_ranking() -> None:
@@ -826,6 +915,27 @@ def test_explicit_gauge_and_feel_preferences_are_used() -> None:
     assert {"preferred_gauge_bonus", "preferred_feel_bonus"} <= rule_keys
     combined_preference_delta = result.results[0].score - result.results[1].score
     assert 0.05 <= combined_preference_delta <= 0.06
+
+
+def test_explicit_gauge_preference_overrides_inferred_setup_gauge() -> None:
+    result = _score_custom_candidates(
+        _attacking_request(
+            preferred_gauge="thin",
+            preferred_tension=28,
+            frequency_per_week=4,
+        ),
+        [
+            _candidate_with_core_scores("thin", {}, gauge_main_mm=0.63),
+            _candidate_with_core_scores("thick", {}, gauge_main_mm=0.70),
+        ],
+    )
+
+    assert result.results[0].catalog_id == "thin"
+    assert all(
+        not str(event["rule"]).startswith("setup_")
+        for row in result.results
+        for event in (row.rationale_payload or {}).get("rule_events", [])
+    )
 
 
 @pytest.mark.parametrize(
@@ -993,7 +1103,7 @@ def _string_item(
         original_series="高弹性",
         original_material=None,
         original_color=None,
-        community_rating=9.1,
+        feedback_rating=9.1,
         want_count=100,
         used_count=50,
         review_count=20,

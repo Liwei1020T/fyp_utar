@@ -9,16 +9,16 @@ from collections.abc import Iterable
 from datetime import timezone
 
 from app.domain.recommendation.entities import CollaborativeEvidence
-from app.domain.recommendation.entities import CommunityFeatureAggregate
-from app.domain.recommendation.entities import CommunityFeedbackRow
-from app.domain.recommendation.entities import CommunitySnapshot
+from app.domain.recommendation.entities import FeedbackFeatureAggregate
+from app.domain.recommendation.entities import FeedbackRow
+from app.domain.recommendation.entities import FeedbackSnapshot
 from app.domain.recommendation.entities import RecommendationInteraction
 
 
-COMMUNITY_POLICY_VERSION = "community_feedback_v3_no_durability_provenance"
-COMMUNITY_SHRINKAGE_K = 10
-COMMUNITY_MAX_WEIGHT = 0.30
-COMMUNITY_FEATURES = ("comfort", "control", "repulsion")
+FEEDBACK_POLICY_VERSION = "feedback_v3_no_durability_provenance"
+FEEDBACK_SHRINKAGE_K = 10
+FEEDBACK_MAX_WEIGHT = 0.30
+FEEDBACK_FEATURES = ("comfort", "control", "repulsion")
 CF_POLICY_VERSION = "racket_cf_enabled_v11_v1"
 CF_SHRINKAGE_K = 10
 CF_MAX_WEIGHT = 0.20
@@ -67,11 +67,11 @@ def cf_weight_for_support(distinct_supporting_users: int) -> float:
     return round(CF_MAX_WEIGHT * confidence, 4)
 
 
-def build_community_snapshot(
-    rows: Iterable[CommunityFeedbackRow],
+def build_feedback_snapshot(
+    rows: Iterable[FeedbackRow],
     *,
     target_racket_model_key: str | None,
-) -> CommunitySnapshot:
+) -> FeedbackSnapshot:
     eligible = _eligible_feedback_values(rows)
     global_buckets: dict[tuple[str, str, str], list[tuple[int, str]]] = defaultdict(
         list
@@ -113,7 +113,7 @@ def build_community_snapshot(
         racket_model_key=target_racket_model_key,
     )
 
-    selected: dict[str, dict[str, CommunityFeatureAggregate]] = defaultdict(dict)
+    selected: dict[str, dict[str, FeedbackFeatureAggregate]] = defaultdict(dict)
     keys = set(global_aggregates) | set(context_aggregates)
     for catalog_id, feature in keys:
         selected[catalog_id][feature] = (
@@ -121,11 +121,11 @@ def build_community_snapshot(
             or global_aggregates[(catalog_id, feature)]
         )
 
-    return CommunitySnapshot(
+    return FeedbackSnapshot(
         by_catalog={
             catalog_id: dict(features) for catalog_id, features in selected.items()
         },
-        snapshot_version=_digest(COMMUNITY_POLICY_VERSION, canonical),
+        snapshot_version=_digest(FEEDBACK_POLICY_VERSION, canonical),
     )
 
 
@@ -163,7 +163,6 @@ def build_cf_evidence(
         for row in rows
         if row.user_id != current_user_id
         and row.racket_model_key == target_racket_model_key
-        and row.requested_tension is not None
         and all(value is not None for value in row.preference_vector)
     ]
     if not peer_rows:
@@ -185,7 +184,8 @@ def build_cf_evidence(
 
     candidate_support: dict[tuple[str, str], list[float]] = defaultdict(list)
     for row in peer_rows:
-        assert row.requested_tension is not None
+        if row.requested_tension is None:
+            continue
         candidate_support[(row.user_id, row.catalog_id)].append(
             max(
                 0.0,
@@ -223,11 +223,11 @@ def build_cf_evidence(
 
 
 def _eligible_feedback_values(
-    rows: Iterable[CommunityFeedbackRow],
-) -> list[tuple[CommunityFeedbackRow, str, int]]:
-    eligible: list[tuple[CommunityFeedbackRow, str, int]] = []
+    rows: Iterable[FeedbackRow],
+) -> list[tuple[FeedbackRow, str, int]]:
+    eligible: list[tuple[FeedbackRow, str, int]] = []
     for row in rows:
-        for feature in COMMUNITY_FEATURES:
+        for feature in FEEDBACK_FEATURES:
             rating = row.ratings.get(feature)
             if rating is None or not 1 <= rating <= 5:
                 continue
@@ -240,7 +240,7 @@ def _aggregate_feedback_buckets(
     *,
     evidence_scope: str,
     racket_model_key: str | None,
-) -> dict[tuple[str, str], CommunityFeatureAggregate]:
+) -> dict[tuple[str, str], FeedbackFeatureAggregate]:
     grouped_users: dict[tuple[str, str], list[tuple[float, list[tuple[int, str]]]]] = (
         defaultdict(list)
     )
@@ -252,22 +252,22 @@ def _aggregate_feedback_buckets(
             )
         )
 
-    aggregates: dict[tuple[str, str], CommunityFeatureAggregate] = {}
+    aggregates: dict[tuple[str, str], FeedbackFeatureAggregate] = {}
     for key, users in grouped_users.items():
         distinct_users = len(users)
         normalized_score = ((sum(value for value, _ in users) / distinct_users) - 1) / 4
-        confidence = distinct_users / (distinct_users + COMMUNITY_SHRINKAGE_K)
+        confidence = distinct_users / (distinct_users + FEEDBACK_SHRINKAGE_K)
         canonical = sorted(values for _, values in users)
-        aggregates[key] = CommunityFeatureAggregate(
+        aggregates[key] = FeedbackFeatureAggregate(
             normalized_score=round(normalized_score, 4),
             distinct_users=distinct_users,
             booking_count=sum(len(values) for _, values in users),
             confidence=round(confidence, 4),
-            weight=round(COMMUNITY_MAX_WEIGHT * confidence, 4),
+            weight=round(FEEDBACK_MAX_WEIGHT * confidence, 4),
             evidence_scope=evidence_scope,
             racket_model_key=racket_model_key,
             source_version=_digest(
-                COMMUNITY_POLICY_VERSION,
+                FEEDBACK_POLICY_VERSION,
                 [
                     {
                         "key": key,

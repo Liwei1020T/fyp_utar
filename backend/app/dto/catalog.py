@@ -76,7 +76,7 @@ class StringOut(BaseModel):
     original_series: str | None = None
     original_material: str | None = None
     original_color: str | None = None
-    community_rating: float | None = None
+    feedback_rating: float | None = None
     want_count: int
     used_count: int
     review_count: int
@@ -337,7 +337,7 @@ def string_to_dto(item: StringItem) -> StringOut:
         original_series=item.original_series,
         original_material=item.original_material,
         original_color=item.original_color,
-        community_rating=item.community_rating,
+        feedback_rating=item.feedback_rating,
         want_count=item.want_count,
         used_count=item.used_count,
         review_count=item.review_count,

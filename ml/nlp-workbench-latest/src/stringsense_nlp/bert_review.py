@@ -653,13 +653,13 @@ def _load_backend_components(workbench: Path) -> dict[str, object]:
     from app.domain.recommendation.entities import RecommendationFeatureSignalModel
     from app.domain.recommendation.entities import RecommendationRequestModel
     from app.domain.recommendation.scoring import ALGORITHM_VERSION
-    from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
+    from app.domain.recommendation.scoring import ContentRecommendationScorer
 
     return {
         "algorithm_version": ALGORITHM_VERSION,
         "candidate_model": RecommendationCandidateModel,
         "request_model": RecommendationRequestModel,
-        "scorer": Fyp1ContentRecommendationScorer,
+        "scorer": ContentRecommendationScorer,
         "signal_model": RecommendationFeatureSignalModel,
         "string_item": StringItem,
         "official_performance": StringOfficialPerformance,
@@ -861,7 +861,7 @@ def _build_candidates(
             original_series=record.get("original_series"),
             original_material=record.get("original_material"),
             original_color=record.get("original_color"),
-            community_rating=record.get("community_rating"),
+            feedback_rating=record.get("feedback_rating"),
             want_count=int(record.get("want_count", 0)),
             used_count=int(record.get("used_count", 0)),
             review_count=int(record["review_count"]),

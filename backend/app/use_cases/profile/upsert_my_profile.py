@@ -5,7 +5,7 @@ from dataclasses import field
 
 from app.domain.profile.entities import PlayerProfile
 from app.domain.recommendation.entities import RecommendationRequestModel
-from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
+from app.domain.recommendation.scoring import ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_repository import RecommendationRepository
@@ -15,8 +15,8 @@ from app.ports.repositories.recommendation_repository import RecommendationRepos
 class UpsertMyProfileUseCase:
     profile_repository: ProfileRepository
     recommendation_repository: RecommendationRepository
-    scorer: Fyp1ContentRecommendationScorer = field(
-        default_factory=Fyp1ContentRecommendationScorer
+    scorer: ContentRecommendationScorer = field(
+        default_factory=ContentRecommendationScorer
     )
 
     def execute(

@@ -238,7 +238,7 @@ export interface BackendString {
   original_series: string | null;
   original_material: string | null;
   original_color: string | null;
-  community_rating: number | null;
+  feedback_rating: number | null;
   want_count: number;
   used_count: number;
   review_count: number;
@@ -735,7 +735,7 @@ export interface BackendAdminFeedback extends BackendFeedback {
   customer_phone_number: string;
 }
 
-export interface BackendCommunityFeatureSummary {
+export interface BackendFeedbackFeatureSummary {
   score: number;
   distinct_users: number;
   booking_count: number;
@@ -745,21 +745,21 @@ export interface BackendCommunityFeatureSummary {
   source_version: string;
 }
 
-export interface BackendCommunityStringSummary {
+export interface BackendFeedbackStringSummary {
   string_id: string;
-  features: Record<string, BackendCommunityFeatureSummary>;
+  features: Record<string, BackendFeedbackFeatureSummary>;
 }
 
-export interface BackendCommunitySummary {
+export interface BackendFeedbackSummary {
   policy_version: string;
   snapshot_version: string;
   racket_model_key: string | null;
-  strings: BackendCommunityStringSummary[];
+  strings: BackendFeedbackStringSummary[];
 }
 
-export interface BackendAdminCommunitySummary {
-  global: BackendCommunitySummary;
-  racket_contexts: BackendCommunitySummary[];
+export interface BackendAdminFeedbackSummary {
+  global: BackendFeedbackSummary;
+  racket_contexts: BackendFeedbackSummary[];
 }
 
 export interface BackendAdminNotification {
@@ -864,8 +864,8 @@ export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
-  community_calibration_used?: boolean;
-  community_snapshot_version?: string | null;
+  feedback_calibration_used?: boolean;
+  feedback_snapshot_version?: string | null;
   racket_context?: Record<string, string | number | null> | null;
   cf_shadow?: Record<string, string | number | boolean | null>;
   primary_fit_angle?: string;
@@ -881,14 +881,14 @@ export interface BackendRecommendationRationale {
     nlp_review_score?: number | null;
     nlp_influence?: number | null;
     baseline_score?: number | null;
-    community_score?: number | null;
-    community_distinct_users?: number | null;
-    community_booking_count?: number | null;
-    community_confidence?: number | null;
-    community_weight?: number | null;
-    community_evidence_scope?: string | null;
-    community_racket_model_key?: string | null;
-    community_source_version?: string | null;
+    feedback_score?: number | null;
+    feedback_distinct_users?: number | null;
+    feedback_booking_count?: number | null;
+    feedback_confidence?: number | null;
+    feedback_weight?: number | null;
+    feedback_evidence_scope?: string | null;
+    feedback_racket_model_key?: string | null;
+    feedback_source_version?: string | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;

@@ -319,7 +319,7 @@ test('admin recommendation details hide internal provenance noise', async () => 
 
   assert.doesNotMatch(
     detail,
-    /Rationale summary|community_snapshot_version|cf_shadow|sha256|Algorithm Family/,
+    /Rationale summary|feedback_snapshot_version|cf_shadow|sha256|Algorithm Family/,
   );
   assert.doesNotMatch(
     detail,

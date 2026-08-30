@@ -96,14 +96,19 @@ def test_catalog_normalization_migration_preserves_existing_booking(
         for column in inspector.get_columns("string_official_performance")
     }
     assert "source_url" not in official_performance_columns
+    metric_columns = {
+        column["name"] for column in inspector.get_columns("string_catalog_metrics")
+    }
+    assert "feedback_rating" in metric_columns
+    assert "community_rating" not in metric_columns
 
     with engine.begin() as connection:
         string_row = (
             connection.execute(
                 text(
                     """
-                SELECT catalog_id, display_name, official_performance_status,
-                       tension_min_lbs, tension_max_lbs
+                SELECT catalog_id, display_name, full_description,
+                       official_performance_status, tension_min_lbs, tension_max_lbs
                 FROM strings
                 WHERE catalog_id = 'yonex-bg80'
                 """
@@ -113,6 +118,8 @@ def test_catalog_normalization_migration_preserves_existing_booking(
             .one()
         )
         assert string_row["display_name"] == "Yonex BG80"
+        assert "Feedback signals:" in string_row["full_description"]
+        assert "Community signals:" not in string_row["full_description"]
         assert string_row["official_performance_status"] == "manual_reviewed"
         assert string_row["tension_min_lbs"] == 23
         assert string_row["tension_max_lbs"] == 28
@@ -180,6 +187,28 @@ def test_catalog_normalization_migration_preserves_existing_booking(
             .one()
         )
         assert matrix_rows["count"] >= 12
+
+        tag_rows = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM string_catalog_tags
+                WHERE catalog_id = 'yonex-bg80'
+                """
+            )
+        ).scalar_one()
+        assert tag_rows > 0
+
+        old_matrix_rows = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM string_recommendation_matrix
+                WHERE source_layer = 'community_signal'
+                """
+            )
+        ).scalar_one()
+        assert old_matrix_rows == 0
 
 
 def test_booking_drift_repair_migration_restores_missing_booking_columns(
@@ -336,7 +365,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260826_0037"
+        assert version_row["version_num"] == "20260831_0038"
 
         store_settings_row = (
             connection.execute(
@@ -455,7 +484,7 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-    assert version == "20260826_0037"
+    assert version == "20260831_0038"
 
     matrix_columns = {
         item["name"] for item in inspector.get_columns("string_recommendation_matrix")

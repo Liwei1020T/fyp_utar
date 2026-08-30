@@ -19,7 +19,7 @@ admin operations surface:
 - `/admin/assistant`: returns the current read-only operations summary and can
   search booking and inventory records. It does not propose changes.
 
-DeepSeek composes the response but never ranks strings. The existing V11
+DeepSeek composes the response but never ranks strings. The current V13
 recommendation use case remains the only ranking owner, and guided previews do
 not update the saved profile or recommendation cache.
 

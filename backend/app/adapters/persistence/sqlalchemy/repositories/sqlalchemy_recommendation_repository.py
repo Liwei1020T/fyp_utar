@@ -23,7 +23,7 @@ from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
 from app.adapters.persistence.sqlalchemy.repositories.mappers import to_string_item
 from app.domain.catalog.recommendation_features import domain_feature_key
 from app.domain.recommendation.entities import CachedRecommendationRecord
-from app.domain.recommendation.entities import CommunityFeedbackRow
+from app.domain.recommendation.entities import FeedbackRow
 from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationInteraction
@@ -113,7 +113,7 @@ class SqlAlchemyRecommendationRepository:
             target_tension=target_tension,
         )
 
-    def list_community_feedback_rows(self) -> list[CommunityFeedbackRow]:
+    def list_feedback_rows(self) -> list[FeedbackRow]:
         query = select(BookingFeedback, Booking).join(
             Booking, Booking.id == BookingFeedback.booking_id
         )
@@ -121,7 +121,7 @@ class SqlAlchemyRecommendationRepository:
             query = query.where(Booking.string_id.in_(self.approved_catalog_ids))
         rows = self.db.execute(query).all()
         return [
-            CommunityFeedbackRow(
+            FeedbackRow(
                 feedback_id=feedback.id,
                 user_id=feedback.user_id,
                 catalog_id=booking.string_id,

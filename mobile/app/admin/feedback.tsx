@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { Platform, Share, View } from 'react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
-import { CommunityFeatureList } from '../../components/shared/CommunityFeatureList';
+import { FeedbackFeatureList } from '../../components/shared/FeedbackFeatureList';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
 import { AppChip } from '../../components/ui/AppChip';
@@ -18,9 +18,9 @@ import {
   useStrings,
 } from '../../store/appStore';
 import type {
-  BackendAdminCommunitySummary,
+  BackendAdminFeedbackSummary,
   BackendAdminFeedback,
-  BackendCommunitySummary,
+  BackendFeedbackSummary,
 } from '../../types/backend';
 
 const PAGE_SIZE = 50;
@@ -38,12 +38,12 @@ export default function AdminFeedbackScreen() {
   const [dateTo, setDateTo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [communitySummary, setCommunitySummary] = useState<
-    BackendAdminCommunitySummary | null
+  const [feedbackSummary, setFeedbackSummary] = useState<
+    BackendAdminFeedbackSummary | null
   >(null);
-  const [selectedCommunityScope, setSelectedCommunityScope] = useState('global');
-  const [isCommunityLoading, setIsCommunityLoading] = useState(Boolean(token));
-  const [communityError, setCommunityError] = useState<string | null>(null);
+  const [selectedFeedbackScope, setSelectedFeedbackScope] = useState('global');
+  const [isFeedbackLoading, setIsFeedbackLoading] = useState(Boolean(token));
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   const load = useCallback(async (offset = 0) => {
     if (!token || user?.role !== 'admin') return;
@@ -73,28 +73,28 @@ export default function AdminFeedbackScreen() {
     }
   }, [dateFrom, dateTo, rating, stringId, token, user?.role]);
 
-  const loadCommunitySummary = useCallback(async () => {
+  const loadFeedbackSummary = useCallback(async () => {
     if (!token || user?.role !== 'admin') return;
-    setIsCommunityLoading(true);
-    setCommunityError(null);
+    setIsFeedbackLoading(true);
+    setFeedbackError(null);
     try {
-      setCommunitySummary(await backendApi.adminFetchCommunitySummary(token));
+      setFeedbackSummary(await backendApi.adminFetchFeedbackSummary(token));
     } catch (error) {
-      setCommunityError(
+      setFeedbackError(
         error instanceof BackendApiError
           ? error.message
-          : 'Failed to load community calibration evidence.',
+          : 'Failed to load feedback calibration evidence.',
       );
     } finally {
-      setIsCommunityLoading(false);
+      setIsFeedbackLoading(false);
     }
   }, [token, user?.role]);
 
   useFocusEffect(
     useCallback(() => {
       void load();
-      void loadCommunitySummary();
-    }, [load, loadCommunitySummary]),
+      void loadFeedbackSummary();
+    }, [load, loadFeedbackSummary]),
   );
 
   if (!user || user.role !== 'admin') return null;
@@ -129,13 +129,13 @@ export default function AdminFeedbackScreen() {
     }
   };
 
-  const communityScopes: BackendCommunitySummary[] = communitySummary
-    ? [communitySummary.global, ...communitySummary.racket_contexts]
+  const feedbackScopes: BackendFeedbackSummary[] = feedbackSummary
+    ? [feedbackSummary.global, ...feedbackSummary.racket_contexts]
     : [];
-  const activeCommunityScope = communityScopes.find(
-    (scope) => (scope.racket_model_key ?? 'global') === selectedCommunityScope,
-  ) ?? communitySummary?.global ?? null;
-  const visibleCommunityStrings = activeCommunityScope?.strings.filter(
+  const activeFeedbackScope = feedbackScopes.find(
+    (scope) => (scope.racket_model_key ?? 'global') === selectedFeedbackScope,
+  ) ?? feedbackSummary?.global ?? null;
+  const visibleFeedbackStrings = activeFeedbackScope?.strings.filter(
     (item, index) => (stringId ? item.string_id === stringId : index === 0),
   ) ?? [];
 
@@ -149,35 +149,35 @@ export default function AdminFeedbackScreen() {
     >
       <AppSection
         eyebrow="Recommendation learning"
-        title="Community calibration"
+        title="Feedback calibration"
       >
         <AppCard variant="elevated" padding="md">
-          {isCommunityLoading ? (
+          {isFeedbackLoading ? (
             <HeroText className="text-sm text-neutral-600">
               Loading recommendation evidence...
             </HeroText>
-          ) : communityError ? (
+          ) : feedbackError ? (
             <View className="gap-3">
               <HeroText
                 selectable
                 accessibilityLiveRegion="polite"
                 className="text-sm leading-6 text-red-700"
               >
-                {communityError}
+                {feedbackError}
               </HeroText>
               <AppButton
                 label="Try again"
                 variant="outline"
                 size="sm"
-                onPress={() => void loadCommunitySummary()}
+                onPress={() => void loadFeedbackSummary()}
               />
             </View>
-          ) : communitySummary ? (
+          ) : feedbackSummary ? (
             <View className="gap-4">
               <AppSelect
                 label="Evidence scope"
-                value={selectedCommunityScope}
-                options={communityScopes.map((scope) => {
+                value={selectedFeedbackScope}
+                options={feedbackScopes.map((scope) => {
                   const scopeKey = scope.racket_model_key ?? 'global';
                   return {
                     id: scopeKey,
@@ -186,12 +186,12 @@ export default function AdminFeedbackScreen() {
                       : 'Global strings',
                   };
                 })}
-                onChange={setSelectedCommunityScope}
+                onChange={setSelectedFeedbackScope}
               />
 
-              {visibleCommunityStrings.length > 0 ? (
+              {visibleFeedbackStrings.length > 0 ? (
                 <View className="gap-3">
-                  {visibleCommunityStrings.map((summary) => {
+                  {visibleFeedbackStrings.map((summary) => {
                     const string = strings.find(
                       (item) => item.id === summary.string_id,
                     );
@@ -205,7 +205,7 @@ export default function AdminFeedbackScreen() {
                             ? `${string.brand} ${string.model}`
                             : summary.string_id}
                         </HeroText>
-                        <CommunityFeatureList
+                        <FeedbackFeatureList
                           features={summary.features}
                           showScope
                         />
@@ -215,13 +215,13 @@ export default function AdminFeedbackScreen() {
                 </View>
               ) : (
                 <HeroText className="text-sm leading-6 text-neutral-600">
-                  No eligible community ratings exist for this scope and string filter.
+                  No eligible feedback ratings exist for this scope and string filter.
                 </HeroText>
               )}
             </View>
           ) : (
             <HeroText className="text-sm leading-6 text-neutral-600">
-              No community calibration snapshot is available.
+              No feedback calibration snapshot is available.
             </HeroText>
           )}
         </AppCard>
@@ -274,10 +274,10 @@ export default function AdminFeedbackScreen() {
             <AppButton
               label="Refresh"
               variant="outline"
-              isLoading={isLoading || isCommunityLoading}
+              isLoading={isLoading || isFeedbackLoading}
               onPress={() => {
                 void load();
-                void loadCommunitySummary();
+                void loadFeedbackSummary();
               }}
             />
           </View>

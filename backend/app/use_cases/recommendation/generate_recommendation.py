@@ -12,9 +12,9 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RacketRecommendationContext
 from app.domain.recommendation.learning_signals import build_cf_evidence
-from app.domain.recommendation.learning_signals import build_community_snapshot
+from app.domain.recommendation.learning_signals import build_feedback_snapshot
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
-from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
+from app.domain.recommendation.scoring import ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_log_repository import (
@@ -51,8 +51,8 @@ class GenerateRecommendationUseCase:
     profile_repository: ProfileRepository
     recommendation_repository: RecommendationRepository
     recommendation_log_repository: RecommendationLogRepository
-    scorer: Fyp1ContentRecommendationScorer = field(
-        default_factory=Fyp1ContentRecommendationScorer
+    scorer: ContentRecommendationScorer = field(
+        default_factory=ContentRecommendationScorer
     )
 
     def execute_preview(
@@ -187,8 +187,8 @@ class GenerateRecommendationUseCase:
         profile_snapshot: dict[str, object] | None = None,
         racket_context: RacketRecommendationContext | None = None,
     ) -> RecommendationResponseModel:
-        community_snapshot = build_community_snapshot(
-            self.recommendation_repository.list_community_feedback_rows(),
+        feedback_snapshot = build_feedback_snapshot(
+            self.recommendation_repository.list_feedback_rows(),
             target_racket_model_key=(
                 racket_context.model_key if racket_context is not None else None
             ),
@@ -206,7 +206,7 @@ class GenerateRecommendationUseCase:
             candidates=self.recommendation_repository.list_active_candidates(),
             request=request,
             top_n=request.top_n,
-            community_snapshot=community_snapshot,
+            feedback_snapshot=feedback_snapshot,
             cf_evidence=cf_evidence,
             racket_context=racket_context,
         )
@@ -215,8 +215,8 @@ class GenerateRecommendationUseCase:
         generated_at = None
 
         if persist and user_id:
-            latest_community = build_community_snapshot(
-                self.recommendation_repository.list_community_feedback_rows(),
+            latest_feedback = build_feedback_snapshot(
+                self.recommendation_repository.list_feedback_rows(),
                 target_racket_model_key=(
                     racket_context.model_key if racket_context is not None else None
                 ),
@@ -231,7 +231,7 @@ class GenerateRecommendationUseCase:
                 target_tension=request.preferred_tension,
             )
             if (
-                latest_community.snapshot_version != community_snapshot.snapshot_version
+                latest_feedback.snapshot_version != feedback_snapshot.snapshot_version
                 or latest_cf.source_version != cf_evidence.source_version
             ):
                 raise ConflictError("Recommendation evidence changed; retry generation")
@@ -306,13 +306,13 @@ class GenerateRecommendationUseCase:
             and racket_payload.get("normalized_model_key")
             else None
         )
-        community_snapshot = build_community_snapshot(
-            self.recommendation_repository.list_community_feedback_rows(),
+        feedback_snapshot = build_feedback_snapshot(
+            self.recommendation_repository.list_feedback_rows(),
             target_racket_model_key=model_key,
         )
         if (
-            rationale.get("community_snapshot_version")
-            != community_snapshot.snapshot_version
+            rationale.get("feedback_snapshot_version")
+            != feedback_snapshot.snapshot_version
         ):
             return False
 

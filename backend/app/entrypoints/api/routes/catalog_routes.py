@@ -9,8 +9,8 @@ from app.dto.common import page_to_dict
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_current_customer
 from app.entrypoints.api.dependencies import get_recommendation_repository
-from app.domain.recommendation.learning_signals import build_community_snapshot
-from app.dto.recommendation import community_snapshot_to_dict
+from app.domain.recommendation.learning_signals import build_feedback_snapshot
+from app.dto.recommendation import feedback_snapshot_to_dict
 from app.use_cases.catalog.list_strings import ListStringsUseCase
 
 
@@ -48,13 +48,13 @@ def list_active_strings(
     return page_to_dict(page, lambda item: string_to_dto(item).model_dump())
 
 
-@router.get("/community-summary", response_model=dict)
-def get_community_summary(
+@router.get("/feedback-summary", response_model=dict)
+def get_feedback_summary(
     _: object = Depends(get_current_customer),
     recommendation_repository=Depends(get_recommendation_repository),
 ) -> dict[str, object]:
-    snapshot = build_community_snapshot(
-        recommendation_repository.list_community_feedback_rows(),
+    snapshot = build_feedback_snapshot(
+        recommendation_repository.list_feedback_rows(),
         target_racket_model_key=None,
     )
-    return community_snapshot_to_dict(snapshot, racket_model_key=None)
+    return feedback_snapshot_to_dict(snapshot, racket_model_key=None)

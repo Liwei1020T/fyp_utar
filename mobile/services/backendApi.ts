@@ -1,6 +1,6 @@
 import type {
   BackendAdminInventoryString,
-  BackendAdminCommunitySummary,
+  BackendAdminFeedbackSummary,
   BackendAdminDeviceToken,
   BackendAdminFeedback,
   BackendAdminNotification,
@@ -16,7 +16,7 @@ import type {
   BackendBookingPaymentQuote,
   BackendCreateFeedbackPayload,
   BackendCreateRacketPayload,
-  BackendCommunitySummary,
+  BackendFeedbackSummary,
   BackendFeedback,
   BackendForgotPasswordRequestResponse,
   BackendInventoryUpdatePayload,
@@ -330,8 +330,8 @@ export const backendApi = {
   listStrings(token: string) {
     return requestJson<BackendPage<BackendString>>('/strings', { token });
   },
-  fetchCommunitySummary(token: string) {
-    return requestJson<BackendCommunitySummary>('/strings/community-summary', {
+  fetchFeedbackSummary(token: string) {
+    return requestJson<BackendFeedbackSummary>('/strings/feedback-summary', {
       token,
     });
   },
@@ -701,11 +701,10 @@ export const backendApi = {
       { token },
     );
   },
-  adminFetchCommunitySummary(token: string) {
-    return requestJson<BackendAdminCommunitySummary>(
-      '/admin/feedback/community-summary',
-      { token },
-    );
+  adminFetchFeedbackSummary(token: string) {
+    return requestJson<BackendAdminFeedbackSummary>('/admin/feedback/summary', {
+      token,
+    });
   },
   async adminExportFeedback(
     token: string,

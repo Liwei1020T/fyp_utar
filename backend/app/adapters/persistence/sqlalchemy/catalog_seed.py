@@ -179,7 +179,7 @@ def approved_row_to_values(
             "source_layer": "hybrid_derived",
             "raw_value": score,
             "normalized_score": score,
-            "evidence_note": "Backfilled from legacy gauge and community tag heuristics.",
+            "evidence_note": "Backfilled from legacy gauge and feedback tag heuristics.",
         }
         for feature_key, score in scores.items()
     ]
@@ -227,7 +227,7 @@ def approved_row_to_values(
             "is_active": bool(row.get("is_active", True)),
         },
         "metrics": {
-            "community_rating": number_or_none(row.get("community_rating")),
+            "feedback_rating": number_or_none(row.get("feedback_rating")),
             "want_count": int(row.get("want_count", 0) or 0),
             "used_count": int(row.get("used_count", 0) or 0),
             "review_count": int(row.get("review_count", 0) or 0),
@@ -238,7 +238,7 @@ def approved_row_to_values(
                 "tag_label": str(tag["tag_label"]).strip(),
                 "tag_count": int(tag.get("tag_count", 0) or 0),
             }
-            for tag in row.get("community_tags") or []
+            for tag in row.get("feedback_tags") or []
         ],
         "official_performance": {
             "catalog_id": catalog_id,

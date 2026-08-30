@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from app.domain.recommendation.entities import CachedRecommendationRecord
-from app.domain.recommendation.entities import CommunityFeedbackRow
+from app.domain.recommendation.entities import FeedbackRow
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationInteraction
 from app.domain.recommendation.entities import RacketRecommendationContext
@@ -21,7 +21,7 @@ class RecommendationRepository(Protocol):
         target_tension: float,
     ) -> RacketRecommendationContext | None: ...
 
-    def list_community_feedback_rows(self) -> list[CommunityFeedbackRow]: ...
+    def list_feedback_rows(self) -> list[FeedbackRow]: ...
 
     def list_recommendation_interactions(self) -> list[RecommendationInteraction]: ...
 

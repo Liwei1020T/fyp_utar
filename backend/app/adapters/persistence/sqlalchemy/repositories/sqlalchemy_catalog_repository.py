@@ -222,14 +222,14 @@ class SqlAlchemyCatalogRepository:
             "model_name": StringCatalogItem.model_name,
             "price_rm": StringInventoryItem.selling_price,
             "gauge_main_mm": StringCatalogItem.gauge_main_mm,
-            "community_rating": StringCatalogMetric.community_rating,
+            "feedback_rating": StringCatalogMetric.feedback_rating,
             "created_at": StringCatalogItem.created_at,
             "updated_at": StringCatalogItem.updated_at,
         }
         sort_column = sort_columns.get(sort_by, StringCatalogItem.display_name)
         if sort_by == "price_rm" and not joined_inventory:
             query = query.outerjoin(StringCatalogItem.inventory_item)
-        elif sort_by == "community_rating":
+        elif sort_by == "feedback_rating":
             query = query.outerjoin(StringCatalogItem.metrics)
         if sort_order == "desc":
             query = query.order_by(

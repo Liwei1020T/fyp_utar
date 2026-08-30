@@ -115,7 +115,7 @@ and replied to the same persisted thread. Screenshots are in
 | `/admin/business-hours` | Pass | Seven-day schedule; capacity 3→4→3 save/restore succeeded. |
 | `/admin/chat/[id]` | Pass | Reply changed Waiting Admin to Admin Joined; Resolve persisted. |
 | `/admin/check-in` | Pass | Search/shortcut/checklist; incomplete checklist is safely blocked. |
-| `/admin/feedback` | Pass | Structured record, community calibration evidence, filters, and CSV download. |
+| `/admin/feedback` | Pass | Structured record, feedback calibration evidence, filters, and CSV download. |
 | `/admin/inventory/[id]` | Pass | Full editor; stock 8→9→8 save/restore succeeded. |
 | `/admin/notifications` | Pass with delivery boundary | In-app send persisted; remote failed truthfully because no active provider/device. |
 | `/admin/payments` | Pass | Irreversible confirmation; RM20 top-up verification credited wallet exactly once. |

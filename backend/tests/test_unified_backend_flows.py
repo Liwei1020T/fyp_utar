@@ -313,7 +313,7 @@ def test_recommendations_logs_and_admin_string_controls():
     )
     assert rationale["collaborative_filtering_used"] is False
     assert rationale["cf_shadow"]["cf_weight"] == 0
-    assert rationale["community_snapshot_version"].startswith("sha256:")
+    assert rationale["feedback_snapshot_version"].startswith("sha256:")
     assert rationale["feature_sources"]
     assert all(
         not {

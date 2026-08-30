@@ -85,7 +85,7 @@ Explicitly avoided:
   - preview/profile recommendation generation, preference-vector persistence, score caching, explainability, and recommendation logging
 - `agent`
   - authenticated grounded answers, exact-run recommendation explanation,
-    bounded read-only tools, V11 What-if preview, and explicit support handoff
+    bounded read-only tools, current-algorithm What-if preview, and explicit support handoff
 
 ## Persistence Structure
 
@@ -108,7 +108,7 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
-The current revision chain has one head at `20260826_0037`.
+The current revision chain has one head at `20260831_0038`.
 
 ## Transaction Contract
 
@@ -151,7 +151,7 @@ external gateway/webhook is selected.
 - Master catalog truth lives in `strings`
 - The approved catalog JSON is bootstrap-only: it is read when `strings` is
   empty, while later startups use persisted catalog rows.
-- Community counts/tags live in `string_catalog_metrics` and `string_catalog_tags`
+- Catalog feedback rating/tags live in `string_catalog_metrics` and `string_catalog_tags`; current recommendation learning uses completed-booking feedback.
 - Official/manual performance lives in `string_official_performance`
 - Store pricing and stock live in `inventory_items`
 - Recommendation features live in `string_recommendation_matrix`
@@ -179,12 +179,12 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - Profile/onboarding fields are converted into `user_preference_matrix` rows with `source_layer='profile'`.
 - Raw 1-to-10 inputs are stored as `raw_score`; backend-normalized weights are stored as `preference_weight`.
 - Active catalog candidates are loaded with official performance, inventory, and matrix entries.
-- FYP1 uses rule-enhanced content recommendation with fixed official/NLP fusion,
+- The current recommender uses rule-enhanced content recommendation with fixed official/NLP fusion,
   profile rules, and bounded confirmed-feedback calibration. Exact-racket
   interaction history receives a bounded CF weight only after three independent
   exact-model supporters; sparse cases retain the base score. Matrix factorization
   and embeddings are not used.
-- PreferenceMatch uses only effective item features from official/manual performance and `nlp_review` matrix rows.
+- PreferenceMatch is the preference-weighted mean of effective item features from official/manual performance and `nlp_review` matrix rows after bounded feedback calibration.
 - Core recommendation dimensions are `repulsion`, `control`, `durability`, `comfort`, `sound`, `elasticity`, `tension_retention`, `string_movement`, and `value_for_money`.
 - Structured catalog heuristics such as gauge are excluded from PreferenceMatch and used only in RuleFit.
 - Official and NLP values use fixed equal fusion when both exist; a single available source is used directly, and the prior is used only when both are missing.
@@ -204,7 +204,7 @@ The main weakness was runtime usage. Before this refactor, the public recommende
   through `app/adapters/services/agent`, and supports four-question guided
   selection, exact-run explanation, verified in-stock alternatives, and one
   read-only admin operations summary. The model cannot write application state
-  or replace V11 scoring. Broader completed tools and admin confirmation handlers
+  or replace the current V13 scorer. Broader completed tools and admin confirmation handlers
   remain preserved behind inactive allowlist entries.
 - Exact recommendation explanations are owner-scoped by persisted `run_id`;
   source metadata is collected server-side from successful tool calls.

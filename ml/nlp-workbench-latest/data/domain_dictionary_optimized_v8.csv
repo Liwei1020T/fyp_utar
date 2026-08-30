@@ -24,7 +24,7 @@ attack,positive_term,杀球爽,positive,satisfying smash feel,domain phrase for 
 attack,positive_term,杀球真的爽,positive,smashes feel really great,latest-data positive attack phrase,latest_raw_v7
 attack,positive_term,点杀,positive,drop smash / point kill,High-frequency attack cue absent in current dictionary,v5_addition
 attack,positive_term,爆破感,positive,explosive impact,domain phrase for positive sentiment,current
-attack,positive_term,突击,positive,burst attack,Frequent attacking cue in community reviews,v5_addition
+attack,positive_term,突击,positive,burst attack,Frequent attacking cue in feedback reviews,v5_addition
 attack,positive_term,进攻利器,positive,weapon for attack,Direct attack endorsement,v5_addition
 attack,positive_term,进攻好,positive,good attacking response,domain phrase for positive sentiment,current
 attack,positive_term,进攻很猛,positive,very strong in attack,latest-data positive attack phrase,latest_raw_v7

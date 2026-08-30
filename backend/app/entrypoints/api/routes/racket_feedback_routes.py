@@ -33,6 +33,7 @@ from app.dto.auth import MessageResponse
 from app.domain.recommendation.learning_signals import canonical_racket_model_key
 from app.domain.recommendation.learning_signals import STANDARD_RACKET_MODELS
 from app.domain.recommendation.learning_signals import standard_racket_model_for_key
+from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.shared.errors import BadRequestError
 from app.shared.errors import ConflictError
 from app.shared.errors import NotFoundError
@@ -42,13 +43,6 @@ from app.shared.serialization import number_to_float
 router = APIRouter(tags=["rackets", "feedback"])
 
 RECOMMENDATION_FEATURE_FIELDS = {"comfort", "control", "repulsion"}
-RACKET_CF_ALGORITHM_VERSION = "fyp1_similarity_preferences_community_racket_cf_v11"
-FEEDBACK_ALGORITHM_VERSIONS = {
-    "fyp1_similarity_preferences_community_v10",
-    RACKET_CF_ALGORITHM_VERSION,
-}
-
-
 RacketServiceSummary = tuple[int, str | None, float | None, str | None]
 
 
@@ -208,7 +202,7 @@ def _get_owned_booking(
 def _invalidate_feedback_caches(db: Session) -> None:
     db.execute(
         delete(RecommendationScoreCache).where(
-            RecommendationScoreCache.algorithm_version.in_(FEEDBACK_ALGORITHM_VERSIONS)
+            RecommendationScoreCache.algorithm_version == ALGORITHM_VERSION
         )
     )
 
@@ -217,7 +211,7 @@ def _invalidate_user_racket_cache(db: Session, user_id: str) -> None:
     db.execute(
         delete(RecommendationScoreCache).where(
             RecommendationScoreCache.user_id == user_id,
-            RecommendationScoreCache.algorithm_version == RACKET_CF_ALGORITHM_VERSION,
+            RecommendationScoreCache.algorithm_version == ALGORITHM_VERSION,
         )
     )
 

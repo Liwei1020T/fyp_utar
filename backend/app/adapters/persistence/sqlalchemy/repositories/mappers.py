@@ -46,7 +46,7 @@ SOURCE_LAYER_PRIORITY = {
     "official_performance": 1,
     "nlp_review": 2,
     "hybrid_derived": 3,
-    "community_signal": 4,
+    "feedback_signal": 4,
     "catalog_structured": 5,
 }
 
@@ -175,7 +175,7 @@ def to_string_item(item: StringCatalogItem) -> StringItem:
         original_series=item.original_series,
         original_material=item.original_material,
         original_color=item.original_color,
-        community_rating=number_to_float(item.metrics.community_rating)
+        feedback_rating=number_to_float(item.metrics.feedback_rating)
         if item.metrics
         else None,
         want_count=item.metrics.want_count if item.metrics else 0,

@@ -1,28 +1,28 @@
 import React from 'react';
 import { View } from 'react-native';
 import {
-  communityEvidenceLabel,
-  communityFeatureEntries,
-  formatCommunityScore,
-  formatCommunityWeight,
-} from '../../lib/communityFeedback';
+  feedbackEvidenceLabel,
+  feedbackFeatureEntries,
+  formatFeedbackScore,
+  formatFeedbackWeight,
+} from '../../lib/feedbackSummary';
 import { formatLabel } from '../../lib/formatters';
-import type { BackendCommunityStringSummary } from '../../types/backend';
+import type { BackendFeedbackStringSummary } from '../../types/backend';
 import { AppChip } from '../ui/AppChip';
 import { HeroText } from '../ui/heroui';
 
-interface CommunityFeatureListProps {
-  features: BackendCommunityStringSummary['features'];
+interface FeedbackFeatureListProps {
+  features: BackendFeedbackStringSummary['features'];
   showScope?: boolean;
 }
 
-export function CommunityFeatureList({
+export function FeedbackFeatureList({
   features,
   showScope = false,
-}: CommunityFeatureListProps) {
+}: FeedbackFeatureListProps) {
   return (
     <View>
-      {communityFeatureEntries(features).map(([featureKey, feature], index) => (
+      {feedbackFeatureEntries(features).map(([featureKey, feature], index) => (
         <View
           key={featureKey}
           className={`flex-row items-center justify-between gap-3 py-3 ${
@@ -35,7 +35,7 @@ export function CommunityFeatureList({
                 {formatLabel(featureKey)}
               </HeroText>
               <AppChip
-                label={communityEvidenceLabel(feature.distinct_users)}
+                label={feedbackEvidenceLabel(feature.distinct_users)}
                 variant={
                   feature.distinct_users >= 10
                     ? 'success'
@@ -60,10 +60,10 @@ export function CommunityFeatureList({
           </View>
           <View className="items-end">
             <HeroText selectable className="text-base font-bold text-neutral-950">
-              {formatCommunityScore(feature.score)}
+              {formatFeedbackScore(feature.score)}
             </HeroText>
             <HeroText selectable className="mt-1 text-[11px] text-neutral-500">
-              {formatCommunityWeight(feature.weight)} influence
+              {formatFeedbackWeight(feature.weight)} influence
             </HeroText>
           </View>
         </View>

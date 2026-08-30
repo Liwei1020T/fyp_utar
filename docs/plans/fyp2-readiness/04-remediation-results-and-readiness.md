@@ -46,7 +46,7 @@ The approved sequence was executed as `F -> A -> C -> B -> D -> E`:
 | A — database | Alembic models and revisions `0001`–`0018` are the schema authority. Clean PostgreSQL migration reaches head. Booking capacity is reserved under a database row lock. |
 | C — backend | FastAPI use cases own validation and transactions. Catalog editing is one atomic backend command. Legacy optional AI adapters no longer initialize at API startup. |
 | B — mobile | Expo is a backend-backed mobile client. Zustand owns current server-state hydration; the unused QueryClient boundary was removed. Native tokens use SecureStore. |
-| D — recommendation | The in-process FYP1 scorer is the sole live owner. Saved runs preserve algorithm, matrix, source timestamps, evidence counts and score layers for admin audit. |
+| D — recommendation | The in-process content scorer is the sole live owner. Saved runs preserve algorithm, matrix, source timestamps, evidence counts and score layers for admin audit. |
 | E — NLP | `ml/nlp-workbench-latest` is the canonical offline workbench. Thin notebooks call tested modules and write immutable run directories; no public NLP service was introduced. |
 
 ## Finding disposition

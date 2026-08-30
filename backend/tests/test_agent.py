@@ -18,6 +18,7 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
+from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.dto.agent import AgentQueryDto
 from app.dto.agent import AgentToolResult
 from app.entrypoints.api.routes.agent_routes import get_deepseek_agent_client
@@ -625,7 +626,7 @@ def test_what_if_tool_maps_changes_without_mutating_saved_profile() -> None:
         recommendation_repository=cast(RecommendationRepository, object()),
     )
     preview_response = RecommendationResponseModel(
-        algorithm_version="fyp1_similarity_preferences_community_racket_cf_v11",
+        algorithm_version=ALGORITHM_VERSION,
         results=[
             RecommendationResultModel(
                 rank=1,
@@ -773,7 +774,7 @@ def test_latest_recommendation_tool_returns_backend_run_source() -> None:
         recommendation_repository=cast(RecommendationRepository, object()),
     )
     cached_response = RecommendationResponseModel(
-        algorithm_version="fyp1_similarity_preferences_community_racket_cf_v11",
+        algorithm_version=ALGORITHM_VERSION,
         results=[],
         run_id="run-latest",
     )

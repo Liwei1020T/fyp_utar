@@ -21,7 +21,7 @@ from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationRequestModel
-from app.domain.recommendation.scoring import Fyp1ContentRecommendationScorer
+from app.domain.recommendation.scoring import ContentRecommendationScorer
 from app.main import app
 
 
@@ -228,7 +228,7 @@ def test_all_approved_strings_have_seeded_official_performance() -> None:
     }
 
 
-def test_feel_and_gauge_preferences_surface_a_match_near_the_top() -> None:
+def test_feel_and_gauge_preferences_raise_matching_candidate_scores() -> None:
     with SessionLocal() as db:
         candidates = SqlAlchemyRecommendationRepository(
             db,
@@ -261,22 +261,48 @@ def test_feel_and_gauge_preferences_surface_a_match_near_the_top() -> None:
         ("preferred_gauge", ("thin", "medium", "thick")),
     ):
         for value in values:
-            request = (
+            preferred_request = (
                 replace(base_request, preferred_feel=value)
                 if field == "preferred_feel"
                 else replace(base_request, preferred_gauge=value)
             )
-            results = Fyp1ContentRecommendationScorer().score_candidates(
-                candidates=candidates,
-                request=request,
-                top_n=5,
+            comparison_value = (
+                next(candidate for candidate in values if candidate != value)
+                if field == "preferred_feel"
+                else "no_preference"
             )
-            top_categories = set()
-            for row in results:
-                catalog_id = row.result.catalog_id
-                assert catalog_id is not None
-                top_categories.add(_candidate_category(by_id[catalog_id], field))
-            assert value in top_categories
+            comparison_request = (
+                replace(base_request, preferred_feel=comparison_value)
+                if field == "preferred_feel"
+                else base_request
+            )
+            preferred_results = ContentRecommendationScorer().score_candidates(
+                candidates=candidates,
+                request=preferred_request,
+                top_n=len(candidates),
+            )
+            comparison_results = ContentRecommendationScorer().score_candidates(
+                candidates=candidates,
+                request=comparison_request,
+                top_n=len(candidates),
+            )
+            preferred_scores = {
+                row.result.catalog_id: row.result.score for row in preferred_results
+            }
+            comparison_scores = {
+                row.result.catalog_id: row.result.score for row in comparison_results
+            }
+            matching_ids = {
+                catalog_id
+                for catalog_id, candidate in by_id.items()
+                if _candidate_category(candidate, field) == value
+            }
+
+            assert matching_ids
+            assert all(
+                preferred_scores[catalog_id] > comparison_scores[catalog_id]
+                for catalog_id in matching_ids
+            )
 
 
 def _candidate_category(candidate: RecommendationCandidateModel, field: str) -> str:

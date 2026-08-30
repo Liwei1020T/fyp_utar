@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from app.domain.catalog.entities import StringItem
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import CollaborativeEvidence
-from app.domain.recommendation.entities import CommunityFeatureAggregate
-from app.domain.recommendation.entities import CommunitySnapshot
+from app.domain.recommendation.entities import FeedbackFeatureAggregate
+from app.domain.recommendation.entities import FeedbackSnapshot
 from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
@@ -18,7 +18,7 @@ from app.domain.recommendation.learning_signals import CF_SHRINKAGE_K
 from app.domain.recommendation.learning_signals import cf_weight_for_support
 
 
-ALGORITHM_VERSION = "fyp1_similarity_preferences_community_racket_cf_v11"
+ALGORITHM_VERSION = "fyp1_weighted_preferences_feedback_racket_cf_v13"
 PREFERENCE_SOURCE_LAYER = "profile"
 
 CORE_RECOMMENDATION_FEATURES = (
@@ -79,8 +79,8 @@ class ScoredRecommendation:
     preference_vector_rows: list[dict[str, float | str | None]]
 
 
-class Fyp1ContentRecommendationScorer:
-    """FYP1 scorer: rule-enhanced, content-based, and explainable."""
+class ContentRecommendationScorer:
+    """Rule-enhanced, content-based, and explainable scorer."""
 
     def __init__(self, *, preference_weight_exponent: float = 1.0) -> None:
         if (
@@ -132,7 +132,7 @@ class Fyp1ContentRecommendationScorer:
         candidates: list[RecommendationCandidateModel],
         request: RecommendationRequestModel,
         top_n: int,
-        community_snapshot: CommunitySnapshot | None = None,
+        feedback_snapshot: FeedbackSnapshot | None = None,
         cf_evidence: CollaborativeEvidence | None = None,
         racket_context: RacketRecommendationContext | None = None,
     ) -> list[ScoredRecommendation]:
@@ -146,13 +146,13 @@ class Fyp1ContentRecommendationScorer:
             effective_scores, feature_sources, feature_meta = _effective_item_features(
                 candidate
             )
-            effective_scores, feature_sources, feature_meta = _apply_community(
+            effective_scores, feature_sources, feature_meta = _apply_feedback(
                 effective_scores=effective_scores,
                 feature_sources=feature_sources,
                 feature_meta=feature_meta,
                 aggregates=(
-                    community_snapshot.by_catalog.get(candidate.item.id, {})
-                    if community_snapshot is not None
+                    feedback_snapshot.by_catalog.get(candidate.item.id, {})
+                    if feedback_snapshot is not None
                     else {}
                 ),
             )
@@ -215,15 +215,15 @@ class Fyp1ContentRecommendationScorer:
                 "display_name": candidate.item.display_name,
                 "brand": candidate.item.brand,
                 "model_name": candidate.item.model_name,
-                "algorithm_family": "community_calibrated_racket_cf",
+                "algorithm_family": "feedback_calibrated_racket_cf",
                 "collaborative_filtering_used": cf_payload.get("mode") == "enabled",
-                "community_calibration_used": any(
-                    (_to_float(row.get("community_weight")) or 0) > 0
+                "feedback_calibration_used": any(
+                    (_to_float(row.get("feedback_weight")) or 0) > 0
                     for row in feature_evidence
                 ),
-                "community_snapshot_version": (
-                    community_snapshot.snapshot_version
-                    if community_snapshot is not None
+                "feedback_snapshot_version": (
+                    feedback_snapshot.snapshot_version
+                    if feedback_snapshot is not None
                     else None
                 ),
                 "racket_context": (
@@ -417,12 +417,12 @@ def _effective_item_features(
     return effective, sources, feature_meta
 
 
-def _apply_community(
+def _apply_feedback(
     *,
     effective_scores: dict[str, float],
     feature_sources: dict[str, str],
     feature_meta: dict[str, dict[str, object]],
-    aggregates: Mapping[str, CommunityFeatureAggregate],
+    aggregates: Mapping[str, FeedbackFeatureAggregate],
 ) -> tuple[dict[str, float], dict[str, str], dict[str, dict[str, object]]]:
     calibrated = dict(effective_scores)
     sources = dict(feature_sources)
@@ -435,18 +435,18 @@ def _apply_community(
             baseline * (1 - aggregate.weight)
             + aggregate.normalized_score * aggregate.weight
         )
-        sources[feature] = f"{sources[feature]}+community_signal"
+        sources[feature] = f"{sources[feature]}+feedback_signal"
         meta[feature].update(
             {
                 "baseline_score": baseline,
-                "community_score": aggregate.normalized_score,
-                "community_distinct_users": aggregate.distinct_users,
-                "community_booking_count": aggregate.booking_count,
-                "community_confidence": aggregate.confidence,
-                "community_weight": aggregate.weight,
-                "community_evidence_scope": aggregate.evidence_scope,
-                "community_racket_model_key": aggregate.racket_model_key,
-                "community_source_version": aggregate.source_version,
+                "feedback_score": aggregate.normalized_score,
+                "feedback_distinct_users": aggregate.distinct_users,
+                "feedback_booking_count": aggregate.booking_count,
+                "feedback_confidence": aggregate.confidence,
+                "feedback_weight": aggregate.weight,
+                "feedback_evidence_scope": aggregate.evidence_scope,
+                "feedback_racket_model_key": aggregate.racket_model_key,
+                "feedback_source_version": aggregate.source_version,
             }
         )
     return calibrated, sources, meta
@@ -539,7 +539,7 @@ def _nlp_feature_signal(
 
 def _auxiliary_scores(candidate: RecommendationCandidateModel) -> dict[str, float]:
     scores: dict[str, float] = {}
-    for source_layer in ("nlp_review", "hybrid_derived", "community_signal"):
+    for source_layer in ("nlp_review", "hybrid_derived", "feedback_signal"):
         for feature_key, value in candidate.matrix_by_source.get(
             source_layer, {}
         ).items():
@@ -586,14 +586,14 @@ def _build_feature_evidence(
             "nlp_influence": round(_to_float(meta.get("nlp_influence")) or 0.0, 4),
             "prior_score": round(_to_float(meta.get("prior_score")) or 0.0, 4),
             "baseline_score": _to_float(meta.get("baseline_score")),
-            "community_score": _to_float(meta.get("community_score")),
-            "community_distinct_users": meta.get("community_distinct_users"),
-            "community_booking_count": meta.get("community_booking_count"),
-            "community_confidence": _to_float(meta.get("community_confidence")),
-            "community_weight": _to_float(meta.get("community_weight")) or 0.0,
-            "community_evidence_scope": meta.get("community_evidence_scope"),
-            "community_racket_model_key": meta.get("community_racket_model_key"),
-            "community_source_version": meta.get("community_source_version"),
+            "feedback_score": _to_float(meta.get("feedback_score")),
+            "feedback_distinct_users": meta.get("feedback_distinct_users"),
+            "feedback_booking_count": meta.get("feedback_booking_count"),
+            "feedback_confidence": _to_float(meta.get("feedback_confidence")),
+            "feedback_weight": _to_float(meta.get("feedback_weight")) or 0.0,
+            "feedback_evidence_scope": meta.get("feedback_evidence_scope"),
+            "feedback_racket_model_key": meta.get("feedback_racket_model_key"),
+            "feedback_source_version": meta.get("feedback_source_version"),
         }
         rows.append(row)
 
@@ -685,56 +685,11 @@ def _preference_match_score(
     if total_weight <= 0:
         return 0.5
 
-    user_vector = [
-        preference_weights.get(feature_key, 0.0)
-        for feature_key in CORE_RECOMMENDATION_FEATURES
-    ]
-    item_raw = [
-        clamp01(effective_scores.get(feature_key, FEATURE_PRIORS[feature_key]))
-        for feature_key in CORE_RECOMMENDATION_FEATURES
-    ]
-    item_total = sum(item_raw) or float(len(item_raw))
-    item_shape = [value / item_total for value in item_raw]
-
-    priority_weights = [1.0 + (weight * 2.0) for weight in user_vector]
-    numerator = sum(
-        priority_weights[index] * user_vector[index] * item_shape[index]
-        for index in range(len(CORE_RECOMMENDATION_FEATURES))
+    weighted_score = sum(
+        weight * clamp01(effective_scores.get(feature_key, FEATURE_PRIORS[feature_key]))
+        for feature_key, weight in preference_weights.items()
     )
-    denom_left = math.sqrt(
-        sum(
-            priority_weights[index] * (user_vector[index] ** 2)
-            for index in range(len(CORE_RECOMMENDATION_FEATURES))
-        )
-    )
-    denom_right = math.sqrt(
-        sum(
-            priority_weights[index] * (item_shape[index] ** 2)
-            for index in range(len(CORE_RECOMMENDATION_FEATURES))
-        )
-    )
-    shape_similarity = (
-        numerator / (denom_left * denom_right)
-        if denom_left > 0 and denom_right > 0
-        else 0.5
-    )
-
-    top_features = sorted(
-        preference_weights.items(),
-        key=lambda item: item[1],
-        reverse=True,
-    )[:3]
-    top_weight = sum(weight for _, weight in top_features) or 1.0
-    top_alignment = (
-        sum(
-            clamp01(effective_scores.get(feature_key, FEATURE_PRIORS[feature_key]))
-            * weight
-            for feature_key, weight in top_features
-        )
-        / top_weight
-    )
-
-    return clamp01((shape_similarity * 0.75) + (top_alignment * 0.25))
+    return clamp01(weighted_score / total_weight)
 
 
 def _rule_fit_score(
@@ -763,7 +718,9 @@ def _rule_fit_score(
     string_movement = effective_scores["string_movement"]
     gauge_category = _gauge_category(gauge)
     requested_gauge = (
-        "thick"
+        None
+        if request.preferred_gauge != "no_preference"
+        else "thick"
         if request.preferred_tension >= 27 or request.frequency_per_week >= 3
         else "thin"
         if request.skill_level == "beginner"

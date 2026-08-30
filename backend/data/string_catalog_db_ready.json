@@ -234,12 +234,12 @@
         "Multiple Colours"
       ],
       "short_description": "A firm-feeling offensive string designed for strong repulsion and a crisp impact sensation.",
-      "full_description": "A firm-feeling offensive string designed for strong repulsion and a crisp impact sensation. Gauge: 0.68 mm. Construction: Outer: specially braided high-polymer nylon fibre; core: Vectran fibre and nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 9.1,
+      "full_description": "A firm-feeling offensive string designed for strong repulsion and a crisp impact sensation. Gauge: 0.68 mm. Construction: Outer: specially braided high-polymer nylon fibre; core: Vectran fibre and nylon multifilament.. Colours: Multiple Colours. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 9.1,
       "want_count": 5873,
       "used_count": 1,
       "review_count": 3109,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -288,12 +288,12 @@
         "Multiple Colours"
       ],
       "short_description": "A classic all-round durability string suited to players who prefer dependable and long-lasting performance.",
-      "full_description": "A classic all-round durability string suited to players who prefer dependable and long-lasting performance. Gauge: 0.70 mm. Construction: Outer string layer with a special braided structure.. Colours: Multiple Colours. Community signals: high durability, good value for money, good repulsion.",
-      "community_rating": 8.0,
+      "full_description": "A classic all-round durability string suited to players who prefer dependable and long-lasting performance. Gauge: 0.70 mm. Construction: Outer string layer with a special braided structure.. Colours: Multiple Colours. Feedback signals: high durability, good value for money, good repulsion.",
+      "feedback_rating": 8.0,
       "want_count": 980,
       "used_count": 7684,
       "review_count": 1506,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "high_durability",
           "tag_label": "high durability",
@@ -346,12 +346,12 @@
         "Pink"
       ],
       "short_description": "A titanium-coated string developed for a sharper impact feel with solid durability.",
-      "full_description": "A titanium-coated string developed for a sharper impact feel with solid durability. Gauge: 0.70 mm. Construction: Synthetic multi-layer resin core with titanium hydride coating on the fibre surface.. Colours: Black, Blue, White, Red, Pink. Community signals: high durability, good value for money, good repulsion.",
-      "community_rating": 8.4,
+      "full_description": "A titanium-coated string developed for a sharper impact feel with solid durability. Gauge: 0.70 mm. Construction: Synthetic multi-layer resin core with titanium hydride coating on the fibre surface.. Colours: Black, Blue, White, Red, Pink. Feedback signals: high durability, good value for money, good repulsion.",
+      "feedback_rating": 8.4,
       "want_count": 655,
       "used_count": 4209,
       "review_count": 899,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "high_durability",
           "tag_label": "high durability",
@@ -405,12 +405,12 @@
         "Sky Blue"
       ],
       "short_description": "A thin-gauge performance string designed for fast repulsion, sharp response, and strong overall control.",
-      "full_description": "A thin-gauge performance string designed for fast repulsion, sharp response, and strong overall control. Gauge: 0.65 mm. Construction: High-intensity nylon multifilament core with specially braided high-polymer nylon outer layer.. Colours: Black, Yellow, White, Neon Pink, Mint Green, Sky Blue. Community signals: good repulsion, good value for money, lower value for money.",
-      "community_rating": 8.6,
+      "full_description": "A thin-gauge performance string designed for fast repulsion, sharp response, and strong overall control. Gauge: 0.65 mm. Construction: High-intensity nylon multifilament core with specially braided high-polymer nylon outer layer.. Colours: Black, Yellow, White, Neon Pink, Mint Green, Sky Blue. Feedback signals: good repulsion, good value for money, lower value for money.",
+      "feedback_rating": 8.6,
       "want_count": 1468,
       "used_count": 6387,
       "review_count": 1331,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -460,12 +460,12 @@
         "Orange"
       ],
       "short_description": "A power-oriented string designed for hard-hitting players who want a solid and punchy response.",
-      "full_description": "A power-oriented string designed for hard-hitting players who want a solid and punchy response. Gauge: 0.68 mm. Construction: Core: high-density nylon multifilament plus Vectran fibre; outer: high-polymer nylon with special braiding.. Colours: White, Orange. Community signals: good repulsion, high durability, good value for money.",
-      "community_rating": 8.9,
+      "full_description": "A power-oriented string designed for hard-hitting players who want a solid and punchy response. Gauge: 0.68 mm. Construction: Core: high-density nylon multifilament plus Vectran fibre; outer: high-polymer nylon with special braiding.. Colours: White, Orange. Feedback signals: good repulsion, high durability, good value for money.",
+      "feedback_rating": 8.9,
       "want_count": 1491,
       "used_count": 5588,
       "review_count": 1082,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -516,12 +516,12 @@
         "Bright Pink"
       ],
       "short_description": "An ultra-thin string focused on explosive repulsion and a very sharp hitting sound.",
-      "full_description": "An ultra-thin string focused on explosive repulsion and a very sharp hitting sound. Gauge: 0.61 mm. Construction: Core: high-density nylon; outer: specially braided high-polymer nylon.. Colours: Purple, White, Bright Pink. Community signals: good repulsion, lower value for money, good value for money.",
-      "community_rating": 9.0,
+      "full_description": "An ultra-thin string focused on explosive repulsion and a very sharp hitting sound. Gauge: 0.61 mm. Construction: Core: high-density nylon; outer: specially braided high-polymer nylon.. Colours: Purple, White, Bright Pink. Feedback signals: good repulsion, lower value for money, good value for money.",
+      "feedback_rating": 9.0,
       "want_count": 655,
       "used_count": 1524,
       "review_count": 395,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -572,12 +572,12 @@
         "Yellow"
       ],
       "short_description": "A thin attacking string designed to combine quick response with strong smash performance.",
-      "full_description": "A thin attacking string designed to combine quick response with strong smash performance. Gauge: 0.65 mm. Construction: High-polymer nylon multifilament with special braiding.. Colours: White, Blue-Green, Yellow. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 9.3,
+      "full_description": "A thin attacking string designed to combine quick response with strong smash performance. Gauge: 0.65 mm. Construction: High-polymer nylon multifilament with special braiding.. Colours: White, Blue-Green, Yellow. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 9.3,
       "want_count": 1518,
       "used_count": 1066,
       "review_count": 331,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -628,12 +628,12 @@
         "White/Blue"
       ],
       "short_description": "A hybrid string set designed for quick repulsion, sharper bite, and stronger control.",
-      "full_description": "A hybrid string set designed for quick repulsion, sharper bite, and stronger control. Gauge: 0.67/0.61 mm. Construction: Cross string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer. Main string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer and polyurethane coating.. Colours: White/Green, White/Red, White/Blue. Community signals: good repulsion, lower value for money, good value for money.",
-      "community_rating": 9.3,
+      "full_description": "A hybrid string set designed for quick repulsion, sharper bite, and stronger control. Gauge: 0.67/0.61 mm. Construction: Cross string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer. Main string: high-intensity nylon multifilament core with braided high-polymer nylon outer layer and polyurethane coating.. Colours: White/Green, White/Red, White/Blue. Feedback signals: good repulsion, lower value for money, good value for money.",
+      "feedback_rating": 9.3,
       "want_count": 2604,
       "used_count": 5019,
       "review_count": 1128,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -683,12 +683,12 @@
         "Red/Grey"
       ],
       "short_description": "A hybrid string set that targets more power while retaining the control-oriented characteristics of the AEROBITE series.",
-      "full_description": "A hybrid string set that targets more power while retaining the control-oriented characteristics of the AEROBITE series. Gauge: 0.72/0.61 mm. Construction: High-density nylon with high-polymer nylon and special braiding.. Colours: Yellow/Grey, Red/Grey. Community signals: good repulsion, high durability, lower value for money.",
-      "community_rating": 9.2,
+      "full_description": "A hybrid string set that targets more power while retaining the control-oriented characteristics of the AEROBITE series. Gauge: 0.72/0.61 mm. Construction: High-density nylon with high-polymer nylon and special braiding.. Colours: Yellow/Grey, Red/Grey. Feedback signals: good repulsion, high durability, lower value for money.",
+      "feedback_rating": 9.2,
       "want_count": 974,
       "used_count": 2133,
       "review_count": 477,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -742,12 +742,12 @@
         "Light Pink"
       ],
       "short_description": "A thin forged-fiber string designed for quick repulsion and a lively hitting feel.",
-      "full_description": "A thin forged-fiber string designed for quick repulsion and a lively hitting feel. Gauge: 0.63 mm. Construction: Core: high-intensity nylon multifilament; outer: forged fibre with special braiding.. Colours: Yellow, Black, White, 宝石红, Mint, Light Pink. Community signals: good repulsion, high durability, good value for money.",
-      "community_rating": 9.3,
+      "full_description": "A thin forged-fiber string designed for quick repulsion and a lively hitting feel. Gauge: 0.63 mm. Construction: Core: high-intensity nylon multifilament; outer: forged fibre with special braiding.. Colours: Yellow, Black, White, 宝石红, Mint, Light Pink. Feedback signals: good repulsion, high durability, good value for money.",
+      "feedback_rating": 9.3,
       "want_count": 2831,
       "used_count": 6089,
       "review_count": 1636,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -801,12 +801,12 @@
         "Purple"
       ],
       "short_description": "A balanced forged-fiber string focused on repulsion, control, and improved durability.",
-      "full_description": "A balanced forged-fiber string focused on repulsion, control, and improved durability. Gauge: 0.65 mm. Construction: Core: high-intensity nylon multifilament; outer: forged fibre with special braiding; coating: elastic outer layer.. Colours: White, Black, Yellow, Red, Blue, Purple. Community signals: good repulsion, high durability, good value for money.",
-      "community_rating": 8.7,
+      "full_description": "A balanced forged-fiber string focused on repulsion, control, and improved durability. Gauge: 0.65 mm. Construction: Core: high-intensity nylon multifilament; outer: forged fibre with special braiding; coating: elastic outer layer.. Colours: White, Black, Yellow, Red, Blue, Purple. Feedback signals: good repulsion, high durability, good value for money.",
+      "feedback_rating": 8.7,
       "want_count": 471,
       "used_count": 1688,
       "review_count": 443,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -860,12 +860,12 @@
         "Lime Green"
       ],
       "short_description": "A thicker EXBOLT option aimed at stronger durability and powerful smashes.",
-      "full_description": "A thicker EXBOLT option aimed at stronger durability and powerful smashes. Gauge: 0.68 mm. Construction: Core: high-intensity nylon multifilament; outer: oval forged fibre with special braiding; coating: elastic outer layer.. Colours: Yellow, Black, White, Bright Red, Turquoise, Lime Green. Community signals: high durability, good repulsion, good value for money.",
-      "community_rating": 8.2,
+      "full_description": "A thicker EXBOLT option aimed at stronger durability and powerful smashes. Gauge: 0.68 mm. Construction: Core: high-intensity nylon multifilament; outer: oval forged fibre with special braiding; coating: elastic outer layer.. Colours: Yellow, Black, White, Bright Red, Turquoise, Lime Green. Feedback signals: high durability, good repulsion, good value for money.",
+      "feedback_rating": 8.2,
       "want_count": 419,
       "used_count": 877,
       "review_count": 355,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "high_durability",
           "tag_label": "high durability",
@@ -918,12 +918,12 @@
         "Red"
       ],
       "short_description": "A RYZONIC-series string positioned for balanced performance and general all-round use.",
-      "full_description": "A RYZONIC-series string positioned for balanced performance and general all-round use. Gauge: 0.65 mm. Construction: High-strength nylon with resin.. Colours: White, Black, Yellow, Pink, Red. Community signals: good value for money, good repulsion, high durability.",
-      "community_rating": 8.9,
+      "full_description": "A RYZONIC-series string positioned for balanced performance and general all-round use. Gauge: 0.65 mm. Construction: High-strength nylon with resin.. Colours: White, Black, Yellow, Pink, Red. Feedback signals: good value for money, good repulsion, high durability.",
+      "feedback_rating": 8.9,
       "want_count": 665,
       "used_count": 1256,
       "review_count": 517,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -973,12 +973,12 @@
         "Vibrant Pink"
       ],
       "short_description": "A high-resilience string with a balanced feel and strong elasticity.",
-      "full_description": "A high-resilience string with a balanced feel and strong elasticity. Gauge: 0.66 mm. Construction: High-strength nylon multifilament core with nanotechnology applied throughout the string intersections.. Colours: Ivory White, Vibrant Pink. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 8.9,
+      "full_description": "A high-resilience string with a balanced feel and strong elasticity. Gauge: 0.66 mm. Construction: High-strength nylon multifilament core with nanotechnology applied throughout the string intersections.. Colours: Ivory White, Vibrant Pink. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 8.9,
       "want_count": 4949,
       "used_count": 1,
       "review_count": 3461,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1032,12 +1032,12 @@
         "Ivory White"
       ],
       "short_description": "A durability-focused string that aims to balance comfort, elasticity, and long-term use.",
-      "full_description": "A durability-focused string that aims to balance comfort, elasticity, and long-term use. Gauge: 0.69 mm. Construction: High-strength nylon multifilament.. Colours: Fluorescent Yellow, Orange, Black, Jewel Blue, Champagne Gold, Ivory White. Community signals: high durability, good repulsion, good value for money.",
-      "community_rating": 8.0,
+      "full_description": "A durability-focused string that aims to balance comfort, elasticity, and long-term use. Gauge: 0.69 mm. Construction: High-strength nylon multifilament.. Colours: Fluorescent Yellow, Orange, Black, Jewel Blue, Champagne Gold, Ivory White. Feedback signals: high durability, good repulsion, good value for money.",
+      "feedback_rating": 8.0,
       "want_count": 167,
       "used_count": 469,
       "review_count": 132,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "high_durability",
           "tag_label": "high durability",
@@ -1086,12 +1086,12 @@
         "Multiple Colours"
       ],
       "short_description": "A control-oriented string designed to provide a firmer response and better shuttle hold.",
-      "full_description": "A control-oriented string designed to provide a firmer response and better shuttle hold. Gauge: 0.68 mm. Construction: High-toughness Vectran fibre with a special flat yarn structure.. Colours: Multiple Colours. Community signals: good value for money, good repulsion, high durability.",
-      "community_rating": 8.6,
+      "full_description": "A control-oriented string designed to provide a firmer response and better shuttle hold. Gauge: 0.68 mm. Construction: High-toughness Vectran fibre with a special flat yarn structure.. Colours: Multiple Colours. Feedback signals: good value for money, good repulsion, high durability.",
+      "feedback_rating": 8.6,
       "want_count": 391,
       "used_count": 532,
       "review_count": 155,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -1135,12 +1135,12 @@
         "Multiple Colours"
       ],
       "short_description": "A user-friendly durability string suitable for all-round players.",
-      "full_description": "A user-friendly durability string suitable for all-round players. Gauge: 0.70 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Community signals: high durability, good value for money, good repulsion.",
-      "community_rating": 8.4,
+      "full_description": "A user-friendly durability string suitable for all-round players. Gauge: 0.70 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Feedback signals: high durability, good value for money, good repulsion.",
+      "feedback_rating": 8.4,
       "want_count": 614,
       "used_count": 2763,
       "review_count": 765,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "high_durability",
           "tag_label": "high durability",
@@ -1195,12 +1195,12 @@
         "Emerald Green"
       ],
       "short_description": "A thin high-resilience string designed for fast rebound and a crisp acoustic response.",
-      "full_description": "A thin high-resilience string designed for fast rebound and a crisp acoustic response. Gauge: 0.61 mm. Colours: White, Yellow, Pink, Light Blue, 红粉, Lavender, Emerald Green. Community signals: good repulsion, lower value for money, good value for money.",
-      "community_rating": 7.6,
+      "full_description": "A thin high-resilience string designed for fast rebound and a crisp acoustic response. Gauge: 0.61 mm. Colours: White, Yellow, Pink, Light Blue, 红粉, Lavender, Emerald Green. Feedback signals: good repulsion, lower value for money, good value for money.",
+      "feedback_rating": 7.6,
       "want_count": 100,
       "used_count": 383,
       "review_count": 117,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1255,12 +1255,12 @@
         "Yellow"
       ],
       "short_description": "A thin string designed for speed-oriented play with lively elasticity and a slightly harder feel.",
-      "full_description": "A thin string designed for speed-oriented play with lively elasticity and a slightly harder feel. Gauge: 0.63 mm. Construction: Nylon.. Colours: White, Green, Pink, Blue, Red, Orange, Yellow. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 8.4,
+      "full_description": "A thin string designed for speed-oriented play with lively elasticity and a slightly harder feel. Gauge: 0.63 mm. Construction: Nylon.. Colours: White, Green, Pink, Blue, Red, Orange, Yellow. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 8.4,
       "want_count": 437,
       "used_count": 1694,
       "review_count": 413,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1309,12 +1309,12 @@
         "Multiple Colours"
       ],
       "short_description": "A softer control-oriented string designed to improve shuttle hold and touch.",
-      "full_description": "A softer control-oriented string designed to improve shuttle hold and touch. Gauge: 0.68 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 8.2,
+      "full_description": "A softer control-oriented string designed to improve shuttle hold and touch. Gauge: 0.68 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 8.2,
       "want_count": 450,
       "used_count": 969,
       "review_count": 273,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1363,12 +1363,12 @@
         "Multiple Colours"
       ],
       "short_description": "A flagship thin-gauge Li-Ning string known for high repulsion and a crisp response.",
-      "full_description": "A flagship thin-gauge Li-Ning string known for high repulsion and a crisp response. Gauge: 0.65 mm. Construction: Heat-resistant high-strength nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 7.7,
+      "full_description": "A flagship thin-gauge Li-Ning string known for high repulsion and a crisp response. Gauge: 0.65 mm. Construction: Heat-resistant high-strength nylon multifilament.. Colours: Multiple Colours. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 7.7,
       "want_count": 923,
       "used_count": 4431,
       "review_count": 961,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1425,12 +1425,12 @@
         "Light Pine Green"
       ],
       "short_description": "A softer-feeling Li-Ning string designed to balance rebound, comfort, and control.",
-      "full_description": "A softer-feeling Li-Ning string designed to balance rebound, comfort, and control. Gauge: 0.65 mm. Construction: Nylon.. Colours: Ivory White, 雅黑, Vibrant Pink, Fluorescent Yellow, Coral Blue, Zircon Purple, Bright Orange, Fluorescent Acid Green, Light Pine Green. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 8.5,
+      "full_description": "A softer-feeling Li-Ning string designed to balance rebound, comfort, and control. Gauge: 0.65 mm. Construction: Nylon.. Colours: Ivory White, 雅黑, Vibrant Pink, Fluorescent Yellow, Coral Blue, Zircon Purple, Bright Orange, Fluorescent Acid Green, Light Pine Green. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 8.5,
       "want_count": 791,
       "used_count": 3278,
       "review_count": 789,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1484,12 +1484,12 @@
         "Light Blue Violet"
       ],
       "short_description": "A rebound-oriented Li-Ning string built for stronger smashes and practical durability.",
-      "full_description": "A rebound-oriented Li-Ning string built for stronger smashes and practical durability. Gauge: 0.68 mm. Construction: Nylon.. Colours: Ivory White, Vibrant Orange, Coral Blue, Fluorescent Yellow, Light Pine Green, Light Blue Violet. Community signals: good repulsion, good value for money, high durability.",
-      "community_rating": 8.6,
+      "full_description": "A rebound-oriented Li-Ning string built for stronger smashes and practical durability. Gauge: 0.68 mm. Construction: Nylon.. Colours: Ivory White, Vibrant Orange, Coral Blue, Fluorescent Yellow, Light Pine Green, Light Blue Violet. Feedback signals: good repulsion, good value for money, high durability.",
+      "feedback_rating": 8.6,
       "want_count": 639,
       "used_count": 1502,
       "review_count": 515,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1541,12 +1541,12 @@
         "Dark Teal Green"
       ],
       "short_description": "A thin high-response Li-Ning string aimed at fast play and crisp performance.",
-      "full_description": "A thin high-response Li-Ning string aimed at fast play and crisp performance. Gauge: 0.63 mm. Construction: Nylon fibre.. Colours: Ivory White, Flame Red, Fluorescent Yellow, Dark Teal Green. Community signals: good repulsion, good value for money, lower value for money.",
-      "community_rating": 8.6,
+      "full_description": "A thin high-response Li-Ning string aimed at fast play and crisp performance. Gauge: 0.63 mm. Construction: Nylon fibre.. Colours: Ivory White, Flame Red, Fluorescent Yellow, Dark Teal Green. Feedback signals: good repulsion, good value for money, lower value for money.",
+      "feedback_rating": 8.6,
       "want_count": 311,
       "used_count": 419,
       "review_count": 110,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1593,12 +1593,12 @@
       "material_summary_en": "Nylon.",
       "color_options_en": [],
       "short_description": "A thin repulsion-focused Li-Ning string designed for speed and lively feedback.",
-      "full_description": "A thin repulsion-focused Li-Ning string designed for speed and lively feedback. Gauge: 0.61 mm. Construction: Nylon.. Community signals: good repulsion, lower value for money, good value for money.",
-      "community_rating": 7.8,
+      "full_description": "A thin repulsion-focused Li-Ning string designed for speed and lively feedback. Gauge: 0.61 mm. Construction: Nylon.. Feedback signals: good repulsion, lower value for money, good value for money.",
+      "feedback_rating": 7.8,
       "want_count": 128,
       "used_count": 589,
       "review_count": 152,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1647,12 +1647,12 @@
         "Multiple Colours"
       ],
       "short_description": "A thin-gauge string designed for fast response and a lively feel.",
-      "full_description": "A thin-gauge string designed for fast response and a lively feel. Gauge: 0.61 mm. Construction: High-polymer nylon multifilament.. Colours: Multiple Colours. Community signals: good repulsion, high durability, lower value for money.",
-      "community_rating": 8.9,
+      "full_description": "A thin-gauge string designed for fast response and a lively feel. Gauge: 0.61 mm. Construction: High-polymer nylon multifilament.. Colours: Multiple Colours. Feedback signals: good repulsion, high durability, lower value for money.",
+      "feedback_rating": 8.9,
       "want_count": 842,
       "used_count": 649,
       "review_count": 251,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1704,12 +1704,12 @@
         "Fluorescent Yellow"
       ],
       "short_description": "A thin Kumpoo string designed for faster response and a lively hitting feel.",
-      "full_description": "A thin Kumpoo string designed for faster response and a lively hitting feel. Gauge: 0.63 mm. Construction: Nylon.. Colours: White, Ice Blue, Pink, Fluorescent Yellow. Community signals: good value for money, good repulsion, high durability.",
-      "community_rating": 8.8,
+      "full_description": "A thin Kumpoo string designed for faster response and a lively hitting feel. Gauge: 0.63 mm. Construction: Nylon.. Colours: White, Ice Blue, Pink, Fluorescent Yellow. Feedback signals: good value for money, good repulsion, high durability.",
+      "feedback_rating": 8.8,
       "want_count": 542,
       "used_count": 753,
       "review_count": 391,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -1758,12 +1758,12 @@
         "White"
       ],
       "short_description": "A thicker RYZONIC-series option intended for players who prefer greater durability and stability.",
-      "full_description": "A thicker RYZONIC-series option intended for players who prefer greater durability and stability. Gauge: 0.69 mm. Construction: Nylon.. Colours: White. Community signals: good value for money, high durability, good repulsion.",
-      "community_rating": 8.8,
+      "full_description": "A thicker RYZONIC-series option intended for players who prefer greater durability and stability. Gauge: 0.69 mm. Construction: Nylon.. Colours: White. Feedback signals: good value for money, high durability, good repulsion.",
+      "feedback_rating": 8.8,
       "want_count": 78,
       "used_count": 60,
       "review_count": 44,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -1815,12 +1815,12 @@
         "Fluorescent Yellow"
       ],
       "short_description": "A balanced Kumpoo string designed to combine speed, touch, and practical durability.",
-      "full_description": "A balanced Kumpoo string designed to combine speed, touch, and practical durability. Gauge: 0.65 mm. Construction: Nylon.. Colours: White, Light Purple, Light Pink, Fluorescent Yellow. Community signals: good value for money, good repulsion, high durability.",
-      "community_rating": 8.7,
+      "full_description": "A balanced Kumpoo string designed to combine speed, touch, and practical durability. Gauge: 0.65 mm. Construction: Nylon.. Colours: White, Light Purple, Light Pink, Fluorescent Yellow. Feedback signals: good value for money, good repulsion, high durability.",
+      "feedback_rating": 8.7,
       "want_count": 208,
       "used_count": 221,
       "review_count": 123,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -1869,12 +1869,12 @@
         "White"
       ],
       "short_description": "A thin RYZONIC-series string intended for fast response and lively performance.",
-      "full_description": "A thin RYZONIC-series string intended for fast response and lively performance. Gauge: 0.58 mm. Construction: High-strength nylon with resin.. Colours: White. Community signals: good repulsion, good value for money, lower value for money.",
-      "community_rating": 7.8,
+      "full_description": "A thin RYZONIC-series string intended for fast response and lively performance. Gauge: 0.58 mm. Construction: High-strength nylon with resin.. Colours: White. Feedback signals: good repulsion, good value for money, lower value for money.",
+      "feedback_rating": 7.8,
       "want_count": 103,
       "used_count": 314,
       "review_count": 109,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_repulsion",
           "tag_label": "good repulsion",
@@ -1926,12 +1926,12 @@
         "Fluorescent Yellow"
       ],
       "short_description": "A thicker Kumpoo string aimed at players who prefer stronger durability and a more stable response.",
-      "full_description": "A thicker Kumpoo string aimed at players who prefer stronger durability and a more stable response. Gauge: 0.69 mm. Construction: Nylon.. Colours: White, Light Purple, Ice Blue, Fluorescent Yellow. Community signals: good value for money, high durability, good repulsion.",
-      "community_rating": 9.5,
+      "full_description": "A thicker Kumpoo string aimed at players who prefer stronger durability and a more stable response. Gauge: 0.69 mm. Construction: Nylon.. Colours: White, Light Purple, Ice Blue, Fluorescent Yellow. Feedback signals: good value for money, high durability, good repulsion.",
+      "feedback_rating": 9.5,
       "want_count": 300,
       "used_count": 175,
       "review_count": 81,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -1978,12 +1978,12 @@
         "Fluorescent Yellow"
       ],
       "short_description": "A medium-gauge Kumpoo string designed for all-round performance.",
-      "full_description": "A medium-gauge Kumpoo string designed for all-round performance. Gauge: 0.67 mm. Construction: Nylon.. Colours: White, Ice Blue, Pink, Fluorescent Yellow. Community signals: good value for money, high durability, good repulsion.",
-      "community_rating": 8.6,
+      "full_description": "A medium-gauge Kumpoo string designed for all-round performance. Gauge: 0.67 mm. Construction: Nylon.. Colours: White, Ice Blue, Pink, Fluorescent Yellow. Feedback signals: good value for money, high durability, good repulsion.",
+      "feedback_rating": 8.6,
       "want_count": 176,
       "used_count": 144,
       "review_count": 78,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "good_value_for_money",
           "tag_label": "good value for money",
@@ -2032,12 +2032,12 @@
         "Multiple Colours"
       ],
       "short_description": "A balanced Li-Ning string designed for dependable durability and stable repulsion.",
-      "full_description": "A balanced Li-Ning string designed for dependable durability and stable repulsion. Gauge: 0.69 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Community signals: high durability, good repulsion, good value for money.",
-      "community_rating": 7.3,
+      "full_description": "A balanced Li-Ning string designed for dependable durability and stable repulsion. Gauge: 0.69 mm. Construction: Nylon multifilament.. Colours: Multiple Colours. Feedback signals: high durability, good repulsion, good value for money.",
+      "feedback_rating": 7.3,
       "want_count": 86,
       "used_count": 439,
       "review_count": 121,
-      "community_tags": [
+      "feedback_tags": [
         {
           "tag_key": "high_durability",
           "tag_label": "high durability",

@@ -139,7 +139,7 @@ and [docs/database.md](./docs/database.md).
 ## Catalog Refactor Notes
 
 - Master catalog data now lives in normalized `brands` and `strings` tables.
-- Community metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
+- Feedback metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
 - The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate.
 - The approved 12-string cohort is seeded with the manually reviewed official performance values from `backend/data/string_catalog_db_ready.json`; non-approved historical rows can remain `pending_manual_fill`.
@@ -165,7 +165,7 @@ independent supporters exist; otherwise FinalScore = BaseScore.
 - `RuleFit` applies badminton-specific logic such as beginner thin-gauge support, high-tension/high-frequency thick-gauge support, and attacking/control bonuses.
 - NLP/review signals are imported from the independent 12-by-9 MacBERT workbook into `string_recommendation_matrix` with `source_layer='nlp_review'`; they are not copied into `strings`, `string_official_performance`, or the protected V9 workbook.
 - Matrix rows contain only scoring values and optional evidence notes; confidence, review-count, reference, and per-row artifact metadata are not persisted.
-- Community feedback calibrates eligible feature signals within bounded support
+- Feedback calibrates eligible feature signals within bounded support
   and a racket-model scope. The final collaborative-filter blend is gated by
   independent support; insufficient evidence keeps the base score unchanged.
 - `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.

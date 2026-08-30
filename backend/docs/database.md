@@ -43,6 +43,7 @@ The active migration sequence is:
 - [20260825_0035_remove_official_performance_source_url.py](../migrations/versions/20260825_0035_remove_official_performance_source_url.py)
 - [20260826_0036_seed_official_performance.py](../migrations/versions/20260826_0036_seed_official_performance.py)
 - [20260826_0037_seed_store_settings.py](../migrations/versions/20260826_0037_seed_store_settings.py)
+- [20260831_0038_feedback_catalog_terminology.py](../migrations/versions/20260831_0038_feedback_catalog_terminology.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -100,9 +101,9 @@ The old `string_catalog_items` table was split into a normalized catalog subsyst
   - one row per string model
   - stores names, descriptions, gauge data, materials, colors, source traceability, and active status
 - `string_catalog_metrics`
-  - community counts and rating separated from master product truth
+  - feedback counts and rating separated from master product truth
 - `string_catalog_tags`
-  - multi-tag community signals per string
+  - multi-tag feedback signals per string
 - `string_official_performance`
   - official/manual performance values only
   - intentionally separate from NLP or rule-derived scores
@@ -216,7 +217,7 @@ These rows are regenerated when a complete profile is saved and when profile rec
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
 The active algorithm version is
-`fyp1_similarity_preferences_community_racket_cf_v11`.
+`fyp1_weighted_preferences_feedback_racket_cf_v13`.
 
 Profile saves invalidate that user's cache. Matrix content changes invalidate
 all score-cache rows, while an unchanged startup import preserves them. Cached reads
@@ -234,7 +235,7 @@ Compatibility columns (`content_score`, `collaborative_score`, `rule_score`, and
 `nlp_score`) remain available for inspection. `collaborative_score` may store the
 raw racket-conditioned score. It has a bounded non-zero ranking weight only after
 the three-distinct-user exact-model gate passes. The
-`rationale` JSON stores preference inputs, effective scores, community snapshot
+`rationale` JSON stores preference inputs, effective scores, feedback snapshot
 and source versions, racket context, CF shadow evidence, rule events, and reasons.
 
 ### `store_business_hours`
@@ -309,6 +310,13 @@ values for the approved 12-string cohort from the canonical catalog source.
 The `20260826_0037` migration seeds the configured single-store settings and
 business-hours snapshot from `data/store_settings_seed.json`. It only inserts
 missing rows, so later administrator edits are not overwritten during upgrades.
+
+The `20260831_0038` migration renames the catalog metric column to
+`feedback_rating`, rewrites derived matrix and description labels to
+`feedback_signal`, and backfills missing feedback metrics/tags from the checked-in
+catalog seed without overwriting existing values. The active runtime has no
+compatibility column or route for the previous terminology; the old names remain
+only inside immutable migration history so older databases can upgrade safely.
 
 ### `check_in_tokens`
 

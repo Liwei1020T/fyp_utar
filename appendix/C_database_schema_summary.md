@@ -16,7 +16,7 @@ Source files:
 | `profiles` | Stores player skill level, playing style, budget, tension, frequency, and preference slider values. |
 | `brands` | Stores normalized badminton string brand master data. |
 | `strings` | Stores master string catalog data such as name, gauge, material, description, and active status. |
-| `string_catalog_metrics` | Stores community-facing rating and review count signals. |
+| `string_catalog_metrics` | Stores feedback-facing rating and review count signals. |
 | `string_catalog_tags` | Stores multi-tag signals for strings. |
 | `string_official_performance` | Stores official or manually curated performance values. |
 | `inventory_items` | Stores shop-specific stock, price, availability, and reorder settings. |

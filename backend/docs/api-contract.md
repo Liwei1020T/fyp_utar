@@ -221,8 +221,12 @@ message table.
 - `GET /api/bookings/{booking_id}/feedback`
 - `POST /api/bookings/{booking_id}/feedback`
 - `PATCH /api/bookings/{booking_id}/feedback`
+- `GET /api/strings/feedback-summary`
 - `GET /api/admin/feedback`
+- `GET /api/admin/feedback/summary`
 - `GET /api/admin/feedback/export`
+
+The two summary routes expose bounded feedback calibration evidence.
 
 Rackets are owned physical records with stable IDs. A booking may reference an
 owned racket and keeps the racket brand/model snapshot used at booking time.
@@ -233,7 +237,7 @@ The authenticated racket-model catalogue returns the six standard FYP
 `key/brand/model` identities. Racket create/update accepts an optional
 `model_key`: an unknown key returns `400`, a valid key makes the server's
 canonical brand/model authoritative, and a custom model returns `model_key=null`
-so recommendation uses global community evidence and no cross-model CF.
+so recommendation uses global feedback evidence and no cross-model CF.
 Structured feedback is allowed once per owned completed booking, with a
 1-to-5 overall rating plus optional relevance, string, tension, comfort,
 control, and repulsion ratings. Admins can filter the persisted
@@ -437,7 +441,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "fyp1_similarity_preferences_community_racket_cf_v11",
+  "algorithm_version": "fyp1_weighted_preferences_feedback_racket_cf_v13",
   "run_id": "recommendation-run-uuid",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
@@ -472,8 +476,8 @@ Recommendation response:
         "final_score": 0.84
       },
       "rationale_payload": {
-        "algorithm_family": "community_calibrated_content_preferences",
-        "community_calibration_used": true,
+        "algorithm_family": "feedback_calibrated_content_preferences",
+        "feedback_calibration_used": true,
         "collaborative_filtering_used": false,
         "feature_sources": {
           "repulsion": "nlp_review",
@@ -518,15 +522,15 @@ Recommendation response:
 `value_for_money` is a review-derived feature and the ninth saved preference dimension. Catalog price is descriptive and does not affect ranking.
 
 `nlp_review_score` is an explanation-facing score that shows how strongly review-derived matrix signals support the user's weighted priorities. It does not replace `preference_match` or change the final weighting formula.
-The active FYP1 recommender is rule-enhanced content recommendation with fixed
-official/NLP fusion and bounded, explicitly confirmed community-feedback
+The active recommender is rule-enhanced content recommendation with fixed
+official/NLP fusion and bounded, explicitly confirmed feedback
 calibration. When `racket_id` is supplied, the racket must belong to the current
 user. Racket-conditioned interaction-history CF is persisted as `cf_shadow` for
 backward-compatible audit naming. It receives a non-zero weight only for a
 candidate supported by at least three independent users on the exact normalized
 racket model. Otherwise `cf_weight=0.0` and the v10 score is unchanged. Matrix
 factorization, embeddings, review-count weighting, and historical catalog
-community metrics are not ranking inputs.
+catalog feedback metrics are not ranking inputs.
 
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload.
 
@@ -574,7 +578,7 @@ payloads and source identifiers are not copied into that history, and Agent chat
 history is not persisted.
 
 The active FYP player tools cover string details, exact two-or-three-string
-comparisons, live store information, V11 What-if previews, and verified in-stock
+comparisons, live store information, current-algorithm What-if previews, and verified in-stock
 alternatives. Exact owned recommendation-run and string context
 is preloaded by the backend for the explanation surface without exposing a
 general run-lookup tool to the model. Guided previews may apply a temporary RM

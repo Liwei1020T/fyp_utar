@@ -5,10 +5,10 @@ from datetime import timezone
 
 import pytest
 
-from app.domain.recommendation.entities import CommunityFeedbackRow
+from app.domain.recommendation.entities import FeedbackRow
 from app.domain.recommendation.entities import RecommendationInteraction
 from app.domain.recommendation.learning_signals import build_cf_evidence
-from app.domain.recommendation.learning_signals import build_community_snapshot
+from app.domain.recommendation.learning_signals import build_feedback_snapshot
 from app.domain.recommendation.learning_signals import canonical_racket_model_key
 from app.domain.recommendation.learning_signals import cf_weight_for_support
 from app.domain.recommendation.learning_signals import normalize_racket_model_key
@@ -31,7 +31,7 @@ def test_racket_key_normalizes_identity_without_fuzzy_matching() -> None:
     )
 
 
-def test_community_uses_exact_context_then_global_and_averages_each_user() -> None:
+def test_feedback_uses_exact_context_then_global_and_averages_each_user() -> None:
     rows = [
         _feedback("f1", "u1", 5, MODEL_KEY),
         _feedback("f2", "u1", 1, MODEL_KEY),
@@ -39,7 +39,7 @@ def test_community_uses_exact_context_then_global_and_averages_each_user() -> No
         _feedback("f4", "u3", 1, "victor:thruster k"),
     ]
 
-    exact = build_community_snapshot(rows, target_racket_model_key=MODEL_KEY)
+    exact = build_feedback_snapshot(rows, target_racket_model_key=MODEL_KEY)
     control = exact.by_catalog["yonex-bg80"]["control"]
     assert control.evidence_scope == "exact_racket_model"
     assert control.distinct_users == 2
@@ -47,7 +47,7 @@ def test_community_uses_exact_context_then_global_and_averages_each_user() -> No
     assert control.normalized_score == pytest.approx(0.75)
     assert control.weight == pytest.approx(0.05)
 
-    global_only = build_community_snapshot(rows, target_racket_model_key=None)
+    global_only = build_feedback_snapshot(rows, target_racket_model_key=None)
     global_control = global_only.by_catalog["yonex-bg80"]["control"]
     assert global_control.evidence_scope == "global_string"
     assert global_control.distinct_users == 3
@@ -55,12 +55,12 @@ def test_community_uses_exact_context_then_global_and_averages_each_user() -> No
     assert global_control.normalized_score == pytest.approx(0.5)
 
 
-def test_community_source_version_changes_when_rating_changes() -> None:
-    first = build_community_snapshot(
+def test_feedback_source_version_changes_when_rating_changes() -> None:
+    first = build_feedback_snapshot(
         [_feedback("f1", "u1", 2, MODEL_KEY)],
         target_racket_model_key=MODEL_KEY,
     )
-    changed = build_community_snapshot(
+    changed = build_feedback_snapshot(
         [_feedback("f1", "u1", 5, MODEL_KEY)],
         target_racket_model_key=MODEL_KEY,
     )
@@ -73,7 +73,7 @@ def test_community_source_version_changes_when_rating_changes() -> None:
 
 
 def test_custom_racket_feedback_uses_global_scope() -> None:
-    snapshot = build_community_snapshot(
+    snapshot = build_feedback_snapshot(
         [_feedback("f1", "u1", 5, None)],
         target_racket_model_key=None,
     )
@@ -83,14 +83,14 @@ def test_custom_racket_feedback_uses_global_scope() -> None:
     assert aggregate.racket_model_key is None
 
 
-def test_community_snapshot_version_does_not_depend_on_query_order() -> None:
+def test_feedback_snapshot_version_does_not_depend_on_query_order() -> None:
     rows = [
         _feedback("f1", "u1", 2, MODEL_KEY),
         _feedback("f2", "u2", 5, MODEL_KEY),
     ]
 
-    forward = build_community_snapshot(rows, target_racket_model_key=MODEL_KEY)
-    reversed_rows = build_community_snapshot(
+    forward = build_feedback_snapshot(rows, target_racket_model_key=MODEL_KEY)
+    reversed_rows = build_feedback_snapshot(
         reversed(rows),
         target_racket_model_key=MODEL_KEY,
     )
@@ -124,6 +124,26 @@ def test_cf_evidence_requires_exact_model_peer() -> None:
     assert "yonex-bg65" not in evidence.score_by_catalog
 
 
+def test_cf_keeps_missing_tension_peers_in_denominator_without_support() -> None:
+    interactions = [
+        _interaction("b1", "peer-missing-tension", "yonex-bg80", MODEL_KEY, None),
+        _interaction("b2", "peer-supported-1", "yonex-bg80", MODEL_KEY, 26),
+        _interaction("b3", "peer-supported-2", "yonex-bg80", MODEL_KEY, 26),
+    ]
+
+    evidence = build_cf_evidence(
+        interactions,
+        current_user_id="current",
+        current_preference_vector=(8, 6, 7, 5, 6, 5, 4, 6, 5),
+        target_racket_model_key=MODEL_KEY,
+        target_tension=26,
+    )
+
+    assert evidence.eligible_peer_count == 3
+    assert evidence.supporting_users_by_catalog == {"yonex-bg80": 2}
+    assert evidence.score_by_catalog["yonex-bg80"] == pytest.approx(0.6667)
+
+
 def test_cf_weight_requires_three_distinct_supporting_users_and_is_bounded() -> None:
     assert cf_weight_for_support(0) == 0
     assert cf_weight_for_support(2) == 0
@@ -136,8 +156,8 @@ def _feedback(
     user_id: str,
     control: int,
     model_key: str | None,
-) -> CommunityFeedbackRow:
-    return CommunityFeedbackRow(
+) -> FeedbackRow:
+    return FeedbackRow(
         feedback_id=feedback_id,
         user_id=user_id,
         catalog_id="yonex-bg80",
@@ -151,7 +171,7 @@ def _interaction(
     user_id: str,
     catalog_id: str,
     model_key: str,
-    tension: float,
+    tension: float | None,
 ) -> RecommendationInteraction:
     return RecommendationInteraction(
         booking_id=booking_id,

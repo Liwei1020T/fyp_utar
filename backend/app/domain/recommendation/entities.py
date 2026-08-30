@@ -100,7 +100,7 @@ class RacketRecommendationContext:
 
 
 @dataclass(frozen=True)
-class CommunityFeedbackRow:
+class FeedbackRow:
     feedback_id: str
     user_id: str
     catalog_id: str
@@ -109,7 +109,7 @@ class CommunityFeedbackRow:
 
 
 @dataclass(frozen=True)
-class CommunityFeatureAggregate:
+class FeedbackFeatureAggregate:
     normalized_score: float
     distinct_users: int
     booking_count: int
@@ -121,8 +121,8 @@ class CommunityFeatureAggregate:
 
 
 @dataclass(frozen=True)
-class CommunitySnapshot:
-    by_catalog: Mapping[str, Mapping[str, CommunityFeatureAggregate]]
+class FeedbackSnapshot:
+    by_catalog: Mapping[str, Mapping[str, FeedbackFeatureAggregate]]
     snapshot_version: str
 
 

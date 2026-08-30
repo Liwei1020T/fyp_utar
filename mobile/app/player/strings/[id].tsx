@@ -31,9 +31,9 @@ import {
 import { formatLabel } from '../../../lib/formatters';
 import { formatTensionRange, getInventoryPriceLabel } from '../../../lib/inventory';
 import { AppRadarChart } from '../../../components/ui/AppRadarChart';
-import { CommunityFeatureList } from '../../../components/shared/CommunityFeatureList';
+import { FeedbackFeatureList } from '../../../components/shared/FeedbackFeatureList';
 import { BackendApiError, backendApi } from '../../../services/backendApi';
-import type { BackendAgentAction, BackendAgentResponse, BackendCommunityStringSummary } from '../../../types/backend';
+import type { BackendAgentAction, BackendAgentResponse, BackendFeedbackStringSummary } from '../../../types/backend';
 
 const FEATURE_LABELS: Record<string, string> = {
   attack: 'Power',
@@ -54,7 +54,7 @@ function toAspectLabel(featureKey?: string, displayLabel?: string) {
   }
 
   if (!featureKey) {
-    return 'Community signal';
+    return 'Feedback signal';
   }
 
   const normalized = featureKey.toLowerCase();
@@ -95,11 +95,11 @@ export default function StringDetailScreen() {
   const compareSelection = useAppStore((state) => state.compareSelection);
   const toggleCompareSelection = useAppStore((state) => state.toggleCompareSelection);
 
-  const [communitySummary, setCommunitySummary] = useState<
-    BackendCommunityStringSummary | null
+  const [feedbackSummary, setFeedbackSummary] = useState<
+    BackendFeedbackStringSummary | null
   >(null);
-  const [isCommunityLoading, setIsCommunityLoading] = useState(Boolean(token));
-  const [communityError, setCommunityError] = useState<string | null>(null);
+  const [isFeedbackLoading, setIsFeedbackLoading] = useState(Boolean(token));
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [agentResponse, setAgentResponse] = useState<BackendAgentResponse | null>(null);
   const [isAgentLoading, setIsAgentLoading] = useState(Boolean(token));
   const [agentError, setAgentError] = useState<string | null>(null);
@@ -109,34 +109,34 @@ export default function StringDetailScreen() {
     ? `${selectedString.brand} ${selectedString.model}`
     : null;
 
-  const loadCommunitySummary = useCallback(async () => {
+  const loadFeedbackSummary = useCallback(async () => {
     if (!token || !params.id) {
-      setIsCommunityLoading(false);
+      setIsFeedbackLoading(false);
       return;
     }
 
-    setIsCommunityLoading(true);
-    setCommunityError(null);
+    setIsFeedbackLoading(true);
+    setFeedbackError(null);
     try {
-      const response = await backendApi.fetchCommunitySummary(token);
-      setCommunitySummary(
+      const response = await backendApi.fetchFeedbackSummary(token);
+      setFeedbackSummary(
         response.strings.find((item) => item.string_id === params.id) ?? null,
       );
     } catch (error) {
-      setCommunityError(
+      setFeedbackError(
         error instanceof BackendApiError
           ? error.message
           : 'Failed to load local player feedback.',
       );
     } finally {
-      setIsCommunityLoading(false);
+      setIsFeedbackLoading(false);
     }
   }, [params.id, token]);
 
   useFocusEffect(
     useCallback(() => {
-      void loadCommunitySummary();
-    }, [loadCommunitySummary]),
+      void loadFeedbackSummary();
+    }, [loadFeedbackSummary]),
   );
 
   useEffect(() => {
@@ -450,8 +450,8 @@ export default function StringDetailScreen() {
         )}
       </AppSection>
 
-      {/* 5. Community Intelligence (Combined NLP + Sentiment) */}
-      <AppSection eyebrow="Community" title="Review intelligence" variant="compact" className="mt-2">
+      {/* 5. Feedback Intelligence (Combined NLP + Sentiment) */}
+      <AppSection eyebrow="Feedback" title="Review intelligence" variant="compact" className="mt-2">
         <AppCard variant="elevated" padding="none" className="overflow-hidden">
           <View className="p-2.5">
             {evidenceSignals.length > 0 ? (
@@ -502,35 +502,35 @@ export default function StringDetailScreen() {
       </AppSection>
 
       <AppSection
-        eyebrow="Community"
+        eyebrow="Feedback"
         title="Local player feedback"
         subtitle="Verified completed bookings only. These ratings calibrate future recommendations without replacing official specifications."
         variant="compact"
         className="mt-2"
       >
         <AppCard variant="elevated" padding="sm">
-          {isCommunityLoading ? (
+          {isFeedbackLoading ? (
             <HeroText className="text-sm text-neutral-600">
               Loading local feedback evidence...
             </HeroText>
-          ) : communityError ? (
+          ) : feedbackError ? (
             <View className="gap-3">
               <HeroText
                 selectable
                 accessibilityLiveRegion="polite"
                 className="text-sm leading-6 text-red-700"
               >
-                {communityError}
+                {feedbackError}
               </HeroText>
               <AppButton
                 label="Try again"
                 variant="outline"
                 size="sm"
-                onPress={() => void loadCommunitySummary()}
+                onPress={() => void loadFeedbackSummary()}
               />
             </View>
-          ) : communitySummary && Object.keys(communitySummary.features).length > 0 ? (
-            <CommunityFeatureList features={communitySummary.features} />
+          ) : feedbackSummary && Object.keys(feedbackSummary.features).length > 0 ? (
+            <FeedbackFeatureList features={feedbackSummary.features} />
           ) : (
             <HeroText className="text-sm leading-6 text-neutral-600">
               No eligible local ratings yet. This string continues using its official and reviewed baseline.

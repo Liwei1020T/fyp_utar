@@ -4,12 +4,12 @@
 
 | Field | Value |
 | --- | --- |
-| Status | V11 implemented for FYP demo; production evidence remains separate |
-| Last reviewed | 2026-08-13 |
+| Status | V11 CF policy retained inside active V13 scoring; production evidence remains separate |
+| Last reviewed | 2026-08-30 |
 | Runtime cohort | `config/approved_string_cohort_v1.csv` (12 strings) |
 | Baseline algorithm | `fyp1_similarity_preferences_v9` |
-| Active feedback algorithm | `fyp1_similarity_preferences_community_v10` |
-| Active CF algorithm | `fyp1_similarity_preferences_community_racket_cf_v11` |
+| Historical feedback comparison algorithm | `fyp1_similarity_preferences_feedback_v10` |
+| Active scoring algorithm | `fyp1_weighted_preferences_feedback_racket_cf_v13` |
 | Current CF status | Guarded enablement above three exact-model supporting users |
 | Implementation status | Scoring, fallback, audit, cache versioning, and demo evaluation implemented |
 | Racket similarity status | Exact normalized model matching active; fuzzy cross-model similarity is an explicit non-goal |
@@ -32,7 +32,7 @@ StringSence will use a hybrid recommendation architecture:
 ```text
 Racket-conditioned hybrid recommendation =
   stable content/rule baseline
-+ structured community outcome calibration
++ structured feedback outcome calibration
 + racket-conditioned collaborative support
 + tension-context fit
 + exact cold-start fallback
@@ -97,7 +97,7 @@ rewrite past interactions.
 control, repulsion, durability, string satisfaction, tension satisfaction, and
 whether the player would use the string again. Their eligibility and provenance
 rules are owned by
-`2026-08-11-community-feedback-calibration-design.md`.
+`2026-08-11-feedback-calibration-design.md`.
 
 ### Runtime wiring implemented
 
@@ -245,7 +245,7 @@ The system uses the most specific valid evidence and falls back safely:
 
 1. the current player's history for the exact physical `racket_id`;
 2. cross-user history for the exact normalized racket model;
-3. global approved-string community evidence;
+3. global approved-string feedback evidence;
 4. the stable content/rule baseline.
 
 Same-brand-only and fuzzy-model matches are not evidence tiers in v1. Racket
@@ -340,7 +340,7 @@ The two proposals are one delivery programme but separate signals:
 
 ```text
 v9 baseline
-  -> v10 structured community calibration
+  -> v10 structured feedback calibration
   -> v11 racket-conditioned CF blend
 ```
 
@@ -363,7 +363,7 @@ one project does not require enabling both in one unreviewed release.
 
 ## Score Blending and Confidence
 
-The stable base score remains v10 when community calibration is enabled, or v9
+The stable base score remains v10 when feedback calibration is enabled, or v9
 when it is not.
 
 ```text
@@ -460,8 +460,8 @@ When an eligible booking becomes completed or an already-completed booking's
 eligible context is corrected, invalidate v11 caches transactionally. Immutable
 runs and logs remain unchanged.
 
-Feedback cache invalidation remains governed by the community-calibration source
-version. A v11 cached result is current only when both its community snapshot and
+Feedback cache invalidation remains governed by the feedback-calibration source
+version. A v11 cached result is current only when both its feedback snapshot and
 CF source version match the latest values.
 
 ## Shadow Evaluation and Activation Gate
@@ -525,7 +525,7 @@ feature outcome evidence only once.
 - v9, v10, and v11 are distinguishable on the same frozen cases;
 - real and labelled-fixture results remain separate;
 - demo metrics are labelled synthetic and production claims remain gated;
-- `fyp1_similarity_preferences_community_racket_cf_v11` records non-zero CF
+- `fyp1_similarity_preferences_feedback_racket_cf_v11` records non-zero CF
   influence only when the support gate is met.
 
 ## Focused Test Plan
@@ -599,7 +599,7 @@ exact-model, shadow-first design is insufficient.
 2. Exact normalized brand/model matching is the only cross-user racket
    identity tier in v1.
 3. Only the six server-catalogued FYP models receive a cross-user key; custom
-   rackets use global community evidence and zero CF weight.
+   rackets use global feedback evidence and zero CF weight.
 4. V11 uses `CF_MIN_SUPPORTING_USERS=3`, `CF_SHRINKAGE_K=10`,
    `CF_MAX_WEIGHT=0.20`, and a 4 lb tension window as reviewable demo policy.
 5. The activation gate keeps real-data metrics separate from

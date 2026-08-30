@@ -13,8 +13,8 @@ from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
-from app.domain.recommendation.entities import CommunitySnapshot
-from app.domain.recommendation.learning_signals import COMMUNITY_POLICY_VERSION
+from app.domain.recommendation.entities import FeedbackSnapshot
+from app.domain.recommendation.learning_signals import FEEDBACK_POLICY_VERSION
 from app.shared.serialization import isoformat_or_none
 
 
@@ -114,13 +114,13 @@ class RecommendationRunDto(BaseModel):
     items: list[RecommendationRunItemDto]
 
 
-def community_snapshot_to_dict(
-    snapshot: CommunitySnapshot,
+def feedback_snapshot_to_dict(
+    snapshot: FeedbackSnapshot,
     *,
     racket_model_key: str | None,
 ) -> dict[str, object]:
     return {
-        "policy_version": COMMUNITY_POLICY_VERSION,
+        "policy_version": FEEDBACK_POLICY_VERSION,
         "snapshot_version": snapshot.snapshot_version,
         "racket_model_key": racket_model_key,
         "strings": [

@@ -118,7 +118,7 @@ ALL_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
     },
     {
         "name": "get_my_recommendations",
-        "description": "Get the current player's latest current cached V11 recommendations.",
+        "description": "Get the current player's latest current recommendations.",
         "parameters": {
             "type": "object",
             "properties": {},
@@ -127,7 +127,7 @@ ALL_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
     },
     {
         "name": "preview_recommendation_what_if",
-        "description": "Run a V11 simulation with explicit profile changes without updating the saved profile or recommendation cache.",
+        "description": "Run a recommendation simulation with explicit profile changes without updating the saved profile or recommendation cache.",
         "parameters": {
             "type": "object",
             "properties": {
