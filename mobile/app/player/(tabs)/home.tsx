@@ -7,6 +7,7 @@ import {
   Bell,
   CalendarClock,
   ChevronRight,
+  Dumbbell,
   Search,
   Sparkles,
 } from 'lucide-react-native';
@@ -41,6 +42,12 @@ const quickActions = [
     accessibilityLabel: 'Open string catalog',
     route: '/player/strings',
     icon: Search,
+  },
+  {
+    title: 'My rackets',
+    accessibilityLabel: 'Open saved racket passports',
+    route: '/player/rackets',
+    icon: Dumbbell,
   },
   {
     title: 'Ask AI',

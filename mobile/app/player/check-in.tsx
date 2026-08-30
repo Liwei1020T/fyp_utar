@@ -16,6 +16,22 @@ import { formatBookingOrderCode } from '../../lib/formatters';
 import { BackendApiError, backendApi } from '../../services/backendApi';
 import type { BackendCheckInToken } from '../../types/backend';
 
+const ARRIVAL_STEPS = [
+  {
+    title: 'Show your QR',
+    description: 'Show the QR to the service desk; it expires after 10 minutes.',
+  },
+  {
+    title: 'Confirm booking details',
+    description: 'Admin confirms racket model, string choice, and requested tension.',
+  },
+  {
+    title: 'Hand over your racket',
+    description:
+      'Service status moves from awaiting drop-off to in progress once the admin accepts the racket.',
+  },
+] as const;
+
 export default function PlayerCheckInScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ bookingId?: string }>();
@@ -142,15 +158,34 @@ export default function PlayerCheckInScreen() {
       )}
 
       <AppSection eyebrow="Instructions" title="What happens on arrival">
-        <View className="gap-3">
-          {[
-            'Show the QR to the service desk; it expires after 10 minutes.',
-            'Admin confirms racket model, string choice, and requested tension.',
-            'Service status moves from awaiting drop-off to in progress once the admin accepts the racket.',
-          ].map((item) => (
-            <AppCard key={item} variant="subtle" padding="sm">
-              <HeroText className="text-sm leading-6 text-neutral-600">{item}</HeroText>
-            </AppCard>
+        <View className="rounded-[18px] border border-separator bg-app-muted p-4">
+          {ARRIVAL_STEPS.map((step, index) => (
+            <View key={step.title} className="flex-row">
+              <View className="mr-3 items-center">
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-primary-100">
+                  <HeroText className="text-sm font-bold text-primary-700">
+                    {index + 1}
+                  </HeroText>
+                </View>
+                {index < ARRIVAL_STEPS.length - 1 ? (
+                  <View className="w-px flex-1 bg-primary-200" />
+                ) : null}
+              </View>
+              <View
+                className={
+                  index < ARRIVAL_STEPS.length - 1
+                    ? 'flex-1 pb-5'
+                    : 'flex-1'
+                }
+              >
+                <HeroText className="text-sm font-bold text-neutral-900">
+                  {step.title}
+                </HeroText>
+                <HeroText className="mt-1 text-sm leading-6 text-neutral-600">
+                  {step.description}
+                </HeroText>
+              </View>
+            </View>
           ))}
         </View>
       </AppSection>

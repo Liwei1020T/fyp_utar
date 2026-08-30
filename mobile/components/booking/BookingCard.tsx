@@ -8,6 +8,7 @@ import {
   PackageCheck,
   TimerReset,
   CircleDashed,
+  QrCode,
 } from 'lucide-react-native';
 import { AppCard } from '../ui/AppCard';
 import { AppChip } from '../ui/AppChip';
@@ -134,6 +135,7 @@ export function BookingCard({
   const bookingDateLabel = formatDateLabel(booking.dropOffDate);
   const priceLabel = getBookingPriceLabel(booking);
   const nextStepAction = onNextStepPress ?? onPress;
+  const isCheckInAction = Boolean(onNextStepPress);
   const nextStepLabel =
     onNextStepPress &&
     (booking.status === 'confirmed' || booking.status === 'awaiting_dropoff')
@@ -182,7 +184,25 @@ export function BookingCard({
       </View>
     </>
   );
-  const nextStepContent = (
+  const nextStepContainerClassName = isCheckInAction
+    ? 'bg-primary-50 border-primary-200'
+    : stripTone.container;
+  const nextStepContent = isCheckInAction ? (
+    <>
+      <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary-100">
+        <QrCode size={18} color={appChromeColors.primary} />
+      </View>
+      <View className="min-w-0 flex-1">
+        <HeroText className="text-[12px] font-bold text-primary-800">
+          Check in at counter
+        </HeroText>
+        <HeroText className="mt-0.5 text-[10px] font-medium text-primary-700">
+          Show QR before {booking.dropOffTime || 'scheduled time'}
+        </HeroText>
+      </View>
+      <ChevronRight size={16} color={appChromeColors.primary} />
+    </>
+  ) : (
     <>
       <StatusIcon size={14} color={stripTone.iconColor} />
       <HeroText className={`flex-1 text-[11px] font-semibold ${stripTone.text}`}>
@@ -221,13 +241,13 @@ export function BookingCard({
                 : 'Open booking details'
             }
             onPress={nextStepAction}
-            className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-2.5 py-1.5 ${stripTone.container}`}
+            className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-2.5 py-2 ${nextStepContainerClassName}`}
           >
             {nextStepContent}
           </Pressable>
         ) : (
           <View
-            className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-2.5 py-1.5 ${stripTone.container}`}
+            className={`mt-0.5 flex-row items-center gap-2 rounded-lg border px-2.5 py-2 ${nextStepContainerClassName}`}
           >
             {nextStepContent}
           </View>

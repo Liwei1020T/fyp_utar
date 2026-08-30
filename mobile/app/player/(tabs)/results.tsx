@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowRight, Scale } from 'lucide-react-native';
@@ -24,6 +24,11 @@ import {
 } from '../../../services/backendMappers';
 import { formatCurrency } from '../../../lib/formatters';
 
+type AgentReasonState =
+  | { status: 'loading' }
+  | { status: 'ready'; text: string }
+  | { status: 'error' };
+
 function humanizeFeature(value: string) {
   return value
     .replace(/_/g, ' ')
@@ -45,6 +50,8 @@ export default function RecommendationResultsScreen() {
   const [cacheError, setCacheError] = useState<string | null>(null);
   const [isLoadingCache, setIsLoadingCache] = useState(false);
   const [hasLoadedCache, setHasLoadedCache] = useState(false);
+  const [agentReasons, setAgentReasons] = useState<Record<string, AgentReasonState>>({});
+  const requestedAgentReasonKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -113,6 +120,80 @@ export default function RecommendationResultsScreen() {
     setLiveStrings,
     token,
   ]);
+
+  useEffect(() => {
+    if (!token || liveResults.length === 0) {
+      setAgentReasons({});
+      requestedAgentReasonKey.current = null;
+      return;
+    }
+
+    const candidates = liveResults
+      .filter((item) => item.catalogId && item.runId)
+      .slice(0, 3);
+    if (candidates.length === 0) {
+      setAgentReasons({});
+      requestedAgentReasonKey.current = null;
+      return;
+    }
+
+    const requestKey = candidates
+      .map((item) => `${item.runId}:${item.catalogId}`)
+      .join('|');
+    if (requestedAgentReasonKey.current === requestKey) {
+      return;
+    }
+    requestedAgentReasonKey.current = requestKey;
+
+    const accessToken = token;
+    let isMounted = true;
+    setAgentReasons(
+      Object.fromEntries(
+        candidates.map((item) => [item.id, { status: 'loading' as const }]),
+      ),
+    );
+
+    async function loadAgentReasons() {
+      await Promise.all(
+        candidates.map(async (item) => {
+          try {
+            const response = await backendApi.queryAgent(accessToken, {
+              message:
+                'In one short, player-friendly sentence, explain why the string in the supplied exact recommendation context fits this player. Mention the strongest supported benefit and, only if supported, one practical trade-off. Do not mention algorithms, scores, rankings, internal data, or that you are an AI.',
+              context: {
+                surface: 'recommendation_explanation',
+                run_id: item.runId,
+                catalog_id: item.catalogId,
+              },
+            });
+            const text = response.summary.trim() || response.answer.trim();
+            if (!isMounted) {
+              return;
+            }
+            setAgentReasons((current) => ({
+              ...current,
+              [item.id]: text
+                ? { status: 'ready', text }
+                : { status: 'error' },
+            }));
+          } catch {
+            if (isMounted) {
+              setAgentReasons((current) => ({
+                ...current,
+                [item.id]: { status: 'error' },
+              }));
+            }
+          }
+        }),
+      );
+    }
+
+    void loadAgentReasons();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [liveResults, token]);
 
   if (!user || user.role !== 'player') {
     return null;
@@ -186,6 +267,13 @@ export default function RecommendationResultsScreen() {
                 const explanationRoute = item.catalogId
                   ? `/player/recommend/explain/${item.catalogId}${item.runId ? `?runId=${item.runId}` : ''}`
                   : null;
+                const agentReason = agentReasons[item.id];
+                const reasonText =
+                  agentReason?.status === 'ready'
+                    ? agentReason.text
+                    : agentReason?.status === 'loading'
+                      ? 'Generating a tailored explanation...'
+                      : item.reasons[0] ?? 'No saved recommendation reason was returned.';
 
                 return (
                   <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md" className="rounded-[30px]">
@@ -240,8 +328,13 @@ export default function RecommendationResultsScreen() {
                         Why this one
                       </HeroText>
                       <HeroText className="mt-1.5 text-sm leading-5 text-neutral-700">
-                        {item.reasons[0] ?? 'No scorer reason was returned.'}
+                        {reasonText}
                       </HeroText>
+                      {agentReason?.status === 'error' ? (
+                        <HeroText className="mt-1 text-[11px] leading-4 text-neutral-500">
+                          Showing the saved match reason while AI explanation is unavailable.
+                        </HeroText>
+                      ) : null}
                     </View>
 
                     <View className="mt-3 flex-row flex-wrap gap-1.5">

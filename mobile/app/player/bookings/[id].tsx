@@ -1,12 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { CalendarClock, Circle, CircleCheck } from 'lucide-react-native';
+import {
+  CalendarClock,
+  Circle,
+  CircleCheck,
+  CreditCard,
+  MessageCircle,
+  QrCode,
+  Route,
+  Star,
+  XCircle,
+} from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
 import { HeroText } from '../../../components/ui/heroui';
 import { AppScreen } from '../../../components/shared/AppScreen';
+import { AppSection } from '../../../components/shared/AppSection';
 import {
   useAppStore,
   useBackendAccessToken,
@@ -401,6 +412,17 @@ export default function PlayerBookingDetailScreen() {
   const canCheckIn =
     booking.status === 'confirmed' || booking.status === 'awaiting_dropoff';
   const canOpenFeedback = booking.status === 'completed';
+  const paymentRequired =
+    booking.status !== 'cancelled' &&
+    booking.paymentStatus !== 'paid' &&
+    activePayment?.status !== 'paid';
+  const paymentAwaitingVerification = activePayment?.status === 'pending';
+  const primaryAction =
+    paymentRequired && !paymentAwaitingVerification
+      ? 'payment'
+      : canCheckIn
+        ? 'check-in'
+        : 'tracking';
 
   const openSupportConversation = async () => {
     if (supportConversation) {
@@ -620,82 +642,122 @@ export default function PlayerBookingDetailScreen() {
           </View>
         </AppCard>
 
-        <View>
-          {booking.status !== 'cancelled' &&
-          booking.paymentStatus !== 'paid' &&
-          activePayment?.status !== 'paid' ? (
-            <AppButton
-              label={
-                activePayment?.status === 'pending'
-                  ? 'Payment awaiting verification'
-                  : 'Pay booking'
-              }
-              variant="outline"
-              size="lg"
-              className="mb-3"
-              isDisabled={activePayment?.status === 'pending'}
-              onPress={() => router.push(`/player/payments/${booking.id}`)}
-            />
-          ) : null}
-          {canCheckIn ? (
-            <AppButton
-              label="Show check-in"
-              variant="outline"
-              size="lg"
-              className="mb-3"
-              accessibilityHint="Open the secure check-in reference"
-              onPress={() =>
-                router.push(`/player/check-in?bookingId=${booking.id}`)
-              }
-            />
-          ) : null}
-          <AppButton
-            label="Message shop"
-            variant="outline"
-            size="lg"
-            className="mb-3"
-            isLoading={isRequestingSupport}
-            onPress={() => void openSupportConversation()}
-          />
-          {supportError ? (
-            <HeroText className="mb-3 text-sm font-medium text-red-600">
-              {supportError}
-            </HeroText>
-          ) : null}
-          {canOpenFeedback ? (
-            <AppButton
-              label={hasFeedback ? 'View service feedback' : 'Leave service feedback'}
-              variant="outline"
-              size="lg"
-              className="mb-3"
-              onPress={() => router.push(`/player/feedback/${booking.id}`)}
-            />
-          ) : null}
-          {canCancel ? (
-            <AppButton
-              label="Cancel booking"
-              variant="outline"
-              size="lg"
-              className="mb-3"
-              isLoading={isCancelling}
-              onPress={cancelBooking}
-            />
-          ) : null}
-          {cancelError ? (
-            <HeroText className="mb-3 text-sm font-medium text-red-600">
-              {cancelError}
-            </HeroText>
-          ) : null}
-          <AppButton
-            label="View tracking"
-            variant="primary"
-            size="lg"
-            onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
-          />
-          <HeroText className="mt-3 text-center text-[11px] leading-5 text-neutral-400">
-            Booking flow covers drop-off, progress updates, and collection tracking.
-          </HeroText>
-        </View>
+        <AppSection title="Next action" variant="compact">
+          <View className="gap-3">
+            {primaryAction === 'payment' ? (
+              <AppButton
+                label="Pay booking"
+                variant="primary"
+                size="lg"
+                leadingIcon={<CreditCard size={19} color="#FFFFFF" />}
+                onPress={() => router.push(`/player/payments/${booking.id}`)}
+              />
+            ) : primaryAction === 'check-in' ? (
+              <AppButton
+                label="Show check-in"
+                variant="primary"
+                size="lg"
+                leadingIcon={<QrCode size={19} color="#FFFFFF" />}
+                accessibilityHint="Open the secure check-in reference"
+                onPress={() =>
+                  router.push(`/player/check-in?bookingId=${booking.id}`)
+                }
+              />
+            ) : (
+              <AppButton
+                label="View tracking"
+                variant="primary"
+                size="lg"
+                leadingIcon={<Route size={19} color="#FFFFFF" />}
+                onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
+              />
+            )}
+
+            <View className="flex-row flex-wrap gap-2.5">
+              {paymentRequired && primaryAction !== 'payment' ? (
+                <AppButton
+                  label={
+                    paymentAwaitingVerification
+                      ? 'Payment awaiting verification'
+                      : 'Pay booking'
+                  }
+                  variant="outline"
+                  size="md"
+                  className="min-w-[47%] flex-1"
+                  leadingIcon={<CreditCard size={17} color="#2F64B6" />}
+                  isDisabled={paymentAwaitingVerification}
+                  onPress={() => router.push(`/player/payments/${booking.id}`)}
+                />
+              ) : null}
+              {canCheckIn && primaryAction !== 'check-in' ? (
+                <AppButton
+                  label="Show check-in"
+                  variant="outline"
+                  size="md"
+                  className="min-w-[47%] flex-1"
+                  leadingIcon={<QrCode size={17} color="#2F64B6" />}
+                  accessibilityHint="Open the secure check-in reference"
+                  onPress={() =>
+                    router.push(`/player/check-in?bookingId=${booking.id}`)
+                  }
+                />
+              ) : null}
+              {primaryAction !== 'tracking' ? (
+                <AppButton
+                  label="View tracking"
+                  variant="outline"
+                  size="md"
+                  className="min-w-[47%] flex-1"
+                  leadingIcon={<Route size={17} color="#2F64B6" />}
+                  onPress={() => router.push(`/player/bookings/${booking.id}/tracking`)}
+                />
+              ) : null}
+              <AppButton
+                label="Message shop"
+                variant="outline"
+                size="md"
+                className="min-w-[47%] flex-1"
+                leadingIcon={<MessageCircle size={17} color="#2F64B6" />}
+                isLoading={isRequestingSupport}
+                onPress={() => void openSupportConversation()}
+              />
+              {canOpenFeedback ? (
+                <AppButton
+                  label={hasFeedback ? 'View service feedback' : 'Leave service feedback'}
+                  variant="outline"
+                  size="md"
+                  className="min-w-[47%] flex-1"
+                  leadingIcon={<Star size={17} color="#2F64B6" />}
+                  onPress={() => router.push(`/player/feedback/${booking.id}`)}
+                />
+              ) : null}
+            </View>
+
+            {supportError ? (
+              <HeroText className="text-sm font-medium text-red-600">
+                {supportError}
+              </HeroText>
+            ) : null}
+
+            {canCancel ? (
+              <AppButton
+                label="Cancel booking"
+                variant="ghost"
+                size="sm"
+                className="self-start px-1"
+                textClassName="text-red-700"
+                leadingIcon={<XCircle size={17} color="#B42318" />}
+                isLoading={isCancelling}
+                onPress={cancelBooking}
+              />
+            ) : null}
+            {cancelError ? (
+              <HeroText className="text-sm font-medium text-red-600">
+                {cancelError}
+              </HeroText>
+            ) : null}
+          </View>
+        </AppSection>
       </View>
     </AppScreen>
   );

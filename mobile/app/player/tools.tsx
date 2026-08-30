@@ -1,95 +1,13 @@
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  BadgeCheck,
-  Bell,
-  CalendarPlus,
-  ChevronRight,
-  List,
-  MessageSquareText,
-  NotebookText,
-  Sparkles,
-  Wallet,
-  Zap,
-} from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { AppScreen } from '../../components/shared/AppScreen';
 import { AppSection } from '../../components/shared/AppSection';
 import { AppCard } from '../../components/ui/AppCard';
 import { HeroText } from '../../components/ui/heroui';
 import { appChromeColors } from '../../components/ui/theme';
-
-const toolGroups = [
-  {
-    title: 'Play',
-    items: [
-      {
-        title: 'Advisor',
-        subtitle: 'Get a string and tension recommendation.',
-        icon: Zap,
-        route: '/player/recommend',
-      },
-      {
-        title: 'String catalog',
-        subtitle: 'Browse, filter, and compare available strings.',
-        icon: List,
-        route: '/player/strings',
-      },
-      {
-        title: 'Book service',
-        subtitle: 'Start a new racket restring booking.',
-        icon: CalendarPlus,
-        route: '/player/bookings/new',
-      },
-      {
-        title: 'My bookings',
-        subtitle: 'Check current orders and service history.',
-        icon: NotebookText,
-        route: '/player/bookings',
-      },
-    ],
-  },
-  {
-    title: 'Service',
-    items: [
-      {
-        title: 'AI assistant',
-        subtitle: 'Ask grounded questions about strings and recommendations.',
-        icon: Sparkles,
-        route: '/player/chatbot',
-      },
-      {
-        title: 'Message shop',
-        subtitle: 'Contact the shop with or without a booking.',
-        icon: MessageSquareText,
-        route: '/player/chat',
-      },
-      {
-        title: 'Notifications',
-        subtitle: 'Review booking, payment, and service updates.',
-        icon: Bell,
-        route: '/player/notifications',
-      },
-      {
-        title: 'Racket passport',
-        subtitle: 'Review your rackets and stringing history.',
-        icon: BadgeCheck,
-        route: '/player/rackets',
-      },
-    ],
-  },
-  {
-    title: 'Account',
-    items: [
-      {
-        title: 'Wallet',
-        subtitle: 'View your verified balance and transactions.',
-        icon: Wallet,
-        route: '/player/wallet',
-      },
-    ],
-  },
-] as const;
+import { playerToolGroups } from '../../components/player/PlayerToolsSheet';
 
 export default function PlayerToolsScreen() {
   const router = useRouter();
@@ -102,7 +20,7 @@ export default function PlayerToolsScreen() {
       onBackPress={() => router.back()}
       backAccessibilityLabel="Back to player home"
     >
-      {toolGroups.map((group, groupIndex) => (
+      {playerToolGroups.map((group, groupIndex) => (
         <AppSection
           key={group.title}
           title={group.title}

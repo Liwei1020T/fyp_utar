@@ -11,6 +11,8 @@ admin operations surface:
   strings, introduces an exact catalog string when the detail page supplies its
   verified context, answers live customer-facing store information, and provides
   a direct user-owned entry to the existing human support screen.
+- `/player/results`: renders one short Agent-generated fit summary for each
+  shortlisted string when its exact recommendation run is available.
 - `/player/recommend/explain/[id]`: explains the exact owned recommendation run
   in short player-friendly language and offers verified in-stock alternatives
   when the selected string is unavailable.

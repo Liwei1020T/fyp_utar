@@ -248,6 +248,23 @@ test('fixed footers do not reserve the tab bar twice', async () => {
   );
 });
 
+test('player notifications stay compact, accessible, and unread-first', async () => {
+  const notifications = await readFile(
+    new URL('app/player/notifications.tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.match(notifications, /headerVariant="flow"/);
+  assert.match(notifications, /Number\(left\.read\) - Number\(right\.read\)/);
+  assert.match(notifications, /notificationCategoryMeta/);
+  assert.match(notifications, /formatDateTime\(item\.createdAt\)/);
+  assert.match(notifications, /Mark all read/);
+  assert.match(notifications, /marked_read_ids/);
+  assert.match(notifications, /event_ids: unreadIds/);
+  assert.match(notifications, /accessibilityLabel="Mark all notifications as read"/);
+  assert.match(notifications, /accessibilityLabel=\{`\$\{item\.read/);
+});
+
 test('authentication uses one account entry and routes from the backend role', async () => {
   const [login, welcome, index] = await Promise.all(
     ['app/auth/login.tsx', 'app/auth/welcome.tsx', 'app/index.tsx'].map((file) =>
@@ -312,6 +329,24 @@ test('admin recommendation details hide internal provenance noise', async () => 
   assert.match(detail, /Score breakdown/);
 });
 
+test('player recommendation detail keeps scoring secondary to the decision', async () => {
+  const detail = await readFile(
+    new URL('app/player/recommend/explain/[id].tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.match(detail, /title="Why it fits"/);
+  assert.match(detail, /title="Booking setup"/);
+  assert.match(detail, /Suggested tension/);
+  assert.match(detail, /String price/);
+  assert.match(detail, /Availability/);
+  assert.match(detail, /getInventoryPriceLabel/);
+  assert.match(detail, /low_stock/);
+  assert.match(detail, /isActionableTradeOff/);
+  assert.doesNotMatch(detail, /Fit snapshot|Score breakdown|Why this matches you|Scorer reason|Review support/);
+  assert.doesNotMatch(detail, /trade-off feels acceptable/);
+});
+
 test('trending strings preserve drag-to-scroll behavior', async () => {
   const trending = await readFile(
     new URL('components/player/TrendingStrings.tsx', mobileRoot),
@@ -335,6 +370,22 @@ test('booking detail returns to the booking list', async () => {
   assert.doesNotMatch(detail, /onBackPress=\{\(\) => router\.back\(\)\}/);
 });
 
+test('booking detail prioritizes one next action and uses labeled action icons', async () => {
+  const booking = await readFile(
+    new URL('app/player/bookings/[id].tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.match(booking, /const primaryAction =/);
+  assert.match(booking, /title="Next action"/);
+  assert.match(booking, /CreditCard/);
+  assert.match(booking, /QrCode/);
+  assert.match(booking, /MessageCircle/);
+  assert.match(booking, /Route/);
+  assert.match(booking, /XCircle/);
+  assert.doesNotMatch(booking, /Booking flow covers/);
+});
+
 test('booking list exposes a direct check-in shortcut', async () => {
   const [bookings, bookingCard, detail] = await Promise.all(
     [
@@ -345,10 +396,30 @@ test('booking list exposes a direct check-in shortcut', async () => {
   );
 
   assert.match(bookings, /onNextStepPress=/);
+  assert.match(bookings, /item\.status === 'confirmed' \|\| item\.status === 'awaiting_dropoff'/);
   assert.match(bookings, /\/player\/check-in\?bookingId=\$\{item\.id\}/);
+  assert.match(bookingCard, /booking\.status === 'confirmed' \|\| booking\.status === 'awaiting_dropoff'/);
+  assert.match(bookingCard, /QrCode/);
+  assert.match(bookingCard, /Check in at counter/);
+  assert.match(bookingCard, /Show QR before/);
   assert.match(bookingCard, /Show check-in for booking/);
   assert.match(detail, /label="Show check-in"/);
   assert.match(detail, /\/player\/check-in\?bookingId=\$\{booking\.id\}/);
+});
+
+test('check-in instructions use a numbered arrival stepper', async () => {
+  const checkIn = await readFile(
+    new URL('app/player/check-in.tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.match(checkIn, /const ARRIVAL_STEPS = \[/);
+  assert.match(checkIn, /title: 'Show your QR'/);
+  assert.match(checkIn, /title: 'Confirm booking details'/);
+  assert.match(checkIn, /title: 'Hand over your racket'/);
+  assert.match(checkIn, /index \+ 1/);
+  assert.match(checkIn, /bg-primary-200/);
+  assert.doesNotMatch(checkIn, /AppCard key=\{item\}/);
 });
 
 test('booking confirmation opens payment choices without reopening setup', async () => {
@@ -395,13 +466,15 @@ test('string detail uses the grounded Agent for its introduction', async () => {
 });
 
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
-  const [profileEdit, home, profile, tools, recommendation, results, adminDashboard, inventory, inventoryCard, analytics, businessHours, settings, bookingSummary, payment] =
+  const [profileEdit, home, profile, tools, toolSheet, tabsLayout, recommendation, results, adminDashboard, inventory, inventoryCard, analytics, businessHours, settings, bookingSummary, payment] =
     await Promise.all(
       [
         'app/player/profile/edit.tsx',
         'app/player/(tabs)/home.tsx',
         'app/player/(tabs)/profile.tsx',
         'app/player/tools.tsx',
+        'components/player/PlayerToolsSheet.tsx',
+        'app/player/(tabs)/_layout.tsx',
         'app/player/(tabs)/recommend.tsx',
         'app/player/(tabs)/results.tsx',
         'app/admin/(tabs)/dashboard.tsx',
@@ -424,6 +497,8 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(home, /Open all player features/);
   assert.match(home, /router\.push\('\/player\/tools'\)/);
   assert.match(home, /isFeatured/);
+  assert.match(home, /title: 'My rackets'/);
+  assert.match(home, /route: '\/player\/rackets'/);
   assert.match(home, /min-h-\[76px\] flex-1 items-center/);
   assert.doesNotMatch(home, /flex-row flex-wrap gap-3/);
   assert.match(home, /Find your next string/);
@@ -434,9 +509,13 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(profile, /title="Your space"/);
   assert.doesNotMatch(profile, /Account settings|Profile note/);
   assert.match(tools, /title="All tools"/);
-  assert.match(tools, /title: 'Play'/);
-  assert.match(tools, /title: 'Service'/);
-  assert.match(tools, /title: 'Account'/);
+  assert.match(toolSheet, /title: 'Play'/);
+  assert.match(toolSheet, /title: 'Service'/);
+  assert.match(toolSheet, /title: 'Account'/);
+  assert.match(tabsLayout, /title: 'More'/);
+  assert.match(tabsLayout, /MoreHorizontal/);
+  assert.match(tabsLayout, /event\.preventDefault\(\)/);
+  assert.match(tabsLayout, /PlayerToolsSheet/);
   assert.match(inventory, /accessibilityLabel="Show inventory filters"/);
   assert.match(inventory, /className="mb-3 flex-row items-end gap-2"/);
   assert.match(inventory, /headerVariant="primary"/);
@@ -464,6 +543,10 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.doesNotMatch(recommendation, /Saved Priority Weights/);
   assert.match(results, /StringProductImage/);
   assert.match(results, /Why this fits/);
+  assert.match(results, /queryAgent/);
+  assert.match(results, /surface: 'recommendation_explanation'/);
+  assert.match(results, /Generating a tailored explanation/);
+  assert.match(results, /response\.summary\.trim\(\)/);
   assert.doesNotMatch(results, /Score model/);
   assert.match(adminDashboard, /title="Needs attention"/);
   assert.match(adminDashboard, /label="Search tools"/);
