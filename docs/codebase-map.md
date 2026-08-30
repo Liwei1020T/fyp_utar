@@ -67,13 +67,14 @@ Query cache owner.
 | [mobile/app/auth/register.tsx](../mobile/app/auth/register.tsx) | Player registration form against backend session bridge. |
 | [mobile/app/auth/forgot-password.tsx](../mobile/app/auth/forgot-password.tsx) | Password reset code request/reset flow. |
 | [mobile/app/player/_layout.tsx](../mobile/app/player/_layout.tsx) | Player route-group guard. |
-| [mobile/app/player/(tabs)/_layout.tsx](../mobile/app/player/%28tabs%29/_layout.tsx) | Player tab shell. |
-| [mobile/app/player/(tabs)/home.tsx](../mobile/app/player/%28tabs%29/home.tsx) | Player dashboard and quick actions. |
+| [mobile/app/player/(tabs)/_layout.tsx](../mobile/app/player/%28tabs%29/_layout.tsx) | Player tab shell with the More-sheet entry point. |
+| [mobile/app/player/(tabs)/home.tsx](../mobile/app/player/%28tabs%29/home.tsx) | Player dashboard, quick actions, and all-features entry. |
 | [mobile/app/player/(tabs)/strings.tsx](../mobile/app/player/%28tabs%29/strings.tsx) | String catalog browsing and sorting. |
-| [mobile/app/player/(tabs)/recommend.tsx](../mobile/app/player/%28tabs%29/recommend.tsx) | Recommendation input form and backend recommendation trigger. |
+| [mobile/app/player/(tabs)/recommend.tsx](../mobile/app/player/%28tabs%29/recommend.tsx) | Recommendation input form and backend trigger opened from More. |
 | [mobile/app/player/(tabs)/bookings.tsx](../mobile/app/player/%28tabs%29/bookings.tsx) | Player booking list and filtering. |
-| [mobile/app/player/(tabs)/chat.tsx](../mobile/app/player/%28tabs%29/chat.tsx) | Live player human-support list for booking-linked and booking-free threads. |
+| [mobile/app/player/(tabs)/chat.tsx](../mobile/app/player/%28tabs%29/chat.tsx) | Live player human-support list opened from More. |
 | [mobile/app/player/(tabs)/profile.tsx](../mobile/app/player/%28tabs%29/profile.tsx) | Player profile overview. |
+| [mobile/app/player/tools.tsx](../mobile/app/player/tools.tsx) | Full-screen grouped player-tools directory. |
 | [mobile/app/player/bookings/new.tsx](../mobile/app/player/bookings/new.tsx) | Booking creation form and slot/string selection. |
 | [mobile/app/player/bookings/summary.tsx](../mobile/app/player/bookings/summary.tsx) | Booking draft confirmation summary. |
 | [mobile/app/player/bookings/[id].tsx](../mobile/app/player/bookings/[id].tsx) | Player booking detail. |
@@ -147,6 +148,7 @@ Query cache owner.
 | [mobile/components/roles/RoleGuard.tsx](../mobile/components/roles/RoleGuard.tsx) | Central role-based route guard. |
 | [mobile/components/auth/AuthShell.tsx](../mobile/components/auth/AuthShell.tsx) | Shared auth-screen layout. |
 | [mobile/components/booking/BookingCard.tsx](../mobile/components/booking/BookingCard.tsx) | Booking summary card. |
+| [mobile/components/player/PlayerToolsSheet.tsx](../mobile/components/player/PlayerToolsSheet.tsx) | More bottom-tab sheet and grouped player-tool navigation. |
 | [mobile/components/booking/SlotPicker.tsx](../mobile/components/booking/SlotPicker.tsx) | Slot selection UI. |
 | [mobile/components/tracking/TrackingTimeline.tsx](../mobile/components/tracking/TrackingTimeline.tsx) | Booking status timeline UI. |
 | [mobile/components/chat/ConversationCard.tsx](../mobile/components/chat/ConversationCard.tsx) | Chat thread card. |

@@ -123,16 +123,21 @@ Main tab workspace:
 
 - `home`
 - `strings`
-- `recommend`
+- `More`, which opens the grouped player-tools sheet
 - `bookings`
 - `profile`
-- `chat`
+
+The `recommend`, `chat`, and `results` routes remain registered in the tab
+group as flow targets, but they are not visible bottom-tab destinations. The
+More sheet exposes recommendation, booking, support, notification, racket, and
+wallet entry points without adding more bottom-tab items.
 
 Additional stack screens extend the tab workflow:
 
 - booking creation, summary, detail, and tracking
 - string detail, compare, and explanation
 - profile edit
+- the all-tools screen and More-sheet entry point
 - payment, feedback, racket service history, notifications, wallet, and counter check-in
 
 `app/player/index.tsx` redirects to `/player/home`.
@@ -427,7 +432,11 @@ Main files:
 - `app/player/strings/[id].tsx`
 - `app/player/strings/compare.tsx`
 
-These screens call the backend recommendation endpoints, map cached/generated results into mobile domain models, and display the backend-provided rationale and scoring evidence.
+These screens call the backend recommendation endpoints, map cached/generated
+results into mobile domain models, and present backend-derived match data with
+concise Agent explanations. The player-facing detail prioritises fit, booking
+setup, availability, and actionable trade-offs instead of exposing the former
+score-breakdown and review-support blocks.
 
 The active backend-aligned recommendation contract now assumes:
 
@@ -435,7 +444,9 @@ The active backend-aligned recommendation contract now assumes:
 - `pref_value_for_money` comes directly from the Value for money slider
 - backend rationale exposes only values that contribute to the active score or explain a rule adjustment
 - explanation payloads identify the contributing feature layer without unused confidence, review-count, or artifact-provenance metadata
-- recommendation detail screens show the returned `value_for_money` score; catalog price remains descriptive
+- recommendation detail screens show the returned match score, catalog price,
+  availability, and suggested tension; `value_for_money` remains part of the
+  saved scoring payload but is not rendered as a separate player score card
 
 ### Booking
 
@@ -611,6 +622,7 @@ Player `flow` pages:
 
 Additional live player pages:
 
+- `/player/tools`
 - `/player/chat`
 - `/player/chat/[id]`
 - `/player/notifications`
@@ -708,7 +720,8 @@ Reusable layout shells used across many screens.
 
 ### `components/*`
 
-Feature-specific reusable UI such as booking cards, chat bubbles, tracking timelines, payment cards, and analytics stats.
+Feature-specific reusable UI such as booking cards, the player More sheet, chat
+bubbles, tracking timelines, payment cards, and analytics stats.
 
 ### `store/`
 
