@@ -9,6 +9,7 @@ from app.domain.recommendation.entities import FeedbackRow
 from app.domain.recommendation.entities import RecommendationInteraction
 from app.domain.recommendation.learning_signals import build_cf_evidence
 from app.domain.recommendation.learning_signals import build_feedback_snapshot
+from app.domain.recommendation.learning_signals import build_personal_history_snapshot
 from app.domain.recommendation.learning_signals import canonical_racket_model_key
 from app.domain.recommendation.learning_signals import cf_weight_for_support
 from app.domain.recommendation.learning_signals import normalize_racket_model_key
@@ -102,6 +103,128 @@ def test_feedback_snapshot_version_does_not_depend_on_query_order() -> None:
     )
 
 
+def test_personal_history_prefers_exact_racket_then_model_then_global() -> None:
+    rows = [
+        _feedback(
+            "f-exact",
+            "current",
+            5,
+            MODEL_KEY,
+            racket_id="racket-1",
+            string_satisfaction=5,
+            would_use_again=False,
+        ),
+        _feedback(
+            "f-model",
+            "current",
+            5,
+            MODEL_KEY,
+            racket_id="racket-2",
+            string_satisfaction=1,
+            would_use_again=True,
+        ),
+        _feedback(
+            "f-other-user",
+            "other",
+            5,
+            MODEL_KEY,
+            racket_id="other-racket",
+            string_satisfaction=5,
+            would_use_again=True,
+        ),
+    ]
+
+    exact = build_personal_history_snapshot(
+        rows,
+        current_user_id="current",
+        target_racket_id="racket-1",
+        target_racket_model_key=MODEL_KEY,
+    ).by_catalog["yonex-bg80"]
+    same_model = build_personal_history_snapshot(
+        rows,
+        current_user_id="current",
+        target_racket_id="racket-3",
+        target_racket_model_key=MODEL_KEY,
+    ).by_catalog["yonex-bg80"]
+    global_only = build_personal_history_snapshot(
+        rows,
+        current_user_id="current",
+        target_racket_id=None,
+        target_racket_model_key="victor:thruster ryuga ii",
+    ).by_catalog["yonex-bg80"]
+
+    assert exact.evidence_scope == "same_racket"
+    assert exact.feedback_count == 1
+    assert exact.would_use_again_ratio == 0
+    assert exact.string_satisfaction == 5
+    assert exact.normalized_score == pytest.approx(0.4)
+    assert same_model.evidence_scope == "same_racket_model"
+    assert same_model.feedback_count == 2
+    assert same_model.normalized_score == pytest.approx(0.5)
+    assert global_only.evidence_scope == "global_string"
+    assert global_only.feedback_count == 2
+
+
+def test_personal_history_snapshot_changes_only_for_relevant_current_user_data() -> (
+    None
+):
+    rows = [
+        _feedback(
+            "f1",
+            "current",
+            2,
+            MODEL_KEY,
+            string_satisfaction=3,
+            would_use_again=True,
+        ),
+        _feedback(
+            "f2",
+            "other",
+            5,
+            MODEL_KEY,
+            string_satisfaction=5,
+            would_use_again=True,
+        ),
+    ]
+    first = build_personal_history_snapshot(
+        rows,
+        current_user_id="current",
+        target_racket_id=None,
+        target_racket_model_key=None,
+    )
+    changed_community_rating = build_personal_history_snapshot(
+        [
+            rows[0],
+            _feedback(
+                "f2", "other", 1, MODEL_KEY, string_satisfaction=5, would_use_again=True
+            ),
+        ],
+        current_user_id="current",
+        target_racket_id=None,
+        target_racket_model_key=None,
+    )
+    changed_personal_rating = build_personal_history_snapshot(
+        [
+            _feedback(
+                "f1",
+                "current",
+                2,
+                MODEL_KEY,
+                string_satisfaction=1,
+                would_use_again=True,
+            ),
+            rows[1],
+        ],
+        current_user_id="current",
+        target_racket_id=None,
+        target_racket_model_key=None,
+    )
+
+    assert first.by_catalog["yonex-bg80"].feedback_count == 1
+    assert first.snapshot_version == changed_community_rating.snapshot_version
+    assert first.snapshot_version != changed_personal_rating.snapshot_version
+
+
 def test_cf_evidence_requires_exact_model_peer() -> None:
     interactions = [
         _interaction("b1", "current", "yonex-bg65", MODEL_KEY, 26),
@@ -156,6 +279,10 @@ def _feedback(
     user_id: str,
     control: int,
     model_key: str | None,
+    *,
+    racket_id: str | None = None,
+    string_satisfaction: int | None = None,
+    would_use_again: bool | None = None,
 ) -> FeedbackRow:
     return FeedbackRow(
         feedback_id=feedback_id,
@@ -163,6 +290,9 @@ def _feedback(
         catalog_id="yonex-bg80",
         racket_model_key=model_key,
         ratings={"control": control},
+        racket_id=racket_id,
+        string_satisfaction=string_satisfaction,
+        would_use_again=would_use_again,
     )
 
 

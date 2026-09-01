@@ -52,6 +52,30 @@ function isActionableTradeOff(value?: string) {
   );
 }
 
+function formatExperienceScope(value?: string | null) {
+  if (value === 'same_racket') {
+    return 'from this exact racket';
+  }
+  if (value === 'same_racket_model') {
+    return 'from this racket model';
+  }
+  return 'from your completed string bookings';
+}
+
+function formatCommunityScope(value?: string | null) {
+  return value === 'exact_racket_model'
+    ? 'same racket model ratings'
+    : 'global string ratings';
+}
+
+function formatRating(value?: number | null) {
+  return value == null ? null : `${value.toFixed(1)}/5`;
+}
+
+function formatPercent(value?: number | null) {
+  return value == null ? null : `${Math.round(value * 100)}%`;
+}
+
 export default function RecommendationExplanationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; runId?: string }>();
@@ -84,6 +108,9 @@ export default function RecommendationExplanationScreen() {
           ruleFit: detailResult.score_breakdown.rule_fit,
           valueForMoney: detailResult.score_breakdown.value_for_money,
           nlpReviewScore: detailResult.score_breakdown.nlp_review_score,
+          personalHistoryScore: detailResult.score_breakdown.personal_history_score,
+          personalHistoryWeight: detailResult.score_breakdown.personal_history_weight,
+          personalizedBaseScore: detailResult.score_breakdown.personalized_base_score,
           finalScore: detailResult.score_breakdown.final_score,
         }
       : undefined);
@@ -128,6 +155,53 @@ export default function RecommendationExplanationScreen() {
   const tradeOff =
     rationale?.trade_off_summary ??
     liveResult?.tradeOffSummary;
+  const racketContext = rationale?.racket_context;
+  const profileContext = rationale?.profile_context;
+  const personalHistory = rationale?.personal_history;
+  const personalHistoryUsed =
+    rationale?.personal_history_used === true &&
+    personalHistory?.mode === 'enabled';
+  const communityEvidence = (rationale?.feature_evidence ?? []).filter(
+    (entry) => (entry.feedback_weight ?? 0) > 0,
+  );
+  const communityFeedbackUsed =
+    rationale?.feedback_calibration_used === true && communityEvidence.length > 0;
+  const similarPlayersUsed =
+    rationale?.collaborative_filtering_used === true &&
+    rationale.cf_shadow?.mode === 'enabled' &&
+    Number(rationale.cf_shadow.cf_weight ?? 0) > 0;
+  const currentRacketLabel =
+    [racketContext?.brand, racketContext?.model].filter(Boolean).join(' ') ||
+    'No saved racket selected';
+  const targetTension = racketContext?.target_tension ?? profileContext?.preferred_tension;
+  const targetTensionLabel = targetTension != null ? `${targetTension} lbs` : 'Saved profile tension';
+  const playingContextLabel = [
+    profileContext?.skill_level,
+    profileContext?.playing_style,
+    profileContext?.frequency_per_week != null
+      ? `${profileContext.frequency_per_week} sessions/week`
+      : null,
+  ]
+    .filter(Boolean)
+    .map((value) => formatLabel(String(value)))
+    .join(' · ') || 'Saved player profile';
+  const personalSatisfaction = formatRating(personalHistory?.string_satisfaction);
+  const personalWouldUseAgain = formatPercent(personalHistory?.would_use_again_ratio);
+  const communityLabels = Array.from(
+    new Set(
+      communityEvidence
+        .map((entry) => entry.display_label ?? entry.feature_key)
+        .filter((label): label is string => Boolean(label)),
+    ),
+  ).slice(0, 3);
+  const communityBookingCount = Math.max(
+    0,
+    ...communityEvidence.map((entry) => entry.feedback_booking_count ?? 0),
+  );
+  const communityScope = communityEvidence[0]?.feedback_evidence_scope;
+  const similarPlayerCount = Number(
+    rationale?.cf_shadow?.distinct_supporting_users ?? 0,
+  );
 
   useEffect(() => {
     if (!token || !params.id) {
@@ -258,7 +332,7 @@ export default function RecommendationExplanationScreen() {
     }
     requestedExplanationKey.current = key;
     void askAgent(
-      'Briefly explain why this string suits me, its main strengths, and one trade-off. Use simple language and do not mention algorithms.',
+      'Using the exact saved recommendation context, write a natural explanation of why this string suits me. Use my profile, racket/tension context, and only evidence marked as used; mention personal experience, community feedback, or similar players only when active. Include the strongest supported benefit and one supported trade-off when available. Do not use a stock template or mention algorithms, scores, rankings, internal data, or that you are an AI.',
     );
   }, [askAgent, params.id, runId]);
 
@@ -356,6 +430,87 @@ export default function RecommendationExplanationScreen() {
       ) : null}
 
       <AppSection title="Why it fits" variant="compact">
+        <AppCard variant="subtle" padding="md" className="mt-3">
+          <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-700">
+            Current setup
+          </HeroText>
+          <View className="mt-2 gap-2">
+            <View className="flex-row items-start justify-between gap-3">
+              <HeroText className="text-sm text-neutral-500">Racket</HeroText>
+              <HeroText selectable className="flex-1 text-right text-sm font-semibold text-neutral-900">
+                {currentRacketLabel}
+              </HeroText>
+            </View>
+            <View className="flex-row items-start justify-between gap-3 border-t border-separator pt-2">
+              <HeroText className="text-sm text-neutral-500">Tension</HeroText>
+              <HeroText selectable className="text-right text-sm font-semibold text-neutral-900">
+                {targetTensionLabel}
+              </HeroText>
+            </View>
+            <View className="flex-row items-start justify-between gap-3 border-t border-separator pt-2">
+              <HeroText className="text-sm text-neutral-500">Playing context</HeroText>
+              <HeroText selectable className="flex-1 text-right text-sm font-semibold text-neutral-900">
+                {playingContextLabel}
+              </HeroText>
+            </View>
+          </View>
+        </AppCard>
+
+        {personalHistoryUsed ? (
+          <AppCard variant="highlighted" padding="md" className="mt-3">
+            <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-700">
+              Previous personal experience
+            </HeroText>
+            <View className="mt-2 flex-row flex-wrap gap-1.5">
+              {personalSatisfaction ? (
+                <AppChip label={`String satisfaction ${personalSatisfaction}`} variant="accent" size="sm" />
+              ) : null}
+              {personalWouldUseAgain ? (
+                <AppChip label={`${personalWouldUseAgain} would use again`} variant="accent" size="sm" />
+              ) : null}
+              <AppChip
+                label={formatExperienceScope(personalHistory?.evidence_scope)}
+                variant="accent"
+                size="sm"
+              />
+            </View>
+          </AppCard>
+        ) : null}
+
+        {communityFeedbackUsed ? (
+          <AppCard variant="subtle" padding="md" className="mt-3">
+            <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-700">
+              Community feedback
+            </HeroText>
+            <View className="mt-2 flex-row flex-wrap gap-1.5">
+              {communityLabels.map((label) => (
+                <AppChip key={label} label={label} variant="info" size="sm" />
+              ))}
+              {communityBookingCount > 0 ? (
+                <AppChip label={`${communityBookingCount} completed ratings`} variant="info" size="sm" />
+              ) : null}
+              {communityScope ? (
+                <AppChip label={formatCommunityScope(communityScope)} variant="info" size="sm" />
+              ) : null}
+            </View>
+          </AppCard>
+        ) : null}
+
+        {similarPlayersUsed ? (
+          <AppCard variant="subtle" padding="md" className="mt-3">
+            <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-700">
+              Similar-player evidence
+            </HeroText>
+            <View className="mt-2 flex-row flex-wrap gap-1.5">
+              <AppChip
+                label={`${similarPlayerCount || 'Similar'} players`}
+                variant="secondary"
+                size="sm"
+              />
+            </View>
+          </AppCard>
+        ) : null}
+
         {agentResponse ? (
           <AgentAnswerCard
             response={agentResponse}

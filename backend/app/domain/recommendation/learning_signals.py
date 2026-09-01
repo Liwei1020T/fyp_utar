@@ -12,6 +12,8 @@ from app.domain.recommendation.entities import CollaborativeEvidence
 from app.domain.recommendation.entities import FeedbackFeatureAggregate
 from app.domain.recommendation.entities import FeedbackRow
 from app.domain.recommendation.entities import FeedbackSnapshot
+from app.domain.recommendation.entities import PersonalHistoryAggregate
+from app.domain.recommendation.entities import PersonalHistorySnapshot
 from app.domain.recommendation.entities import RecommendationInteraction
 
 
@@ -19,6 +21,11 @@ FEEDBACK_POLICY_VERSION = "feedback_v3_no_durability_provenance"
 FEEDBACK_SHRINKAGE_K = 10
 FEEDBACK_MAX_WEIGHT = 0.30
 FEEDBACK_FEATURES = ("comfort", "control", "repulsion")
+PERSONAL_HISTORY_POLICY_VERSION = "personal_history_v1"
+PERSONAL_HISTORY_SHRINKAGE_K = 3
+PERSONAL_HISTORY_MAX_WEIGHT = 0.08
+PERSONAL_HISTORY_WOULD_USE_AGAIN_WEIGHT = 0.60
+PERSONAL_HISTORY_SATISFACTION_WEIGHT = 0.40
 CF_POLICY_VERSION = "racket_cf_enabled_v11_v1"
 CF_SHRINKAGE_K = 10
 CF_MAX_WEIGHT = 0.20
@@ -129,6 +136,77 @@ def build_feedback_snapshot(
     )
 
 
+def build_personal_history_snapshot(
+    rows: Iterable[FeedbackRow],
+    *,
+    current_user_id: str,
+    target_racket_id: str | None,
+    target_racket_model_key: str | None,
+) -> PersonalHistorySnapshot:
+    user_rows = [
+        row
+        for row in rows
+        if row.user_id == current_user_id and _has_personal_history(row)
+    ]
+    canonical: list[dict[str, object]] = [
+        {
+            "feedback_id": row.feedback_id,
+            "catalog_id": row.catalog_id,
+            "racket_id": row.racket_id,
+            "racket_model_key": row.racket_model_key,
+            "string_satisfaction": row.string_satisfaction,
+            "would_use_again": row.would_use_again,
+        }
+        for row in user_rows
+    ]
+    rows_by_catalog: dict[str, list[FeedbackRow]] = defaultdict(list)
+    for row in user_rows:
+        rows_by_catalog[row.catalog_id].append(row)
+
+    selected: dict[str, PersonalHistoryAggregate] = {}
+    for catalog_id, catalog_rows in rows_by_catalog.items():
+        exact_racket_rows = (
+            [row for row in catalog_rows if row.racket_id == target_racket_id]
+            if target_racket_id is not None
+            else []
+        )
+        same_model_rows = (
+            [
+                row
+                for row in catalog_rows
+                if row.racket_model_key == target_racket_model_key
+            ]
+            if target_racket_model_key is not None
+            else []
+        )
+        if exact_racket_rows:
+            selected[catalog_id] = _aggregate_personal_history(
+                exact_racket_rows,
+                evidence_scope="same_racket",
+                racket_id=target_racket_id,
+                racket_model_key=target_racket_model_key,
+            )
+        elif same_model_rows:
+            selected[catalog_id] = _aggregate_personal_history(
+                same_model_rows,
+                evidence_scope="same_racket_model",
+                racket_id=None,
+                racket_model_key=target_racket_model_key,
+            )
+        else:
+            selected[catalog_id] = _aggregate_personal_history(
+                catalog_rows,
+                evidence_scope="global_string",
+                racket_id=None,
+                racket_model_key=None,
+            )
+
+    return PersonalHistorySnapshot(
+        by_catalog=selected,
+        snapshot_version=_digest(PERSONAL_HISTORY_POLICY_VERSION, canonical),
+    )
+
+
 def build_cf_evidence(
     interactions: Iterable[RecommendationInteraction],
     *,
@@ -233,6 +311,85 @@ def _eligible_feedback_values(
                 continue
             eligible.append((row, feature, rating))
     return eligible
+
+
+def _has_personal_history(row: FeedbackRow) -> bool:
+    return row.string_satisfaction is not None or row.would_use_again is not None
+
+
+def _aggregate_personal_history(
+    rows: list[FeedbackRow],
+    *,
+    evidence_scope: str,
+    racket_id: str | None,
+    racket_model_key: str | None,
+) -> PersonalHistoryAggregate:
+    satisfaction_values = [
+        row.string_satisfaction for row in rows if row.string_satisfaction is not None
+    ]
+    would_use_again_values = [
+        1.0 if row.would_use_again else 0.0
+        for row in rows
+        if row.would_use_again is not None
+    ]
+    string_satisfaction = (
+        sum(satisfaction_values) / len(satisfaction_values)
+        if satisfaction_values
+        else None
+    )
+    would_use_again_ratio = (
+        sum(would_use_again_values) / len(would_use_again_values)
+        if would_use_again_values
+        else None
+    )
+    signals = [
+        (would_use_again_ratio, PERSONAL_HISTORY_WOULD_USE_AGAIN_WEIGHT),
+        (
+            ((string_satisfaction - 1) / 4)
+            if string_satisfaction is not None
+            else None,
+            PERSONAL_HISTORY_SATISFACTION_WEIGHT,
+        ),
+    ]
+    available_signals = [
+        (score, weight) for score, weight in signals if score is not None
+    ]
+    total_weight = sum(weight for _, weight in available_signals)
+    normalized_score = (
+        sum(score * weight for score, weight in available_signals) / total_weight
+    )
+    feedback_count = len(rows)
+    confidence = feedback_count / (feedback_count + PERSONAL_HISTORY_SHRINKAGE_K)
+    return PersonalHistoryAggregate(
+        normalized_score=round(normalized_score, 4),
+        feedback_count=feedback_count,
+        string_satisfaction=round(string_satisfaction, 4)
+        if string_satisfaction is not None
+        else None,
+        would_use_again_ratio=round(would_use_again_ratio, 4)
+        if would_use_again_ratio is not None
+        else None,
+        confidence=round(confidence, 4),
+        weight=round(PERSONAL_HISTORY_MAX_WEIGHT * confidence, 4),
+        evidence_scope=evidence_scope,
+        racket_id=racket_id,
+        racket_model_key=racket_model_key,
+        source_version=_digest(
+            PERSONAL_HISTORY_POLICY_VERSION,
+            [
+                {
+                    "catalog_id": row.catalog_id,
+                    "feedback_id": row.feedback_id,
+                    "racket_id": row.racket_id,
+                    "racket_model_key": row.racket_model_key,
+                    "string_satisfaction": row.string_satisfaction,
+                    "would_use_again": row.would_use_again,
+                    "scope": evidence_scope,
+                }
+                for row in rows
+            ],
+        ),
+    )
 
 
 def _aggregate_feedback_buckets(

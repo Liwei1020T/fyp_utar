@@ -180,7 +180,9 @@ The main weakness was runtime usage. Before this refactor, the public recommende
 - Raw 1-to-10 inputs are stored as `raw_score`; backend-normalized weights are stored as `preference_weight`.
 - Active catalog candidates are loaded with official performance, inventory, and matrix entries.
 - The current recommender uses rule-enhanced content recommendation with fixed official/NLP fusion,
-  profile rules, and bounded confirmed-feedback calibration. Exact-racket
+  profile rules, bounded confirmed-feedback calibration, and a separate bounded
+  current-player history rerank. Personal history prefers exact physical racket
+  feedback before exact-model and global string history. Exact-racket
   interaction history receives a bounded CF weight only after three independent
   exact-model supporters; sparse cases retain the base score. Matrix factorization
   and embeddings are not used.

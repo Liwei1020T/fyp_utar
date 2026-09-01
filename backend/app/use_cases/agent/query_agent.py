@@ -38,8 +38,9 @@ Example JSON output for format only: {{"answer":"Plain response.","summary":"Sho
 
 RECOMMENDATION_EXPLANATION_INSTRUCTION = """For this recommendation explanation, use plain player-friendly language.
 Keep the summary to one short sentence, the answer under 70 words, and provide at most three short evidence points. Do not repeat the same fact in the answer and evidence.
-Focus only on why the string fits, its main strengths, and one trade-off.
-Do not mention algorithms, versions, internal identifiers, internal field names, formulas, weights, score calculations, rule bonuses or penalties, fallback modes, or collaborative filtering anywhere in the response, including suggested questions.
+Use the verified profile context, racket/tension context, and saved rationale to explain why this string fits. Write naturally from the evidence; do not use a fixed sentence template or stock explanation.
+Honor the saved rationale flags `personal_history_used`, `feedback_calibration_used`, and `collaborative_filtering_used`: mention previous personal experience, community feedback, or similar-player evidence only when the corresponding flag is true; describe the last one as similar players, never as a recommendation algorithm.
+Do not mention algorithms, versions, internal identifiers, internal field names, formulas, weights, score calculations, rule bonuses or penalties, or fallback modes anywhere in the response, including suggested questions. Never infer or invent evidence when a flag is false or missing.
 If verified live inventory says this string is out of stock, call find_in_stock_alternatives before answering and offer up to three returned alternatives with open_string actions. Never describe how similarity was calculated.
 """
 

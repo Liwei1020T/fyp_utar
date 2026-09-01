@@ -16,7 +16,10 @@ from app.domain.catalog.recommendation_features import (
 from app.domain.recommendation.entities import CachedRecommendationRecord
 from app.domain.recommendation.entities import CollaborativeEvidence
 from app.domain.recommendation.entities import FeedbackFeatureAggregate
+from app.domain.recommendation.entities import FeedbackRow
 from app.domain.recommendation.entities import FeedbackSnapshot
+from app.domain.recommendation.entities import PersonalHistoryAggregate
+from app.domain.recommendation.entities import PersonalHistorySnapshot
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
@@ -57,12 +60,14 @@ class FakeRecommendationRepository:
     def __init__(
         self,
         candidates: list[RecommendationCandidateModel] | None = None,
+        feedback_rows: list[FeedbackRow] | None = None,
     ) -> None:
         self.preference_entries: list[dict[str, float | str | None]] = []
         self.cached: list[CachedRecommendationRecord] = []
         self.cleared_cache_user_ids: list[str] = []
         self.last_cache_algorithm_version: str | None = None
         self._candidates = candidates
+        self._feedback_rows = feedback_rows or []
 
     def list_active_candidates(self) -> list[RecommendationCandidateModel]:
         if self._candidates is not None:
@@ -116,7 +121,7 @@ class FakeRecommendationRepository:
         return None
 
     def list_feedback_rows(self):
-        return []
+        return self._feedback_rows
 
     def list_recommendation_interactions(self):
         return []
@@ -345,6 +350,10 @@ def test_zero_feedback_preserves_baseline_scores_and_order() -> None:
             by_catalog={},
             snapshot_version="sha256:empty",
         ),
+        personal_history_snapshot=PersonalHistorySnapshot(
+            by_catalog={},
+            snapshot_version="sha256:empty-personal",
+        ),
     )
 
     assert [row.result.catalog_id for row in empty_snapshot] == [
@@ -353,6 +362,81 @@ def test_zero_feedback_preserves_baseline_scores_and_order() -> None:
     assert [row.result.score for row in empty_snapshot] == [
         row.result.score for row in baseline
     ]
+    assert all(
+        (row.result.rationale_payload or {})["personal_history_used"] is False
+        for row in empty_snapshot
+    )
+
+
+def test_personal_history_changes_score_with_a_small_explainable_weight() -> None:
+    scorer = ContentRecommendationScorer()
+    candidate = FakeRecommendationRepository().list_active_candidates()[0]
+    request = _attacking_request()
+    baseline = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+    )[0].result
+    positive = scorer.score_candidates(
+        candidates=[candidate],
+        request=request,
+        top_n=1,
+        personal_history_snapshot=PersonalHistorySnapshot(
+            by_catalog={
+                candidate.item.id: PersonalHistoryAggregate(
+                    normalized_score=1.0,
+                    feedback_count=1,
+                    string_satisfaction=5.0,
+                    would_use_again_ratio=1.0,
+                    confidence=0.25,
+                    weight=0.02,
+                    evidence_scope="same_racket",
+                    racket_id="racket-1",
+                    racket_model_key="yonex:astrox 88d pro",
+                    source_version="sha256:personal",
+                )
+            },
+            snapshot_version="sha256:personal-snapshot",
+        ),
+    )[0].result
+
+    assert positive.score > baseline.score
+    assert positive.score - baseline.score <= 0.02
+    rationale = positive.rationale_payload or {}
+    assert rationale["personal_history_used"] is True
+    assert rationale["personal_history"]["evidence_scope"] == "same_racket"
+    assert rationale["personal_history"]["weight"] == pytest.approx(0.02)
+    assert (positive.score_breakdown or {})["base_score"] == pytest.approx(
+        (positive.score_breakdown or {})["preference_match"] * 0.75 / 0.90
+        + (positive.score_breakdown or {})["rule_fit"] * 0.15 / 0.90,
+        abs=1e-4,
+    )
+
+
+def test_personal_history_changes_invalidate_cached_results() -> None:
+    feedback = FeedbackRow(
+        feedback_id="feedback-1",
+        user_id="user-1",
+        catalog_id="yonex-bg80",
+        racket_model_key=None,
+        ratings={},
+        string_satisfaction=5,
+        would_use_again=True,
+    )
+    repository = FakeRecommendationRepository(feedback_rows=[feedback])
+    use_case = GenerateRecommendationUseCase(
+        profile_repository=FakeProfileRepository(),
+        recommendation_repository=repository,
+        recommendation_log_repository=FakeRecommendationLogRepository(),
+    )
+
+    use_case._execute(user_id="user-1", request=_attacking_request(), persist=True)
+    assert use_case.execute_cached(user_id="user-1").results
+
+    repository._feedback_rows[0] = replace(feedback, string_satisfaction=1)
+
+    with pytest.raises(NotFoundError, match="No current cached recommendations"):
+        use_case.execute_cached(user_id="user-1")
 
 
 def test_feedback_calibration_alone_changes_feature_and_final_score() -> None:
@@ -711,7 +795,9 @@ def test_cached_recommendation_detail_returns_rationale() -> None:
     assert detail.result.score_breakdown["nlp_review_score"] is not None
     assert detail.result.score_breakdown["final_score"] == detail.result.score
     assert repository.last_cache_algorithm_version == ALGORITHM_VERSION
-    assert ALGORITHM_VERSION == "fyp1_weighted_preferences_feedback_racket_cf_v13"
+    assert (
+        ALGORITHM_VERSION == "fyp1_weighted_preferences_feedback_racket_cf_personal_v14"
+    )
 
 
 def test_preference_vector_uses_defined_storage_feature_keys() -> None:

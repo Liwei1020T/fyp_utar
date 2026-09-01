@@ -325,7 +325,9 @@ def test_recommendation_explanation_requests_short_non_technical_copy() -> None:
     assert "answer under 70 words" in instruction
     assert "Do not repeat the same fact" in instruction
     assert "Do not mention algorithms" in instruction
-    assert "collaborative filtering" in instruction
+    assert "personal experience" in instruction
+    assert "similar-player evidence" in instruction
+    assert "fixed sentence template" in instruction
     assert "find_in_stock_alternatives" in instruction
 
 

@@ -217,11 +217,12 @@ These rows are regenerated when a complete profile is saved and when profile rec
 Stores the latest generated recommendation rows per `(user_id, catalog_id, algorithm_version)`.
 
 The active algorithm version is
-`fyp1_weighted_preferences_feedback_racket_cf_v13`.
+`fyp1_weighted_preferences_feedback_racket_cf_personal_v14`.
 
 Profile saves invalidate that user's cache. Matrix content changes invalidate
-all score-cache rows, while an unchanged startup import preserves them. Cached reads
-also exclude inactive or unavailable inventory.
+all score-cache rows, while an unchanged startup import preserves them. Personal
+history feedback invalidates that user's cache; cached reads also exclude
+inactive or unavailable inventory.
 
 Score fields:
 

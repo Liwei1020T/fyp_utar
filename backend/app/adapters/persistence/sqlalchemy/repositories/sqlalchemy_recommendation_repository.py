@@ -133,6 +133,9 @@ class SqlAlchemyRecommendationRepository:
                     "control": feedback.control,
                     "repulsion": feedback.repulsion,
                 },
+                racket_id=booking.racket_id,
+                string_satisfaction=feedback.string_satisfaction,
+                would_use_again=feedback.would_use_again,
             )
             for feedback, booking in rows
             if booking.status == "completed"

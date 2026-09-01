@@ -106,6 +106,9 @@ class FeedbackRow:
     catalog_id: str
     racket_model_key: str | None
     ratings: Mapping[str, int | None]
+    racket_id: str | None = None
+    string_satisfaction: int | None = None
+    would_use_again: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -123,6 +126,26 @@ class FeedbackFeatureAggregate:
 @dataclass(frozen=True)
 class FeedbackSnapshot:
     by_catalog: Mapping[str, Mapping[str, FeedbackFeatureAggregate]]
+    snapshot_version: str
+
+
+@dataclass(frozen=True)
+class PersonalHistoryAggregate:
+    normalized_score: float
+    feedback_count: int
+    string_satisfaction: float | None
+    would_use_again_ratio: float | None
+    confidence: float
+    weight: float
+    evidence_scope: str
+    racket_id: str | None
+    racket_model_key: str | None
+    source_version: str
+
+
+@dataclass(frozen=True)
+class PersonalHistorySnapshot:
+    by_catalog: Mapping[str, PersonalHistoryAggregate]
     snapshot_version: str
 
 

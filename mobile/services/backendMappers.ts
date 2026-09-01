@@ -1116,6 +1116,9 @@ function mapRecommendationScoreBreakdown(
     ruleFit: value.rule_fit,
     valueForMoney: value.value_for_money,
     nlpReviewScore: value.nlp_review_score,
+    personalHistoryScore: value.personal_history_score,
+    personalHistoryWeight: value.personal_history_weight,
+    personalizedBaseScore: value.personalized_base_score,
     finalScore: value.final_score,
   };
 }

@@ -434,7 +434,11 @@ Main files:
 
 These screens call the backend recommendation endpoints, map cached/generated
 results into mobile domain models, and present backend-derived match data with
-concise Agent explanations. The player-facing detail prioritises fit, booking
+concise Agent explanations. The player-facing detail prioritises the Agent's
+dynamic fit explanation, current racket/tension context, and evidence that was
+actually used in the run. Structured personal-history, community, and
+similar-player badges remain conditional; the saved top reason is only the
+fallback when the Agent cannot answer. The page still prioritises fit, booking
 setup, availability, and actionable trade-offs instead of exposing the former
 score-breakdown and review-support blocks.
 
@@ -443,7 +447,10 @@ The active backend-aligned recommendation contract now assumes:
 - canonical player setup inputs include `preferred_feel`, `preferred_gauge`, and structured `recent_goal`
 - `pref_value_for_money` comes directly from the Value for money slider
 - backend rationale exposes only values that contribute to the active score or explain a rule adjustment
-- explanation payloads identify the contributing feature layer without unused confidence, review-count, or artifact-provenance metadata
+- explanation payloads identify the contributing feature layer and retain only evidence needed for ranking, audit, or player-facing explanation
+- recommendation explanation prompts are grounded in the exact saved run and
+  must omit personal, community, or similar-player claims when their usage flags
+  are false
 - recommendation detail screens show the returned match score, catalog price,
   availability, and suggested tension; `value_for_money` remains part of the
   saved scoring payload but is not rendered as a separate player score card

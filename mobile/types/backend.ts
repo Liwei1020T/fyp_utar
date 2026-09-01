@@ -857,6 +857,26 @@ export interface BackendRecommendationScoreBreakdown {
   rule_fit?: number;
   value_for_money?: number;
   nlp_review_score?: number;
+  personal_history_score?: number;
+  personal_history_weight?: number;
+  personalized_base_score?: number;
+  final_score?: number;
+}
+
+export interface BackendPersonalHistoryEvidence {
+  mode?: string;
+  normalized_score?: number | null;
+  feedback_count?: number;
+  string_satisfaction?: number | null;
+  would_use_again_ratio?: number | null;
+  confidence?: number;
+  weight?: number;
+  evidence_scope?: string | null;
+  racket_id?: string | null;
+  racket_model_key?: string | null;
+  source_version?: string | null;
+  snapshot_version?: string | null;
+  base_score?: number;
   final_score?: number;
 }
 
@@ -864,8 +884,11 @@ export interface BackendRecommendationRationale {
   score_breakdown?: BackendRecommendationScoreBreakdown;
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
+  personal_history_used?: boolean;
   feedback_calibration_used?: boolean;
   feedback_snapshot_version?: string | null;
+  personal_history_snapshot_version?: string | null;
+  personal_history?: BackendPersonalHistoryEvidence | null;
   racket_context?: Record<string, string | number | null> | null;
   cf_shadow?: Record<string, string | number | boolean | null>;
   primary_fit_angle?: string;

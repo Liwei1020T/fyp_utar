@@ -13,6 +13,7 @@ from app.domain.recommendation.entities import RecommendationResultModel
 from app.domain.recommendation.entities import RacketRecommendationContext
 from app.domain.recommendation.learning_signals import build_cf_evidence
 from app.domain.recommendation.learning_signals import build_feedback_snapshot
+from app.domain.recommendation.learning_signals import build_personal_history_snapshot
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.domain.recommendation.scoring import ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
@@ -187,8 +188,19 @@ class GenerateRecommendationUseCase:
         profile_snapshot: dict[str, object] | None = None,
         racket_context: RacketRecommendationContext | None = None,
     ) -> RecommendationResponseModel:
+        feedback_rows = self.recommendation_repository.list_feedback_rows()
         feedback_snapshot = build_feedback_snapshot(
-            self.recommendation_repository.list_feedback_rows(),
+            feedback_rows,
+            target_racket_model_key=(
+                racket_context.model_key if racket_context is not None else None
+            ),
+        )
+        personal_history_snapshot = build_personal_history_snapshot(
+            feedback_rows,
+            current_user_id=user_id or "",
+            target_racket_id=(
+                racket_context.racket_id if racket_context is not None else None
+            ),
             target_racket_model_key=(
                 racket_context.model_key if racket_context is not None else None
             ),
@@ -207,6 +219,7 @@ class GenerateRecommendationUseCase:
             request=request,
             top_n=request.top_n,
             feedback_snapshot=feedback_snapshot,
+            personal_history_snapshot=personal_history_snapshot,
             cf_evidence=cf_evidence,
             racket_context=racket_context,
         )
@@ -215,8 +228,19 @@ class GenerateRecommendationUseCase:
         generated_at = None
 
         if persist and user_id:
+            latest_feedback_rows = self.recommendation_repository.list_feedback_rows()
             latest_feedback = build_feedback_snapshot(
-                self.recommendation_repository.list_feedback_rows(),
+                latest_feedback_rows,
+                target_racket_model_key=(
+                    racket_context.model_key if racket_context is not None else None
+                ),
+            )
+            latest_personal_history = build_personal_history_snapshot(
+                latest_feedback_rows,
+                current_user_id=user_id,
+                target_racket_id=(
+                    racket_context.racket_id if racket_context is not None else None
+                ),
                 target_racket_model_key=(
                     racket_context.model_key if racket_context is not None else None
                 ),
@@ -232,6 +256,8 @@ class GenerateRecommendationUseCase:
             )
             if (
                 latest_feedback.snapshot_version != feedback_snapshot.snapshot_version
+                or latest_personal_history.snapshot_version
+                != personal_history_snapshot.snapshot_version
                 or latest_cf.source_version != cf_evidence.source_version
             ):
                 raise ConflictError("Recommendation evidence changed; retry generation")
@@ -306,13 +332,31 @@ class GenerateRecommendationUseCase:
             and racket_payload.get("normalized_model_key")
             else None
         )
+        feedback_rows = self.recommendation_repository.list_feedback_rows()
         feedback_snapshot = build_feedback_snapshot(
-            self.recommendation_repository.list_feedback_rows(),
+            feedback_rows,
             target_racket_model_key=model_key,
         )
         if (
             rationale.get("feedback_snapshot_version")
             != feedback_snapshot.snapshot_version
+        ):
+            return False
+
+        personal_history_snapshot = build_personal_history_snapshot(
+            feedback_rows,
+            current_user_id=cached[0].user_id,
+            target_racket_id=(
+                racket_payload.get("racket_id")
+                if isinstance(racket_payload, dict)
+                and isinstance(racket_payload.get("racket_id"), str)
+                else None
+            ),
+            target_racket_model_key=model_key,
+        )
+        if (
+            rationale.get("personal_history_snapshot_version")
+            != personal_history_snapshot.snapshot_version
         ):
             return False
 

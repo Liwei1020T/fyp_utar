@@ -6,7 +6,7 @@ This document describes the current recommendation runtime in `backend/app/domai
 
 Persisted algorithm identifier:
 
-- `fyp1_weighted_preferences_feedback_racket_cf_v13`
+- `fyp1_weighted_preferences_feedback_racket_cf_personal_v14`
 
 Design style:
 
@@ -15,6 +15,7 @@ Design style:
 - Gauge, feel, tension, frequency, and recent-goal rule adjustments
 - Fixed official/NLP feature fusion without confidence or review-count weighting
 - Bounded structured-feedback calibration, preferring exact racket-model evidence
+- Bounded personal-history reranking from the current player's completed feedback
 - Racket-conditioned collaborative filtering with a three-user activation gate
 
 Collaborative evidence is observable and persisted. It receives a non-zero,
@@ -27,7 +28,7 @@ users on the exact normalized racket model. Sparse cases preserve the v10 score.
 flowchart TD
     A[Client Request: preview/profile] --> B[GenerateRecommendationUseCase]
     B --> C[Load Owned Racket Context]
-    C --> D[Build Feedback Snapshot + CF Shadow]
+    C --> D[Build Community + Personal History Snapshots + CF Shadow]
     D --> E[Load String Item + Official Performance + Matrix Entries]
     E --> F[ContentRecommendationScorer]
     F --> G[Per-Candidate Scoring]
@@ -134,6 +135,11 @@ Catalog review counts are not recommendation inputs.
 - Explicitly confirmed structured feedback is averaged per user before aggregation.
 - Exact normalized racket-model evidence is preferred; global string evidence is
   the fallback. Influence is shrunk with `K=10` and capped at `0.30` per feature.
+- The current player's `string_satisfaction` and `would_use_again` fields are
+  kept separate from community calibration and CF. Personal evidence prefers
+  the exact physical `racket_id`, then the exact normalized racket model, then
+  the player's global history for that string. Its weight is shrunk with
+  `K=3` and capped at `0.08`.
 - Completed bookings from similar users on the exact racket model produce a
   tension-aware CF score. Its runtime weight remains `0.0` below three distinct
   supporters and is otherwise dynamically shrunk and capped at `0.20`.
@@ -234,9 +240,22 @@ $$
 + 0.15 \cdot \text{RuleFit}}{0.90}
 $$
 
-When exact-racket CF has at least three independent supporters, the scorer
-uses its bounded, shrunk weight to blend `BaseScore` with the CF score. When it
-does not, the CF weight is zero and `FinalScore = BaseScore`.
+Personal history first produces a small adjusted base score:
+
+```text
+personal_history_score =
+    0.60 * would_use_again_ratio
+  + 0.40 * normalized_string_satisfaction
+
+personal_history_weight = 0.08 * feedback_count / (feedback_count + 3)
+personalized_base_score = BaseScore * (1 - personal_history_weight)
+                         + personal_history_score * personal_history_weight
+```
+
+Missing personal fields are omitted from the weighted average. With no current
+player history, `personalized_base_score = BaseScore` exactly. CF then applies
+its existing bounded blend to `personalized_base_score` only when the existing
+three-independent-user gate is met.
 
 Ranking is then sorted by:
 
@@ -254,7 +273,15 @@ For each result, scorer stores:
 - top reasons and rule events
 - feature evidence rows with official value, NLP value, fixed NLP contribution, and effective score
 - feedback scope, counts, bounded weight, and source/snapshot versions
+- personal-history scope, completed-feedback count, component values, bounded
+  weight, and personal snapshot version
 - selected racket context and gated CF evidence with base/final score audit fields
+
+The player result and detail screens use the grounded recommendation Agent to
+turn this saved rationale into natural language. The mobile UI keeps only
+structured context and evidence badges; personal, community, and similar-player
+evidence is displayed only when its persisted usage flag is true. If the Agent
+is unavailable, the saved `top_reasons` remains the bounded fallback.
 
 Persistence behavior by request type:
 
@@ -283,13 +310,14 @@ This keeps recommendations explainable, tunable, and stable for FYP use while st
 | Boundary | Review result | Evidence in the current runtime |
 | --- | --- | --- |
 | Single ranking owner | **Pass** | Mobile calls the recommendation API; `GenerateRecommendationUseCase` builds evidence and `ContentRecommendationScorer` owns scoring and Top-N ordering. The Agent explains or compares results but does not rank strings. |
-| Feedback learning loop | **Pass** | Completed feature-rating fields in `booking_feedback` are exposed as `FeedbackRow`, aggregated by `build_feedback_snapshot`, applied once by `_apply_feedback`, and recorded with policy/source versions. Eligible feature changes invalidate the active cache version; text-only feedback remains non-ranking. |
+| Feedback learning loop | **Pass** | Community feature-rating fields in `booking_feedback` are exposed as `FeedbackRow`, aggregated by `build_feedback_snapshot`, and applied once by `_apply_feedback`; the current player's satisfaction/reuse fields use a separate bounded personal snapshot. Eligible changes invalidate the active cache version; text-only feedback remains non-ranking. |
 | CF boundary | **Pass** | Completed interactions use exact canonical racket-model keys, exclude the current user, include missing-tension peers only in the denominator, gate influence at three distinct supporters, and cap the blend at 20%. |
 | NLP boundary | **Pass** | The reviewed MacBERT/NLP workbook is an offline matrix source. Runtime feedback changes bounded feature calibration; it does not retrain or promote an NLP model. |
 | Cohort and cold start | **Pass** | Repository candidate filtering remains bounded to the approved 12-string cohort and inventory availability; absent feedback or unsupported CF returns the content/rule baseline. |
 | Explainability and audit | **Pass** | Response rationale includes feature evidence, feedback scope/weight/version, racket context, CF support, fallback reason, and base/final scores. |
 | Academic effectiveness claim | **Not claimed** | No expert gold labels, NDCG/hit-rate evaluation, or production-accuracy claim is introduced by this change. The current evidence demonstrates signal influence and safe fallbacks only. |
 
-The active runtime name is `fyp1_weighted_preferences_feedback_racket_cf_v13`.
+The active runtime name is `fyp1_weighted_preferences_feedback_racket_cf_personal_v14`.
 Catalog feedback metrics are descriptive provenance and are not a second ranking
-signal; current ranking uses the bounded feedback snapshot and CF evidence.
+signal; current ranking uses the bounded community snapshot, personal-history
+snapshot, and existing CF evidence as separate layers.

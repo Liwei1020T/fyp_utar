@@ -441,7 +441,7 @@ Recommendation response:
 
 ```json
 {
-  "algorithm_version": "fyp1_weighted_preferences_feedback_racket_cf_v13",
+  "algorithm_version": "fyp1_weighted_preferences_feedback_racket_cf_personal_v14",
   "run_id": "recommendation-run-uuid",
   "generated_at": "2026-04-12T14:10:00+00:00",
   "results": [
@@ -479,6 +479,11 @@ Recommendation response:
         "algorithm_family": "feedback_calibrated_content_preferences",
         "feedback_calibration_used": true,
         "collaborative_filtering_used": false,
+        "personal_history_used": false,
+        "personal_history": {
+          "mode": "unavailable",
+          "weight": 0.0
+        },
         "feature_sources": {
           "repulsion": "nlp_review",
           "control": "nlp_review"
@@ -525,7 +530,10 @@ Recommendation response:
 The active recommender is rule-enhanced content recommendation with fixed
 official/NLP fusion and bounded, explicitly confirmed feedback
 calibration. When `racket_id` is supplied, the racket must belong to the current
-user. Racket-conditioned interaction-history CF is persisted as `cf_shadow` for
+user. The current player's completed-booking `string_satisfaction` and
+`would_use_again` values are persisted in `personal_history` and applied as a
+separate bounded reranking layer, preferring the exact racket, then exact model,
+then global string history. Racket-conditioned interaction-history CF is persisted as `cf_shadow` for
 backward-compatible audit naming. It receives a non-zero weight only for a
 candidate supported by at least three independent users on the exact normalized
 racket model. Otherwise `cf_weight=0.0` and the v10 score is unchanged. Matrix

@@ -43,6 +43,7 @@ from app.shared.serialization import number_to_float
 router = APIRouter(tags=["rackets", "feedback"])
 
 RECOMMENDATION_FEATURE_FIELDS = {"comfort", "control", "repulsion"}
+PERSONAL_HISTORY_FIELDS = {"string_satisfaction", "would_use_again"}
 RacketServiceSummary = tuple[int, str | None, float | None, str | None]
 
 
@@ -405,6 +406,11 @@ def create_feedback(
         for field_name in RECOMMENDATION_FEATURE_FIELDS & payload.model_fields_set
     ):
         _invalidate_feedback_caches(db)
+    if any(
+        values.get(field_name) is not None
+        for field_name in PERSONAL_HISTORY_FIELDS & payload.model_fields_set
+    ):
+        _invalidate_user_racket_cache(db, current_user.user_id)
     db.flush()
     db.refresh(feedback)
     return feedback_to_dto(feedback)
@@ -440,10 +446,17 @@ def update_feedback(
         for field_name in RECOMMENDATION_FEATURE_FIELDS & payload.model_fields_set
         if getattr(feedback, field_name) != values.get(field_name)
     }
+    changed_personal_history = {
+        field_name
+        for field_name in PERSONAL_HISTORY_FIELDS & payload.model_fields_set
+        if getattr(feedback, field_name) != values.get(field_name)
+    }
     for field_name, value in values.items():
         setattr(feedback, field_name, value)
     if changed_features:
         _invalidate_feedback_caches(db)
+    if changed_personal_history:
+        _invalidate_user_racket_cache(db, current_user.user_id)
 
     db.flush()
     db.refresh(feedback)

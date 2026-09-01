@@ -244,7 +244,27 @@ export interface RecommendationScoreBreakdown {
   ruleFit?: number;
   valueForMoney?: number;
   nlpReviewScore?: number;
+  personalHistoryScore?: number;
+  personalHistoryWeight?: number;
+  personalizedBaseScore?: number;
   finalScore?: number;
+}
+
+export interface PersonalHistoryEvidence {
+  mode?: string;
+  normalized_score?: number | null;
+  feedback_count?: number;
+  string_satisfaction?: number | null;
+  would_use_again_ratio?: number | null;
+  confidence?: number;
+  weight?: number;
+  evidence_scope?: string | null;
+  racket_id?: string | null;
+  racket_model_key?: string | null;
+  source_version?: string | null;
+  snapshot_version?: string | null;
+  base_score?: number;
+  final_score?: number;
 }
 
 export interface RecommendationRationalePayload {
@@ -253,10 +273,20 @@ export interface RecommendationRationalePayload {
     rule_fit?: number;
     value_for_money?: number;
     nlp_review_score?: number;
+    personal_history_score?: number;
+    personal_history_weight?: number;
+    personalized_base_score?: number;
     final_score?: number;
   };
   algorithm_family?: string;
   collaborative_filtering_used?: boolean;
+  personal_history_used?: boolean;
+  feedback_calibration_used?: boolean;
+  feedback_snapshot_version?: string | null;
+  personal_history_snapshot_version?: string | null;
+  personal_history?: PersonalHistoryEvidence | null;
+  racket_context?: Record<string, string | number | null> | null;
+  cf_shadow?: Record<string, string | number | boolean | null>;
   primary_fit_angle?: string;
   trade_off_summary?: string;
   feature_sources?: Record<string, string>;
@@ -269,6 +299,10 @@ export interface RecommendationRationalePayload {
     official_score?: number | null;
     nlp_review_score?: number | null;
     nlp_influence?: number | null;
+    feedback_score?: number | null;
+    feedback_booking_count?: number | null;
+    feedback_weight?: number | null;
+    feedback_evidence_scope?: string | null;
   }>;
   effective_feature_scores?: Record<string, number>;
   fused_feature_scores?: Record<string, number>;

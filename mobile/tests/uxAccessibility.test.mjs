@@ -336,6 +336,12 @@ test('player recommendation detail keeps scoring secondary to the decision', asy
   );
 
   assert.match(detail, /title="Why it fits"/);
+  assert.match(detail, /Current setup/);
+  assert.match(detail, /Previous personal experience/);
+  assert.match(detail, /Community feedback/);
+  assert.match(detail, /Similar-player evidence/);
+  assert.match(detail, /only evidence marked as used/);
+  assert.match(detail, /AgentAnswerCard/);
   assert.match(detail, /title="Booking setup"/);
   assert.match(detail, /Suggested tension/);
   assert.match(detail, /String price/);
@@ -546,7 +552,11 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(results, /queryAgent/);
   assert.match(results, /surface: 'recommendation_explanation'/);
   assert.match(results, /Generating a tailored explanation/);
+  assert.match(results, /only the evidence marked as used/);
   assert.match(results, /response\.summary\.trim\(\)/);
+  assert.match(results, /Your history/);
+  assert.match(results, /Community feedback/);
+  assert.match(results, /Similar players/);
   assert.doesNotMatch(results, /Score model/);
   assert.match(adminDashboard, /title="Needs attention"/);
   assert.match(adminDashboard, /label="Search tools"/);

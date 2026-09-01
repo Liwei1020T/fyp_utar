@@ -9,6 +9,8 @@ from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import CollaborativeEvidence
 from app.domain.recommendation.entities import FeedbackFeatureAggregate
 from app.domain.recommendation.entities import FeedbackSnapshot
+from app.domain.recommendation.entities import PersonalHistoryAggregate
+from app.domain.recommendation.entities import PersonalHistorySnapshot
 from app.domain.recommendation.entities import RecommendationFeatureSignalModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResultModel
@@ -18,7 +20,7 @@ from app.domain.recommendation.learning_signals import CF_SHRINKAGE_K
 from app.domain.recommendation.learning_signals import cf_weight_for_support
 
 
-ALGORITHM_VERSION = "fyp1_weighted_preferences_feedback_racket_cf_v13"
+ALGORITHM_VERSION = "fyp1_weighted_preferences_feedback_racket_cf_personal_v14"
 PREFERENCE_SOURCE_LAYER = "profile"
 
 CORE_RECOMMENDATION_FEATURES = (
@@ -133,6 +135,7 @@ class ContentRecommendationScorer:
         request: RecommendationRequestModel,
         top_n: int,
         feedback_snapshot: FeedbackSnapshot | None = None,
+        personal_history_snapshot: PersonalHistorySnapshot | None = None,
         cf_evidence: CollaborativeEvidence | None = None,
         racket_context: RacketRecommendationContext | None = None,
     ) -> list[ScoredRecommendation]:
@@ -184,8 +187,22 @@ class ContentRecommendationScorer:
                 / FINAL_SCORE_WEIGHT_TOTAL,
                 4,
             )
-            final_score, cf_payload = _apply_cf(
+            personal_history = (
+                personal_history_snapshot.by_catalog.get(candidate.item.id)
+                if personal_history_snapshot is not None
+                else None
+            )
+            personalized_base_score, personal_history_payload = _apply_personal_history(
                 base_score=base_score,
+                aggregate=personal_history,
+                snapshot_version=(
+                    personal_history_snapshot.snapshot_version
+                    if personal_history_snapshot is not None
+                    else None
+                ),
+            )
+            final_score, cf_payload = _apply_cf(
+                base_score=personalized_base_score,
                 evidence=cf_evidence,
                 catalog_id=candidate.item.id,
             )
@@ -201,10 +218,14 @@ class ContentRecommendationScorer:
                 "rule_fit": round(rule_fit, 4),
                 "value_for_money": round(effective_scores["value_for_money"], 4),
                 "base_score": base_score,
+                "personalized_base_score": personalized_base_score,
                 "final_score": final_score,
             }
             if nlp_review_score is not None:
                 breakdown["nlp_review_score"] = round(nlp_review_score, 4)
+            if personal_history is not None:
+                breakdown["personal_history_score"] = personal_history.normalized_score
+                breakdown["personal_history_weight"] = personal_history.weight
 
             fit_angle = _primary_fit_angle(
                 effective_scores,
@@ -217,6 +238,7 @@ class ContentRecommendationScorer:
                 "model_name": candidate.item.model_name,
                 "algorithm_family": "feedback_calibrated_racket_cf",
                 "collaborative_filtering_used": cf_payload.get("mode") == "enabled",
+                "personal_history_used": personal_history is not None,
                 "feedback_calibration_used": any(
                     (_to_float(row.get("feedback_weight")) or 0) > 0
                     for row in feature_evidence
@@ -226,6 +248,12 @@ class ContentRecommendationScorer:
                     if feedback_snapshot is not None
                     else None
                 ),
+                "personal_history_snapshot_version": (
+                    personal_history_snapshot.snapshot_version
+                    if personal_history_snapshot is not None
+                    else None
+                ),
+                "personal_history": personal_history_payload,
                 "racket_context": (
                     {
                         "racket_id": racket_context.racket_id,
@@ -450,6 +478,44 @@ def _apply_feedback(
             }
         )
     return calibrated, sources, meta
+
+
+def _apply_personal_history(
+    *,
+    base_score: float,
+    aggregate: PersonalHistoryAggregate | None,
+    snapshot_version: str | None,
+) -> tuple[float, dict[str, object]]:
+    if aggregate is None:
+        return base_score, {
+            "mode": "unavailable",
+            "weight": 0.0,
+            "snapshot_version": snapshot_version,
+        }
+
+    final_score = round(
+        clamp01(
+            base_score * (1 - aggregate.weight)
+            + aggregate.normalized_score * aggregate.weight
+        ),
+        4,
+    )
+    return final_score, {
+        "mode": "enabled",
+        "normalized_score": aggregate.normalized_score,
+        "feedback_count": aggregate.feedback_count,
+        "string_satisfaction": aggregate.string_satisfaction,
+        "would_use_again_ratio": aggregate.would_use_again_ratio,
+        "confidence": aggregate.confidence,
+        "weight": aggregate.weight,
+        "evidence_scope": aggregate.evidence_scope,
+        "racket_id": aggregate.racket_id,
+        "racket_model_key": aggregate.racket_model_key,
+        "source_version": aggregate.source_version,
+        "snapshot_version": snapshot_version,
+        "base_score": base_score,
+        "final_score": final_score,
+    }
 
 
 def _apply_cf(

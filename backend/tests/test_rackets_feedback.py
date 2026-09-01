@@ -481,3 +481,64 @@ def test_structured_feedback_patch_without_durability_or_provenance() -> None:
         json={"durability": 4},
     )
     assert removed_durability.status_code == 422
+
+
+def test_personal_feedback_clears_the_owner_recommendation_cache() -> None:
+    owner_token = register_customer(
+        username="feedback-cache-owner",
+        phone_number="+60121110015",
+    )
+    racket = create_racket(owner_token)
+    booking = create_booking(owner_token, str(racket["id"]))
+    booking_id = str(booking["id"])
+    complete_booking(login_admin(), booking_id)
+
+    with SessionLocal() as db:
+        db.add(
+            RecommendationScoreCache(
+                user_id=str(booking["user_id"]),
+                catalog_id=str(booking["string_id"]),
+                algorithm_version=ALGORITHM_VERSION,
+                final_score=0.5,
+                rank_position=1,
+                rationale={},
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        assert (
+            db.execute(
+                select(RecommendationScoreCache).where(
+                    RecommendationScoreCache.user_id == str(booking["user_id"]),
+                    RecommendationScoreCache.algorithm_version == ALGORITHM_VERSION,
+                )
+            )
+            .scalars()
+            .first()
+            is not None
+        )
+
+    response = client.post(
+        f"/api/bookings/{booking_id}/feedback",
+        headers=headers(owner_token),
+        json={
+            "rating": 4,
+            "string_satisfaction": 5,
+            "would_use_again": False,
+        },
+    )
+    assert response.status_code == 200
+
+    with SessionLocal() as db:
+        assert (
+            db.execute(
+                select(RecommendationScoreCache).where(
+                    RecommendationScoreCache.user_id == str(booking["user_id"]),
+                    RecommendationScoreCache.algorithm_version == ALGORITHM_VERSION,
+                )
+            )
+            .scalars()
+            .first()
+            is None
+        )

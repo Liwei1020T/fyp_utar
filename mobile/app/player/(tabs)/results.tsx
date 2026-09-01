@@ -159,7 +159,7 @@ export default function RecommendationResultsScreen() {
           try {
             const response = await backendApi.queryAgent(accessToken, {
               message:
-                'In one short, player-friendly sentence, explain why the string in the supplied exact recommendation context fits this player. Mention the strongest supported benefit and, only if supported, one practical trade-off. Do not mention algorithms, scores, rankings, internal data, or that you are an AI.',
+                'Using the supplied exact recommendation context, write a natural, player-friendly explanation of why this string fits me. Use the saved profile, racket/tension context, and only the evidence marked as used: mention personal experience, community feedback, or similar players only when present and active. Do not use a stock template or mention algorithms, scores, rankings, internal data, or that you are an AI.',
               context: {
                 surface: 'recommendation_explanation',
                 run_id: item.runId,
@@ -274,6 +274,19 @@ export default function RecommendationResultsScreen() {
                     : agentReason?.status === 'loading'
                       ? 'Generating a tailored explanation...'
                       : item.reasons[0] ?? 'No saved recommendation reason was returned.';
+                const rationale = item.rationalePayload;
+                const personalHistoryUsed =
+                  rationale?.personal_history_used === true &&
+                  rationale.personal_history?.mode === 'enabled';
+                const communityFeedbackUsed =
+                  rationale?.feedback_calibration_used === true &&
+                  (rationale.feature_evidence ?? []).some(
+                    (entry) => (entry.feedback_weight ?? 0) > 0,
+                  );
+                const similarPlayersUsed =
+                  rationale?.collaborative_filtering_used === true &&
+                  rationale.cf_shadow?.mode === 'enabled' &&
+                  Number(rationale.cf_shadow.cf_weight ?? 0) > 0;
 
                 return (
                   <AppCard key={item.id} variant={isTop ? 'highlighted' : 'elevated'} padding="md" className="rounded-[30px]">
@@ -341,6 +354,15 @@ export default function RecommendationResultsScreen() {
                       {topAspectLabels.map((label) => (
                         <AppChip key={label} label={humanizeFeature(label)} variant="primary" size="sm" />
                       ))}
+                      {personalHistoryUsed ? (
+                        <AppChip label="Your history" variant="accent" size="sm" />
+                      ) : null}
+                      {communityFeedbackUsed ? (
+                        <AppChip label="Community feedback" variant="info" size="sm" />
+                      ) : null}
+                      {similarPlayersUsed ? (
+                        <AppChip label="Similar players" variant="secondary" size="sm" />
+                      ) : null}
                     </View>
 
                     <View className="mt-3 rounded-xl bg-neutral-50 px-3 py-1.5">
