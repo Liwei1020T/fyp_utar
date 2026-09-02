@@ -20,7 +20,7 @@ admin operations surface:
   including current totals and booking or inventory searches. It matches the
   response shape to the question and does not propose changes.
 
-DeepSeek composes the response but never ranks strings. The current V13
+DeepSeek composes the response but never ranks strings. The current V14
 recommendation use case remains the only ranking owner, and guided previews do
 not update the saved profile or recommendation cache.
 

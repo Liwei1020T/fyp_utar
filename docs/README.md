@@ -19,6 +19,12 @@ The following documents preserve a decision, plan, audit, or acceptance run at
 the date in their filename. They are not current operating instructions unless
 they explicitly say otherwise.
 
+When a historical document mentions an older catalog count, migration head,
+payment method, notification provider, or recommendation version, treat it as
+dated evidence. Current runtime truth is the source code plus the current
+guides above, especially `backend/docs/database.md` and
+`backend/docs/recommendation-design.md`.
+
 - [Low-Token Codebase Map](./codebase-map.md)
 - [FYP-Scoped Player And Admin Agent](./agent.md)
 - [FYP1 Scope](./fyp1-scope.md)

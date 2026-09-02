@@ -584,7 +584,9 @@ def test_enabled_cf_can_change_ranking() -> None:
     assert enabled[0].result.score > enabled[1].result.score
 
 
-def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
+def test_preview_does_not_persist_and_profile_persists_preference_vector_and_cache() -> (
+    None
+):
     repository = FakeRecommendationRepository()
     logs = FakeRecommendationRunRepository()
     use_case = GenerateRecommendationUseCase(
@@ -599,8 +601,7 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     assert result.run_id
     assert result.results[0].catalog_id == "yonex-bg80"
     assert result.results[0].score_breakdown is not None
-    assert logs.last_run is not None
-    assert logs.last_run["algorithm_version"] == ALGORITHM_VERSION
+    assert logs.last_run is None
     assert repository.preference_entries == []
     assert repository.cached == []
 
@@ -609,6 +610,8 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
         request=_attacking_request(),
         persist=True,
     )
+    assert logs.last_run is not None
+    assert logs.last_run["algorithm_version"] == ALGORITHM_VERSION
     assert profile_result.results[0].catalog_id == "yonex-bg80"
     assert {entry["feature_key"] for entry in repository.preference_entries} >= {
         "repulsion",

@@ -14,9 +14,13 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 - Player/admin catalog, inventory, booking selection, recommendations, and BERT
   preparation share the 12-string boundary in
   `config/approved_string_cohort_v1.csv`.
-- Other persisted or raw-source strings remain available only for historical
-  booking, audit, and research provenance; they are hidden from active system
-  flows rather than deleted.
+- Runtime seeding filters the 33-item source snapshot through that cohort before
+  creating rows, so a fresh database contains only 12 catalog, inventory, and
+  recommendation candidates. The remaining source records are offline research
+  provenance, not runtime database rows.
+- Existing non-approved runtime rows are removed by migration
+  `20260902_0042`; `store_settings`, business hours, the approved strings, and
+  their active inventory are preserved.
 - The current BERT task is aspect-conditioned, high-confidence Silver
   three-class classification: `not_mentioned`, `positive`, and `negative`.
   `mentioned` and `mixed` are excluded from training. No zero-shot NLI or human
@@ -24,6 +28,9 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 - MacBERT training remains an offline Silver experiment. Its separately reviewed
   12-by-9 Matrix is promoted into the backend `nlp_review` layer; this promotion
   does not turn Silver validation into Gold, human accuracy, or Kappa evidence.
+- Profile recommendation generation persists cache and run-audit rows. Agent
+  What-if previews return an ephemeral `run_id` but do not persist a run, cache,
+  or profile changes.
 
 ## Documentation Map
 

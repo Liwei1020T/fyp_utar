@@ -301,7 +301,8 @@ Core shared interfaces are defined in `types/domain.ts`.
 
 ### Inventory modeling note
 
-`StringItem` remains the compatibility model used across the app, but admin inventory now treats two nested records as the source of truth:
+`StringItem` is the shared mobile read model, but admin inventory treats two
+nested records as the persistence source of truth:
 
 - `catalog`
 - `inventory`
@@ -310,7 +311,9 @@ Core shared interfaces are defined in `types/domain.ts`.
 
 `inventory` holds vendor-specific data such as stock quantity, price, price status, availability status, and shop note.
 
-Legacy top-level string fields remain available so existing player flows do not need a wide refactor yet.
+Top-level string fields, where present, are mapper/UI projections for existing
+player screens. They are not persisted backend columns or separate database
+records.
 
 The live admin detail editor commits changed catalog, official-performance, and inventory sections through one backend editor command and one database transaction. Image upload/removal remains a separate file-storage operation and is reported independently if it fails after the structured save.
 

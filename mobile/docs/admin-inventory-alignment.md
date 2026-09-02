@@ -128,7 +128,9 @@ The frontend now treats `StringItem` as a hybrid display model with two explicit
 - `catalog`
 - `inventory`
 
-Legacy top-level fields remain for compatibility with existing player flows, but admin inventory screens should treat `catalog` and `inventory` as the source of truth.
+Top-level fields, where present, are mapper/UI projections for existing player
+flows; they are not persisted backend columns. Admin inventory screens should
+treat `catalog` and `inventory` as the persistence source of truth.
 
 ## 6. Admin Microcopy
 
@@ -254,7 +256,7 @@ Legacy top-level fields remain for compatibility with existing player flows, but
 ## 8. Implementation Checklist
 
 - [x] Add explicit frontend separation between string catalog data and shop inventory data
-- [x] Preserve compatibility with existing player-facing string screens through legacy top-level fields
+- [x] Keep existing player-facing string screens supplied through mapper/UI projections while catalog and inventory remain the persistence source of truth
 - [x] Redesign admin inventory list into a denser workbench layout
 - [x] Add thumbnail-aware reusable admin inventory cards
 - [x] Add truthful price states: fixed price, pending, quoted at shop

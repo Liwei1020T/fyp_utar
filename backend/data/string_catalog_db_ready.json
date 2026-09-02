@@ -5,7 +5,7 @@
   "notes": [
     "Database-ready normalized catalog derived from the user's 33-string source dataset.",
     "English names, descriptions, and normalized fields are provided.",
-    "Official performance values for the approved 12-string cohort are manually reviewed and stored below; non-approved historical rows may remain pending.",
+    "Official performance values for the approved 12-string cohort are manually reviewed and stored below; startup filters this 33-item source through the approved cohort and does not seed the other 21 records.",
     "NLP matrix scores are intentionally excluded from the catalog and should stay in the recommendation pipeline."
   ],
   "brands": [

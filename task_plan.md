@@ -1,5 +1,9 @@
 # Agent Scope Simplification Plan
 
+> Superseded historical plan. Completed phases and their dated assumptions are
+> retained for traceability; current runtime behavior is documented in
+> `README.md`, `docs/agent.md`, and `backend/docs/database.md`.
+
 ## Goal
 
 Keep only the FYP-focused Agent scope while preserving completed code for later re-enablement.

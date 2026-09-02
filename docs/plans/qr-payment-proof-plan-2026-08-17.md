@@ -1,5 +1,9 @@
 # QR Transfer and Payment-Proof Implementation Plan
 
+> Historical implementation plan. The statements about retaining legacy payment
+> methods describe the pre-`20260902_0042` database and are superseded by the
+> current schema; use `backend/docs/database.md` for current truth.
+
 > 2026-08-18 extension: new booking payments and wallet top-ups also accept
 > `cash`. Cash reuses the same pending/admin-review ledger, requires no QR or
 > proof image, and does not credit a wallet before admin approval.

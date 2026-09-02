@@ -292,19 +292,20 @@ class GenerateRecommendationUseCase:
             run_id=run_id,
             generated_at=generated_at,
         )
-        result_payloads = [_result_payload(item) for item in response.results]
-        request_snapshot = {
-            **request.__dict__,
-            "racket_context": _racket_context_payload(racket_context),
-        }
-        self.recommendation_run_repository.create_run(
-            run_id=run_id,
-            user_id=user_id,
-            request_payload=request_snapshot,
-            profile_payload=profile_snapshot or request.__dict__,
-            result_payloads=result_payloads,
-            algorithm_version=response.algorithm_version,
-        )
+        if persist and user_id:
+            result_payloads = [_result_payload(item) for item in response.results]
+            request_snapshot = {
+                **request.__dict__,
+                "racket_context": _racket_context_payload(racket_context),
+            }
+            self.recommendation_run_repository.create_run(
+                run_id=run_id,
+                user_id=user_id,
+                request_payload=request_snapshot,
+                profile_payload=profile_snapshot or request.__dict__,
+                result_payloads=result_payloads,
+                algorithm_version=response.algorithm_version,
+            )
         return response
 
     def _cache_is_current(self, cached: list[CachedRecommendationRecord]) -> bool:

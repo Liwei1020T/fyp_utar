@@ -41,15 +41,15 @@
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
   - recommendation learning loop: weighted-preference v13 ranking -> bounded feedback calibration -> gated exact-racket CF inherited from v11, with the calibrated base fallback below three independent supporters
-  - FYP-scoped player Agent: four-question guided selection, two-or-three-string comparison, exact-run explanation, verified in-stock alternatives, and live store information -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V13 remains the only ranking owner
+  - FYP-scoped player Agent: four-question guided selection, two-or-three-string comparison, exact-run explanation, verified in-stock alternatives, and live store information -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V14 remains the only ranking owner
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
   - admin Agent operations: read-only current-operations summary plus booking and inventory searches; write handlers remain preserved but inactive
   - NLP artifact handoff: independent 12-string MacBERT workbook in `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` -> backend `RECOMMENDATION_MATRIX_SOURCE_PATH`; legacy V9 remains separate
 - State/data boundaries:
-  - `backend/` owns runtime data, auth, bookings, notification preferences, commerce ledgers, and recommendation logs
+  - `backend/` owns runtime data, auth, bookings, notification preferences, commerce ledgers, and recommendation run audits
   - `mobile/` is API-only at runtime: every route page uses backend or backend-derived records and no seeded mock session exists
   - `ml/nlp-workbench-latest/` is offline experimentation and artifact generation, not a public service
-  - catalog, inventory, booking selection, and recommendation APIs expose only the 12 approved cohort IDs; other persisted strings remain hidden for historical-reference integrity
+  - fresh runtime seeding and catalog APIs expose only the 12 approved cohort IDs; the 33-item source JSON is offline provenance, while migration `20260902_0042` removes non-approved runtime rows
 
 ## Change Rules
 

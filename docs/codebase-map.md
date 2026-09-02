@@ -90,9 +90,8 @@ Query cache owner.
 | [mobile/app/player/chatbot.tsx](../mobile/app/player/chatbot.tsx) | FYP-scoped guided-selection and string-comparison Agent with live store information and verified replacement-string actions. |
 | [mobile/app/player/check-in.tsx](../mobile/app/player/check-in.tsx) | Expiring server-issued QR check-in token screen. |
 | [mobile/app/player/feedback/[bookingId].tsx](../mobile/app/player/feedback/%5BbookingId%5D.tsx) | Creates or displays the structured feedback record for one completed owned booking. |
-| [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Owned backend event feed with persisted read IDs. |
-| [mobile/app/player/notifications/preferences.tsx](../mobile/app/player/notifications/preferences.tsx) | Backend preferences shared by the in-app feed and OpenWA delivery. |
-| [mobile/app/player/settings.tsx](../mobile/app/player/settings.tsx) | Account, password, privacy, deletion request, version, and logout controls. |
+| [mobile/app/player/notifications.tsx](../mobile/app/player/notifications.tsx) | Owned backend event feed, read state, and notification-preference entry point. |
+| [mobile/app/player/settings.tsx](../mobile/app/player/settings.tsx) | Account, password, privacy, version, and logout controls. |
 | [mobile/app/player/rackets.tsx](../mobile/app/player/rackets.tsx) | Owned physical Racket Passport list. |
 | [mobile/app/player/rackets/new.tsx](../mobile/app/player/rackets/new.tsx) | Registers a new owned physical racket passport. |
 | [mobile/app/player/rackets/[id].tsx](../mobile/app/player/rackets/%5Bid%5D.tsx) | Edits a physical racket passport and shows completed linked service history. |
@@ -106,7 +105,7 @@ Query cache owner.
 | [mobile/app/admin/(tabs)/chat.tsx](../mobile/app/admin/%28tabs%29/chat.tsx) | Live booking/general human-support queue backed by persisted conversation state. |
 | [mobile/app/admin/(tabs)/analytics.tsx](../mobile/app/admin/%28tabs%29/analytics.tsx) | Backend analytics summary and popular-string view. |
 | [mobile/app/admin/bookings/[id].tsx](../mobile/app/admin/bookings/[id].tsx) | Admin booking detail and status updates. |
-| [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing trending strings. |
+| [mobile/app/admin/inventory/[id].tsx](../mobile/app/admin/inventory/[id].tsx) | Admin inventory detail edits plus `show on home` shortcut for player-facing Featured strings. |
 | [mobile/app/admin/business-hours.tsx](../mobile/app/admin/business-hours.tsx) | Store business hours editor. |
 | [mobile/app/admin/check-in.tsx](../mobile/app/admin/check-in.tsx) | Camera QR scan, secure token confirmation, and manual lookup fallback. |
 | [mobile/app/admin/feedback.tsx](../mobile/app/admin/feedback.tsx) | Structured feedback filter, booking drill-down, and CSV export. |
@@ -115,8 +114,9 @@ Query cache owner.
 | [mobile/app/admin/recommendations/[runId].tsx](../mobile/app/admin/recommendations/%5BrunId%5D.tsx) | Admin recommendation run detail with request/profile snapshots and score breakdown review. |
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Live booking service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Persisted payment monitor and verification actions. |
-| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, notification category switches, trending strings, and admin password controls. |
+| [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, notification category switches, featured strings, and admin password controls. |
 | [mobile/app/admin/racket-models.tsx](../mobile/app/admin/racket-models.tsx) | Admin-managed racket model catalogue used by the player racket selector. |
+| [mobile/app/admin/users.tsx](../mobile/app/admin/users.tsx) | Registered-user overview with search and user profile/recent-order sheet. |
 | [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Admin human-support reply screen with persisted read, resolve, and close actions. |
 
 ### Mobile State, Services, And Types
@@ -203,18 +203,18 @@ Backend lives in [backend](../backend). The active runtime is FastAPI under
 
 | Path | Purpose |
 | --- | --- |
-| [backend/app/entrypoints/api/routes/auth_routes.py](../backend/app/entrypoints/api/routes/auth_routes.py) | Register, login, password reset/change, deletion request, and `/auth/me`. |
+| [backend/app/entrypoints/api/routes/auth_routes.py](../backend/app/entrypoints/api/routes/auth_routes.py) | Register, login, password reset/change, and `/auth/me`. |
 | [backend/app/entrypoints/api/routes/profile_routes.py](../backend/app/entrypoints/api/routes/profile_routes.py) | Current customer profile and privacy settings. |
 | [backend/app/entrypoints/api/routes/catalog_routes.py](../backend/app/entrypoints/api/routes/catalog_routes.py) | Public string catalog list/detail. |
 | [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail, cancellation, and QR token issue. |
-| [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Recommendation preview/profile endpoints. |
+| [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Profile recommendation generation and cached recommendation reads. |
 | [backend/app/entrypoints/api/routes/agent_routes.py](../backend/app/entrypoints/api/routes/agent_routes.py) | Authenticated, rate-limited player Agent query endpoint and DeepSeek composition. |
-| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin racket-model catalogue management plus strings, inventory, bookings, secure check-in, queue, settings, and recommendation logs. |
-| [backend/app/entrypoints/api/routes/admin_engagement_routes.py](../backend/app/entrypoints/api/routes/admin_engagement_routes.py) | Admin feedback export, device tokens, notification delivery, and resend. |
+| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin racket-model catalogue management plus strings, inventory, bookings, secure check-in, queue, settings, and recommendation-run audit. |
+| [backend/app/entrypoints/api/routes/admin_engagement_routes.py](../backend/app/entrypoints/api/routes/admin_engagement_routes.py) | Admin feedback export, in-app/OpenWA notification delivery, and resend. |
 | [backend/app/entrypoints/api/routes/admin_analytics_routes.py](../backend/app/entrypoints/api/routes/admin_analytics_routes.py) | Admin analytics summary and popular-string reporting. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
 | [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes, QR/cash payments, payment proofs, wallet ledger/top-ups, and admin verification. |
-| [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
+| [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, and preferences. |
 | [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-linked and booking-free human-support lifecycle and messages. |
 | [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Player racket-model catalogue reads, owned physical rackets, and completed-booking feedback. |
 | [backend/app/entrypoints/api/routes/media_routes.py](../backend/app/entrypoints/api/routes/media_routes.py) | Time-limited signed access to persisted upload media. |
@@ -247,14 +247,14 @@ reuse seam.
 | --- | --- |
 | [backend/app/adapters/persistence/sqlalchemy/session.py](../backend/app/adapters/persistence/sqlalchemy/session.py) | SQLAlchemy engine/session lifecycle, request commit/rollback boundary, schema helpers, and DB health checks. |
 | [backend/app/adapters/persistence/sqlalchemy/base.py](../backend/app/adapters/persistence/sqlalchemy/base.py) | Declarative base. |
-| [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, conversations, notifications, rackets/feedback, commerce, business hours, settings, recommendation logs/runs, and password reset codes. |
+| [backend/app/adapters/persistence/sqlalchemy/models](../backend/app/adapters/persistence/sqlalchemy/models) | ORM models for users, profiles, strings, bookings, conversations, notifications, rackets/feedback, commerce, business hours, settings, recommendation runs/items, and password reset codes. |
 | [backend/app/adapters/persistence/sqlalchemy/repositories](../backend/app/adapters/persistence/sqlalchemy/repositories) | Concrete repository implementations and ORM-domain mappers. |
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults from the checked-in snapshots. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260831_0038`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260902_0044`. |
 | [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
-| [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Fallback approved string catalog source. |
+| [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Preserved raw catalog provenance; runtime seed uses the normalized source and filters it to the approved cohort. |
 | [backend/data/store_settings_seed.json](../backend/data/store_settings_seed.json) | Rebuildable single-store profile and business-hours snapshot. |
 
 
@@ -263,7 +263,7 @@ reuse seam.
 | Path | Purpose |
 | --- | --- |
 | [backend/tests/conftest.py](../backend/tests/conftest.py) | Test env defaults and per-test SQLite DB reset/seed fixture. |
-| [backend/tests/test_unified_backend_flows.py](../backend/tests/test_unified_backend_flows.py) | End-to-end API flow coverage: auth, profile, booking, admin controls, recommendation logs, store ops. |
+| [backend/tests/test_unified_backend_flows.py](../backend/tests/test_unified_backend_flows.py) | End-to-end API flow coverage: auth, profile, booking, admin controls, recommendation-run audit, store ops. |
 | [backend/tests/test_sqlalchemy_repositories.py](../backend/tests/test_sqlalchemy_repositories.py) | Repository persistence behavior. |
 | [backend/tests/test_recommendation_use_case.py](../backend/tests/test_recommendation_use_case.py) | Recommendation use-case behavior. |
 | [backend/tests/test_agent.py](../backend/tests/test_agent.py) | Agent tool bounds, ownership, provider payload, What-if mapping, auth, and API behavior. |
@@ -274,7 +274,7 @@ reuse seam.
 | [backend/tests/test_rackets_feedback.py](../backend/tests/test_rackets_feedback.py) | Racket ownership/snapshots and completed-booking feedback rules. |
 | [backend/tests/test_store_analytics.py](../backend/tests/test_store_analytics.py) | Persisted commerce analytics and store-local day boundary. |
 | [backend/tests/test_transaction_atomicity.py](../backend/tests/test_transaction_atomicity.py) | Failure-injection coverage for recommendation, password-reset, and secure check-in transaction rollback. |
-| [backend/tests/test_player_admin_operations.py](../backend/tests/test_player_admin_operations.py) | Secure QR, detailed feedback, device delivery, account security, and privacy flow. |
+| [backend/tests/test_player_admin_operations.py](../backend/tests/test_player_admin_operations.py) | Secure QR, detailed feedback, OpenWA/in-app delivery, account security, and privacy flow. |
 
 ## NLP Workbench
 
@@ -303,7 +303,7 @@ public runtime default review source is:
 
 - `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 
-No experiment run promotes itself. Replacing the canonical V9 workbook or any
+No experiment run promotes itself. Replacing the protected V9 workbook or any
 standalone `AI_*_PATH` compatibility artifact requires a separate comparison and
 explicit human approval.
 

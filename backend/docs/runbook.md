@@ -58,12 +58,12 @@ cd backend
 - `value_for_money` is the ninth weighted preference feature; catalog price is descriptive and is not scored.
 - Structured gauge and official feel categories are soft RuleFit inputs and never remove candidates.
 - Admin string write operations still require approved catalog membership.
-- The approved 12-string cohort is seeded as `manual_reviewed` with its official performance values. Non-approved historical rows may remain `pending_manual_fill` and can be updated later through admin endpoints.
+- Startup filters the 33-item catalog source through `config/approved_string_cohort_v1.csv`; only the 12 approved strings, their inventory, and their matrix rows are seeded. Non-approved source records are not runtime catalog rows.
 - NLP-derived scores should be loaded into `string_recommendation_matrix`, not into `strings` or `string_official_performance`.
 - Admin debug support:
   - `GET /api/admin/strings/{id}/recommendation-matrix` shows effective scores plus raw matrix rows grouped by source layer.
   - `POST /api/admin/recommendation-matrix/import` safely re-imports the configured CSV or XLSX artifact and reports matched, inserted, updated, and unmatched counts.
-- Admin Expo notification delivery commits `pending` before provider I/O, then
+- Admin OpenWA notification delivery commits `pending` before provider I/O, then
   persists and returns the final provider outcome (`sent` or `failed`) from a
   separate session. A provider failure is recorded as `failed`; it is not
   retried by a queue.

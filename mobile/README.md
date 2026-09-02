@@ -63,8 +63,8 @@ operations modules.
 
    Copy `.env.example` to an untracked `.env`. `EXPO_PUBLIC_API_BASE_URL` is
    required for a real backend; set `EXPO_PUBLIC_EAS_PROJECT_ID` only when
-   configuring an EAS build. The project UUID is public; the Expo access token
-   belongs only in `backend/.env`.
+   configuring an EAS build. The project UUID is public; provider secrets stay
+   server-side and are never placed in the mobile bundle.
 
 3. **Run the App in a browser:**
    ```bash

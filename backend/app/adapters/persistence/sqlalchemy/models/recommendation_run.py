@@ -69,7 +69,6 @@ class RecommendationRunItem(Base):
         nullable=True,
     )
     rule_fit_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
-    budget_fit_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
     value_for_money_score: Mapped[float | None] = mapped_column(
         Numeric(6, 4), nullable=True
     )

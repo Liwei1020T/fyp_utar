@@ -20,23 +20,22 @@ Design style:
 
 Collaborative evidence is observable and persisted. It receives a non-zero,
 shrunk weight only when one candidate has at least three independent supporting
-users on the exact normalized racket model. Sparse cases preserve the v10 score.
+users on the exact normalized racket model. Sparse cases preserve the base score.
 
 ## 2. End-to-End Runtime Flow
 
 ```mermaid
 flowchart TD
-    A[Client Request: preview/profile] --> B[GenerateRecommendationUseCase]
+    A[Profile generation or internal What-if preview] --> B[GenerateRecommendationUseCase]
     B --> C[Load Owned Racket Context]
     C --> D[Build Community + Personal History Snapshots + CF Shadow]
     D --> E[Load String Item + Official Performance + Matrix Entries]
     E --> F[ContentRecommendationScorer]
     F --> G[Per-Candidate Scoring]
     G --> H[Rank + Top N]
-    H --> I[Persist Run + Log]
-    I --> J{Request Type}
-    J -->|profile| K[Persist Preference Vector + Score Cache]
-    J -->|preview| L[Skip Profile Persistence]
+    H --> J{Request Type}
+    J -->|profile| K[Persist Run + Preference Vector + Score Cache]
+    J -->|preview| L[Return temporary run_id only]
     K --> M[API Response]
     L --> M
 ```
@@ -285,11 +284,13 @@ is unavailable, the saved `top_reasons` remains the bounded fallback.
 
 Persistence behavior by request type:
 
-- Always persisted (preview and profile):
-    - recommendation run snapshots (`recommendation_runs`, `recommendation_run_items`)
 - Profile only:
+    - recommendation run snapshots (`recommendation_runs`, `recommendation_run_items`)
     - normalized user preference vector (`user_preference_matrix`, source `profile`)
     - per-item score cache (`recommendation_score_cache`)
+- Internal What-if preview:
+    - returns an ephemeral `run_id` for the current response context
+    - does not write recommendation runs, run items, preference vectors, score cache, or profile changes
 
 ## 10. Design Summary
 

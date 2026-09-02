@@ -62,7 +62,7 @@ This file applies to this directory and all children. Deeper `AGENTS.md` files o
 - Session storage: `services/backendSessionStorage.ts`
   Native bearer tokens use Expo SecureStore. Web bearer tokens use current-tab session storage so refresh and deep links work without creating a long-lived browser login. Both are revalidated through `/auth/me`.
 - Data contracts: `types/domain.ts`
-  Canonical shared domain model. For inventory work, treat `StringItem.catalog` as master string data and `StringItem.inventory` as vendor-specific shop data; legacy top-level fields remain compatibility mirrors for older screens.
+  Canonical shared domain model. For inventory work, treat `StringItem.catalog` as master string data and `StringItem.inventory` as vendor-specific shop data; any top-level fields are mapper/UI projections only and are not database columns.
 - Deep-dive reference: `docs/frontend-architecture.md`
   Update this doc when major structure or data-flow assumptions change.
 

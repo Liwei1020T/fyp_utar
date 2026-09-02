@@ -407,7 +407,8 @@ Store-ops responses add:
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
 - single-store settings payloads for support/policy copy, notification
-  category switches, `trending_string_ids`, optional `payment_qr_url`, and the
+  category switches, internal `trending_string_ids` (the player-facing Featured
+  strings selection), optional `payment_qr_url`, and the
   read-only `business_hours` snapshot. Player clients read these through
   `GET /api/store-settings`. QR upload/replace/delete is a separate admin
   multipart operation so text settings remain JSON
@@ -541,11 +542,17 @@ separate bounded reranking layer, preferring the exact racket, then exact model,
 then global string history. Racket-conditioned interaction-history CF is persisted as `cf_shadow` for
 backward-compatible audit naming. It receives a non-zero weight only for a
 candidate supported by at least three independent users on the exact normalized
-racket model. Otherwise `cf_weight=0.0` and the v10 score is unchanged. Matrix
+racket model. Otherwise `cf_weight=0.0` and the base score is unchanged. Matrix
 factorization, embeddings, review-count weighting, and historical catalog
 catalog feedback metrics are not ranking inputs.
 
 `POST /api/recommendations/generate` uses the current authenticated user's saved profile, writes `user_preference_matrix`, caches the ranked rows in `recommendation_score_cache`, persists a historical run in `recommendation_runs` and `recommendation_run_items`, and returns the same response shape. The persisted `profile_snapshot` is the saved backend profile context, not just a copy of the request payload.
+
+The internal Agent What-if preview calls the same use case with `persist=False`.
+It returns a temporary `run_id` for the current response context but does not
+write recommendation runs, run items, score cache, preference vectors, or
+profile changes. Preview results therefore do not appear in the admin run
+history.
 
 `GET /api/recommendations/{user_id}` returns the latest cached recommendation set. Customers may use their own user id or `me`; admins may inspect any user id.
 

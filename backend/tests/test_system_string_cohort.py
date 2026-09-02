@@ -165,7 +165,7 @@ def test_inactive_inventory_is_excluded_from_catalog_lookup() -> None:
         assert repository.get_by_id("yonex-bg80", include_inactive=True) is not None
 
 
-def test_other_strings_are_hidden_but_preserved_for_history() -> None:
+def test_seed_contains_only_approved_strings() -> None:
     customer_headers = _headers(_register_customer())
     admin_headers = _headers(_login_admin())
 
@@ -180,8 +180,8 @@ def test_other_strings_are_hidden_but_preserved_for_history() -> None:
         == 404
     )
     with SessionLocal() as db:
-        assert db.get(StringCatalogItem, HIDDEN_ID) is not None
-        assert db.scalar(select(func.count()).select_from(StringCatalogItem)) == 33
+        assert db.get(StringCatalogItem, HIDDEN_ID) is None
+        assert db.scalar(select(func.count()).select_from(StringCatalogItem)) == 12
 
 
 def test_backend_and_nlp_read_the_same_versioned_cohort() -> None:

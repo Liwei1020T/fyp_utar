@@ -23,7 +23,7 @@ Source files:
 | --- | --- | --- |
 | Customer auth, profile, booking, and admin status flow | `test_auth_profile_booking_and_admin_status_flow` | Player registration, profile update, booking creation, admin booking lookup, and booking status update. |
 | Customer cannot access admin booking routes | `test_customer_cannot_access_admin_booking_routes` | Role-based access control returns forbidden response for non-admin user. |
-| Recommendation logs and admin string controls | `test_recommendations_logs_and_admin_string_controls` | Recommendation generation, score breakdown, cached results, admin recommendation logs, and catalog update/deactivation. |
+| Recommendation-run audit and admin string controls | `test_recommendations_logs_and_admin_string_controls` | Profile recommendation generation, score breakdown, cached results, persisted recommendation runs, and catalog update/deactivation. |
 | Admin inventory update controls public availability | `test_admin_inventory_string_update_controls_public_availability` | Inventory stock updates affect public catalog visibility. |
 | Public string filters expose normalized catalog fields | `test_public_string_filters_expose_normalized_catalog_fields` | Catalog filtering by hybrid flag, brand, and gauge. |
 | Admin can persist official performance and inventory history | `test_admin_can_persist_official_performance_and_inventory_history` | Manual performance values and inventory movements are persisted. |

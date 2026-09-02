@@ -348,11 +348,6 @@ class ContentRecommendationScorer:
                         "rule_fit_score": breakdown["rule_fit"],
                         "value_for_money_score": breakdown["value_for_money"],
                         "nlp_review_score": breakdown.get("nlp_review_score"),
-                        "collaborative_score": (
-                            cf_evidence.score_by_catalog.get(candidate.item.id)
-                            if cf_evidence is not None
-                            else None
-                        ),
                         "final_score": final_score,
                         "rank_position": 0,
                         "rationale": rationale_payload,

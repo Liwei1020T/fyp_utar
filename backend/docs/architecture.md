@@ -82,7 +82,7 @@ Explicitly avoided:
   - owned physical racket passports, completed service history, and one
     structured feedback record per completed booking
 - `recommendation`
-  - preview/profile recommendation generation, preference-vector persistence, score caching, explainability, and recommendation logging
+  - profile recommendation generation, non-persistent What-if preview, preference-vector persistence, score caching, explainability, and recommendation-run audit
 - `agent`
   - authenticated grounded answers, exact-run recommendation explanation,
     bounded read-only tools, current-algorithm What-if preview, and explicit support handoff
@@ -108,7 +108,7 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
-The current revision chain has one head at `20260902_0042`.
+The current revision chain has one head at `20260902_0044`.
 
 ## Transaction Contract
 
@@ -155,7 +155,7 @@ external gateway/webhook is selected.
 - Official/manual performance lives in `string_official_performance`
 - Store pricing and stock live in `inventory_items`
 - Recommendation features live in `string_recommendation_matrix`
-- The primary derived item-side matrix layer is the V9 NLP/review workbook imported as `source_layer='nlp_review'`
+- The primary derived item-side matrix layer is the independent 12-string MacBERT workbook imported as `source_layer='nlp_review'`; the V9 workbook remains protected historical input
 - The workbook is an optional startup import. If it is absent, persisted catalog
   and official-performance data remain usable and health reports
   `catalog_fallback`; an imported matrix remains available from the database
@@ -165,7 +165,7 @@ external gateway/webhook is selected.
   roll back, the persisted matrix remains active, and startup logs the rejection.
 - Manual artifact parsing/validation failures return HTTP 400; database and
   filesystem failures are not converted into artifact errors.
-- Older `hybrid_derived` rows remain compatibility data, not master catalog truth
+- `hybrid_derived` is an actively used fallback row layer for approved strings, not a master catalog table; it is separate from removed schema compatibility
 - The active scorer uses official performance plus NLP/review matrix values for PreferenceMatch; structured catalog data is reserved for RuleFit, filtering, and display
 
 ## Recommendation Design Review Summary
@@ -195,7 +195,7 @@ The main weakness was runtime usage. Before this refactor, the public recommende
   exact-model support gate is met; otherwise the base score is final.
 - Gauge, official feel, and structured recent goal are soft RuleFit inputs; catalog price is descriptive only.
 - Generated profile recommendations are cached in `recommendation_score_cache` with score breakdown and rationale payloads.
-- Generated recommendations are also persisted into `recommendation_runs` and `recommendation_run_items` for admin inspection and reproducibility.
+- Profile-generated recommendations are also persisted into `recommendation_runs` and `recommendation_run_items` for admin inspection and reproducibility. Internal What-if previews return a temporary `run_id` but do not persist run rows, run items, caches, or profile vectors.
 - Rationale preserves the actual official/NLP values and the fixed source contribution used for each feature.
 - Cached results are returned through `GET /api/recommendations/{user_id}` and single-item explanations through `GET /api/recommendations/{user_id}/{catalog_id}`.
 
@@ -206,7 +206,7 @@ The main weakness was runtime usage. Before this refactor, the public recommende
   through `app/adapters/services/agent`, and supports four-question guided
   selection, exact-run explanation, verified in-stock alternatives, and one
   read-only admin operations summary. The model cannot write application state
-  or replace the current V13 scorer. Broader completed tools and admin confirmation handlers
+  or replace the current V14 scorer. Broader completed tools and admin confirmation handlers
   remain preserved behind inactive allowlist entries.
 - Exact recommendation explanations are owner-scoped by persisted `run_id`;
   source metadata is collected server-side from successful tool calls.

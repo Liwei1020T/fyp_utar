@@ -1,5 +1,10 @@
 # Agent Scope Findings
 
+> Historical, append-only findings log. Dated observations below are evidence
+> from earlier runtimes and are not current schema truth. Use the repository
+> README and `backend/docs/database.md` for the current 12-string seed,
+> migration head, and active table boundaries.
+
 ## Agent comparison and validation (2026-08-24)
 
 - `compare_strings` is fully implemented and currently excluded only by the

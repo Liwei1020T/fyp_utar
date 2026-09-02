@@ -242,17 +242,12 @@ class SqlAlchemyRecommendationRepository:
             rule_fit = _float_or_none(result.get("rule_fit_score"))
             value_for_money = _float_or_none(result.get("value_for_money_score"))
             nlp_review_score = _float_or_none(result.get("nlp_review_score"))
-            collaborative_score = _float_or_none(result.get("collaborative_score"))
             rationale = _required_mapping(result, "rationale")
             self.db.add(
                 RecommendationScoreCache(
                     user_id=user_id,
                     catalog_id=str(result["catalog_id"]),
                     algorithm_version=algorithm_version,
-                    content_score=preference_match,
-                    collaborative_score=collaborative_score,
-                    rule_score=rule_fit,
-                    nlp_score=nlp_review_score,
                     preference_match_score=preference_match,
                     rule_fit_score=rule_fit,
                     value_for_money_score=value_for_money,
@@ -425,18 +420,10 @@ def _to_cached_record(item: RecommendationScoreCache) -> CachedRecommendationRec
         user_id=item.user_id,
         catalog_id=item.catalog_id,
         algorithm_version=item.algorithm_version,
-        preference_match_score=number_to_float(item.preference_match_score)
-        if hasattr(item, "preference_match_score")
-        else number_to_float(item.content_score),
-        rule_fit_score=number_to_float(item.rule_fit_score)
-        if hasattr(item, "rule_fit_score")
-        else number_to_float(item.rule_score),
-        value_for_money_score=number_to_float(item.value_for_money_score)
-        if hasattr(item, "value_for_money_score")
-        else None,
-        nlp_review_score=number_to_float(item.nlp_review_score)
-        if hasattr(item, "nlp_review_score")
-        else number_to_float(item.nlp_score),
+        preference_match_score=number_to_float(item.preference_match_score),
+        rule_fit_score=number_to_float(item.rule_fit_score),
+        value_for_money_score=number_to_float(item.value_for_money_score),
+        nlp_review_score=number_to_float(item.nlp_review_score),
         final_score=float(item.final_score),
         rank_position=item.rank_position,
         rationale=dict(item.rationale or {}),

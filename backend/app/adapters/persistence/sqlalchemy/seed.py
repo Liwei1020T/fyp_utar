@@ -119,11 +119,9 @@ def ensure_catalog_seeded(db: Session) -> None:
             db.merge(Brand(**brand))
         for payload in seed_rows["items"]:
             catalog_values = dict(payload["catalog"])
-            inventory_values = dict(payload["inventory"])
             if str(catalog_values["catalog_id"]) not in cohort_ids:
-                catalog_values["is_active"] = False
-                inventory_values["is_active"] = False
-                inventory_values["availability_status"] = "out_of_stock"
+                continue
+            inventory_values = dict(payload["inventory"])
             item = StringCatalogItem(**catalog_values)
             item.metrics = StringCatalogMetric(
                 catalog_id=item.catalog_id,

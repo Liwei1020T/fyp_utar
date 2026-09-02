@@ -48,12 +48,25 @@ The active migration sequence is:
 - [20260902_0040_remove_legacy_feedback_and_catalog_tables.py](../migrations/versions/20260902_0040_remove_legacy_feedback_and_catalog_tables.py)
 - [20260902_0041_align_active_schema.py](../migrations/versions/20260902_0041_align_active_schema.py)
 - [20260902_0042_remove_unused_runtime_compatibility.py](../migrations/versions/20260902_0042_remove_unused_runtime_compatibility.py)
+- [20260902_0043_remove_unused_recommendation_score_columns.py](../migrations/versions/20260902_0043_remove_unused_recommendation_score_columns.py)
+- [20260902_0044_remove_legacy_preview_runs.py](../migrations/versions/20260902_0044_remove_legacy_preview_runs.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
 upgradeable without stamping over real schema gaps; arbitrary partially
 created tables remain unsupported. New runtime schemas are created only by
 Alembic.
+
+At the current head (`20260902_0044`), the runtime contains the 32 application
+tables represented by the SQLAlchemy models, plus Alembic's `alembic_version`
+metadata table. Every application table has a current model and a live
+repository, route, use case, seed, or audit consumer; removed legacy tables and
+unused recommendation score columns are not part of the active schema.
+
+Live verification on 2026-09-02 matched the ORM table set exactly: 33 public
+tables total, with 12 strings and 12 inventory rows, no inactive or non-approved
+catalog rows, no orphan recommendation rows, and no legacy preview markers.
+`store_settings` and `store_business_hours` were both present.
 
 ## Active Business Tables
 
@@ -154,7 +167,9 @@ Important rule:
 
 ### `string_official_performance`
 
-Stores official or manually curated performance values. The approved 12-string cohort is seeded with complete `manual_reviewed` values; missing values for other historical rows stay null and default to `pending_manual_fill`.
+Stores official or manually curated performance values. The approved 12-string
+cohort is seeded with complete `manual_reviewed` values. Non-approved source
+records are not seeded into the runtime database.
 
 ### `inventory_items`
 
@@ -177,7 +192,8 @@ Stores item-side recommendation features with explicit provenance via `source_la
 Current seed/import behavior keeps two important layers separate:
 
 - `hybrid_derived`
-  - compatibility fallback rows backfilled from the old flat catalog heuristics
+  - active fallback rows derived for the approved cohort when a primary matrix
+    value is unavailable; this is a row layer, not a legacy table
 - `nlp_review`
   - the primary item-side recommendation matrix imported from `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 
@@ -201,7 +217,7 @@ Current `nlp_review` runtime import keys are:
 - `string_movement`
 - `tension_retention`
 
-Support keys such as `value_for_money`, `stability_score`, `all_round_score`, `attacking_fit_score`, `control_fit_score`, and `beginner_fit_score` may still appear from older compatibility rows (for example `hybrid_derived`) but are not imported by the current `nlp_review` whitelist.
+Support keys such as `value_for_money`, `stability_score`, `all_round_score`, `attacking_fit_score`, `control_fit_score`, and `beginner_fit_score` may appear in the active `hybrid_derived` fallback layer but are not imported by the current `nlp_review` whitelist.
 
 ### `user_preference_matrix`
 
@@ -236,10 +252,10 @@ Score fields:
 - `nlp_review_score`
 - `final_score`
 
-Compatibility columns (`content_score`, `collaborative_score`, `rule_score`, and
-`nlp_score`) remain available for inspection. `collaborative_score` may store the
-raw racket-conditioned score. It has a bounded non-zero ranking weight only after
-the three-distinct-user exact-model gate passes. The
+The cache stores only the current explicit score fields. Racket-conditioned
+collaborative evidence remains in the rationale audit payload and has a bounded
+non-zero ranking weight only after the three-distinct-user exact-model gate
+passes. The
 `rationale` JSON stores preference inputs, effective scores, feedback snapshot
 and source versions, racket context, CF shadow evidence, rule events, and reasons.
 
@@ -250,8 +266,8 @@ Stores the single-store weekly schedule plus special closed dates used to genera
 ### `store_settings`
 
 Stores the single-store support copy, policy text, contact details, booking
-notes, persisted `trending_string_ids` used by the player home screen, notification
-switches, and the optional server-owned `payment_qr_path` used for manual QR
+notes, persisted `trending_string_ids` used as the player-facing Featured strings
+selection, notification switches, and the optional server-owned `payment_qr_path` used for manual QR
 transfers. The configured snapshot is seeded only when the row is missing.
 
 ### `bookings`
@@ -381,5 +397,7 @@ Store immutable admin-audit history for generated recommendations:
 - item rows keep rank, final score, score layers, evidence, and rationale;
 - the mobile admin run list/detail reads these historical rows rather than the
   mutable latest-result cache.
+- only profile recommendation generation creates these rows; internal Agent
+  What-if previews return a temporary `run_id` and do not write them.
 
 The active runtime schema authority is limited to `app/adapters/persistence/sqlalchemy/models/` plus the root `migrations/` history.

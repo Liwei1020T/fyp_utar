@@ -39,9 +39,11 @@ Key variables:
 In this unified workspace, the public runtime recommendation source is `RECOMMENDATION_MATRIX_SOURCE_PATH` (default: `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`).
 
 The active catalog and recommendation boundary is the versioned 12-string list
-in `../config/approved_string_cohort_v1.csv`. Other master-data rows remain
-persisted for historical booking and audit references, but catalog, inventory,
-editing, booking selection, and recommendation APIs do not expose them.
+in `../config/approved_string_cohort_v1.csv`. Startup filters the 33-item
+`data/string_catalog_db_ready.json` source through that list before creating
+catalog, inventory, and matrix rows. Non-approved strings are not seeded into a
+fresh runtime and were removed from the current database by migration
+`20260902_0042`.
 
 The configured single-store profile and business-hours snapshot are stored in
 `data/store_settings_seed.json` and are inserted by the startup seed/migration
@@ -138,7 +140,7 @@ and [docs/database.md](./docs/database.md).
 - Feedback metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
 - The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate.
-- The approved 12-string cohort is seeded with the manually reviewed official performance values from `backend/data/string_catalog_db_ready.json`; non-approved historical rows can remain `pending_manual_fill`.
+- The approved 12-string cohort is seeded with the manually reviewed official performance values from `backend/data/string_catalog_db_ready.json`; non-approved source records remain offline provenance and are not seeded.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.
 - The backend imports the canonical recommendation artifact into `string_recommendation_matrix` with `source_layer='nlp_review'`; each import fully replaces that source layer and records a SHA-256 source version.
 
@@ -164,4 +166,4 @@ independent supporters exist; otherwise FinalScore = BaseScore.
 - Feedback calibrates eligible feature signals within bounded support
   and a racket-model scope. The final collaborative-filter blend is gated by
   independent support; insufficient evidence keeps the base score unchanged.
-- `POST /api/recommendations/generate` generates and caches profile recommendations; the older `/preview` and `/profile` routes remain for compatibility.
+- `POST /api/recommendations/generate` generates profile recommendations, updates the profile preference vector and score cache, and persists a recommendation run for admin audit. The Agent's internal What-if preview uses the same use case with `persist=False`: its returned `run_id` is ephemeral and it writes no recommendation run, run items, cache, or profile vector.

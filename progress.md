@@ -1,5 +1,9 @@
 # Agent Scope Simplification Progress
 
+> Historical, append-only progress log. Earlier counts, provider states, and
+> migration heads are snapshots of the date shown; they do not override the
+> current source or database audit documented in `backend/docs/database.md`.
+
 ## 2026-08-24
 
 - Started Phase 27 after the user explicitly requested complete Agent testing

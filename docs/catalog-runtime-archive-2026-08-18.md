@@ -1,5 +1,9 @@
 # Runtime Catalog Archive — 2026-08-18
 
+> Historical snapshot. This archive describes the pre-`20260902_0042` runtime
+> and is superseded by the current 12-string seed and database schema. Do not
+> use it as the current runtime state.
+
 ## Result
 
 The retained PostgreSQL runtime keeps 33 catalog records for referential and

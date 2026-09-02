@@ -21,8 +21,9 @@ Canonical source folder:
 | Approved system/BERT cohort | `config/approved_string_cohort_v1.csv` | Defines the 12 active strings shared by runtime filtering and BERT preparation. |
 | BERT preparation run | `ml/nlp-workbench-latest/output/runs/bert-prep-system12-high3-20260810-v1/` | Contains the frozen 130,421-row, high-confidence three-class Silver dataset and provenance. |
 | BERT training runs | `ml/nlp-workbench-latest/output/runs/<bert-training-run-id>/bert_training/` | Contains run-scoped model, metrics, predictions, and `not_promoted` manifests. |
-| Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | Compatibility CSV for the optional standalone AI-service path. |
-| Practical feature matrix XLSX | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` | Current default backend recommendation matrix source. |
+| Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | Preserved historical/compatibility artifact; not imported by the current runtime. |
+| Practical feature matrix XLSX | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` | Preserved legacy V9 artifact; not imported by the current runtime. |
+| Current recommendation matrix | `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` | Current 12-string MacBERT `nlp_review` source imported by the backend. |
 
 ## Backend Integration
 

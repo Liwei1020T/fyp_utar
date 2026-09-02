@@ -387,22 +387,11 @@ class RecommendationScoreCache(Base):
         ForeignKey("strings.catalog_id", ondelete="CASCADE"),
     )
     algorithm_version: Mapped[str] = mapped_column(SAString(80))
-    content_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
-    collaborative_score: Mapped[float | None] = mapped_column(
-        Numeric(6, 4),
-        nullable=True,
-    )
-    rule_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
-    nlp_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
     preference_match_score: Mapped[float | None] = mapped_column(
         Numeric(6, 4),
         nullable=True,
     )
     rule_fit_score: Mapped[float | None] = mapped_column(Numeric(6, 4), nullable=True)
-    budget_fit_score: Mapped[float | None] = mapped_column(
-        Numeric(6, 4),
-        nullable=True,
-    )
     value_for_money_score: Mapped[float | None] = mapped_column(
         Numeric(6, 4),
         nullable=True,

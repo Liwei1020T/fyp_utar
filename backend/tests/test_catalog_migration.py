@@ -369,7 +369,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260902_0042"
+        assert version_row["version_num"] == "20260902_0044"
 
         store_settings_row = (
             connection.execute(
@@ -488,7 +488,7 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-        assert version == "20260902_0042"
+        assert version == "20260902_0044"
 
     assert "old_status" not in {
         item["name"] for item in inspector.get_columns("booking_status_history")
@@ -502,6 +502,20 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         "recommendation_logs",
     }.isdisjoint(inspector.get_table_names())
 
+    score_cache_columns = {
+        item["name"] for item in inspector.get_columns("recommendation_score_cache")
+    }
+    assert {
+        "content_score",
+        "collaborative_score",
+        "rule_score",
+        "nlp_score",
+        "budget_fit_score",
+    }.isdisjoint(score_cache_columns)
+    assert "budget_fit_score" not in {
+        item["name"] for item in inspector.get_columns("recommendation_run_items")
+    }
+
     matrix_columns = {
         item["name"] for item in inspector.get_columns("string_recommendation_matrix")
     }
@@ -512,3 +526,81 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         "source_generated_at",
         "review_count_snapshot",
     }.isdisjoint(matrix_columns)
+
+
+def test_preview_cleanup_migration_removes_legacy_preview_runs(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    db_path = tmp_path / "preview-cleanup.sqlite"
+    database_url = f"sqlite+pysqlite:///{db_path}"
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("APP_ENV", "testing")
+    get_settings.cache_clear()
+
+    config = make_alembic_config(database_url)
+    command.upgrade(config, "20260902_0042")
+    engine = create_engine(database_url)
+
+    with engine.begin() as connection:
+        catalog_id = connection.execute(
+            text("SELECT catalog_id FROM strings ORDER BY catalog_id LIMIT 1")
+        ).scalar_one()
+        connection.execute(
+            text(
+                """
+                INSERT INTO recommendation_runs (
+                    id, user_id, algorithm_version,
+                    request_snapshot, profile_snapshot
+                ) VALUES (
+                    'legacy-preview-run', NULL, 'preview-test',
+                    :request_snapshot, :profile_snapshot
+                )
+                """
+            ),
+            {
+                "request_snapshot": json.dumps({"top_n": 5}),
+                "profile_snapshot": json.dumps({"top_n": 5}),
+            },
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO recommendation_run_items (
+                    id, run_id, catalog_id, rank_position, final_score,
+                    score_breakdown, rationale
+                ) VALUES (
+                    'legacy-preview-item', 'legacy-preview-run', :catalog_id,
+                    1, 0.5, :score_breakdown, :rationale
+                )
+                """
+            ),
+            {
+                "catalog_id": catalog_id,
+                "score_breakdown": json.dumps({}),
+                "rationale": json.dumps({}),
+            },
+        )
+
+    command.upgrade(config, "head")
+
+    with engine.begin() as connection:
+        assert (
+            connection.execute(
+                text(
+                    "SELECT COUNT(*) FROM recommendation_runs "
+                    "WHERE id = 'legacy-preview-run'"
+                )
+            ).scalar_one()
+            == 0
+        )
+        assert (
+            connection.execute(
+                text(
+                    "SELECT COUNT(*) FROM recommendation_run_items "
+                    "WHERE id = 'legacy-preview-item'"
+                )
+            ).scalar_one()
+            == 0
+        )
