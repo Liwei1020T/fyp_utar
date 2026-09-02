@@ -146,7 +146,6 @@ Example profile request:
 - `PATCH /api/notifications/read`
 - `GET /api/notifications/preferences`
 - `PUT /api/notifications/preferences`
-- `GET /api/admin/device-tokens`
 - `GET /api/admin/notifications`
 - `POST /api/admin/notifications`
 - `POST /api/admin/notifications/{notification_id}/resend`
@@ -156,17 +155,10 @@ Preferences are stored per authenticated user and contain boolean `booking`,
 derives owned operational events and includes persisted admin deliveries before
 applying those preferences. Read event IDs are persisted per user.
 
-The current mobile app does not register Expo device tokens. Existing
-server-managed or legacy token rows remain visible to admins. Admin delivery
-always creates an in-app notification record; remote Expo delivery is attempted
-only for an existing enabled token when `EXPO_PUSH_ENABLED=true`. Production
-startup also requires the server-only `EXPO_ACCESS_TOKEN`, which is sent to Expo
-as a bearer token and must never be bundled into the mobile app.
-
-Alternatively, `OPENWA_ENABLED=true` sends the same persisted delivery through
+Admin delivery always creates an in-app notification record.
+`OPENWA_ENABLED=true` sends the same persisted delivery through
 the configured self-hosted OpenWA session using the player's account phone
-number. OpenWA and Expo cannot be enabled together; OpenWA requires a
-server-only, session-scoped operator API key. A category disabled in the
+number. OpenWA requires a server-only, session-scoped operator API key. A category disabled in the
 player's notification preferences is neither shown in the in-app feed nor sent
 through OpenWA.
 
@@ -179,15 +171,13 @@ stops later reminders.
 ### Account Security and Privacy
 
 - `POST /api/auth/change-password`
-- `POST /api/auth/delete-account-request`
 - `GET /api/profile/privacy`
 - `PUT /api/profile/privacy`
 
 Password changes verify the current password and invalidate every previously
 issued bearer token, including the token used for the change; clients must log
-in again. Account deletion is an auditable request, not an immediate destructive
-delete. Privacy settings store analytics, personalization, and marketing consent
-independently from the recommendation profile.
+in again. Privacy settings store analytics, personalization, and marketing
+consent independently from the recommendation profile.
 
 ### Human Support Conversations
 
@@ -213,6 +203,9 @@ message table.
 ### Rackets and Feedback
 
 - `GET /api/racket-models`
+- `GET /api/admin/racket-models`
+- `POST /api/admin/racket-models`
+- `PATCH /api/admin/racket-models/{racket_model_id}`
 - `GET /api/rackets`
 - `POST /api/rackets`
 - `GET /api/rackets/{racket_id}`
@@ -233,11 +226,14 @@ owned racket and keeps the racket brand/model snapshot used at booking time.
 Racket detail includes its completed `service_history`; there is no separate
 history endpoint.
 Racket detail history includes only completed bookings for that racket.
-The authenticated racket-model catalogue returns the six standard FYP
-`key/brand/model` identities. Racket create/update accepts an optional
-`model_key`: an unknown key returns `400`, a valid key makes the server's
-canonical brand/model authoritative, and a custom model returns `model_key=null`
-so recommendation uses global feedback evidence and no cross-model CF.
+The authenticated player racket-model catalogue returns active
+`key/brand/model` identities from the admin-managed catalogue. The catalogue is
+seeded with the six standard FYP models; admins can add models or deactivate
+them without deleting historical player data. Racket create/update accepts an
+optional `model_key`: an unknown or inactive managed key returns `400`, while a
+valid key makes the server's canonical brand/model authoritative. A custom
+manual model returns `model_key=null` so recommendation uses global feedback
+evidence and no cross-model CF.
 Structured feedback is allowed once per owned completed booking, with a
 1-to-5 overall rating plus optional relevance, string, tension, comfort,
 control, and repulsion ratings. Admins can filter the persisted
@@ -259,9 +255,8 @@ New external payment requests use `multipart/form-data` with either
 `proof` image up to 5 MB; cash requires neither QR configuration nor a proof.
 Both start as `pending`. The admin endpoint verifies them as `paid`, `failed`,
 or `cancelled`; QR responses include a short-lived `proof_url` for the
-authenticated owner or admin. Historical card, online-banking, and e-wallet
-records remain readable but are not accepted for new requests. Wallet top-up
-credit is written only when the admin verifies the associated payment.
+authenticated owner or admin. Wallet top-up credit is written only when the
+admin verifies the associated payment.
 
 `POST /api/admin/store-settings/payment-qr` accepts a required `photo` image and
 returns the updated settings with `payment_qr_url`. The delete endpoint clears
@@ -301,11 +296,16 @@ any active payment so checkout never trusts a stale catalog snapshot.
 - `DELETE /api/admin/store-settings/payment-qr`
 - `GET /api/admin/analytics/summary?days=7|30` (defaults to 7 and includes the matching previous-period booking and revenue totals)
 - `GET /api/admin/analytics/popular-strings`
-- `GET /api/admin/users/overview?limit=1..100`
+- `GET /api/admin/users/overview?limit=1..100&search=<username>`
+- `GET /api/admin/users/{user_id}`
 
 The admin user overview returns live registered-user totals, active-account
 totals, player/admin role counts, and the newest accounts up to the requested
-limit. It is read-only and omits phone numbers, passwords, and token metadata.
+limit. `search` filters the returned account list by username while leaving the
+global totals unchanged. The user detail endpoint returns the selected account's
+phone number, profile fields, and five newest bookings. Both endpoints are
+read-only; the overview omits phone numbers, and both endpoints omit passwords
+and token metadata.
 
 Only approved catalog strings from `backend/data/string_catalog_db_ready.json`
 are exposed or updated. Admin catalog, official-performance, and inventory
@@ -407,8 +407,8 @@ Store-ops responses add:
 - generated slot rows with `booked_count` and `available_spots`
 - service queue lanes grouped by booking status
 - single-store settings payloads for support/policy copy, notification
-  category switches, `trending_string_ids`, and optional `payment_qr_url`. Player
-  clients read these through
+  category switches, `trending_string_ids`, optional `payment_qr_url`, and the
+  read-only `business_hours` snapshot. Player clients read these through
   `GET /api/store-settings`. QR upload/replace/delete is a separate admin
   multipart operation so text settings remain JSON
 - analytics summary with store-local `today_bookings`, repeat customers,

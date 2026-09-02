@@ -1,16 +1,16 @@
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import {
   useFocusEffect,
   useLocalSearchParams,
   useRouter,
 } from 'expo-router';
+import { Star } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
-import { AppChip } from '../../../components/ui/AppChip';
 import { AppInput } from '../../../components/ui/AppInput';
-import { AppSelect } from '../../../components/ui/AppSelect';
 import { HeroText } from '../../../components/ui/heroui';
+import { appChromeColors } from '../../../components/ui/theme';
 import { AppScreen } from '../../../components/shared/AppScreen';
 import { AppSection } from '../../../components/shared/AppSection';
 import {
@@ -30,20 +30,9 @@ import {
 import type {
   Booking,
   BookingFeedback,
-  FeedbackSentimentTag,
 } from '../../../types/domain';
 import type { BackendUpdateFeedbackPayload } from '../../../types/backend';
 import { showAlert } from '../../../lib/alerts';
-
-const SENTIMENT_OPTIONS: {
-  id: FeedbackSentimentTag;
-  label: string;
-}[] = [
-  { id: 'crisp_feel', label: 'Crisp feel' },
-  { id: 'good_communication', label: 'Good communication' },
-  { id: 'fast_turnaround', label: 'Fast turnaround' },
-  { id: 'would_book_again', label: 'Would book again' },
-];
 
 const DETAIL_RATINGS = [
   ['recommendationRelevance', 'Recommendation relevance'],
@@ -72,6 +61,64 @@ function emptyDetailRatings(): Record<DetailRatingKey, number | null> {
   >;
 }
 
+const RATING_VALUES = [1, 2, 3, 4, 5];
+
+function StarRating({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <View className="gap-2">
+      <View className="flex-row items-center justify-between gap-3">
+        <HeroText className="text-sm font-semibold text-neutral-900">
+          {label}
+        </HeroText>
+        <HeroText
+          className={
+            value == null
+              ? 'text-sm text-neutral-500'
+              : 'text-sm font-bold text-neutral-950'
+          }
+        >
+          {value == null ? 'Not rated' : `${value}/5`}
+        </HeroText>
+      </View>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={`${label}, ${value == null ? 'not rated' : `${value} out of 5`}`}
+        className="flex-row items-center justify-between rounded-[14px] border border-primary-200 bg-white px-2 py-1"
+      >
+        {RATING_VALUES.map((score) => {
+          const isFilled = value != null && score <= value;
+          return (
+            <Pressable
+              key={score}
+              accessibilityRole="radio"
+              accessibilityLabel={`${label}: ${score} star${score === 1 ? '' : 's'}`}
+              accessibilityState={{ checked: value === score }}
+              className="min-h-[48px] min-w-[48px] items-center justify-center rounded-[10px] active:opacity-70"
+              hitSlop={4}
+              onPress={() => onChange(score)}
+            >
+              <Star
+                size={28}
+                color={isFilled ? appChromeColors.accent : appChromeColors.textMuted}
+                fill={isFilled ? appChromeColors.accent : 'transparent'}
+                strokeWidth={2}
+              />
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 export default function FeedbackScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ bookingId?: string }>();
@@ -88,7 +135,6 @@ export default function FeedbackScreen() {
   const [comment, setComment] = useState('');
   const [stringFeedback, setStringFeedback] = useState('');
   const [serviceFeedback, setServiceFeedback] = useState('');
-  const [sentimentTags, setSentimentTags] = useState<FeedbackSentimentTag[]>([]);
   const [isLoading, setIsLoading] = useState(Boolean(token && bookingId));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -151,14 +197,6 @@ export default function FeedbackScreen() {
       ? formatBookingOrderCode(bookingId)
       : 'recent booking';
 
-  const toggleSentiment = (tag: FeedbackSentimentTag) => {
-    setSentimentTags((current) =>
-      current.includes(tag)
-        ? current.filter((item) => item !== tag)
-        : [...current, tag],
-    );
-  };
-
   const markDirty = (field: string) =>
     setDirtyFields((current) => new Set(current).add(field));
 
@@ -177,7 +215,6 @@ export default function FeedbackScreen() {
     setComment(existingFeedback.comment ?? '');
     setStringFeedback(existingFeedback.stringFeedback ?? '');
     setServiceFeedback(existingFeedback.serviceFeedback ?? '');
-    setSentimentTags(existingFeedback.sentimentTags);
     setDirtyFields(new Set());
     setIsEditing(true);
   };
@@ -215,7 +252,6 @@ export default function FeedbackScreen() {
         comment: comment.trim() || null,
         string_feedback: stringFeedback.trim() || null,
         service_feedback: serviceFeedback.trim() || null,
-        sentiment_tags: sentimentTags,
       };
       const response = existingFeedback
         ? await backendApi.updateBookingFeedback(
@@ -432,22 +468,6 @@ export default function FeedbackScreen() {
             </AppCard>
           </AppSection>
         ) : null}
-        {existingFeedback.sentimentTags.length > 0 ? (
-          <AppSection eyebrow="Tags" title="Recorded sentiment">
-            <View className="flex-row flex-wrap gap-2">
-              {existingFeedback.sentimentTags.map((tag) => (
-                <AppChip
-                  key={tag}
-                  label={
-                    SENTIMENT_OPTIONS.find((item) => item.id === tag)?.label ??
-                    tag
-                  }
-                  variant="primary"
-                />
-              ))}
-            </View>
-          </AppSection>
-        ) : null}
         <AppButton
           label="Edit feedback"
           className="mt-8"
@@ -482,16 +502,11 @@ export default function FeedbackScreen() {
 
       <AppSection eyebrow="Service" title="Overall stringing service">
         <AppCard variant="highlighted" padding="lg">
-          <AppSelect
+          <StarRating
             label="Overall service rating"
-            value={rating == null ? null : String(rating)}
-            placeholder="Choose a rating"
-            options={[1, 2, 3, 4, 5].map((value) => ({
-              id: String(value),
-              label: `${value}/5`,
-            }))}
+            value={rating}
             onChange={(value) => {
-              setRating(Number(value));
+              setRating(value);
               markDirty('rating');
             }}
           />
@@ -502,64 +517,58 @@ export default function FeedbackScreen() {
         <View className="gap-3">
           {DETAIL_RATINGS.map(([key, label]) => {
             return (
-            <AppCard key={key} variant="elevated" padding="md">
-              <HeroText className="mb-3 text-sm font-semibold text-neutral-900">
-                {label}: {detailRatings[key] == null ? 'Not rated' : `${detailRatings[key]}/5`}
-              </HeroText>
-              <AppSelect
-                label={label}
-                value={detailRatings[key] == null ? null : String(detailRatings[key])}
-                placeholder="Not rated"
-                options={[1, 2, 3, 4, 5].map((value) => ({
-                  id: String(value),
-                  label: `${value}/5`,
-                }))}
-                onChange={(value) => {
-                  setDetailRatings((current) => ({
-                    ...current,
-                    [key]: Number(value),
-                  }));
-                  markDirty(DETAIL_API_KEYS[key]);
-                }}
-              />
-              <AppButton
-                label="Not enough experience to judge"
-                variant="ghost"
-                size="sm"
-                onPress={() => {
-                  setDetailRatings((current) => ({ ...current, [key]: null }));
-                  markDirty(DETAIL_API_KEYS[key]);
-                }}
-              />
-            </AppCard>
+              <AppCard key={key} variant="elevated" padding="md">
+                <StarRating
+                  label={label}
+                  value={detailRatings[key]}
+                  onChange={(value) => {
+                    setDetailRatings((current) => ({
+                      ...current,
+                      [key]: value,
+                    }));
+                    markDirty(DETAIL_API_KEYS[key]);
+                  }}
+                />
+              </AppCard>
             );
           })}
         </View>
       </AppSection>
 
       <AppSection eyebrow="Reuse" title="Would you use this setup again?">
-        <AppSelect
-          label="Use this setup again"
-          value={wouldUseAgain == null ? null : String(wouldUseAgain)}
-          placeholder="Choose an answer"
-          options={[
-            { id: 'true', label: 'Yes' },
-            { id: 'false', label: 'No' },
-          ]}
-          onChange={(value) => {
-            setWouldUseAgain(value === 'true');
-            markDirty('would_use_again');
-          }}
-        />
-        <AppButton
-          label="Not sure"
-          variant={wouldUseAgain == null ? 'primary' : 'outline'}
-          className="mt-3"
-          onPress={() => {
-            setWouldUseAgain(null);
-            markDirty('would_use_again');
-          }}
-        />
+        <View className="gap-2">
+          <HeroText className="ml-1 text-sm font-semibold text-foreground">
+            Use this setup again
+          </HeroText>
+          <View
+            accessibilityRole="radiogroup"
+            accessibilityLabel="Use this setup again"
+            className="flex-row gap-2"
+          >
+            <AppButton
+              label="Yes"
+              variant={wouldUseAgain === true ? 'primary' : 'outline'}
+              className="flex-1"
+              accessibilityRole="radio"
+              accessibilityState={{ selected: wouldUseAgain === true }}
+              onPress={() => {
+                setWouldUseAgain(true);
+                markDirty('would_use_again');
+              }}
+            />
+            <AppButton
+              label="No"
+              variant={wouldUseAgain === false ? 'primary' : 'outline'}
+              className="flex-1"
+              accessibilityRole="radio"
+              accessibilityState={{ selected: wouldUseAgain === false }}
+              onPress={() => {
+                setWouldUseAgain(false);
+                markDirty('would_use_again');
+              }}
+            />
+          </View>
+        </View>
       </AppSection>
 
       <AppSection eyebrow="Comment" title="Anything else?">
@@ -602,27 +611,6 @@ export default function FeedbackScreen() {
           inputClassName="min-h-24"
           placeholder="Share your experience with updates and turnaround..."
         />
-      </AppSection>
-
-      <AppSection eyebrow="Tags" title="Quick sentiment">
-        <View className="flex-row flex-wrap gap-2">
-          {SENTIMENT_OPTIONS.map((item) => {
-            const isSelected = sentimentTags.includes(item.id);
-            return (
-              <AppChip
-                key={item.id}
-                label={item.label}
-                variant={isSelected ? 'primary' : 'neutral'}
-                accessibilityLabel={`${item.label} sentiment`}
-                accessibilityState={{ selected: isSelected }}
-                onPress={() => {
-                  toggleSentiment(item.id);
-                  markDirty('sentiment_tags');
-                }}
-              />
-            );
-          })}
-        </View>
       </AppSection>
 
       {submitError ? (

@@ -896,6 +896,7 @@ def test_admin_business_hours_settings_and_slots_flow():
     assert public_settings_response.json()["trending_string_ids"] == [
         featured_string_id
     ]
+    assert len(public_settings_response.json()["business_hours"]["days"]) == 7
 
 
 def test_booking_slot_id_rejects_past_closed_off_grid_and_full_slots():

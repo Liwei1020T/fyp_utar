@@ -7,9 +7,6 @@ from pydantic import ConfigDict
 
 
 PaymentMethod = Literal[
-    "card",
-    "online_banking",
-    "e_wallet",
     "qr_transfer",
     "cash",
     "wallet_balance",

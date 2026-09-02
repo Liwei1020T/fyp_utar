@@ -90,7 +90,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                 Payment(
                     id="payment-pending-booking",
                     user_id=user_id,
-                    method="online_banking",
+                    method="cash",
                     status="pending",
                     amount=Decimal("40.00"),
                     payment_type="booking_payment",
@@ -101,7 +101,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                 Payment(
                     id="payment-pending-topup",
                     user_id=user_id,
-                    method="online_banking",
+                    method="cash",
                     status="pending",
                     amount=Decimal("20.00"),
                     payment_type="wallet_top_up",
@@ -123,7 +123,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                 Payment(
                     id="payment-paid-yesterday",
                     user_id=user_id,
-                    method="online_banking",
+                    method="cash",
                     status="paid",
                     amount=Decimal("60.00"),
                     payment_type="booking_payment",
@@ -134,7 +134,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                 Payment(
                     id="payment-paid-topup",
                     user_id=user_id,
-                    method="online_banking",
+                    method="cash",
                     status="paid",
                     amount=Decimal("100.00"),
                     payment_type="wallet_top_up",
@@ -145,7 +145,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                 Payment(
                     id="payment-current-period",
                     user_id=user_id,
-                    method="online_banking",
+                    method="cash",
                     status="paid",
                     amount=Decimal("10.00"),
                     payment_type="booking_payment",
@@ -156,7 +156,7 @@ def test_analytics_uses_persisted_payments_and_store_local_day(
                 Payment(
                     id="payment-previous-period",
                     user_id=user_id,
-                    method="online_banking",
+                    method="cash",
                     status="paid",
                     amount=Decimal("20.00"),
                     payment_type="booking_payment",

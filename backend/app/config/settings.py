@@ -60,15 +60,6 @@ class Settings(BaseSettings):
         default=False,
         alias="PASSWORD_RESET_DEV_PREVIEW_ENABLED",
     )
-    expo_push_enabled: bool = Field(default=False, alias="EXPO_PUSH_ENABLED")
-    expo_push_access_token: SecretStr | None = Field(
-        default=None,
-        alias="EXPO_ACCESS_TOKEN",
-    )
-    expo_push_endpoint: str = Field(
-        default="https://exp.host/--/api/v2/push/send",
-        alias="EXPO_PUSH_ENDPOINT",
-    )
     openwa_enabled: bool = Field(default=False, alias="OPENWA_ENABLED")
     openwa_base_url: str = Field(
         default="http://127.0.0.1:2785/api",
@@ -220,19 +211,6 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "PASSWORD_RESET_DEV_PREVIEW_ENABLED must be false in production"
                 )
-        if self.expo_push_enabled and self.openwa_enabled:
-            raise ValueError("Enable only one remote notification provider")
-        if (
-            self.environment == "production"
-            and self.expo_push_enabled
-            and (
-                self.expo_push_access_token is None
-                or not self.expo_push_access_token.get_secret_value().strip()
-            )
-        ):
-            raise ValueError(
-                "EXPO_ACCESS_TOKEN must be set when Expo push is enabled in production"
-            )
         if self.openwa_enabled:
             if not self.openwa_session_id:
                 raise ValueError("OPENWA_SESSION_ID must be set when OpenWA is enabled")

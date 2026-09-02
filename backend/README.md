@@ -25,11 +25,8 @@ Key variables:
 - `JWT_SECRET_KEY`: signing key for bearer tokens
 - `APPROVED_STRINGS_SOURCE_PATH`: approved normalized catalog source; relative paths resolve from the backend root
 - `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix source file (`.csv` or `.xlsx`); relative paths resolve from the backend root
-- `EXPO_PUSH_ENABLED`: enables remote Expo delivery after device registration
-- `EXPO_ACCESS_TOKEN`: server-only Expo access token used with enhanced push
-  security; it is mandatory when push is enabled in production
-- `OPENWA_ENABLED`: uses a self-hosted OpenWA session as the remote WhatsApp
-  notification channel; do not enable it together with Expo push
+- `OPENWA_ENABLED`: uses a self-hosted OpenWA session as the optional remote
+  WhatsApp notification channel
 - `OPENWA_BASE_URL`, `OPENWA_SESSION_ID`, `OPENWA_API_KEY`: OpenWA REST endpoint
   and session-scoped operator credential
 - `AGENT_ENABLED`, `AGENT_API_KEY`: enable the authenticated FYP-scoped player
@@ -51,10 +48,9 @@ The configured single-store profile and business-hours snapshot are stored in
 when those rows are missing. Existing administrator edits are preserved.
 
 
-Keep `EXPO_ACCESS_TOKEN` in the deployment secret store or untracked
-`backend/.env`. Never put it in the mobile app or use an `EXPO_PUBLIC_*` name.
-The same server-only rule applies to `OPENWA_API_KEY` and `AGENT_API_KEY`; never
-expose either through an `EXPO_PUBLIC_*` mobile variable.
+Keep `OPENWA_API_KEY` and `AGENT_API_KEY` in the deployment secret store or an
+untracked `backend/.env`; never expose either through an `EXPO_PUBLIC_*` mobile
+variable.
 
 For an FYP-only WhatsApp channel, run the self-hosted OpenWA `v0.11.1`, create
 and connect one session in its dashboard, mint a session-scoped operator key,

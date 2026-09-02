@@ -18,8 +18,8 @@ from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.domain.recommendation.scoring import ContentRecommendationScorer
 from app.domain.recommendation.scoring import PREFERENCE_SOURCE_LAYER
 from app.ports.repositories.profile_repository import ProfileRepository
-from app.ports.repositories.recommendation_log_repository import (
-    RecommendationLogRepository,
+from app.ports.repositories.recommendation_run_repository import (
+    RecommendationRunRepository,
 )
 from app.ports.repositories.recommendation_repository import RecommendationRepository
 from app.shared.errors import BadRequestError
@@ -51,7 +51,7 @@ REQUIRED_PROFILE_FIELDS = {
 class GenerateRecommendationUseCase:
     profile_repository: ProfileRepository
     recommendation_repository: RecommendationRepository
-    recommendation_log_repository: RecommendationLogRepository
+    recommendation_run_repository: RecommendationRunRepository
     scorer: ContentRecommendationScorer = field(
         default_factory=ContentRecommendationScorer
     )
@@ -293,30 +293,16 @@ class GenerateRecommendationUseCase:
             generated_at=generated_at,
         )
         result_payloads = [_result_payload(item) for item in response.results]
-        response_payload = {
-            "algorithm_version": response.algorithm_version,
-            "run_id": response.run_id,
-            "generated_at": response.generated_at.isoformat()
-            if response.generated_at
-            else None,
-            "results": result_payloads,
-        }
         request_snapshot = {
             **request.__dict__,
             "racket_context": _racket_context_payload(racket_context),
         }
-        self.recommendation_log_repository.create_run(
+        self.recommendation_run_repository.create_run(
             run_id=run_id,
             user_id=user_id,
             request_payload=request_snapshot,
             profile_payload=profile_snapshot or request.__dict__,
             result_payloads=result_payloads,
-            algorithm_version=response.algorithm_version,
-        )
-        self.recommendation_log_repository.create_log(
-            user_id=user_id,
-            request_payload=request_snapshot,
-            response_payload=response_payload,
             algorithm_version=response.algorithm_version,
         )
         return response

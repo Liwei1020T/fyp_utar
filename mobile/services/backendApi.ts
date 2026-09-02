@@ -1,8 +1,9 @@
 import type {
   BackendAdminInventoryString,
+  BackendAdminRacketModel,
   BackendAdminFeedbackSummary,
-  BackendAdminDeviceToken,
   BackendAdminFeedback,
+  BackendAdminUserDetail,
   BackendAdminNotification,
   BackendAdminUsersOverview,
   BackendAgentQuery,
@@ -16,6 +17,7 @@ import type {
   BackendBookingConversation,
   BackendBookingPaymentQuote,
   BackendCreateFeedbackPayload,
+  BackendCreateRacketModelPayload,
   BackendCreateRacketPayload,
   BackendFeedbackSummary,
   BackendFeedback,
@@ -50,6 +52,7 @@ import type {
   BackendString,
   BackendStringEditorUpdatePayload,
   BackendUpdateRacketPayload,
+  BackendUpdateRacketModelPayload,
   BackendUpdateFeedbackPayload,
   BackendWallet,
 } from '../types/backend';
@@ -186,18 +189,6 @@ export const backendApi = {
       body: payload,
       token,
       expireSessionOnUnauthorized: false,
-    });
-  },
-  requestAccountDeletion(token: string, reason?: string) {
-    return requestJson<{
-      id: string;
-      status: string;
-      reason: string | null;
-      requested_at: string;
-    }>('/auth/delete-account-request', {
-      method: 'POST',
-      body: { reason: reason?.trim() || null },
-      token,
     });
   },
   fetchProfile(token: string) {
@@ -573,6 +564,35 @@ export const backendApi = {
       token,
     });
   },
+  adminListRacketModels(token: string) {
+    return requestJson<BackendAdminRacketModel[]>('/admin/racket-models', {
+      token,
+    });
+  },
+  adminCreateRacketModel(
+    token: string,
+    payload: BackendCreateRacketModelPayload,
+  ) {
+    return requestJson<BackendAdminRacketModel>('/admin/racket-models', {
+      method: 'POST',
+      body: payload,
+      token,
+    });
+  },
+  adminUpdateRacketModel(
+    token: string,
+    racketModelId: string,
+    payload: BackendUpdateRacketModelPayload,
+  ) {
+    return requestJson<BackendAdminRacketModel>(
+      `/admin/racket-models/${encodeURIComponent(racketModelId)}`,
+      {
+        method: 'PATCH',
+        body: payload,
+        token,
+      },
+    );
+  },
   fetchBusinessHours(token: string) {
     return requestJson<BackendStoreBusinessHours>('/admin/business-hours', {
       token,
@@ -648,10 +668,19 @@ export const backendApi = {
       token,
     });
   },
-  adminFetchUsersOverview(token: string, limit = 100) {
+  adminFetchUsersOverview(token: string, limit = 100, search?: string) {
     const searchParams = new URLSearchParams({ limit: String(limit) });
+    if (search?.trim()) {
+      searchParams.set('search', search.trim());
+    }
     return requestJson<BackendAdminUsersOverview>(
       `/admin/users/overview?${searchParams.toString()}`,
+      { token },
+    );
+  },
+  adminFetchUserDetail(token: string, userId: string) {
+    return requestJson<BackendAdminUserDetail>(
+      `/admin/users/${encodeURIComponent(userId)}`,
       { token },
     );
   },
@@ -741,11 +770,6 @@ export const backendApi = {
       `/admin/notifications${suffix}`,
       { token },
     );
-  },
-  adminListDeviceTokens(token: string) {
-    return requestJson<BackendAdminDeviceToken[]>('/admin/device-tokens', {
-      token,
-    });
   },
   adminSendNotification(
     token: string,

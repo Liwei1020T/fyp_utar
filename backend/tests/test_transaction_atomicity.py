@@ -9,7 +9,6 @@ from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
 from app.adapters.persistence.sqlalchemy.models import Profile
-from app.adapters.persistence.sqlalchemy.models import RecommendationLog
 from app.adapters.persistence.sqlalchemy.models import RecommendationRun
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import UserPreferenceMatrix
@@ -20,8 +19,8 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_booking_reposit
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_password_reset_repository import (
     SqlAlchemyPasswordResetRepository,
 )
-from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_log_repository import (
-    SqlAlchemyRecommendationLogRepository,
+from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_run_repository import (
+    SqlAlchemyRecommendationRunRepository,
 )
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
     SqlAlchemyRecommendationRepository,
@@ -63,7 +62,7 @@ def _login_admin() -> str:
     return response.json()["access_token"]
 
 
-def test_recommendation_rolls_back_cache_when_log_write_fails(monkeypatch) -> None:
+def test_recommendation_rolls_back_cache_when_run_write_fails(monkeypatch) -> None:
     token = _register("+60123330001")
     profile = client.put(
         "/api/profile",
@@ -92,7 +91,6 @@ def test_recommendation_rolls_back_cache_when_log_write_fails(monkeypatch) -> No
         UserPreferenceMatrix,
         RecommendationScoreCache,
         RecommendationRun,
-        RecommendationLog,
     )
     with SessionLocal() as db:
         counts_before = {
@@ -100,15 +98,15 @@ def test_recommendation_rolls_back_cache_when_log_write_fails(monkeypatch) -> No
             for model in tracked_models
         }
 
-    def fail_log_write(*args, **kwargs) -> None:
-        raise RuntimeError("forced recommendation log failure")
+    def fail_run_write(*args, **kwargs) -> None:
+        raise RuntimeError("forced recommendation run failure")
 
     monkeypatch.setattr(
-        SqlAlchemyRecommendationLogRepository,
-        "create_log",
-        fail_log_write,
+        SqlAlchemyRecommendationRunRepository,
+        "create_run",
+        fail_run_write,
     )
-    with pytest.raises(RuntimeError, match="forced recommendation log failure"):
+    with pytest.raises(RuntimeError, match="forced recommendation run failure"):
         client.post(
             "/api/recommendations/generate",
             headers=_headers(token),

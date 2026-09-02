@@ -155,9 +155,6 @@ export type PaymentStatus =
   | 'cancelled';
 
 export type PaymentMethod =
-  | 'card'
-  | 'online_banking'
-  | 'e_wallet'
   | 'qr_transfer'
   | 'cash'
   | 'wallet_balance';
@@ -391,12 +388,6 @@ export interface NotificationItem {
   route: string;
 }
 
-export type FeedbackSentimentTag =
-  | 'crisp_feel'
-  | 'good_communication'
-  | 'fast_turnaround'
-  | 'would_book_again';
-
 export interface BookingFeedback {
   id: string;
   bookingId: string;
@@ -412,7 +403,6 @@ export interface BookingFeedback {
   comment?: string;
   stringFeedback?: string;
   serviceFeedback?: string;
-  sentimentTags: FeedbackSentimentTag[];
   createdAt: string;
   updatedAt: string;
 }

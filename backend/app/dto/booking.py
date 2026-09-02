@@ -70,7 +70,6 @@ class CheckInTokenOut(BaseModel):
 
 
 class BookingStatusHistoryOut(BaseModel):
-    old_status: str | None
     new_status: str
     changed_by_user_id: str | None
     changed_by_phone_number: str | None
@@ -123,7 +122,6 @@ class BookingOut(BaseModel):
 
 def booking_history_to_dto(entry: BookingStatusHistoryEntry) -> BookingStatusHistoryOut:
     return BookingStatusHistoryOut(
-        old_status=entry.old_status,
         new_status=entry.new_status,
         changed_by_user_id=entry.changed_by_user_id,
         changed_by_phone_number=entry.changed_by_phone_number,

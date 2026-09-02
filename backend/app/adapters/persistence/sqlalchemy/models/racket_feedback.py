@@ -7,7 +7,6 @@ from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Boolean
 from sqlalchemy import Integer
-from sqlalchemy import JSON
 from sqlalchemy import String as SAString
 from sqlalchemy import Text
 from sqlalchemy import func
@@ -16,6 +15,27 @@ from sqlalchemy.orm import mapped_column
 
 from app.adapters.persistence.sqlalchemy.base import Base
 from app.adapters.persistence.sqlalchemy.models.common import generate_uuid
+
+
+class RacketModelCatalog(Base):
+    __tablename__ = "racket_model_catalog"
+
+    id: Mapped[str] = mapped_column(
+        SAString(36), primary_key=True, default=generate_uuid
+    )
+    model_key: Mapped[str] = mapped_column(SAString(220), unique=True, index=True)
+    brand: Mapped[str] = mapped_column(SAString(100))
+    model: Mapped[str] = mapped_column(SAString(100))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
 
 
 class Racket(Base):
@@ -93,7 +113,6 @@ class BookingFeedback(Base):
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     string_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     service_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
-    sentiment_tags: Mapped[list[str]] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

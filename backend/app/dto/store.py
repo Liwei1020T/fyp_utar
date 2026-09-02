@@ -187,6 +187,7 @@ class StoreSettingsOut(StoreSettingsPayload):
     id: str = STORE_ID
     payment_qr_url: str | None = None
     updated_at: str | None = None
+    business_hours: StoreBusinessHoursOut | None = None
 
 
 class AnalyticsWorkloadEntryOut(BaseModel):
@@ -238,7 +239,10 @@ def business_hours_to_dto(hours: StoreBusinessHoursRecord) -> StoreBusinessHours
     )
 
 
-def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
+def settings_to_dto(
+    settings: StoreSettingsRecord,
+    business_hours: StoreBusinessHoursRecord | None = None,
+) -> StoreSettingsOut:
     return StoreSettingsOut(
         id=settings.id,
         store_name=settings.store_name,
@@ -259,6 +263,9 @@ def settings_to_dto(settings: StoreSettingsRecord) -> StoreSettingsOut:
             settings.notification_settings,
         ),
         updated_at=settings.updated_at,
+        business_hours=(
+            business_hours_to_dto(business_hours) if business_hours else None
+        ),
     )
 
 

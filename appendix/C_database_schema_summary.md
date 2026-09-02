@@ -25,7 +25,6 @@ Source files:
 | `string_recommendation_matrix` | Stores item-side feature scores from source layers such as `nlp_review`. |
 | `user_preference_matrix` | Stores user-side normalized preference vectors. |
 | `recommendation_score_cache` | Stores generated recommendation results and score breakdowns per user. |
-| `recommendation_logs` | Stores recommendation request and response snapshots. |
 | `recommendation_runs` | Stores immutable request/profile snapshots and artifact versions for admin audit. |
 | `recommendation_run_items` | Stores ranked score layers and rationales for each historical run. |
 | `bookings` | Stores stringing service booking records. |
@@ -60,7 +59,7 @@ For the report appendix, the ERD can be grouped into:
 1. User and profile: `users`, `profiles`
 2. Catalog and inventory: `brands`, `strings`, `inventory_items`, `inventory_movements`
 3. Recommendation: `string_recommendation_matrix`, `user_preference_matrix`,
-   `recommendation_score_cache`, `recommendation_logs`,
+   `recommendation_score_cache`,
    `recommendation_runs`, `recommendation_run_items`
 4. Booking and support: `bookings`, `booking_status_history`,
    `booking_updates`, `booking_conversations`, `rackets`, `booking_feedback`

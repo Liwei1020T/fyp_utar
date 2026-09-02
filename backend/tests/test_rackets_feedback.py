@@ -177,6 +177,83 @@ def test_standard_racket_catalog_and_server_owned_identity() -> None:
     assert context.model_key is None
 
 
+def test_admin_manages_the_racket_models_available_to_players() -> None:
+    admin_token = login_admin()
+    player_token = register_customer(
+        username="managed-racket-player",
+        phone_number="+60121110030",
+    )
+
+    assert client.get("/api/admin/racket-models").status_code == 401
+    assert (
+        client.get(
+            "/api/admin/racket-models",
+            headers=headers(player_token),
+        ).status_code
+        == 403
+    )
+
+    create_response = client.post(
+        "/api/admin/racket-models",
+        headers=headers(admin_token),
+        json={"brand": "Yonex", "model": "Duora Z-Strike"},
+    )
+    assert create_response.status_code == 200
+    created_model = create_response.json()
+    assert created_model["key"] == "yonex:duora z strike"
+    assert created_model["is_active"] is True
+
+    player_models = client.get(
+        "/api/racket-models",
+        headers=headers(player_token),
+    )
+    assert player_models.status_code == 200
+    assert created_model["key"] in {item["key"] for item in player_models.json()}
+
+    selected_racket = client.post(
+        "/api/rackets",
+        headers=headers(player_token),
+        json={
+            "nickname": "Managed frame",
+            "model_key": created_model["key"],
+            "brand": "Spoofed brand",
+            "model": "Spoofed model",
+        },
+    )
+    assert selected_racket.status_code == 200
+    assert selected_racket.json()["brand"] == "Yonex"
+    assert selected_racket.json()["model"] == "Duora Z-Strike"
+
+    disable_response = client.patch(
+        f"/api/admin/racket-models/{created_model['id']}",
+        headers=headers(admin_token),
+        json={"is_active": False},
+    )
+    assert disable_response.status_code == 200
+    assert disable_response.json()["is_active"] is False
+
+    player_models_after_disable = client.get(
+        "/api/racket-models",
+        headers=headers(player_token),
+    )
+    assert player_models_after_disable.status_code == 200
+    assert created_model["key"] not in {
+        item["key"] for item in player_models_after_disable.json()
+    }
+
+    inactive_selection = client.post(
+        "/api/rackets",
+        headers=headers(player_token),
+        json={
+            "nickname": "Inactive frame",
+            "model_key": created_model["key"],
+            "brand": "Spoofed brand",
+            "model": "Spoofed model",
+        },
+    )
+    assert inactive_selection.status_code == 400
+
+
 def complete_booking(admin_token: str, booking_id: str) -> None:
     for status in ("in_progress", "ready_for_collection", "completed"):
         response = client.patch(
@@ -309,12 +386,12 @@ def test_feedback_requires_owned_completed_booking_and_is_unique() -> None:
         json={"rating": 6, "string_feedback": "Too high."},
     )
     assert invalid_rating.status_code == 422
-    invalid_tag = client.post(
+    removed_tag_field = client.post(
         f"/api/bookings/{booking_id}/feedback",
         headers=headers(owner_token),
-        json={"rating": 5, "sentiment_tags": ["invented_tag"]},
+        json={"rating": 5, "sentiment_tags": ["crisp_feel"]},
     )
-    assert invalid_tag.status_code == 422
+    assert removed_tag_field.status_code == 422
     too_long = client.post(
         f"/api/bookings/{booking_id}/feedback",
         headers=headers(owner_token),
@@ -326,12 +403,6 @@ def test_feedback_requires_owned_completed_booking_and_is_unique() -> None:
         "rating": 5,
         "string_feedback": "Crisp response with strong repulsion.",
         "service_feedback": "Clear updates and fast turnaround.",
-        "sentiment_tags": [
-            "crisp_feel",
-            "good_communication",
-            "fast_turnaround",
-            "would_book_again",
-        ],
     }
     create_response = client.post(
         f"/api/bookings/{booking_id}/feedback",
@@ -341,7 +412,7 @@ def test_feedback_requires_owned_completed_booking_and_is_unique() -> None:
     assert create_response.status_code == 200
     assert create_response.json()["booking_id"] == booking_id
     assert create_response.json()["rating"] == 5
-    assert create_response.json()["sentiment_tags"] == payload["sentiment_tags"]
+    assert "sentiment_tags" not in create_response.json()
 
     duplicate_response = client.post(
         f"/api/bookings/{booking_id}/feedback",

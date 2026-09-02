@@ -187,18 +187,6 @@ class CachedRecommendationRecord:
 
 
 @dataclass(frozen=True)
-class RecommendationLogRecord:
-    id: str
-    user_id: str | None
-    phone_number: str | None
-    username: str | None
-    request: dict[str, Any]
-    recommendation: dict[str, Any]
-    algorithm_version: str
-    created_at: datetime | None
-
-
-@dataclass(frozen=True)
 class RecommendationRunItemRecord:
     id: str
     catalog_id: str

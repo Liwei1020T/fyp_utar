@@ -16,7 +16,7 @@ from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_current_user
-from app.entrypoints.api.dependencies import get_recommendation_log_repository
+from app.entrypoints.api.dependencies import get_recommendation_run_repository
 from app.entrypoints.api.dependencies import get_recommendation_repository
 from app.entrypoints.api.dependencies import get_profile_repository
 from app.entrypoints.api.dependencies import get_store_repository
@@ -51,7 +51,7 @@ def query_agent(
     current_user: CurrentUser = Depends(get_current_user),
     model_client: DeepSeekAgentClient = Depends(get_deepseek_agent_client),
     catalog_repository=Depends(get_catalog_repository),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
+    recommendation_run_repository=Depends(get_recommendation_run_repository),
     store_repository=Depends(get_store_repository),
     booking_repository=Depends(get_booking_repository),
     profile_repository=Depends(get_profile_repository),
@@ -68,7 +68,7 @@ def query_agent(
     toolbox = (
         AdminAgentToolbox(
             catalog_repository=catalog_repository,
-            recommendation_log_repository=recommendation_log_repository,
+            recommendation_run_repository=recommendation_run_repository,
             store_repository=store_repository,
             booking_repository=booking_repository,
             profile_repository=profile_repository,
@@ -80,7 +80,7 @@ def query_agent(
         if is_admin
         else AgentToolbox(
             catalog_repository=catalog_repository,
-            recommendation_log_repository=recommendation_log_repository,
+            recommendation_run_repository=recommendation_run_repository,
             store_repository=store_repository,
             booking_repository=booking_repository,
             profile_repository=profile_repository,

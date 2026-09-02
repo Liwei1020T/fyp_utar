@@ -24,6 +24,10 @@ class Payment(Base):
             "method <> 'qr_transfer' OR proof_path IS NOT NULL",
             name="ck_payments_qr_transfer_proof",
         ),
+        CheckConstraint(
+            "method IN ('qr_transfer', 'cash', 'wallet_balance')",
+            name="ck_payments_current_method",
+        ),
     )
 
     id: Mapped[str] = mapped_column(

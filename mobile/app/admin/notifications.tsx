@@ -17,7 +17,6 @@ import {
   useCurrentUser,
 } from '../../store/appStore';
 import type {
-  BackendAdminDeviceToken,
   BackendAdminNotification,
   BackendNotificationCategory,
 } from '../../types/backend';
@@ -38,7 +37,6 @@ export default function AdminNotificationsScreen() {
   const [notifications, setNotifications] = useState<BackendAdminNotification[]>(
     [],
   );
-  const [devices, setDevices] = useState<BackendAdminDeviceToken[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [category, setCategory] =
     useState<BackendNotificationCategory>('service');
@@ -60,27 +58,15 @@ export default function AdminNotificationsScreen() {
         phone: booking.customerPhone ?? '',
       });
     });
-    devices.forEach((device) => {
-      byId.set(device.user_id, {
-        id: device.user_id,
-        name: device.customer_username,
-        phone: device.customer_phone_number,
-      });
-    });
     return [...byId.values()];
-  }, [bookings, devices]);
+  }, [bookings]);
 
   const load = useCallback(async () => {
     if (!token || user?.role !== 'admin') return;
     setIsBusy(true);
     setMessage(null);
     try {
-      const [deliveryRows, deviceRows] = await Promise.all([
-        backendApi.adminListNotifications(token),
-        backendApi.adminListDeviceTokens(token),
-      ]);
-      setNotifications(deliveryRows);
-      setDevices(deviceRows);
+      setNotifications(await backendApi.adminListNotifications(token));
     } catch (error) {
       setMessage(
         error instanceof BackendApiError

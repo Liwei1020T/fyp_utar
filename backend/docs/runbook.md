@@ -83,8 +83,6 @@ cd backend
   booking payments use `qr_transfer` with a validated screenshot or `cash`
   without a screenshot. Both remain `pending` until an administrator verifies
   the transfer evidence or confirms cash receipt.
-- Historical card, online-banking, and e-wallet rows remain readable as legacy
-  records but are not accepted for new requests.
 - Wallet top-ups credit the append-only ledger exactly once after verification.
 - `wallet_balance` booking payments complete immediately after the server checks
   the persisted balance and do not require a screenshot.

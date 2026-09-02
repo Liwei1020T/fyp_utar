@@ -466,22 +466,29 @@ export default function AdminSettingsScreen() {
 
       <AppSection
         eyebrow="Homepage"
-        title="Trending strings"
+        title="Featured strings"
         subtitle="Pick the exact strings that should appear on the player home screen."
       >
-        <AppCard variant="subtle" padding="md">
-          <View className="gap-4">
-            <View>
-              <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-                Selected {trendingStringIds.length}/5
-              </HeroText>
-              <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
-                These strings are the only items shown in the player Trending Strings carousel.
-              </HeroText>
+        <View className="gap-4">
+          <AppCard variant="highlighted" padding="md">
+            <View className="flex-row items-start justify-between gap-3">
+              <View className="min-w-0 flex-1">
+                <HeroText className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                  On player home
+                </HeroText>
+                <HeroText className="mt-1 text-[13px] leading-5 text-slate-600">
+                  Choose up to 5 strings for the Featured strings carousel.
+                </HeroText>
+              </View>
+              <AppChip
+                label={`${trendingStringIds.length}/5 selected`}
+                variant="primary"
+                size="md"
+              />
             </View>
 
             {selectedTrendingStrings.length > 0 ? (
-              <View className="flex-row flex-wrap gap-2">
+              <View className="mt-4 flex-row flex-wrap gap-2">
                 {selectedTrendingStrings.map((item) => (
                   <AppChip
                     key={item.id}
@@ -493,19 +500,24 @@ export default function AdminSettingsScreen() {
                 ))}
               </View>
             ) : (
-              <View className="rounded-[16px] border border-[#DCE6F7] bg-white px-3 py-3">
-                <HeroText className="text-[13px] font-semibold text-slate-900">
-                  No homepage strings selected
-                </HeroText>
-                <HeroText className="mt-1 text-[12px] leading-5 text-slate-600">
-                  Select up to 5 strings below. Player home will stay empty until at least one is saved.
-                </HeroText>
-              </View>
+              <HeroText className="mt-4 text-[13px] leading-5 text-slate-600">
+                Nothing selected yet. Choose a string from the catalog below.
+              </HeroText>
             )}
+          </AppCard>
 
+          <View>
+            <View className="mb-2 flex-row items-center justify-between gap-3">
+              <HeroText className="text-sm font-semibold text-slate-900">
+                Choose from catalog
+              </HeroText>
+              <HeroText className="text-[12px] text-slate-500">
+                {filteredTrendingStrings.length} available
+              </HeroText>
+            </View>
             <AppInput
               variant="minimal"
-              className="mb-0"
+              className="mb-3"
               value={trendingSearch}
               onChangeText={setTrendingSearch}
               placeholder="Search string or brand"
@@ -526,9 +538,14 @@ export default function AdminSettingsScreen() {
                   />
                 );
               })}
+              {filteredTrendingStrings.length === 0 ? (
+                <HeroText className="text-[13px] leading-5 text-slate-600">
+                  No strings match “{trendingSearch.trim()}”.
+                </HeroText>
+              ) : null}
             </View>
           </View>
-        </AppCard>
+        </View>
       </AppSection>
 
       {saveSuccessMessage ? (

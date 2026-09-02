@@ -1,19 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
-
-
-SentimentTag = Literal[
-    "crisp_feel",
-    "good_communication",
-    "fast_turnaround",
-    "would_book_again",
-]
 
 
 class CreateRacketPayload(BaseModel):
@@ -82,6 +72,29 @@ class RacketModelOptionOut(BaseModel):
     model: str
 
 
+class CreateRacketModelPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    brand: str = Field(min_length=1, max_length=100)
+    model: str = Field(min_length=1, max_length=100)
+
+
+class UpdateRacketModelPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    is_active: bool
+
+
+class AdminRacketModelOut(BaseModel):
+    id: str
+    key: str
+    brand: str
+    model: str
+    is_active: bool
+    created_at: str
+    updated_at: str
+
+
 class CreateFeedbackPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -104,13 +117,6 @@ class CreateFeedbackPayload(BaseModel):
         min_length=1,
         max_length=2000,
     )
-    sentiment_tags: list[SentimentTag] = Field(default_factory=list, max_length=4)
-
-    @model_validator(mode="after")
-    def validate_feedback(self) -> "CreateFeedbackPayload":
-        if len(self.sentiment_tags) != len(set(self.sentiment_tags)):
-            raise ValueError("sentiment_tags must be unique")
-        return self
 
 
 class UpdateFeedbackPayload(BaseModel):
@@ -127,7 +133,6 @@ class UpdateFeedbackPayload(BaseModel):
     comment: str | None = Field(default=None, min_length=1, max_length=2000)
     string_feedback: str | None = Field(default=None, min_length=1, max_length=2000)
     service_feedback: str | None = Field(default=None, min_length=1, max_length=2000)
-    sentiment_tags: list[SentimentTag] | None = Field(default=None, max_length=4)
 
     @model_validator(mode="after")
     def validate_update(self) -> "UpdateFeedbackPayload":
@@ -135,10 +140,6 @@ class UpdateFeedbackPayload(BaseModel):
             raise ValueError("At least one feedback field is required")
         if "rating" in self.model_fields_set and self.rating is None:
             raise ValueError("rating cannot be null")
-        if self.sentiment_tags is not None and len(self.sentiment_tags) != len(
-            set(self.sentiment_tags)
-        ):
-            raise ValueError("sentiment_tags must be unique")
         return self
 
 
@@ -157,7 +158,6 @@ class FeedbackOut(BaseModel):
     comment: str | None
     string_feedback: str | None
     service_feedback: str | None
-    sentiment_tags: list[SentimentTag]
     created_at: str
     updated_at: str
 

@@ -18,7 +18,7 @@ from app.adapters.persistence.sqlalchemy.models.support_conversation import (
     SupportConversation,
     SupportConversationMessage,
 )
-from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
+from app.adapters.persistence.sqlalchemy.models.recommendation_run import (
     RecommendationRun,
 )
 from app.adapters.persistence.sqlalchemy.session import get_db
@@ -122,10 +122,12 @@ def _derived_notification_events(
         NotificationOut(
             id=f"booking-status:{history.id}",
             user_id=user_id,
-            category="booking" if history.old_status is None else "service",
+            category=(
+                "booking" if history.new_status == "awaiting_dropoff" else "service"
+            ),
             title=(
                 "Booking created"
-                if history.old_status is None
+                if history.new_status == "awaiting_dropoff"
                 else STATUS_TITLES.get(
                     history.new_status,
                     f"Booking status: {history.new_status.replace('_', ' ').title()}",
@@ -134,7 +136,7 @@ def _derived_notification_events(
             body=history.note
             or (
                 "Your booking was received by the shop."
-                if history.old_status is None
+                if history.new_status == "awaiting_dropoff"
                 else f"Your booking moved to {history.new_status.replace('_', ' ')}."
             ),
             created_at=history.changed_at,

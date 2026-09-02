@@ -47,7 +47,7 @@
   - the unified Python backend owns workflow writes
   - booking support, player feedback, and derived notifications reuse persisted booking updates/history
   - payment status and wallet balance come only from `payments` and `wallet_transactions`
-  - recommendation logs remain business-owned data
+  - recommendation runs and run items remain business-owned audit data
 
 ## Change Rules
 

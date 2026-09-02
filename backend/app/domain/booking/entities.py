@@ -6,7 +6,6 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class BookingStatusHistoryEntry:
-    old_status: str | None
     new_status: str
     changed_by_user_id: str | None
     changed_by_phone_number: str | None

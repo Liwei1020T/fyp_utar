@@ -116,6 +116,7 @@ Query cache owner.
 | [mobile/app/admin/service-queue.tsx](../mobile/app/admin/service-queue.tsx) | Live booking service queue lanes. |
 | [mobile/app/admin/payments.tsx](../mobile/app/admin/payments.tsx) | Persisted payment monitor and verification actions. |
 | [mobile/app/admin/settings.tsx](../mobile/app/admin/settings.tsx) | Store copy, notification category switches, trending strings, and admin password controls. |
+| [mobile/app/admin/racket-models.tsx](../mobile/app/admin/racket-models.tsx) | Admin-managed racket model catalogue used by the player racket selector. |
 | [mobile/app/admin/chat/[id].tsx](../mobile/app/admin/chat/%5Bid%5D.tsx) | Admin human-support reply screen with persisted read, resolve, and close actions. |
 
 ### Mobile State, Services, And Types
@@ -208,14 +209,14 @@ Backend lives in [backend](../backend). The active runtime is FastAPI under
 | [backend/app/entrypoints/api/routes/booking_routes.py](../backend/app/entrypoints/api/routes/booking_routes.py) | Customer booking create/list/detail, cancellation, and QR token issue. |
 | [backend/app/entrypoints/api/routes/recommendation_routes.py](../backend/app/entrypoints/api/routes/recommendation_routes.py) | Recommendation preview/profile endpoints. |
 | [backend/app/entrypoints/api/routes/agent_routes.py](../backend/app/entrypoints/api/routes/agent_routes.py) | Authenticated, rate-limited player Agent query endpoint and DeepSeek composition. |
-| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin strings, inventory, bookings, secure check-in, queue, settings, and recommendation logs. |
+| [backend/app/entrypoints/api/routes/admin_routes.py](../backend/app/entrypoints/api/routes/admin_routes.py) | Admin racket-model catalogue management plus strings, inventory, bookings, secure check-in, queue, settings, and recommendation logs. |
 | [backend/app/entrypoints/api/routes/admin_engagement_routes.py](../backend/app/entrypoints/api/routes/admin_engagement_routes.py) | Admin feedback export, device tokens, notification delivery, and resend. |
 | [backend/app/entrypoints/api/routes/admin_analytics_routes.py](../backend/app/entrypoints/api/routes/admin_analytics_routes.py) | Admin analytics summary and popular-string reporting. |
 | [backend/app/entrypoints/api/routes/store_routes.py](../backend/app/entrypoints/api/routes/store_routes.py) | Public slot listing. |
 | [backend/app/entrypoints/api/routes/commerce_routes.py](../backend/app/entrypoints/api/routes/commerce_routes.py) | Booking quotes, QR/cash payments, payment proofs, wallet ledger/top-ups, and admin verification. |
 | [backend/app/entrypoints/api/routes/notification_routes.py](../backend/app/entrypoints/api/routes/notification_routes.py) | Owned notification feed, read IDs, preferences, and device token registration. |
 | [backend/app/entrypoints/api/routes/booking_conversation_routes.py](../backend/app/entrypoints/api/routes/booking_conversation_routes.py) | Player/admin booking-linked and booking-free human-support lifecycle and messages. |
-| [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Server-validated standard racket catalogue, owned physical rackets, and completed-booking feedback. |
+| [backend/app/entrypoints/api/routes/racket_feedback_routes.py](../backend/app/entrypoints/api/routes/racket_feedback_routes.py) | Player racket-model catalogue reads, owned physical rackets, and completed-booking feedback. |
 | [backend/app/entrypoints/api/routes/media_routes.py](../backend/app/entrypoints/api/routes/media_routes.py) | Time-limited signed access to persisted upload media. |
 
 ### Backend Domains And Use Cases

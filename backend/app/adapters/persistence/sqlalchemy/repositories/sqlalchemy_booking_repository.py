@@ -96,7 +96,6 @@ class SqlAlchemyBookingRepository:
         self.db.add(
             BookingStatusHistory(
                 booking_id=booking.id,
-                old_status=None,
                 new_status=status,
                 changed_by_user_id=changed_by_user_id,
             )
@@ -227,7 +226,6 @@ class SqlAlchemyBookingRepository:
             self.db.add(
                 BookingStatusHistory(
                     booking_id=booking.id,
-                    old_status=previous_status,
                     new_status=next_status,
                     changed_by_user_id=changed_by_user_id,
                     note=note,

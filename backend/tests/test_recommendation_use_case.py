@@ -199,25 +199,9 @@ class FakeRecommendationRepository:
         )
 
 
-class FakeRecommendationLogRepository:
+class FakeRecommendationRunRepository:
     def __init__(self) -> None:
-        self.last_log: dict[str, object] | None = None
         self.last_run: dict[str, object] | None = None
-
-    def create_log(
-        self,
-        *,
-        user_id: str | None,
-        request_payload: dict[str, object],
-        response_payload: dict[str, object],
-        algorithm_version: str,
-    ) -> None:
-        self.last_log = {
-            "user_id": user_id,
-            "request_payload": request_payload,
-            "response_payload": response_payload,
-            "algorithm_version": algorithm_version,
-        }
 
     def create_run(
         self,
@@ -237,16 +221,6 @@ class FakeRecommendationLogRepository:
             "result_payloads": result_payloads,
             "algorithm_version": algorithm_version,
         }
-
-    def list_logs(
-        self,
-        *,
-        phone_number: str | None,
-        algorithm_version: str | None,
-        limit: int | None,
-        offset: int,
-    ) -> Page:
-        raise NotImplementedError
 
     def list_runs(
         self,
@@ -427,7 +401,7 @@ def test_personal_history_changes_invalidate_cached_results() -> None:
     use_case = GenerateRecommendationUseCase(
         profile_repository=FakeProfileRepository(),
         recommendation_repository=repository,
-        recommendation_log_repository=FakeRecommendationLogRepository(),
+        recommendation_run_repository=FakeRecommendationRunRepository(),
     )
 
     use_case._execute(user_id="user-1", request=_attacking_request(), persist=True)
@@ -612,11 +586,11 @@ def test_enabled_cf_can_change_ranking() -> None:
 
 def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     repository = FakeRecommendationRepository()
-    logs = FakeRecommendationLogRepository()
+    logs = FakeRecommendationRunRepository()
     use_case = GenerateRecommendationUseCase(
         profile_repository=FakeProfileRepository(),
         recommendation_repository=repository,
-        recommendation_log_repository=logs,
+        recommendation_run_repository=logs,
     )
 
     result = use_case.execute_preview(user_id="user-1", request=_attacking_request())
@@ -625,8 +599,8 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
     assert result.run_id
     assert result.results[0].catalog_id == "yonex-bg80"
     assert result.results[0].score_breakdown is not None
-    assert logs.last_log is not None
-    assert logs.last_log["algorithm_version"] == ALGORITHM_VERSION
+    assert logs.last_run is not None
+    assert logs.last_run["algorithm_version"] == ALGORITHM_VERSION
     assert repository.preference_entries == []
     assert repository.cached == []
 
@@ -663,7 +637,7 @@ def test_generate_recommendation_persists_preference_vector_and_cache() -> None:
 
 def test_execute_profile_persists_true_profile_snapshot() -> None:
     repository = FakeRecommendationRepository()
-    logs = FakeRecommendationLogRepository()
+    logs = FakeRecommendationRunRepository()
     profile = PlayerProfile(
         user_id="user-1",
         skill_level="advanced",
@@ -688,7 +662,7 @@ def test_execute_profile_persists_true_profile_snapshot() -> None:
     use_case = GenerateRecommendationUseCase(
         profile_repository=FakeProfileRepository(profile),
         recommendation_repository=repository,
-        recommendation_log_repository=logs,
+        recommendation_run_repository=logs,
     )
 
     result = use_case.execute_profile(user_id="user-1", top_n=3)
@@ -730,7 +704,7 @@ def test_profile_recommendation_rejects_unowned_racket() -> None:
     use_case = GenerateRecommendationUseCase(
         profile_repository=FakeProfileRepository(profile),
         recommendation_repository=FakeRecommendationRepository(),
-        recommendation_log_repository=FakeRecommendationLogRepository(),
+        recommendation_run_repository=FakeRecommendationRunRepository(),
     )
 
     with pytest.raises(NotFoundError, match="Racket not found"):
@@ -777,11 +751,11 @@ def test_profile_update_invalidates_cached_recommendations() -> None:
 
 def test_cached_recommendation_detail_returns_rationale() -> None:
     repository = FakeRecommendationRepository()
-    logs = FakeRecommendationLogRepository()
+    logs = FakeRecommendationRunRepository()
     use_case = GenerateRecommendationUseCase(
         profile_repository=FakeProfileRepository(),
         recommendation_repository=repository,
-        recommendation_log_repository=logs,
+        recommendation_run_repository=logs,
     )
     use_case._execute(user_id="user-1", request=_attacking_request(), persist=True)
 
@@ -1298,7 +1272,7 @@ def _score_custom_candidates(
     return GenerateRecommendationUseCase(
         profile_repository=FakeProfileRepository(),
         recommendation_repository=FakeRecommendationRepository(candidates),
-        recommendation_log_repository=FakeRecommendationLogRepository(),
+        recommendation_run_repository=FakeRecommendationRunRepository(),
     ).execute_preview(user_id="user-1", request=request)
 
 

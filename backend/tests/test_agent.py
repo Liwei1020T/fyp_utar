@@ -25,8 +25,8 @@ from app.entrypoints.api.routes.agent_routes import get_deepseek_agent_client
 from app.main import app
 from app.ports.repositories.booking_repository import BookingRepository
 from app.ports.repositories.catalog_repository import CatalogRepository
-from app.ports.repositories.recommendation_log_repository import (
-    RecommendationLogRepository,
+from app.ports.repositories.recommendation_run_repository import (
+    RecommendationRunRepository,
 )
 from app.ports.repositories.profile_repository import ProfileRepository
 from app.ports.repositories.recommendation_repository import RecommendationRepository
@@ -258,6 +258,8 @@ def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
         "Always ask all four questions" in message.get("content", "")
         and "call compare_strings" in message.get("content", "")
         and "call get_store_information" in message.get("content", "")
+        and "opening hours" in message.get("content", "")
+        and "store address" in message.get("content", "")
         and "answer under 70 words" in message.get("content", "")
         and "Do not repeat the same fact" in message.get("content", "")
         for message in client.calls[0]["messages"]
@@ -485,7 +487,7 @@ def test_compare_strings_combines_distinct_backend_items() -> None:
 
     toolbox = AgentToolbox(
         catalog_repository=cast(CatalogRepository, Catalogs()),
-        recommendation_log_repository=cast(RecommendationLogRepository, object()),
+        recommendation_run_repository=cast(RecommendationRunRepository, object()),
         store_repository=cast(StoreRepository, object()),
         booking_repository=cast(BookingRepository, object()),
         profile_repository=cast(ProfileRepository, object()),
@@ -573,8 +575,8 @@ def test_recommendation_run_tool_hides_another_users_run() -> None:
 
     toolbox = AgentToolbox(
         catalog_repository=cast(CatalogRepository, object()),
-        recommendation_log_repository=cast(
-            RecommendationLogRepository,
+        recommendation_run_repository=cast(
+            RecommendationRunRepository,
             RunRepository(),
         ),
         store_repository=cast(StoreRepository, object()),
@@ -621,7 +623,7 @@ def test_what_if_tool_maps_changes_without_mutating_saved_profile() -> None:
 
     toolbox = AgentToolbox(
         catalog_repository=cast(CatalogRepository, object()),
-        recommendation_log_repository=cast(RecommendationLogRepository, object()),
+        recommendation_run_repository=cast(RecommendationRunRepository, object()),
         store_repository=cast(StoreRepository, object()),
         booking_repository=cast(BookingRepository, object()),
         profile_repository=cast(ProfileRepository, Profiles()),
@@ -742,7 +744,7 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
 
     toolbox = AgentToolbox(
         catalog_repository=cast(CatalogRepository, Catalogs()),
-        recommendation_log_repository=cast(RecommendationLogRepository, object()),
+        recommendation_run_repository=cast(RecommendationRunRepository, object()),
         store_repository=cast(StoreRepository, object()),
         booking_repository=cast(BookingRepository, object()),
         profile_repository=cast(ProfileRepository, object()),
@@ -769,7 +771,7 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
 def test_latest_recommendation_tool_returns_backend_run_source() -> None:
     toolbox = AgentToolbox(
         catalog_repository=cast(CatalogRepository, object()),
-        recommendation_log_repository=cast(RecommendationLogRepository, object()),
+        recommendation_run_repository=cast(RecommendationRunRepository, object()),
         store_repository=cast(StoreRepository, object()),
         booking_repository=cast(BookingRepository, object()),
         profile_repository=cast(ProfileRepository, object()),
@@ -934,6 +936,45 @@ def test_agent_endpoint_requires_auth_and_reports_unconfigured_provider() -> Non
     assert unavailable.json()["error"]["message"] == "Agent is not configured"
 
 
+def test_agent_retries_an_invalid_final_answer_before_failing() -> None:
+    fake_client = FakeModelClient(
+        [
+            _completion(
+                {"role": "assistant", "content": "The answer is 3."},
+                "stop",
+            ),
+            _completion(
+                {"role": "assistant", "content": _answer_content()},
+                "stop",
+            ),
+        ]
+    )
+
+    response = QueryAgentUseCase(
+        toolbox=cast(AgentToolbox, FakeToolbox()),
+        model_client=fake_client,
+    ).execute(
+        payload=AgentQueryDto.model_validate(
+            {
+                "message": "How many bookings are there?",
+                "context": {"surface": "admin_assistant"},
+            }
+        ),
+        user_id="admin-1",
+    )
+
+    assert (
+        response.answer == "The store information is available from the live settings."
+    )
+    assert len(fake_client.calls) == 2
+    assert fake_client.calls[1]["tools"] == []
+    assert fake_client.calls[1]["tool_choice"] == "none"
+    assert (
+        "Return exactly one JSON object"
+        in fake_client.calls[1]["messages"][-1]["content"]
+    )
+
+
 def test_agent_endpoint_accepts_validated_fake_model_response() -> None:
     fake_client = FakeModelClient(
         [_completion({"role": "assistant", "content": _answer_content()}, "stop")]
@@ -1070,27 +1111,31 @@ def test_admin_agent_uses_enabled_read_tools_and_filters_all_actions() -> None:
         "find_admin_inventory",
     }
     assert fake_client.calls[0]["tool_choice"] == "auto"
-    assert any(
-        "read-only operations information" in message.get("content", "")
+    admin_instruction = next(
+        message
         for message in fake_client.calls[0]["messages"]
-        if isinstance(message.get("content"), str)
+        if message.get("content", "").startswith(
+            "You are assisting an authenticated StringSense administrator"
+        )
     )
-    assert any(
-        "prose answers concise and focused" in message.get("content", "")
-        and "Answer the administrator's actual question directly"
-        in message.get("content", "")
-        and "Do not retrieve or append unrelated operations data"
-        in message.get("content", "")
-        and "one record per line" in message.get("content", "")
-        and "Do not repeat those records in evidence" in message.get("content", "")
-        and "state how many records were returned" in message.get("content", "")
-        and "Never expose secrets" in message.get("content", "")
-        and "booking search" in message.get("content", "")
-        and "inventory search" in message.get("content", "")
-        and "no suggested questions or actions" in message.get("content", "")
-        for message in fake_client.calls[0]["messages"]
-        if isinstance(message.get("content"), str)
+    assert admin_instruction["role"] == "system"
+    instruction = admin_instruction["content"]
+    assert "Match the response shape to the administrator's question" in instruction
+    assert "Do not force a fixed list template" in instruction
+    assert "one record per line" not in instruction
+    assert "Name: value" not in instruction
+    assert (
+        "If the answer already contains the requested facts, use an empty evidence list"
+        in instruction
     )
+    assert "Answer in the language of the latest administrator question" in instruction
+    assert "check that the summary, answer, and evidence agree" in instruction
+    assert "Do not retrieve or append unrelated operations data" in instruction
+    assert "state how many records were returned" in instruction
+    assert "Never expose secrets" in instruction
+    assert "booking search" in instruction
+    assert "inventory search" in instruction
+    assert "no suggested questions or actions" in instruction
 
 
 def test_agent_surface_rejects_the_wrong_role() -> None:

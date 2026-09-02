@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import cast
-
 from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy import select
@@ -12,6 +10,9 @@ from sqlalchemy.orm import Session
 from app.adapters.persistence.sqlalchemy.models.booking import Booking
 from app.adapters.persistence.sqlalchemy.models.racket_feedback import BookingFeedback
 from app.adapters.persistence.sqlalchemy.models.racket_feedback import Racket
+from app.adapters.persistence.sqlalchemy.models.racket_feedback import (
+    RacketModelCatalog,
+)
 from app.adapters.persistence.sqlalchemy.models.string_catalog_item import (
     RecommendationScoreCache,
 )
@@ -24,14 +25,12 @@ from app.dto.racket_feedback import RacketDetailOut
 from app.dto.racket_feedback import RacketModelOptionOut
 from app.dto.racket_feedback import RacketOut
 from app.dto.racket_feedback import RacketServiceHistoryOut
-from app.dto.racket_feedback import SentimentTag
 from app.dto.racket_feedback import UpdateRacketPayload
 from app.dto.racket_feedback import UpdateFeedbackPayload
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_current_customer
 from app.dto.auth import MessageResponse
 from app.domain.recommendation.learning_signals import canonical_racket_model_key
-from app.domain.recommendation.learning_signals import STANDARD_RACKET_MODELS
 from app.domain.recommendation.learning_signals import standard_racket_model_for_key
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.shared.errors import BadRequestError
@@ -131,6 +130,7 @@ def _racket_service_summaries(
 
 
 def _resolve_racket_identity(
+    db: Session,
     *,
     model_key: str | None,
     brand: str,
@@ -138,9 +138,17 @@ def _resolve_racket_identity(
 ) -> tuple[str, str]:
     if model_key is not None:
         standard_model = standard_racket_model_for_key(model_key)
-        if standard_model is None:
-            raise BadRequestError("Unknown standard racket model")
-        return standard_model
+        if standard_model is not None:
+            return standard_model
+        managed_model = db.execute(
+            select(RacketModelCatalog).where(
+                RacketModelCatalog.model_key == model_key,
+                RacketModelCatalog.is_active.is_(True),
+            )
+        ).scalar_one_or_none()
+        if managed_model is None:
+            raise BadRequestError("Unknown or inactive racket model")
+        return managed_model.brand, managed_model.model
 
     canonical_key = canonical_racket_model_key(brand, model)
     if canonical_key is None:
@@ -166,7 +174,6 @@ def feedback_to_dto(feedback: BookingFeedback) -> FeedbackOut:
         comment=feedback.comment,
         string_feedback=feedback.string_feedback,
         service_feedback=feedback.service_feedback,
-        sentiment_tags=cast(list[SentimentTag], feedback.sentiment_tags),
         created_at=feedback.created_at.isoformat(),
         updated_at=feedback.updated_at.isoformat(),
     )
@@ -242,10 +249,24 @@ def list_rackets(
 @router.get("/racket-models", response_model=list[RacketModelOptionOut])
 def list_racket_models(
     _: CurrentUser = Depends(get_current_customer),
+    db: Session = Depends(get_db, scope="function"),
 ) -> list[RacketModelOptionOut]:
+    models = (
+        db.execute(
+            select(RacketModelCatalog)
+            .where(RacketModelCatalog.is_active.is_(True))
+            .order_by(RacketModelCatalog.brand.asc(), RacketModelCatalog.model.asc())
+        )
+        .scalars()
+        .all()
+    )
     return [
-        RacketModelOptionOut(key=key, brand=brand, model=model)
-        for key, brand, model in STANDARD_RACKET_MODELS
+        RacketModelOptionOut(
+            key=model.model_key,
+            brand=model.brand,
+            model=model.model,
+        )
+        for model in models
     ]
 
 
@@ -258,6 +279,7 @@ def create_racket(
     values = payload.model_dump()
     model_key = values.pop("model_key")
     values["brand"], values["model"] = _resolve_racket_identity(
+        db,
         model_key=model_key,
         brand=payload.brand,
         model=payload.model,
@@ -334,12 +356,14 @@ def update_racket(
     model_key = values.pop("model_key", None)
     if model_key is not None:
         values["brand"], values["model"] = _resolve_racket_identity(
+            db,
             model_key=model_key,
             brand=racket.brand,
             model=racket.model,
         )
     elif "brand" in values or "model" in values:
         values["brand"], values["model"] = _resolve_racket_identity(
+            db,
             model_key=None,
             brand=values.get("brand", racket.brand),
             model=values.get("model", racket.model),

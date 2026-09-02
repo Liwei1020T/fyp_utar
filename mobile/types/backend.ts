@@ -107,16 +107,6 @@ export interface BackendPrivacySettings {
   marketing_consent: boolean;
 }
 
-export interface BackendDeviceToken {
-  id: string;
-  user_id: string;
-  token_preview: string;
-  platform: 'ios' | 'android' | 'web';
-  device_name: string | null;
-  enabled: boolean;
-  last_seen_at: string;
-}
-
 export type BackendNotificationCategory =
   | 'booking'
   | 'payment'
@@ -393,7 +383,6 @@ export interface BackendSlot {
 }
 
 export interface BackendBookingStatusHistory {
-  old_status: string | null;
   new_status: string;
   changed_by_user_id: string | null;
   changed_by_phone_number: string | null;
@@ -525,11 +514,21 @@ export interface BackendRacketModelOption {
   model: string;
 }
 
-export type BackendFeedbackSentimentTag =
-  | 'crisp_feel'
-  | 'good_communication'
-  | 'fast_turnaround'
-  | 'would_book_again';
+export interface BackendAdminRacketModel extends BackendRacketModelOption {
+  id: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendCreateRacketModelPayload {
+  brand: string;
+  model: string;
+}
+
+export interface BackendUpdateRacketModelPayload {
+  is_active: boolean;
+}
 
 export interface BackendCreateFeedbackPayload {
   rating: number;
@@ -543,7 +542,6 @@ export interface BackendCreateFeedbackPayload {
   comment?: string | null;
   string_feedback?: string | null;
   service_feedback?: string | null;
-  sentiment_tags?: BackendFeedbackSentimentTag[];
 }
 
 export type BackendUpdateFeedbackPayload = Partial<BackendCreateFeedbackPayload>;
@@ -563,7 +561,6 @@ export interface BackendFeedback {
   comment: string | null;
   string_feedback: string | null;
   service_feedback: string | null;
-  sentiment_tags: BackendFeedbackSentimentTag[];
   created_at: string;
   updated_at: string;
 }
@@ -603,9 +600,6 @@ export interface BackendPayment {
   booking_id: string | null;
   user_id: string;
   method:
-    | 'card'
-    | 'online_banking'
-    | 'e_wallet'
     | 'qr_transfer'
     | 'cash'
     | 'wallet_balance';
@@ -679,6 +673,7 @@ export interface BackendStoreSettings {
     { enabled?: boolean }
   >;
   updated_at: string | null;
+  business_hours?: BackendStoreBusinessHours | null;
 }
 
 export interface BackendStoreSettingsPayload {
@@ -715,6 +710,33 @@ export interface BackendAdminUsersOverview {
   player_count: number;
   admin_count: number;
   users: BackendAdminUser[];
+}
+
+export interface BackendAdminUserProfile {
+  skill_level: string | null;
+  playing_style: string | null;
+  preferred_tension: number | null;
+  frequency_per_week: number | null;
+  preferred_feel: string | null;
+  preferred_gauge: string | null;
+  recent_goal: string | null;
+}
+
+export interface BackendAdminUserBooking {
+  id: string;
+  order_code: string;
+  string_name: string;
+  racket_model: string | null;
+  requested_tension: number | null;
+  status: string;
+  drop_off_datetime: string | null;
+  created_at: string | null;
+}
+
+export interface BackendAdminUserDetail extends BackendAdminUser {
+  phone_number: string;
+  profile: BackendAdminUserProfile | null;
+  recent_orders: BackendAdminUserBooking[];
 }
 
 export interface BackendAnalyticsSummary {
@@ -783,7 +805,6 @@ export interface BackendAdminNotification {
   user_id: string;
   customer_username: string;
   customer_phone_number: string;
-  token_preview: string | null;
   category: BackendNotificationCategory;
   title: string;
   body: string;
@@ -793,11 +814,6 @@ export interface BackendAdminNotification {
   attempts: number;
   created_at: string;
   last_attempt_at: string | null;
-}
-
-export interface BackendAdminDeviceToken extends BackendDeviceToken {
-  customer_username: string;
-  customer_phone_number: string;
 }
 
 export interface BackendPopularString {

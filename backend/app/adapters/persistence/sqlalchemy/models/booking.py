@@ -109,7 +109,6 @@ class BookingStatusHistory(Base):
         ForeignKey("bookings.id", ondelete="CASCADE"),
         index=True,
     )
-    old_status: Mapped[str | None] = mapped_column(SAString(30), nullable=True)
     new_status: Mapped[str] = mapped_column(SAString(30))
     changed_by_user_id: Mapped[str | None] = mapped_column(
         SAString(36),

@@ -16,8 +16,9 @@ admin operations surface:
 - `/player/recommend/explain/[id]`: explains the exact owned recommendation run
   in short player-friendly language and offers verified in-stock alternatives
   when the selected string is unavailable.
-- `/admin/assistant`: returns the current read-only operations summary and can
-  search booking and inventory records. It does not propose changes.
+- `/admin/assistant`: answers question-specific read-only operations queries,
+  including current totals and booking or inventory searches. It matches the
+  response shape to the question and does not propose changes.
 
 DeepSeek composes the response but never ranks strings. The current V13
 recommendation use case remains the only ranking owner, and guided previews do

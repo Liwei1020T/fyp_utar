@@ -38,6 +38,38 @@ class AdminUsersOverviewOut(BaseModel):
     users: list[AdminUserSummaryOut]
 
 
+class AdminUserProfileOut(BaseModel):
+    skill_level: str | None
+    playing_style: str | None
+    preferred_tension: float | None
+    frequency_per_week: int | None
+    preferred_feel: str | None
+    preferred_gauge: str | None
+    recent_goal: str | None
+
+
+class AdminUserBookingOut(BaseModel):
+    id: str
+    order_code: str
+    string_name: str
+    racket_model: str | None
+    requested_tension: float | None
+    status: str
+    drop_off_datetime: str | None
+    created_at: str | None
+
+
+class AdminUserDetailOut(BaseModel):
+    id: str
+    username: str
+    phone_number: str
+    role: str
+    is_active: bool
+    created_at: str | None
+    profile: AdminUserProfileOut | None
+    recent_orders: list[AdminUserBookingOut]
+
+
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -132,19 +164,6 @@ class ChangePasswordRequest(BaseModel):
     def validate_password(cls, value: str, info) -> str:
         hasher = cast(PasswordHasher, info.context["password_hasher"])
         return hasher.validate_local_password(value)
-
-
-class AccountDeletionRequestPayload(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-
-    reason: str | None = Field(default=None, min_length=1, max_length=1000)
-
-
-class AccountDeletionRequestOut(BaseModel):
-    id: str
-    status: str
-    reason: str | None
-    requested_at: str
 
 
 def user_to_dto(user: UserAccount) -> UserOut:

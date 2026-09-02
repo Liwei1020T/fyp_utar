@@ -10,7 +10,6 @@ from datetime import time
 from datetime import timedelta
 from datetime import timezone
 from typing import cast
-from urllib import request as urllib_request
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -23,7 +22,6 @@ from sqlalchemy.orm import Session
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import BookingStatusHistory
 from app.adapters.persistence.sqlalchemy.models import BookingFeedback
-from app.adapters.persistence.sqlalchemy.models import DeviceToken
 from app.adapters.persistence.sqlalchemy.models import NotificationDelivery
 from app.adapters.persistence.sqlalchemy.models import Profile
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
@@ -34,9 +32,7 @@ from app.adapters.persistence.sqlalchemy.session import get_db
 from app.adapters.services.openwa import send_openwa_text
 from app.config.settings import get_settings
 from app.domain.booking.policies import booking_order_code
-from app.dto.notifications import AdminDeviceTokenOut
 from app.dto.notifications import AdminNotificationOut
-from app.dto.notifications import DevicePlatform
 from app.dto.notifications import NotificationCategory
 from app.dto.notifications import SendNotificationPayload
 from app.dto.racket_feedback import AdminFeedbackOut
@@ -79,17 +75,11 @@ def get_admin_feedback_summary(
 
 @dataclass(frozen=True, slots=True)
 class _NotificationDeliveryTarget:
-    provider: str
     recipient: str
     title: str
     body: str
-    route: str | None
     endpoint: str
     access_token: str | None
-
-
-def _token_preview(token: str) -> str:
-    return f"{token[:8]}…{token[-6:]}"
 
 
 def _feedback_query(
@@ -147,14 +137,12 @@ def _admin_feedback_dto(
 def _notification_dto(
     notification: NotificationDelivery,
     user: User,
-    device_token: DeviceToken | None,
 ) -> AdminNotificationOut:
     return AdminNotificationOut(
         id=notification.id,
         user_id=notification.user_id,
         customer_username=user.username,
         customer_phone_number=user.phone_number,
-        token_preview=_token_preview(device_token.token) if device_token else None,
         category=cast(NotificationCategory, notification.category),
         title=notification.title,
         body=notification.body,
@@ -193,88 +181,30 @@ def _prepare_notification_delivery(
         return False
 
     if settings.openwa_enabled:
-        notification.device_token_id = None
         notification.attempts += 1
         notification.last_attempt_at = datetime.now(timezone.utc)
         notification.status = "pending"
         notification.provider_message = None
         return True
 
-    device_token = (
-        db.get(DeviceToken, notification.device_token_id)
-        if notification.device_token_id
-        else db.scalar(
-            select(DeviceToken)
-            .where(
-                DeviceToken.user_id == notification.user_id,
-                DeviceToken.enabled.is_(True),
-            )
-            .order_by(DeviceToken.last_seen_at.desc())
-            .limit(1)
-        )
-    )
-    notification.attempts += 1
-    notification.last_attempt_at = datetime.now(timezone.utc)
-    if device_token is None or not device_token.enabled:
-        notification.status = "failed"
-        notification.provider_message = "No active device token"
-        return False
-    notification.device_token_id = device_token.id
-
-    if not settings.expo_push_enabled:
-        notification.status = "disabled"
-        notification.provider_message = "Expo push delivery is disabled"
-        return False
-
-    notification.status = "pending"
-    notification.provider_message = None
-    return True
+    notification.status = "disabled"
+    notification.provider_message = "Remote delivery is disabled"
+    return False
 
 
 def _send_notification_to_provider(
     target: _NotificationDeliveryTarget,
 ) -> tuple[str, str | None]:
-    if target.provider == "openwa":
-        try:
-            return (
-                "sent",
-                send_openwa_text(
-                    endpoint=target.endpoint,
-                    api_key=target.access_token,
-                    chat_id=target.recipient,
-                    text=f"*{target.title}*\n{target.body}",
-                ),
-            )
-        except (OSError, TypeError, ValueError) as exc:
-            return "failed", str(exc)[:500]
-
-    payload = {
-        "to": target.recipient,
-        "title": target.title,
-        "body": target.body,
-        "data": {"route": target.route} if target.route else {},
-    }
-    body = json.dumps(payload).encode("utf-8")
-    headers = {"Accept": "application/json", "Content-Type": "application/json"}
-    if target.access_token:
-        headers["Authorization"] = f"Bearer {target.access_token}"
-    request = urllib_request.Request(
-        target.endpoint,
-        data=body,
-        headers=headers,
-        method="POST",
-    )
     try:
-        with urllib_request.urlopen(request, timeout=5) as response:
-            provider_response = json.loads(response.read().decode("utf-8"))
-        if not isinstance(provider_response, dict):
-            raise ValueError(f"{target.provider} returned an invalid response")
-        ticket = provider_response.get("data", {})
-        if not isinstance(ticket, dict):
-            raise ValueError("Expo returned an invalid delivery ticket")
-        status = "sent" if ticket.get("status") == "ok" else "failed"
-        provider_message = ticket.get("message") or ticket.get("id")
-        return status, str(provider_message) if provider_message is not None else None
+        return (
+            "sent",
+            send_openwa_text(
+                endpoint=target.endpoint,
+                api_key=target.access_token,
+                chat_id=target.recipient,
+                text=f"*{target.title}*\n{target.body}",
+            ),
+        )
     except (OSError, TypeError, ValueError) as exc:
         return "failed", str(exc)[:500]
 
@@ -286,12 +216,7 @@ def _notification_response_for_session(
     user = db.get(User, notification.user_id)
     if user is None:
         raise NotFoundError("User not found")
-    device_token = (
-        db.get(DeviceToken, notification.device_token_id)
-        if notification.device_token_id
-        else None
-    )
-    return _notification_dto(notification, user, device_token)
+    return _notification_dto(notification, user)
 
 
 def _read_notification_response(notification_id: str) -> AdminNotificationOut:
@@ -336,11 +261,9 @@ def _deliver_notification(notification_id: str) -> AdminNotificationOut:
                     character for character in user.phone_number if character.isdigit()
                 )
                 target = _NotificationDeliveryTarget(
-                    provider="openwa",
                     recipient=f"{phone_digits}@c.us",
                     title=notification.title,
                     body=notification.body,
-                    route=notification.route,
                     endpoint=(
                         f"{settings.openwa_base_url.rstrip('/')}"
                         f"/sessions/{settings.openwa_session_id}/messages/send-text"
@@ -348,28 +271,6 @@ def _deliver_notification(notification_id: str) -> AdminNotificationOut:
                     access_token=(
                         settings.openwa_api_key.get_secret_value()
                         if settings.openwa_api_key is not None
-                        else None
-                    ),
-                )
-        else:
-            device_token = (
-                db.get(DeviceToken, notification.device_token_id)
-                if notification.device_token_id
-                else None
-            )
-            if device_token is None or not device_token.enabled:
-                provider_message = "No active device token"
-            else:
-                target = _NotificationDeliveryTarget(
-                    provider="expo",
-                    recipient=device_token.token,
-                    title=notification.title,
-                    body=notification.body,
-                    route=notification.route,
-                    endpoint=settings.expo_push_endpoint,
-                    access_token=(
-                        settings.expo_push_access_token.get_secret_value()
-                        if settings.expo_push_access_token is not None
                         else None
                     ),
                 )
@@ -534,50 +435,19 @@ def admin_export_feedback(
     )
 
 
-@router.get("/device-tokens", response_model=list[AdminDeviceTokenOut])
-def admin_device_tokens(
-    _: CurrentUser = Depends(get_current_admin),
-    db: Session = Depends(get_db, scope="function"),
-) -> list[AdminDeviceTokenOut]:
-    rows = db.execute(
-        select(DeviceToken, User)
-        .join(User, User.id == DeviceToken.user_id)
-        .order_by(DeviceToken.last_seen_at.desc())
-    ).all()
-    return [
-        AdminDeviceTokenOut(
-            id=token.id,
-            user_id=token.user_id,
-            token_preview=_token_preview(token.token),
-            platform=cast(DevicePlatform, token.platform),
-            device_name=token.device_name,
-            enabled=token.enabled,
-            last_seen_at=token.last_seen_at,
-            customer_username=user.username,
-            customer_phone_number=user.phone_number,
-        )
-        for token, user in rows
-    ]
-
-
 @router.get("/notifications", response_model=list[AdminNotificationOut])
 def admin_notifications(
     status: str | None = Query(default=None, max_length=20),
     _: CurrentUser = Depends(get_current_admin),
     db: Session = Depends(get_db, scope="function"),
 ) -> list[AdminNotificationOut]:
-    query = (
-        select(NotificationDelivery, User, DeviceToken)
-        .join(User, User.id == NotificationDelivery.user_id)
-        .outerjoin(DeviceToken, DeviceToken.id == NotificationDelivery.device_token_id)
+    query = select(NotificationDelivery, User).join(
+        User, User.id == NotificationDelivery.user_id
     )
     if status:
         query = query.where(NotificationDelivery.status == status)
     rows = db.execute(query.order_by(NotificationDelivery.created_at.desc())).all()
-    return [
-        _notification_dto(notification, user, device_token)
-        for notification, user, device_token in rows
-    ]
+    return [_notification_dto(notification, user) for notification, user in rows]
 
 
 @router.post("/notifications", response_model=AdminNotificationOut)

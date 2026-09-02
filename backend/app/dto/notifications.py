@@ -27,7 +27,6 @@ NotificationCategory = Literal[
     "recommendation",
     "system",
 ]
-DevicePlatform = Literal["ios", "android", "web"]
 NotificationEventId = Annotated[
     str,
     StringConstraints(
@@ -72,27 +71,11 @@ class MarkNotificationsReadOut(BaseModel):
     marked_read_ids: list[str]
 
 
-class DeviceTokenOut(BaseModel):
-    id: str
-    user_id: str
-    token_preview: str
-    platform: DevicePlatform
-    device_name: str | None
-    enabled: bool
-    last_seen_at: datetime
-
-
-class AdminDeviceTokenOut(DeviceTokenOut):
-    customer_username: str
-    customer_phone_number: str
-
-
 class AdminNotificationOut(BaseModel):
     id: str
     user_id: str
     customer_username: str
     customer_phone_number: str
-    token_preview: str | None
     category: NotificationCategory
     title: str
     body: str

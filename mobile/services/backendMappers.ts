@@ -729,20 +729,18 @@ function historyToTimeline(
     ];
   }
 
-  return entries.map((entry) => {
+  return entries.map((entry, index) => {
     const status = mapBackendStatus(entry.new_status);
+    const isInitialEntry = index === 0;
     return {
       status,
-      title:
-        entry.old_status == null
-          ? 'Booking created'
-          : `Moved to ${titleCase(status)}`,
+      title: isInitialEntry ? 'Booking created' : `Moved to ${titleCase(status)}`,
       note:
         entry.note && entry.note.trim()
           ? entry.note
-          : entry.old_status == null
+          : isInitialEntry
           ? 'Initial booking submitted through the live backend.'
-          : `Status updated from ${titleCase(mapBackendStatus(entry.old_status))}.`,
+          : 'Service status updated by the shop.',
       at: entry.changed_at ?? createdAt,
     };
   });
@@ -909,7 +907,6 @@ export function mapBackendFeedbackToBookingFeedback(
     comment: feedback.comment ?? undefined,
     stringFeedback: feedback.string_feedback ?? undefined,
     serviceFeedback: feedback.service_feedback ?? undefined,
-    sentimentTags: feedback.sentiment_tags,
     createdAt: feedback.created_at,
     updatedAt: feedback.updated_at,
   };

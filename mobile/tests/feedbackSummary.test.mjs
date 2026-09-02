@@ -56,7 +56,12 @@ test('player and admin screens expose recoverable feedback-summary states', asyn
   assert.match(playerDetail, /title="Local player feedback"/);
   assert.match(playerDetail, /Loading local feedback evidence/);
   assert.match(playerDetail, /No eligible local ratings yet/);
-  assert.match(adminFeedback, /title="Feedback calibration"/);
+  assert.match(adminFeedback, /eyebrow="Feedback inbox"/);
+  assert.match(adminFeedback, />\s*Calibration evidence/);
+  assert.match(adminFeedback, /label="View calibration evidence"/);
+  assert.match(adminFeedback, /visible=\{showCalibration\}/);
+  assert.match(adminFeedback, /label=\{showFilters/);
+  assert.match(adminFeedback, /Hide filters/);
   assert.match(adminFeedback, /Global strings/);
   assert.match(adminFeedback, /No eligible feedback ratings exist/);
   assert.doesNotMatch(adminFeedback, /Review structured service feedback/);

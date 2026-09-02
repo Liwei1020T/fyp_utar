@@ -44,6 +44,10 @@ The active migration sequence is:
 - [20260826_0036_seed_official_performance.py](../migrations/versions/20260826_0036_seed_official_performance.py)
 - [20260826_0037_seed_store_settings.py](../migrations/versions/20260826_0037_seed_store_settings.py)
 - [20260831_0038_feedback_catalog_terminology.py](../migrations/versions/20260831_0038_feedback_catalog_terminology.py)
+- [20260902_0039_racket_model_catalog.py](../migrations/versions/20260902_0039_racket_model_catalog.py)
+- [20260902_0040_remove_legacy_feedback_and_catalog_tables.py](../migrations/versions/20260902_0040_remove_legacy_feedback_and_catalog_tables.py)
+- [20260902_0041_align_active_schema.py](../migrations/versions/20260902_0041_align_active_schema.py)
+- [20260902_0042_remove_unused_runtime_compatibility.py](../migrations/versions/20260902_0042_remove_unused_runtime_compatibility.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -120,7 +124,7 @@ The old `string_catalog_items` table was split into a normalized catalog subsyst
 - `recommendation_score_cache`
   - cached recommendation results per user and algorithm version, including the active score breakdown and rationale payload
 
-The migration keeps the legacy flat table only as historical migrated state during transition. Alembic autogenerate intentionally ignores `string_catalog_items_legacy`, and the active runtime schema now reads catalog and inventory data from the normalized tables above.
+The active runtime schema reads catalog and inventory data only from the normalized tables above. Migration `20260902_0040` removes leftover `string_catalog_items`, `string_catalog_items_legacy`, and `string_inventory_items` tables after checking that bookings still resolve through `strings`; these compatibility tables are not part of the active schema.
 
 ### `strings`
 
@@ -289,6 +293,12 @@ state behavior.
 Stores user-owned physical racket passports with a stable ID, nickname,
 brand/model, optional frame metadata, preferred use, and notes.
 
+### `racket_model_catalog`
+
+Stores the admin-managed brand/model choices shown to players. The normalized
+`model_key` is unique; deactivation hides a model from new selections while
+preserving existing racket passports and booking snapshots.
+
 ### `booking_feedback`
 
 Stores one structured feedback row per completed booking. The unique booking
@@ -298,6 +308,11 @@ tension satisfaction, comfort, control, and repulsion. The
 `20260825_0033` migration removes the legacy feedback durability columns and
 field-level confirmation metadata; catalogue and player-preference durability
 remain separate recommendation data.
+
+Migration `20260902_0040` removes the deprecated per-booking
+`sentiment_tags` field. Current feedback keeps structured ratings, optional
+comments, and the nullable `would_use_again` answer; existing unanswered rows
+are not guessed or deleted.
 
 The `20260825_0034` migration removes the unused store service-price column;
 booking charges now come only from the selected string price.
@@ -325,16 +340,10 @@ Stores expiring one-time booking check-in digests. Raw QR values are never
 persisted; used and revoked timestamps prevent replay. A partial unique index
 permits only one unused, unrevoked token per booking.
 
-### `device_tokens` and `notifications`
+### `notifications`
 
-`device_tokens` owns Expo device registrations per user. `notifications`
-stores each admin-composed in-app delivery and its latest optional Expo or
-OpenWA attempt status.
-
-### `account_deletion_requests`
-
-Stores auditable player deletion requests for later administrator resolution;
-requesting deletion does not erase runtime data immediately.
+Stores each admin-composed in-app delivery and its latest optional OpenWA
+attempt status.
 
 ### `notification_reads`
 
@@ -354,20 +363,14 @@ Stores booking-payment and wallet-top-up records:
 
 New external records use `qr_transfer` or `cash` and remain `pending` until
 admin verification. QR transfer requires an uploaded JPG/PNG/WEBP proof stored
-under the payment-proofs upload area; cash keeps `proof_path` null. Historical
-card, online-banking, and e-wallet rows remain readable as legacy records.
-Wallet booking payments may complete immediately after a server-side balance
-check.
+under the payment-proofs upload area; cash keeps `proof_path` null. Wallet
+booking payments may complete immediately after a server-side balance check.
 
 ### `wallet_transactions`
 
 Append-only credit/debit ledger rows linked one-to-one to a completed payment.
 Wallet balance is derived from this ledger; it is not a client-editable stored
 counter.
-
-### `recommendation_logs`
-
-Stores request snapshots, result snapshots, and `algorithm_version`.
 
 ### `recommendation_runs` and `recommendation_run_items`
 

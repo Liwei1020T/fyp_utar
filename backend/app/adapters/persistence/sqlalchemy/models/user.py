@@ -5,10 +5,8 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime
 from sqlalchemy import Boolean
-from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String as SAString
-from sqlalchemy import Text
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -20,9 +18,6 @@ from app.adapters.persistence.sqlalchemy.models.common import generate_uuid
 if TYPE_CHECKING:
     from app.adapters.persistence.sqlalchemy.models.booking import Booking
     from app.adapters.persistence.sqlalchemy.models.profile import Profile
-    from app.adapters.persistence.sqlalchemy.models.recommendation_log import (
-        RecommendationLog,
-    )
 
 
 class User(Base):
@@ -59,27 +54,3 @@ class User(Base):
         uselist=False,
     )
     bookings: Mapped[list["Booking"]] = relationship(back_populates="user")
-    recommendation_logs: Mapped[list["RecommendationLog"]] = relationship(
-        back_populates="user"
-    )
-
-
-class AccountDeletionRequest(Base):
-    __tablename__ = "account_deletion_requests"
-
-    id: Mapped[str] = mapped_column(
-        SAString(36), primary_key=True, default=generate_uuid
-    )
-    user_id: Mapped[str] = mapped_column(
-        SAString(36),
-        ForeignKey("users.id", ondelete="CASCADE"),
-        index=True,
-    )
-    status: Mapped[str] = mapped_column(SAString(20), default="pending", index=True)
-    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    requested_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-    resolved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )

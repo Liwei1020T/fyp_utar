@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 
-from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.entities import RecommendationResponseModel
 from app.domain.recommendation.entities import RecommendationResultModel
@@ -193,19 +192,6 @@ def recommendation_detail_to_dto(
         run_id=run_id,
         generated_at=isoformat_or_none(generated_at or result.generated_at),
     )
-
-
-def recommendation_log_to_dict(item: RecommendationLogRecord) -> dict[str, Any]:
-    return {
-        "id": item.id,
-        "user_id": item.user_id,
-        "phone_number": item.phone_number,
-        "username": item.username,
-        "request": item.request,
-        "recommendation": item.recommendation,
-        "algorithm_version": item.algorithm_version,
-        "created_at": isoformat_or_none(item.created_at),
-    }
 
 
 def recommendation_run_to_dict(item: RecommendationRunRecord) -> dict[str, Any]:

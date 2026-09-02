@@ -211,6 +211,43 @@ test('feedback submission uses a clear confirmation dialog', async () => {
   assert.doesNotMatch(feedback, /durability|feedback-eligibility/i);
 });
 
+test('feedback ratings use accessible five-star controls', async () => {
+  const feedback = await readFile(
+    new URL('app/player/feedback/[bookingId].tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.match(feedback, /function StarRating/);
+  assert.match(feedback, /RATING_VALUES = \[1, 2, 3, 4, 5\]/);
+  assert.match(feedback, /accessibilityRole="radiogroup"/);
+  assert.match(feedback, /accessibilityRole="radio"/);
+  assert.doesNotMatch(feedback, /Not enough experience to judge/);
+});
+
+test('feedback reuse choice uses direct yes-or-no buttons', async () => {
+  const feedback = await readFile(
+    new URL('app/player/feedback/[bookingId].tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.match(feedback, /label="Yes"/);
+  assert.match(feedback, /label="No"/);
+  assert.match(feedback, /accessibilityRole="radiogroup"/);
+  assert.doesNotMatch(feedback, /Choose an answer|Not sure/);
+});
+
+test('feedback form omits removed sentiment tag compatibility', async () => {
+  const feedback = await readFile(
+    new URL('app/player/feedback/[bookingId].tsx', mobileRoot),
+    'utf8',
+  );
+
+  assert.doesNotMatch(
+    feedback,
+    /Quick sentiment|toggleSentiment|sentiment_tags|sentimentTags|FeedbackSentimentTag|Recorded sentiment/,
+  );
+});
+
 test('binary preference controls use native switches', async () => {
   const sources = await Promise.all(
     [
@@ -307,8 +344,12 @@ test('reduced Agent cards hide evidence status labels', async () => {
   assert.match(answerCard, /showEvidenceStatus \?/);
   assert.match(chatbot, /label="Contact human support"/);
   assert.match(chatbot, /router\.push\('\/player\/chat'\)/);
+  assert.match(chatbot, /Where is the shop located\?/);
+  assert.match(chatbot, /store hours, address, or contact/);
   assert.match(adminAssistant, /label="Generate daily briefing"/);
   assert.match(adminAssistant, /DAILY_BRIEFING_PROMPT/);
+  assert.match(adminAssistant, /Ask specific booking, inventory, or operations questions/);
+  assert.doesNotMatch(adminAssistant, /summarizes current workload without changing/);
 });
 
 test('admin recommendation details hide internal provenance noise', async () => {
@@ -338,7 +379,6 @@ test('player recommendation detail keeps scoring secondary to the decision', asy
   assert.match(detail, /title="Why it fits"/);
   assert.match(detail, /Current setup/);
   assert.match(detail, /Previous personal experience/);
-  assert.match(detail, /Community feedback/);
   assert.match(detail, /Similar-player evidence/);
   assert.match(detail, /only evidence marked as used/);
   assert.match(detail, /AgentAnswerCard/);
@@ -348,7 +388,7 @@ test('player recommendation detail keeps scoring secondary to the decision', asy
   assert.match(detail, /Availability/);
   assert.match(detail, /getInventoryPriceLabel/);
   assert.match(detail, /low_stock/);
-  assert.match(detail, /isActionableTradeOff/);
+  assert.doesNotMatch(detail, /Community feedback|Before you book|isActionableTradeOff/);
   assert.doesNotMatch(detail, /Fit snapshot|Score breakdown|Why this matches you|Scorer reason|Review support/);
   assert.doesNotMatch(detail, /trade-off feels acceptable/);
 });
@@ -472,7 +512,7 @@ test('string detail uses the grounded Agent for its introduction', async () => {
 });
 
 test('core mobile journeys use progressive disclosure and discoverable tools', async () => {
-  const [profileEdit, home, profile, tools, toolSheet, tabsLayout, recommendation, results, adminDashboard, inventory, inventoryCard, analytics, businessHours, settings, bookingSummary, payment] =
+  const [profileEdit, home, profile, tools, toolSheet, tabsLayout, recommendation, results, adminDashboard, inventory, inventoryCard, analytics, businessHours, settings, racketModels, bookingSummary, payment] =
     await Promise.all(
       [
         'app/player/profile/edit.tsx',
@@ -489,6 +529,7 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
         'app/admin/(tabs)/analytics.tsx',
         'app/admin/business-hours.tsx',
         'app/admin/settings.tsx',
+        'app/admin/racket-models.tsx',
         'app/player/bookings/summary.tsx',
         'app/player/payments/[bookingId].tsx',
       ].map((file) => readFile(new URL(file, mobileRoot), 'utf8')),
@@ -535,6 +576,10 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(analytics, /7-day comparison|30 days|previous_period_bookings/);
   assert.match(adminDashboard, /pending_payment_count|low_stock_count|unread_chats/);
   assert.match(adminDashboard, /\/admin\/payments|\/admin\/inventory|\/admin\/chat/);
+  assert.match(adminDashboard, /\/admin\/racket-models/);
+  assert.match(racketModels, /adminCreateRacketModel/);
+  assert.match(racketModels, /adminUpdateRacketModel/);
+  assert.match(racketModels, /Only active models appear in the player racket selector/);
   assert.match(businessHours, /title="Temporary closures"/);
   assert.match(businessHours, /label="Add closed date"/);
   assert.match(businessHours, /Only today or future dates can be added/);
@@ -558,6 +603,7 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.match(results, /Community feedback/);
   assert.match(results, /Similar players/);
   assert.doesNotMatch(results, /Score model/);
-  assert.match(adminDashboard, /title="Needs attention"/);
+  assert.match(adminDashboard, /title="Today’s operations"/);
+  assert.match(adminDashboard, /today_bookings|completed_today/);
   assert.match(adminDashboard, /label="Search tools"/);
 });

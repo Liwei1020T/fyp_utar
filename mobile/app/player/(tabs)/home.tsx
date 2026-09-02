@@ -8,8 +8,11 @@ import {
   CalendarClock,
   ChevronRight,
   Dumbbell,
+  MessageSquareText,
   Search,
   Sparkles,
+  Store,
+  Wallet,
 } from 'lucide-react-native';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppCard } from '../../../components/ui/AppCard';
@@ -23,12 +26,18 @@ import { AppSection } from '../../../components/shared/AppSection';
 import { TrendingStrings } from '../../../components/player/TrendingStrings';
 import {
   useBookings,
+  useBusinessHoursState,
   useCurrentUser,
   useNotifications,
   useStrings,
+  useWallets,
 } from '../../../store/appStore';
-import { formatBookingStatus, formatDateLabel } from '../../../lib/formatters';
-import type { Booking } from '../../../types/domain';
+import {
+  formatBookingStatus,
+  formatCurrency,
+  formatDateLabel,
+} from '../../../lib/formatters';
+import type { Booking, BusinessHours } from '../../../types/domain';
 
 const quickActions = [
   {
@@ -61,8 +70,10 @@ export default function PlayerHomeScreen() {
   const router = useRouter();
   const user = useCurrentUser();
   const bookings = useBookings();
+  const businessHours = useBusinessHoursState();
   const notifications = useNotifications();
   const strings = useStrings();
+  const wallets = useWallets();
 
   if (!user || user.role !== 'player') {
     return null;
@@ -72,9 +83,12 @@ export default function PlayerHomeScreen() {
   const activeBooking = playerBookings.find(
     (item) => !['completed', 'cancelled', 'rejected'].includes(item.status),
   );
-  const hasUnreadNotifications = notifications.some(
+  const unreadNotifications = notifications.filter(
     (item) => item.userId === user.id && !item.read,
   );
+  const hasUnreadNotifications = unreadNotifications.length > 0;
+  const wallet = wallets.find((item) => item.userId === user.id);
+  const storeHoursLabel = getStoreHoursLabel(businessHours);
   const latestBooking = playerBookings[0];
   const primaryBooking = activeBooking ?? latestBooking;
   const latestString = primaryBooking
@@ -83,6 +97,38 @@ export default function PlayerHomeScreen() {
   const firstName = user.name.trim().split(/\s+/)[0] || 'player';
   const greetingName =
     firstName.length > 18 ? `${firstName.slice(0, 17)}…` : firstName;
+  const homeShortcuts = [
+    {
+      title: 'My bookings',
+      detail:
+        playerBookings.length === 0
+          ? 'No bookings yet'
+          : `${playerBookings.length} ${playerBookings.length === 1 ? 'booking' : 'bookings'}`,
+      route: '/player/bookings',
+      icon: CalendarClock,
+    },
+    {
+      title: 'Notifications',
+      detail:
+        unreadNotifications.length === 0
+          ? 'All caught up'
+          : `${unreadNotifications.length} unread`,
+      route: '/player/notifications',
+      icon: Bell,
+    },
+    {
+      title: 'Message shop',
+      detail: 'Ask about a service',
+      route: '/player/chat',
+      icon: MessageSquareText,
+    },
+    {
+      title: 'Wallet',
+      detail: wallet ? `${formatCurrency(wallet.availableBalance)} available` : 'View balance',
+      route: '/player/wallet',
+      icon: Wallet,
+    },
+  ] as const;
 
   return (
     <AppScreen
@@ -94,16 +140,20 @@ export default function PlayerHomeScreen() {
       headerRight={
         <AppIconButton
           icon={
-            <View>
+            <View className="relative">
               <Bell size={20} color="#475569" strokeWidth={2} />
               {hasUnreadNotifications ? (
-                <View className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-white bg-red-500" />
+                <View className="absolute -right-2 -top-2 h-4 min-w-4 items-center justify-center rounded-full border border-white bg-red-500 px-1">
+                  <HeroText className="text-[9px] font-bold leading-3 text-white">
+                    {unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}
+                  </HeroText>
+                </View>
               ) : null}
             </View>
           }
           accessibilityLabel={
             hasUnreadNotifications
-              ? 'Open notifications, unread alerts available'
+              ? `Open notifications, ${unreadNotifications.length} unread ${unreadNotifications.length === 1 ? 'update' : 'updates'}`
               : 'Open notifications'
           }
           accessibilityHint="View booking, payment, chat, and recommendation alerts"
@@ -184,7 +234,10 @@ export default function PlayerHomeScreen() {
                 <HeroText className="mt-3 text-[22px] font-bold leading-[27px] tracking-tight text-white">
                   Your restring is moving.
                 </HeroText>
-                <HeroText className="mt-1.5 text-sm leading-5 text-secondary-100">
+                <HeroText className="mt-1.5 text-[13px] font-semibold leading-[18px] text-white">
+                  {activeBooking.racketBrand} {activeBooking.racketModel}
+                </HeroText>
+                <HeroText className="mt-0.5 text-[13px] leading-[18px] text-secondary-100">
                   {latestString.brand} {latestString.model} • {activeBooking.requestedTension} lbs
                 </HeroText>
               </View>
@@ -192,12 +245,40 @@ export default function PlayerHomeScreen() {
                 <Activity size={18} color="#FFFFFF" />
               </View>
             </View>
+            <View className="mt-4 flex-row gap-2">
+              <View className="flex-1 rounded-[14px] bg-white/10 px-3 py-2.5">
+                <HeroText className="text-[10px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
+                  Drop-off
+                </HeroText>
+                <HeroText
+                  className="mt-1 text-[13px] font-semibold leading-[17px] text-white"
+                  numberOfLines={2}
+                >
+                  {formatRelativeBookingDate(activeBooking.dropOffDate, activeBooking.dropOffTime)}
+                </HeroText>
+              </View>
+              <View className="flex-1 rounded-[14px] bg-white/10 px-3 py-2.5">
+                <HeroText className="text-[10px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
+                  Payment
+                </HeroText>
+                <HeroText
+                  className="mt-1 text-[13px] font-semibold leading-[17px] text-white"
+                  numberOfLines={2}
+                >
+                  {getBookingPaymentLabel(activeBooking)}
+                </HeroText>
+              </View>
+            </View>
             <View className="mt-4 rounded-[14px] border border-white/15 bg-white/10 px-3 py-2.5">
               <HeroText className="text-[11px] font-semibold uppercase tracking-[0.16em] text-secondary-100">
                 Next step
               </HeroText>
               <HeroText className="mt-1 text-sm leading-5 text-white">
-                {getNextBookingStep(activeBooking.status, activeBooking.dropOffDate)}
+                {getNextBookingStep(
+                  activeBooking.status,
+                  activeBooking.dropOffDate,
+                  activeBooking.dropOffTime,
+                )}
               </HeroText>
             </View>
             <AppButton
@@ -243,9 +324,70 @@ export default function PlayerHomeScreen() {
         </View>
       )}
 
+      {storeHoursLabel ? (
+        <View className="mt-2 flex-row items-center gap-1.5 px-1">
+          <Store size={14} color={appChromeColors.primary} strokeWidth={2} />
+          <HeroText className="text-[12px] font-medium text-slate-600">
+            {storeHoursLabel}
+          </HeroText>
+        </View>
+      ) : null}
+
       <AppSection
-        title="Trending Strings"
-        subtitle="Popular setups this week."
+        title="Quick access"
+        subtitle="Your everyday shortcuts."
+        className="mt-4"
+        variant="compact"
+      >
+        {[homeShortcuts.slice(0, 2), homeShortcuts.slice(2)].map((row, rowIndex) => (
+          <View
+            key={rowIndex}
+            className={rowIndex === 0 ? 'flex-row gap-2' : 'mt-2 flex-row gap-2'}
+          >
+            {row.map((shortcut) => {
+              const Icon = shortcut.icon;
+
+              return (
+                <Pressable
+                  key={shortcut.title}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${shortcut.title}, ${shortcut.detail}`}
+                  accessibilityHint={`Open ${shortcut.title.toLowerCase()}`}
+                  onPress={() => router.push(shortcut.route as never)}
+                  className="min-h-[68px] flex-1 flex-row items-center gap-2 rounded-[14px] border border-[#DCE6F7] bg-white px-3 py-2.5"
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.72 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  })}
+                >
+                  <View className="h-8 w-8 items-center justify-center rounded-[10px] bg-primary-50">
+                    <Icon size={16} color={appChromeColors.primary} strokeWidth={2} />
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <HeroText
+                      className="text-[13px] font-semibold leading-[17px] text-slate-900"
+                      numberOfLines={1}
+                    >
+                      {shortcut.title}
+                    </HeroText>
+                    <HeroText
+                      className="mt-0.5 text-[11px] leading-[15px] text-slate-500"
+                      numberOfLines={1}
+                    >
+                      {shortcut.detail}
+                    </HeroText>
+                  </View>
+                  <ChevronRight size={14} color="#94A3B8" />
+                </Pressable>
+              );
+            })}
+          </View>
+        ))}
+      </AppSection>
+
+      <AppSection
+        title="Featured strings"
+        subtitle="Selected by the shop this week."
         className="mt-4"
         rightAction={
           <Pressable
@@ -318,7 +460,11 @@ export default function PlayerHomeScreen() {
                 Next step
               </HeroText>
               <HeroText className="mt-1 text-[13px] leading-[18px] text-slate-800">
-                {getNextBookingStep(latestBooking.status, latestBooking.dropOffDate)}
+                {getNextBookingStep(
+                  latestBooking.status,
+                  latestBooking.dropOffDate,
+                  latestBooking.dropOffTime,
+                )}
               </HeroText>
             </View>
 
@@ -338,14 +484,23 @@ export default function PlayerHomeScreen() {
   );
 }
 
-function getNextBookingStep(status: Booking['status'], dropOffDate: string) {
+function getNextBookingStep(
+  status: Booking['status'],
+  dropOffDate: string,
+  dropOffTime?: string,
+) {
   switch (status) {
     case 'pending':
     case 'pending_payment':
       return 'Next: Confirm your booking details and finalise the quote at the shop.';
     case 'confirmed':
     case 'awaiting_dropoff':
-      return `Next: Drop off on ${dropOffDate}.`;
+      {
+        const schedule = formatRelativeBookingDate(dropOffDate, dropOffTime);
+        return schedule.startsWith('Overdue')
+          ? `Next: Drop off — ${schedule.toLowerCase()}.`
+          : `Next: Drop off ${schedule}.`;
+      }
     case 'in_progress':
       return 'Next: Waiting for stringing completion.';
     case 'ready_for_collection':
@@ -359,6 +514,163 @@ function getNextBookingStep(status: Booking['status'], dropOffDate: string) {
     default:
       return 'Next: Check booking details for the latest service update.';
   }
+}
+
+function getBookingPaymentLabel(booking: Booking) {
+  switch (booking.paymentStatus) {
+    case 'paid':
+      return booking.totalAmount > 0
+        ? `Paid · ${formatCurrency(booking.totalAmount)}`
+        : 'Paid';
+    case 'pending':
+      return 'Payment pending';
+    case 'unpaid':
+      return 'Payment due';
+    case 'failed':
+      return 'Payment failed';
+    case 'cancelled':
+      return 'Payment cancelled';
+  }
+}
+
+function formatRelativeBookingDate(dateValue: string, time?: string) {
+  const bookingDate = parseCalendarDate(dateValue);
+  if (!bookingDate) {
+    return `${formatDateLabel(dateValue)}${time ? ` · ${time}` : ''}`;
+  }
+
+  const difference = calendarDayNumber(bookingDate) - calendarDayNumber(new Date());
+  const formattedTime = time ? ` ${formatClockTime(time)}` : '';
+
+  if (difference < 0) {
+    const days = Math.abs(difference);
+    return `Overdue by ${days} ${days === 1 ? 'day' : 'days'}`;
+  }
+
+  if (difference === 0) {
+    return `Today${formattedTime}`;
+  }
+
+  if (difference === 1) {
+    return `Tomorrow${formattedTime}`;
+  }
+
+  return `On ${formatDateLabel(dateValue)}${formattedTime}`;
+}
+
+function parseCalendarDate(value: string) {
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+  if (![year, month, day].every(Number.isFinite)) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+    ? date
+    : null;
+}
+
+function calendarDayNumber(date: Date) {
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000;
+}
+
+function formatClockTime(value?: string) {
+  if (!value) {
+    return '';
+  }
+
+  const [hour, minute] = value.split(':').map(Number);
+  if (![hour, minute].every(Number.isFinite)) {
+    return value;
+  }
+
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${suffix}`;
+}
+
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+] as const;
+
+function getStoreHoursLabel(hoursList: BusinessHours[]) {
+  const hours = hoursList[0];
+  if (!hours) {
+    return null;
+  }
+
+  const now = new Date();
+  const today = hours.days.find((item) => item.day === WEEKDAY_NAMES[now.getDay()]);
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const isSpecialClosed = hours.specialClosedDates.includes(todayKey);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const openMinutes = toMinutes(today?.openTime);
+  const closeMinutes = toMinutes(today?.closeTime);
+  const breakStart = toMinutes(today?.breakStart);
+  const breakEnd = toMinutes(today?.breakEnd);
+
+  if (
+    today?.isOpen &&
+    !isSpecialClosed &&
+    openMinutes != null &&
+    closeMinutes != null &&
+    currentMinutes >= openMinutes &&
+    currentMinutes < closeMinutes
+  ) {
+    if (
+      breakStart != null &&
+      breakEnd != null &&
+      currentMinutes >= breakStart &&
+      currentMinutes < breakEnd
+    ) {
+      return `Closed for break · Reopens ${formatClockTime(today.breakEnd)}`;
+    }
+    return `Open until ${formatClockTime(today.closeTime)}`;
+  }
+
+  if (
+    today?.isOpen &&
+    !isSpecialClosed &&
+    openMinutes != null &&
+    currentMinutes < openMinutes
+  ) {
+    return `Closed · Opens today at ${formatClockTime(today.openTime)}`;
+  }
+
+  return `Closed · Opens ${getNextOpenLabel(hours, now)}`;
+}
+
+function getNextOpenLabel(hours: BusinessHours, now: Date) {
+  for (let offset = 1; offset <= 7; offset += 1) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + offset);
+    const day = hours.days.find((item) => item.day === WEEKDAY_NAMES[date.getDay()]);
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+    if (day?.isOpen && !hours.specialClosedDates.includes(dateKey)) {
+      const label = offset === 1 ? 'tomorrow' : day.day;
+      return `${label} at ${formatClockTime(day.openTime)}`;
+    }
+  }
+
+  return 'later';
+}
+
+function toMinutes(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const [hour, minute] = value.split(':').map(Number);
+  return [hour, minute].every(Number.isFinite) ? hour * 60 + minute : null;
 }
 
 function getBookingPriceLabel(booking: Booking) {

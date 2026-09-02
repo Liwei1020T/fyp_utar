@@ -31,11 +31,13 @@ from app.adapters.persistence.sqlalchemy.models import StringCatalogTag
 from app.adapters.persistence.sqlalchemy.models import StringInventoryItem
 from app.adapters.persistence.sqlalchemy.models import StringOfficialPerformance
 from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatrix
+from app.adapters.persistence.sqlalchemy.models import RacketModelCatalog
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.services.security.pbkdf2_password_hasher import Pbkdf2PasswordHasher
 from app.config.settings import get_settings
 from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
+from app.domain.recommendation.learning_signals import STANDARD_RACKET_MODELS
 from app.shared.errors import ConflictError
 
 
@@ -104,6 +106,7 @@ def ensure_seed_user(
 
 def ensure_catalog_seeded(db: Session) -> None:
     settings = get_settings()
+    ensure_racket_model_catalog_seeded(db)
     ensure_recommendation_feature_definitions(db)
     normalize_legacy_feature_keys(db)
     db.flush()
@@ -149,6 +152,24 @@ def ensure_catalog_seeded(db: Session) -> None:
             db,
             settings.recommendation_matrix_path,
         )
+
+
+def ensure_racket_model_catalog_seeded(db: Session) -> None:
+    existing_keys = set(
+        db.execute(select(RacketModelCatalog.model_key)).scalars().all()
+    )
+    for model_key, brand, model in STANDARD_RACKET_MODELS:
+        if model_key in existing_keys:
+            continue
+        db.add(
+            RacketModelCatalog(
+                model_key=model_key,
+                brand=brand,
+                model=model,
+                is_active=True,
+            )
+        )
+    db.flush()
 
 
 def _import_startup_recommendation_matrix(db: Session, source_path: Path) -> None:

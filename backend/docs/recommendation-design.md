@@ -287,7 +287,6 @@ Persistence behavior by request type:
 
 - Always persisted (preview and profile):
     - recommendation run snapshots (`recommendation_runs`, `recommendation_run_items`)
-    - recommendation log payloads (`recommendation_logs`)
 - Profile only:
     - normalized user preference vector (`user_preference_matrix`, source `profile`)
     - per-item score cache (`recommendation_score_cache`)

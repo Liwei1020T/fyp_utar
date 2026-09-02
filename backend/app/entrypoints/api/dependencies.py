@@ -19,8 +19,8 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_password_reset_
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_profile_repository import (
     SqlAlchemyProfileRepository,
 )
-from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_log_repository import (
-    SqlAlchemyRecommendationLogRepository,
+from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_run_repository import (
+    SqlAlchemyRecommendationRunRepository,
 )
 from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_repository import (
     SqlAlchemyRecommendationRepository,
@@ -108,10 +108,10 @@ def get_store_repository(
     return SqlAlchemyStoreRepository(db)
 
 
-def get_recommendation_log_repository(
+def get_recommendation_run_repository(
     db: Session = Depends(get_db, scope="function"),
-) -> SqlAlchemyRecommendationLogRepository:
-    return SqlAlchemyRecommendationLogRepository(db)
+) -> SqlAlchemyRecommendationRunRepository:
+    return SqlAlchemyRecommendationRunRepository(db)
 
 
 def get_recommendation_repository(

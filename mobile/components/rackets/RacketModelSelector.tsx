@@ -100,7 +100,7 @@ export function RacketModelSelector({
             const selectedOption = options.find((option) => option.key === id);
             onSelect(selectedOption ?? null);
           }}
-          helperText="Standard models use exact shared racket evidence. Other models use global feedback evidence."
+          helperText="Choose a model listed by the shop, or enter another model manually."
         />
       ) : null}
     </View>

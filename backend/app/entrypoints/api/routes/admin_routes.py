@@ -23,8 +23,12 @@ from app.adapters.persistence.sqlalchemy.catalog_seed import (
 from app.adapters.persistence.sqlalchemy.catalog_seed import (
     merge_with_approved_defaults,
 )
+from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
+from app.adapters.persistence.sqlalchemy.models import Profile
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.models import RacketModelCatalog
+from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
@@ -33,6 +37,9 @@ from app.dto.booking import BookingSortField
 from app.dto.booking import SortOrder
 from app.dto.booking import UpdateBookingStatusPayload
 from app.dto.booking import booking_to_dto
+from app.dto.auth import AdminUserBookingOut
+from app.dto.auth import AdminUserDetailOut
+from app.dto.auth import AdminUserProfileOut
 from app.dto.auth import AdminUserSummaryOut
 from app.dto.auth import AdminUsersOverviewOut
 from app.dto.catalog import AdminInventoryStringOut
@@ -49,6 +56,9 @@ from app.dto.catalog import recommendation_matrix_inspection_to_dto
 from app.dto.catalog import string_to_dto
 from app.dto.common import page_to_dict
 from app.dto.recommendation import recommendation_run_to_dict
+from app.dto.racket_feedback import AdminRacketModelOut
+from app.dto.racket_feedback import CreateRacketModelPayload
+from app.dto.racket_feedback import UpdateRacketModelPayload
 from app.dto.store import CheckInLookupOut
 from app.dto.store import CheckInPayload
 from app.dto.store import ServiceQueueItemOut
@@ -61,15 +71,19 @@ from app.dto.store import StoreSettingsOut
 from app.dto.store import StoreSettingsPayload
 from app.dto.store import business_hours_to_dto
 from app.dto.store import settings_to_dto
+from app.domain.booking.policies import booking_order_code
+from app.domain.recommendation.learning_signals import normalize_racket_model_key
 from app.domain.recommendation.scoring import ALGORITHM_VERSION
 from app.entrypoints.api.dependencies import CurrentUser
 from app.entrypoints.api.dependencies import get_booking_repository
 from app.entrypoints.api.dependencies import get_catalog_repository
 from app.entrypoints.api.dependencies import get_clock
 from app.entrypoints.api.dependencies import get_current_admin
-from app.entrypoints.api.dependencies import get_recommendation_log_repository
+from app.entrypoints.api.dependencies import get_recommendation_run_repository
 from app.entrypoints.api.dependencies import get_store_repository
 from app.shared.errors import BadRequestError
+from app.shared.errors import ConflictError
+from app.shared.errors import NotFoundError
 from app.shared.transaction_effects import register_created_file
 from app.shared.transaction_effects import register_removed_file
 from app.shared.upload_storage import MAX_UPLOAD_BYTES
@@ -213,6 +227,18 @@ def inventory_update_values(payload: InventoryUpdatePayload) -> dict[str, object
     return values
 
 
+def racket_model_to_dto(model: RacketModelCatalog) -> AdminRacketModelOut:
+    return AdminRacketModelOut(
+        id=model.id,
+        key=model.model_key,
+        brand=model.brand,
+        model=model.model,
+        is_active=model.is_active,
+        created_at=model.created_at.isoformat(),
+        updated_at=model.updated_at.isoformat(),
+    )
+
+
 @router.post("/strings/{string_id}/image", response_model=StringOut)
 async def admin_upload_string_image(
     string_id: str,
@@ -280,9 +306,73 @@ def admin_inventory_strings(
     return page_to_dict(page, lambda item: inventory_string_to_dto(item).model_dump())
 
 
+@router.get("/racket-models", response_model=list[AdminRacketModelOut])
+def admin_racket_models(
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db, scope="function"),
+) -> list[AdminRacketModelOut]:
+    models = (
+        db.execute(
+            select(RacketModelCatalog).order_by(
+                RacketModelCatalog.is_active.desc(),
+                RacketModelCatalog.brand.asc(),
+                RacketModelCatalog.model.asc(),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [racket_model_to_dto(model) for model in models]
+
+
+@router.post("/racket-models", response_model=AdminRacketModelOut)
+def admin_create_racket_model(
+    payload: CreateRacketModelPayload,
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db, scope="function"),
+) -> AdminRacketModelOut:
+    model_key = normalize_racket_model_key(payload.brand, payload.model)
+    if model_key is None:
+        raise BadRequestError("Brand and model must contain letters or numbers")
+    existing = db.execute(
+        select(RacketModelCatalog).where(
+            RacketModelCatalog.model_key == model_key,
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise ConflictError("Racket model already exists")
+    model = RacketModelCatalog(
+        model_key=model_key,
+        brand=payload.brand,
+        model=payload.model,
+        is_active=True,
+    )
+    db.add(model)
+    db.flush()
+    db.refresh(model)
+    return racket_model_to_dto(model)
+
+
+@router.patch("/racket-models/{racket_model_id}", response_model=AdminRacketModelOut)
+def admin_update_racket_model(
+    racket_model_id: str,
+    payload: UpdateRacketModelPayload,
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db, scope="function"),
+) -> AdminRacketModelOut:
+    model = db.get(RacketModelCatalog, racket_model_id)
+    if model is None:
+        raise NotFoundError("Racket model not found")
+    model.is_active = payload.is_active
+    db.flush()
+    db.refresh(model)
+    return racket_model_to_dto(model)
+
+
 @router.get("/users/overview", response_model=AdminUsersOverviewOut)
 def admin_users_overview(
     limit: int = Query(default=100, ge=1, le=100),
+    search: str | None = Query(default=None, max_length=100),
     _: CurrentUser = Depends(get_current_admin),
     db: Session = Depends(get_db, scope="function"),
 ) -> AdminUsersOverviewOut:
@@ -296,16 +386,22 @@ def admin_users_overview(
     admin_count = (
         db.scalar(select(func.count(User.id)).where(User.role == "admin")) or 0
     )
-    rows = db.execute(
-        select(
-            User.id,
-            User.username,
-            User.role,
-            User.is_active,
-            User.created_at,
+    user_query = select(
+        User.id,
+        User.username,
+        User.role,
+        User.is_active,
+        User.created_at,
+    )
+    normalized_search = search.strip() if search else ""
+    if normalized_search:
+        escaped_search = normalized_search.replace("\\", "\\\\")
+        escaped_search = escaped_search.replace("%", "\\%").replace("_", "\\_")
+        user_query = user_query.where(
+            User.username.ilike(f"%{escaped_search}%", escape="\\")
         )
-        .order_by(User.created_at.desc(), User.id.desc())
-        .limit(limit)
+    rows = db.execute(
+        user_query.order_by(User.created_at.desc(), User.id.desc()).limit(limit)
     ).all()
     return AdminUsersOverviewOut(
         total_users=total_users,
@@ -321,6 +417,104 @@ def admin_users_overview(
                 created_at=row.created_at.isoformat() if row.created_at else None,
             )
             for row in rows
+        ],
+    )
+
+
+@router.get("/users/{user_id}", response_model=AdminUserDetailOut)
+def admin_user_detail(
+    user_id: str,
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db, scope="function"),
+) -> AdminUserDetailOut:
+    user = db.execute(
+        select(
+            User.id,
+            User.username,
+            User.phone_number,
+            User.role,
+            User.is_active,
+            User.created_at,
+        ).where(User.id == user_id)
+    ).one_or_none()
+    if user is None:
+        raise NotFoundError("User not found")
+
+    profile = db.execute(
+        select(
+            Profile.skill_level,
+            Profile.playing_style,
+            Profile.preferred_tension,
+            Profile.frequency_per_week,
+            Profile.preferred_feel,
+            Profile.preferred_gauge,
+            Profile.recent_goal,
+        ).where(Profile.user_id == user.id)
+    ).one_or_none()
+    profile_dto = (
+        AdminUserProfileOut(
+            skill_level=profile.skill_level,
+            playing_style=profile.playing_style,
+            preferred_tension=(
+                float(profile.preferred_tension)
+                if profile.preferred_tension is not None
+                else None
+            ),
+            frequency_per_week=profile.frequency_per_week,
+            preferred_feel=profile.preferred_feel,
+            preferred_gauge=profile.preferred_gauge,
+            recent_goal=profile.recent_goal,
+        )
+        if profile is not None
+        else None
+    )
+
+    booking_rows = db.execute(
+        select(
+            Booking.id,
+            Booking.string_id,
+            StringCatalogItem.display_name,
+            Booking.racket_model,
+            Booking.requested_tension,
+            Booking.status,
+            Booking.drop_off_datetime,
+            Booking.created_at,
+        )
+        .outerjoin(
+            StringCatalogItem,
+            StringCatalogItem.catalog_id == Booking.string_id,
+        )
+        .where(Booking.user_id == user.id)
+        .order_by(Booking.created_at.desc(), Booking.id.desc())
+        .limit(5)
+    ).all()
+
+    return AdminUserDetailOut(
+        id=user.id,
+        username=user.username,
+        phone_number=user.phone_number,
+        role=user.role,
+        is_active=user.is_active,
+        created_at=user.created_at.isoformat() if user.created_at else None,
+        profile=profile_dto,
+        recent_orders=[
+            AdminUserBookingOut(
+                id=row.id,
+                order_code=booking_order_code(row.id),
+                string_name=row.display_name or f"Archived string ({row.string_id})",
+                racket_model=row.racket_model,
+                requested_tension=(
+                    float(row.requested_tension)
+                    if row.requested_tension is not None
+                    else None
+                ),
+                status=row.status,
+                drop_off_datetime=(
+                    row.drop_off_datetime.isoformat() if row.drop_off_datetime else None
+                ),
+                created_at=row.created_at.isoformat() if row.created_at else None,
+            )
+            for row in booking_rows
         ],
     )
 
@@ -578,10 +772,10 @@ def admin_recommendation_runs(
     limit: int | None = Query(default=None, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     _: CurrentUser = Depends(get_current_admin),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
+    recommendation_run_repository=Depends(get_recommendation_run_repository),
 ) -> dict[str, object]:
     page = ListRecommendationRunsUseCase(
-        recommendation_log_repository=recommendation_log_repository
+        recommendation_run_repository=recommendation_run_repository
     ).execute(
         phone_number=phone_number,
         algorithm_version=algorithm_version,
@@ -595,10 +789,10 @@ def admin_recommendation_runs(
 def admin_recommendation_run_detail(
     run_id: str,
     _: CurrentUser = Depends(get_current_admin),
-    recommendation_log_repository=Depends(get_recommendation_log_repository),
+    recommendation_run_repository=Depends(get_recommendation_run_repository),
 ) -> dict[str, object]:
     run = GetRecommendationRunUseCase(
-        recommendation_log_repository=recommendation_log_repository
+        recommendation_run_repository=recommendation_run_repository
     ).execute(run_id)
     return recommendation_run_to_dict(run)
 

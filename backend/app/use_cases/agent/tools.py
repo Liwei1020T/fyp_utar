@@ -17,8 +17,8 @@ from app.dto.recommendation import recommendation_response_to_dto
 from app.ports.repositories.booking_repository import BookingRepository
 from app.ports.repositories.catalog_repository import CatalogRepository
 from app.ports.repositories.profile_repository import ProfileRepository
-from app.ports.repositories.recommendation_log_repository import (
-    RecommendationLogRepository,
+from app.ports.repositories.recommendation_run_repository import (
+    RecommendationRunRepository,
 )
 from app.ports.repositories.store_repository import StoreRepository
 from app.ports.repositories.recommendation_repository import RecommendationRepository
@@ -248,7 +248,7 @@ AGENT_TOOL_SPECS = tuple(
 @dataclass
 class AgentToolbox:
     catalog_repository: CatalogRepository
-    recommendation_log_repository: RecommendationLogRepository
+    recommendation_run_repository: RecommendationRunRepository
     store_repository: StoreRepository
     booking_repository: BookingRepository
     profile_repository: ProfileRepository
@@ -406,7 +406,7 @@ class AgentToolbox:
         run_id: str,
         catalog_id: str | None,
     ) -> AgentToolResult:
-        run = self.recommendation_log_repository.get_run(run_id)
+        run = self.recommendation_run_repository.get_run(run_id)
         if run is None or run.user_id != user_id:
             raise NotFoundError("Recommendation run not found")
         items = [
@@ -512,7 +512,7 @@ class AgentToolbox:
         response = GenerateRecommendationUseCase(
             profile_repository=self.profile_repository,
             recommendation_repository=self.recommendation_repository,
-            recommendation_log_repository=self.recommendation_log_repository,
+            recommendation_run_repository=self.recommendation_run_repository,
         ).execute_cached(user_id=user_id)
         run_id = response.run_id or "current"
         return AgentToolResult(
@@ -628,7 +628,7 @@ class AgentToolbox:
         response = GenerateRecommendationUseCase(
             profile_repository=self.profile_repository,
             recommendation_repository=self.recommendation_repository,
-            recommendation_log_repository=self.recommendation_log_repository,
+            recommendation_run_repository=self.recommendation_run_repository,
         ).execute_preview(
             user_id=user_id,
             request=request,

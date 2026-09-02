@@ -14,6 +14,7 @@ import {
 } from '../../services/backendApi';
 import {
   mapBackendBookingToBooking,
+  mapBackendBusinessHoursToBusinessHours,
   mapBackendConversationToConversation,
   mapBackendNotificationToNotification,
   mapBackendPaymentToPayment,
@@ -38,6 +39,7 @@ export default function PlayerLayout() {
   const setLivePayments = useAppStore((state) => state.setLivePayments);
   const setLiveRackets = useAppStore((state) => state.setLiveRackets);
   const setLiveWallet = useAppStore((state) => state.setLiveWallet);
+  const updateBusinessHours = useAppStore((state) => state.updateBusinessHours);
   const updateStoreSettings = useAppStore((state) => state.updateStoreSettings);
 
   useEffect(() => {
@@ -137,6 +139,15 @@ export default function PlayerLayout() {
             trendingStringIds: storeSettings.trending_string_ids ?? [],
             notificationSettings: storeSettings.notification_settings,
           });
+          if (storeSettings.business_hours) {
+            updateBusinessHours(
+              'main',
+              mapBackendBusinessHoursToBusinessHours(
+                storeSettings.business_hours,
+                'main',
+              ),
+            );
+          }
         } else if (storeSettingsResult.status === 'rejected') {
           console.warn('Failed to hydrate live store settings', storeSettingsResult.reason);
         }
@@ -214,6 +225,7 @@ export default function PlayerLayout() {
     setLiveStrings,
     setLiveWallet,
     token,
+    updateBusinessHours,
     updateStoreSettings,
     user?.role,
   ]);

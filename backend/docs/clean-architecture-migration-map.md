@@ -55,7 +55,6 @@ Current post-migration route modules with no legacy one-file equivalent:
 - Old: recommendation orchestration inside `stringsense_backend/modules/recommendations.py`
 - New:
   - `app/use_cases/recommendation/generate_recommendation.py`
-  - `app/use_cases/recommendation/list_recommendation_logs.py`
 
 ## ORM and Repositories
 

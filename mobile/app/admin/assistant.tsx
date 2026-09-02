@@ -218,7 +218,7 @@ export default function AdminAgentScreen() {
       tone="admin"
       headerVariant="secondary"
       title="Admin AI"
-      subtitle="Read-only booking, inventory, and operations answers."
+      subtitle="Ask specific booking, inventory, or operations questions."
       showBackButton
       onBackPress={() => router.back()}
       footer={
@@ -250,10 +250,10 @@ export default function AdminAgentScreen() {
           </View>
           <View className="flex-1">
             <HeroText className="text-xl font-black text-white">
-              Review today&apos;s operations.
+              Ask about today&apos;s operations.
             </HeroText>
             <HeroText className="mt-2 text-sm leading-6 text-primary-100">
-              Admin AI summarizes current workload without changing store data.
+              Ask about a specific record or the current workload. Admin AI only reads store data.
             </HeroText>
           </View>
           <ShieldCheck size={21} color="#DCE8FF" />

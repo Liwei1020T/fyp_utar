@@ -143,8 +143,8 @@ def test_player_admin_operational_flow() -> None:
         },
     )
     assert notification.status_code == 200
-    assert notification.json()["status"] == "failed"
-    assert notification.json()["provider_message"] == "No active device token"
+    assert notification.json()["status"] == "disabled"
+    assert notification.json()["provider_message"] == "Remote delivery is disabled"
     feed = client.get("/api/notifications", headers=_headers(player_token))
     assert any(item["title"] == "Counter update" for item in feed.json())
 
@@ -172,10 +172,3 @@ def test_player_admin_operational_flow() -> None:
         json={"phone_number": "+60124440001", "password": "changed123"},
     )
     assert login.status_code == 200
-    deletion = client.post(
-        "/api/auth/delete-account-request",
-        headers=_headers(login.json()["access_token"]),
-        json={"reason": "No longer needed"},
-    )
-    assert deletion.status_code == 200
-    assert deletion.json()["status"] == "pending"

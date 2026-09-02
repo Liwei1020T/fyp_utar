@@ -28,7 +28,10 @@ def public_get_store_settings(
     store_repository=Depends(get_store_repository),
 ) -> StoreSettingsOut:
     settings = GetStoreSettingsUseCase(store_repository=store_repository).execute()
-    return settings_to_dto(settings)
+    return settings_to_dto(
+        settings,
+        business_hours=store_repository.get_business_hours(),
+    )
 
 
 @router.get("/slots", response_model=dict)

@@ -103,12 +103,12 @@ The old monolithic ORM module was split into per-domain model files:
   - owns `payments` and append-only `wallet_transactions`
 - `models/store_business_hours.py`
 - `models/store_settings.py`
-- `models/recommendation_log.py`
-  - now owns `recommendation_logs`, `recommendation_runs`, and `recommendation_run_items`
+- `models/recommendation_run.py`
+  - owns `recommendation_runs` and `recommendation_run_items`
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
-The current revision chain has one head at `20260831_0038`.
+The current revision chain has one head at `20260902_0042`.
 
 ## Transaction Contract
 

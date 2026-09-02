@@ -9,6 +9,7 @@ import {
   CreditCard,
   BellRing,
   Bot,
+  CircleDot,
   LogOut,
   ListTodo,
   ScanSearch,
@@ -71,6 +72,12 @@ const PRIMARY_ACTIONS = [
     subtitle: 'Manage stock.',
     route: '/admin/inventory',
     icon: Boxes,
+  },
+  {
+    title: 'Racket models',
+    subtitle: 'Choose models for players.',
+    route: '/admin/racket-models',
+    icon: CircleDot,
   },
   {
     title: 'Feedback',
@@ -163,7 +170,6 @@ export default function AdminDashboardScreen() {
     analytics &&
       ((awaitingDropOffCount ?? 0) > 0 ||
         (readyForCollectionCount ?? 0) > 0 ||
-        analytics.pending_feedback_count > 0 ||
         analytics.pending_payment_count > 0 ||
         analytics.low_stock_count > 0 ||
         analytics.unread_chats > 0),
@@ -251,8 +257,8 @@ export default function AdminDashboardScreen() {
 
         <AppSection
           eyebrow="NOW"
-          title="Needs attention"
-          subtitle="Start with live work before opening the full tool set."
+          title="Today’s operations"
+          subtitle="Review live work before opening the full tool set."
           variant="compact"
         >
           <View className="gap-3">
@@ -302,22 +308,22 @@ export default function AdminDashboardScreen() {
               </AppCard>
             ) : null}
 
-            {(analytics?.pending_feedback_count ?? 0) > 0 ? (
+            {analytics ? (
               <AppCard
                 variant="elevated"
                 padding="md"
-                onPress={() => router.push('/admin/feedback')}
+                onPress={() => router.push('/admin/bookings')}
               >
                 <View className="flex-row items-center gap-2.5">
-                  <View className="h-10 w-10 items-center justify-center rounded-[12px] bg-warning-50">
-                    <MessageSquareText size={18} color={appChromeColors.warning} />
+                  <View className="h-10 w-10 items-center justify-center rounded-[12px] border border-primary-200 bg-primary-50">
+                    <CalendarRange size={18} color={appChromeColors.primary} />
                   </View>
                   <View className="min-w-0 flex-1">
                     <HeroText className="text-sm font-semibold text-slate-900">
-                      {analytics?.pending_feedback_count} completed order{analytics?.pending_feedback_count === 1 ? '' : 's'} still need feedback
+                      {analytics.today_bookings} booking{analytics.today_bookings === 1 ? '' : 's'} scheduled today
                     </HeroText>
                     <HeroText className="mt-1 text-sm leading-5 text-slate-600">
-                      Review player ratings.
+                      {analytics.completed_today} completed today.
                     </HeroText>
                   </View>
                   <ArrowRight size={17} color={appChromeColors.textMuted} />

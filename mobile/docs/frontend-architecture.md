@@ -13,7 +13,7 @@ The app is optimized for:
 
 At runtime, player auth, profile, strings, recommendations, bookings, support messages, payments, wallet, notifications, racket service history, check-in, feedback, and the admin operations surface use live backend state.
 
-The player home `Trending Strings` carousel is now backend-backed through admin store settings. Admins manage the featured string IDs from `/admin/settings`, the backend persists them on `/api/admin/store-settings`, and player surfaces hydrate them through `GET /api/store-settings` before rendering only those admin-picked strings.
+The player home `Featured strings` carousel and store-hours summary are backend-backed through the existing store settings flow. Admins manage the featured string IDs and business hours from their existing settings screens, the backend persists them on the existing admin endpoints, and player surfaces hydrate both through `GET /api/store-settings` before rendering only the admin-picked strings and current opening status.
 
 ## 2. Technology Stack
 
@@ -401,7 +401,7 @@ The admin workspace is structured as an operations console:
 2. booking queue
 3. inventory management
 4. support, payments, analytics, and recommendation audit
-5. business hours, counter check-in, and store settings
+5. business hours, counter check-in, store settings, and player racket-model management
 
 Operational tools live outside the tabs:
 
@@ -512,6 +512,7 @@ Admin-specific screens model the operational back office:
 - dashboard metrics
 - bookings management
 - inventory workbench, attention triage, and master-detail editing
+- admin-managed racket models used by the player registration selector
 - business hours
 - shop settings
 
@@ -655,6 +656,7 @@ Admin `secondary` pages:
 - `/admin/inventory/[id]`
 - `/admin/business-hours`
 - `/admin/settings`
+- `/admin/racket-models`
 
 Admin `flow` pages:
 

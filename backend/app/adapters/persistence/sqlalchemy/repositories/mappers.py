@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
 from typing import cast
 
 from app.adapters.persistence.sqlalchemy.models import Booking
 from app.adapters.persistence.sqlalchemy.models import PasswordResetCode
 from app.adapters.persistence.sqlalchemy.models import Profile
-from app.adapters.persistence.sqlalchemy.models import RecommendationLog
 from app.adapters.persistence.sqlalchemy.models import RecommendationRun
 from app.adapters.persistence.sqlalchemy.models import RecommendationRunItem
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
@@ -32,7 +30,6 @@ from app.domain.catalog.entities import (
 )
 from app.domain.catalog.entities import StringTag
 from app.domain.profile.entities import PlayerProfile
-from app.domain.recommendation.entities import RecommendationLogRecord
 from app.domain.recommendation.entities import RecommendationRunItemRecord
 from app.domain.recommendation.entities import RecommendationRunRecord
 from app.domain.store.entities import BusinessHoursDay
@@ -273,7 +270,6 @@ def to_booking_record(booking: Booking) -> BookingRecord:
         latest_admin_note=latest_admin_note,
         status_history=[
             BookingStatusHistoryEntry(
-                old_status=entry.old_status,
                 new_status=entry.new_status,
                 changed_by_user_id=entry.changed_by_user_id,
                 changed_by_phone_number=entry.changed_by.phone_number
@@ -338,19 +334,6 @@ def to_store_settings(settings: StoreSettings) -> StoreSettingsRecord:
         trending_string_ids=list(settings.trending_string_ids or []),
         notification_settings=dict(settings.notification_settings or {}),
         updated_at=settings.updated_at.isoformat() if settings.updated_at else None,
-    )
-
-
-def to_recommendation_log(item: RecommendationLog) -> RecommendationLogRecord:
-    return RecommendationLogRecord(
-        id=item.id,
-        user_id=item.user_id,
-        phone_number=item.user.phone_number if item.user else None,
-        username=item.user.username if item.user else None,
-        request=json.loads(item.request_json),
-        recommendation=json.loads(item.recommendation_json),
-        algorithm_version=item.algorithm_version,
-        created_at=item.created_at,
     )
 
 

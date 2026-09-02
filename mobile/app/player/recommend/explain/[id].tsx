@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-  AlertTriangle,
   SendHorizontal,
   Target,
   WalletCards,
@@ -42,16 +41,6 @@ function compactSentence(value: string) {
   return value.trim().replace(/\.$/, '');
 }
 
-function isActionableTradeOff(value?: string) {
-  const normalized = value?.trim() ?? '';
-
-  return Boolean(
-    normalized
-      && !/^no evidence-backed trade-off/i.test(normalized)
-      && !/^domain-rule support is moderate/i.test(normalized),
-  );
-}
-
 function formatExperienceScope(value?: string | null) {
   if (value === 'same_racket') {
     return 'from this exact racket';
@@ -60,12 +49,6 @@ function formatExperienceScope(value?: string | null) {
     return 'from this racket model';
   }
   return 'from your completed string bookings';
-}
-
-function formatCommunityScope(value?: string | null) {
-  return value === 'exact_racket_model'
-    ? 'same racket model ratings'
-    : 'global string ratings';
 }
 
 function formatRating(value?: number | null) {
@@ -152,20 +135,12 @@ export default function RecommendationExplanationScreen() {
     detailResult?.reasons?.[0] ??
     'A detailed explanation is loading for this result.';
   const bestReason = compactSentence(strongestReason);
-  const tradeOff =
-    rationale?.trade_off_summary ??
-    liveResult?.tradeOffSummary;
   const racketContext = rationale?.racket_context;
   const profileContext = rationale?.profile_context;
   const personalHistory = rationale?.personal_history;
   const personalHistoryUsed =
     rationale?.personal_history_used === true &&
     personalHistory?.mode === 'enabled';
-  const communityEvidence = (rationale?.feature_evidence ?? []).filter(
-    (entry) => (entry.feedback_weight ?? 0) > 0,
-  );
-  const communityFeedbackUsed =
-    rationale?.feedback_calibration_used === true && communityEvidence.length > 0;
   const similarPlayersUsed =
     rationale?.collaborative_filtering_used === true &&
     rationale.cf_shadow?.mode === 'enabled' &&
@@ -187,18 +162,6 @@ export default function RecommendationExplanationScreen() {
     .join(' · ') || 'Saved player profile';
   const personalSatisfaction = formatRating(personalHistory?.string_satisfaction);
   const personalWouldUseAgain = formatPercent(personalHistory?.would_use_again_ratio);
-  const communityLabels = Array.from(
-    new Set(
-      communityEvidence
-        .map((entry) => entry.display_label ?? entry.feature_key)
-        .filter((label): label is string => Boolean(label)),
-    ),
-  ).slice(0, 3);
-  const communityBookingCount = Math.max(
-    0,
-    ...communityEvidence.map((entry) => entry.feedback_booking_count ?? 0),
-  );
-  const communityScope = communityEvidence[0]?.feedback_evidence_scope;
   const similarPlayerCount = Number(
     rationale?.cf_shadow?.distinct_supporting_users ?? 0,
   );
@@ -477,25 +440,6 @@ export default function RecommendationExplanationScreen() {
           </AppCard>
         ) : null}
 
-        {communityFeedbackUsed ? (
-          <AppCard variant="subtle" padding="md" className="mt-3">
-            <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-700">
-              Community feedback
-            </HeroText>
-            <View className="mt-2 flex-row flex-wrap gap-1.5">
-              {communityLabels.map((label) => (
-                <AppChip key={label} label={label} variant="info" size="sm" />
-              ))}
-              {communityBookingCount > 0 ? (
-                <AppChip label={`${communityBookingCount} completed ratings`} variant="info" size="sm" />
-              ) : null}
-              {communityScope ? (
-                <AppChip label={formatCommunityScope(communityScope)} variant="info" size="sm" />
-              ) : null}
-            </View>
-          </AppCard>
-        ) : null}
-
         {similarPlayersUsed ? (
           <AppCard variant="subtle" padding="md" className="mt-3">
             <HeroText className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-700">
@@ -585,21 +529,6 @@ export default function RecommendationExplanationScreen() {
           </View>
         </AppCard>
       </AppSection>
-      {isActionableTradeOff(tradeOff) ? (
-        <AppSection title="Before you book" variant="compact">
-          <View className="rounded-[14px] border border-warning-100 bg-warning-50 px-3 py-3">
-            <View className="flex-row items-start gap-3">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
-                <AlertTriangle size={19} color="#B67D21" strokeWidth={2.4} />
-              </View>
-              <HeroText className="flex-1 text-sm leading-6 text-neutral-700">
-                {compactSentence(tradeOff ?? '')}.
-              </HeroText>
-            </View>
-          </View>
-        </AppSection>
-      ) : null}
-
       <AppSection title="Next step" variant="compact">
         <View className="rounded-[14px] border border-[#E5EDF7] bg-white px-3 py-3">
           <View className="flex-row items-start gap-3">

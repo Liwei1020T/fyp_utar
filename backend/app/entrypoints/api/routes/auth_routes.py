@@ -9,15 +9,11 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from pydantic import BaseModel
 from pydantic import ValidationError
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.adapters.persistence.sqlalchemy.models import AccountDeletionRequest
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.adapters.services.openwa import send_openwa_text
 from app.config.settings import get_settings
-from app.dto.auth import AccountDeletionRequestOut
-from app.dto.auth import AccountDeletionRequestPayload
 from app.dto.auth import AuthResponse
 from app.dto.auth import ChangePasswordRequest
 from app.dto.auth import ForgotPasswordRequest
@@ -282,34 +278,3 @@ def change_password(
         password_hasher.hash_password(request.new_password),
     )
     return MessageResponse(message="Password updated")
-
-
-@router.post(
-    "/delete-account-request",
-    response_model=AccountDeletionRequestOut,
-)
-def request_account_deletion(
-    payload: AccountDeletionRequestPayload,
-    current_user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db, scope="function"),
-) -> AccountDeletionRequestOut:
-    existing = db.scalar(
-        select(AccountDeletionRequest).where(
-            AccountDeletionRequest.user_id == current_user.user_id,
-            AccountDeletionRequest.status == "pending",
-        )
-    )
-    if existing is not None:
-        raise ConflictError("An account deletion request is already pending")
-    request = AccountDeletionRequest(
-        user_id=current_user.user_id,
-        reason=payload.reason,
-    )
-    db.add(request)
-    db.flush()
-    return AccountDeletionRequestOut(
-        id=request.id,
-        status=request.status,
-        reason=request.reason,
-        requested_at=request.requested_at.isoformat(),
-    )

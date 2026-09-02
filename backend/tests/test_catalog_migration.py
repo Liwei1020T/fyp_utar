@@ -91,6 +91,10 @@ def test_catalog_normalization_migration_preserves_existing_booking(
     assert "strings" in table_names
     assert "inventory_items" in table_names
     assert "string_recommendation_matrix" in table_names
+    assert "racket_model_catalog" in table_names
+    assert "string_catalog_items" not in table_names
+    assert "string_catalog_items_legacy" not in table_names
+    assert "string_inventory_items" not in table_names
     official_performance_columns = {
         column["name"]
         for column in inspector.get_columns("string_official_performance")
@@ -365,7 +369,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260831_0038"
+        assert version_row["version_num"] == "20260902_0042"
 
         store_settings_row = (
             connection.execute(
@@ -484,7 +488,19 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-    assert version == "20260831_0038"
+        assert version == "20260902_0042"
+
+    assert "old_status" not in {
+        item["name"] for item in inspector.get_columns("booking_status_history")
+    }
+    assert "device_token_id" not in {
+        item["name"] for item in inspector.get_columns("notifications")
+    }
+    assert {
+        "account_deletion_requests",
+        "device_tokens",
+        "recommendation_logs",
+    }.isdisjoint(inspector.get_table_names())
 
     matrix_columns = {
         item["name"] for item in inspector.get_columns("string_recommendation_matrix")
