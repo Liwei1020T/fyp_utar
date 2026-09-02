@@ -24,6 +24,10 @@ from stringsense_nlp.foundation import conservative_normalize  # noqa: E402
 from stringsense_nlp.foundation import language_category  # noqa: E402
 from stringsense_nlp.foundation import load_string_mappings  # noqa: E402
 from stringsense_nlp.foundation import normalize_string_name  # noqa: E402
+from stringsense_nlp.labeling import build_aspect_lexicon  # noqa: E402
+from stringsense_nlp.labeling import build_normalizer  # noqa: E402
+from stringsense_nlp.labeling import classify_review_aspect  # noqa: E402
+from stringsense_nlp.labeling import split_into_clauses  # noqa: E402
 from stringsense_nlp.review_html import build_review_payload  # noqa: E402
 from stringsense_nlp.review_html import render_annotation_review_html  # noqa: E402
 
@@ -77,6 +81,72 @@ def test_conservative_cleaning_is_traceable_and_preserves_contrast() -> None:
         "whitespace_collapsed",
     }
     assert language_category(cleaned) == "mixed_zh_en"
+
+
+def test_nested_negative_phrase_wins_for_durability() -> None:
+    result = classify_review_aspect(
+        ["这个球线不耐用"],
+        {
+            "aspect_terms": {"耐用"},
+            "positive_terms": {"耐用"},
+            "negative_terms": {"不耐用"},
+        },
+    )
+
+    assert result["label_text"] == "negative"
+
+
+def test_nested_positive_phrase_wins_for_string_movement() -> None:
+    result = classify_review_aspect(
+        ["这个球线不跑线"],
+        {
+            "aspect_terms": {"跑线"},
+            "positive_terms": {"不跑线"},
+            "negative_terms": {"跑线"},
+        },
+    )
+
+    assert result["label_text"] == "positive"
+
+
+@pytest.mark.parametrize(
+    ("text", "aspect", "expected_label"),
+    (
+        ("耐用", "durability", "positive"),
+        ("不耐用", "durability", "negative"),
+        ("耐打", "durability", "positive"),
+        ("不耐打", "durability", "negative"),
+        ("跑线", "string_movement", "negative"),
+        ("不跑线", "string_movement", "positive"),
+        ("移位", "string_movement", "mentioned"),
+        ("不移位", "string_movement", "positive"),
+        ("震手", "comfort", "negative"),
+        ("不震手", "comfort", "positive"),
+        ("弹性好", "elasticity", "positive"),
+        ("不太弹", "elasticity", "negative"),
+        ("容易断", "durability", "negative"),
+        ("不容易断", "durability", "positive"),
+        ("掉磅快", "tension_retention", "negative"),
+        ("不容易掉磅", "tension_retention", "positive"),
+    ),
+)
+def test_silver_matching_regression_cases(
+    text: str,
+    aspect: str,
+    expected_label: str,
+) -> None:
+    dictionary = pd.read_csv(WORKBENCH / "data/domain_dictionary_optimized_v8.csv")
+    rules = pd.read_csv(WORKBENCH / "data/normalization_rules_v8.csv")
+    normalize = build_normalizer(rules)
+    lexicon = build_aspect_lexicon(dictionary)
+
+    normalized = normalize(text)
+    result = classify_review_aspect(
+        split_into_clauses(normalized),
+        lexicon[aspect],
+    )
+
+    assert result["label_text"] == expected_label
 
 
 @pytest.mark.parametrize("value", ("BG80", "BG-80", "BG 80", "ｂｇ８０"))

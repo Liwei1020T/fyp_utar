@@ -81,6 +81,37 @@ def build_aspect_lexicon(
     return dict(lexicon)
 
 
+def _non_overlapping_term_hits(
+    text: str,
+    terms_by_kind: dict[str, set[str]],
+) -> list[tuple[str, str]]:
+    candidates: list[tuple[int, int, str, str]] = []
+    for kind, terms in terms_by_kind.items():
+        for term in terms:
+            if not term:
+                continue
+            start = 0
+            while True:
+                index = text.find(term, start)
+                if index < 0:
+                    break
+                candidates.append((index, index + len(term), kind, term))
+                start = index + 1
+
+    # ponytail: per-term substring scan; use a trie if the dictionary grows materially.
+    candidates.sort(key=lambda hit: (-(hit[1] - hit[0]), hit[0], hit[2], hit[3]))
+    selected: list[tuple[int, int, str, str]] = []
+    for candidate in candidates:
+        start, end, _, _ = candidate
+        if any(
+            start < selected_end and selected_start < end
+            for selected_start, selected_end, _, _ in selected
+        ):
+            continue
+        selected.append(candidate)
+    return [(kind, term) for _, _, kind, term in selected]
+
+
 def register_custom_terms(dictionary: pd.DataFrame) -> None:
     for term in dictionary["term"].dropna().astype(str).str.strip():
         if term:
@@ -95,9 +126,23 @@ def classify_review_aspect(
     negative_hits = 0
     matched_clauses = 0
     for clause in clauses:
-        aspect_hits = sum(term in clause for term in lexicon["aspect_terms"])
-        clause_positive_hits = sum(term in clause for term in lexicon["positive_terms"])
-        clause_negative_hits = sum(term in clause for term in lexicon["negative_terms"])
+        aspect_hits = _non_overlapping_term_hits(
+            clause,
+            {"aspect": lexicon["aspect_terms"]},
+        )
+        polarity_hits = _non_overlapping_term_hits(
+            clause,
+            {
+                "positive": lexicon["positive_terms"],
+                "negative": lexicon["negative_terms"],
+            },
+        )
+        clause_positive_hits = sum(
+            polarity == "positive" for polarity, _ in polarity_hits
+        )
+        clause_negative_hits = sum(
+            polarity == "negative" for polarity, _ in polarity_hits
+        )
         if aspect_hits or clause_positive_hits or clause_negative_hits:
             matched_clauses += 1
             positive_hits += clause_positive_hits
