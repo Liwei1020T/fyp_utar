@@ -108,7 +108,27 @@ The old monolithic ORM module was split into per-domain model files:
 - `models/password_reset_code.py`
 
 Alembic targets the SQLAlchemy metadata directly from `app/adapters/persistence/sqlalchemy/`.
-The current revision chain has one head at `20260902_0044`.
+The current revision chain has one head at `20260902_0045`.
+
+## Compatibility and Retirement Boundary
+
+- The standalone `backend/ai_service`, old public backend shell, mobile mock
+  runtime, removed API operations, and legacy catalog tables are not active
+  runtime paths.
+- The runtime now reads canonical seed rows with precomputed `hybrid_derived`
+  scores, accepts only the current nine NLP matrix features, and reads the V14
+  rationale `price_rm` field directly. Migration `20260902_0045` is the one-time
+  convergence boundary for older persisted feature keys and disposable caches;
+  no runtime compatibility reader remains.
+- `backend/data/raw/badminton_strings_recommender.jsonl` remains offline
+  provenance only and is not read by the runtime seed.
+- `models/string_catalog_item.py` is an existing filename; its ORM classes map
+  the current `strings` and `inventory_items` tables. Renaming it would add
+  mechanical churn without removing a runtime compatibility path.
+
+These helpers do not expose a second API, scorer, database schema, or local mock
+data source. The active runtime remains the unified FastAPI app, current ORM
+tables, and V14 recommendation scorer.
 
 ## Transaction Contract
 

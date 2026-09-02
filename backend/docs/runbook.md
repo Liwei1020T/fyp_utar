@@ -44,6 +44,11 @@ cd backend
 - The unified backend seeds the normalized catalog from `APPROVED_STRINGS_SOURCE_PATH` when the catalog is empty.
 - Relative `APPROVED_STRINGS_SOURCE_PATH` values resolve from the backend root.
 - The default approved source is `backend/data/string_catalog_db_ready.json`.
+- The normalized source must use the current schema and contain canonical
+  `hybrid_derived_scores`; missing or invalid configured paths fail when a fresh
+  catalog is seeded. Raw catalog provenance is offline-only; selling prices
+  remain admin-controlled inventory state and are seeded as `price_pending` when
+  absent.
 - Relative `RECOMMENDATION_MATRIX_SOURCE_PATH` values also resolve from the backend root.
 - The default NLP review matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; V9 remains separate.
 - Recommendation generation uses `(0.75 * PreferenceMatch + 0.15 * RuleFit) / 0.90`

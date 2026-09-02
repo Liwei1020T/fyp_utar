@@ -19,9 +19,6 @@ from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
 from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
     import_recommendation_matrix_csv,
 )
-from app.adapters.persistence.sqlalchemy.recommendation_matrix_import import (
-    normalize_legacy_feature_keys,
-)
 from app.adapters.persistence.sqlalchemy.models import Brand
 from app.adapters.persistence.sqlalchemy.models import StoreBusinessHours
 from app.adapters.persistence.sqlalchemy.models import StoreSettings
@@ -108,7 +105,6 @@ def ensure_catalog_seeded(db: Session) -> None:
     settings = get_settings()
     ensure_racket_model_catalog_seeded(db)
     ensure_recommendation_feature_definitions(db)
-    normalize_legacy_feature_keys(db)
     db.flush()
 
     count = db.execute(select(func.count()).select_from(StringCatalogItem)).scalar_one()

@@ -50,6 +50,7 @@ The active migration sequence is:
 - [20260902_0042_remove_unused_runtime_compatibility.py](../migrations/versions/20260902_0042_remove_unused_runtime_compatibility.py)
 - [20260902_0043_remove_unused_recommendation_score_columns.py](../migrations/versions/20260902_0043_remove_unused_recommendation_score_columns.py)
 - [20260902_0044_remove_legacy_preview_runs.py](../migrations/versions/20260902_0044_remove_legacy_preview_runs.py)
+- [20260902_0045_converge_canonical_recommendation_data.py](../migrations/versions/20260902_0045_converge_canonical_recommendation_data.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -57,7 +58,7 @@ upgradeable without stamping over real schema gaps; arbitrary partially
 created tables remain unsupported. New runtime schemas are created only by
 Alembic.
 
-At the current head (`20260902_0044`), the runtime contains the 32 application
+At the current head (`20260902_0045`), the runtime contains the 32 application
 tables represented by the SQLAlchemy models, plus Alembic's `alembic_version`
 metadata table. Every application table has a current model and a live
 repository, route, use case, seed, or audit consumer; removed legacy tables and
@@ -216,8 +217,11 @@ Current `nlp_review` runtime import keys are:
 - `sound`
 - `string_movement`
 - `tension_retention`
+- `value_for_money`
 
-Support keys such as `value_for_money`, `stability_score`, `all_round_score`, `attacking_fit_score`, `control_fit_score`, and `beginner_fit_score` may appear in the active `hybrid_derived` fallback layer but are not imported by the current `nlp_review` whitelist.
+The active `hybrid_derived` fallback layer stores the canonical support keys
+`beginner_fit`, `stability`, `all_round`, `attacking_fit`, and `control_fit`.
+They are not imported by the current `nlp_review` whitelist.
 
 ### `user_preference_matrix`
 

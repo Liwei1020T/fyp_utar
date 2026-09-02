@@ -1,5 +1,12 @@
 # Mock Page Remediation
 
+> Historical remediation record. The verification below is frozen to 2026-07-24;
+> use [`../README.md`](../README.md), [`../agent.md`](../agent.md), and the
+> current backend guides for runtime truth. Since this record, the Agent route
+> became an active guided-selection screen and migrations `20260902_0040` through
+> `20260902_0044` and `20260902_0045` removed additional runtime compatibility
+> data and fields.
+
 ## Definition
 
 In this record, mock data means customer, booking, payment, wallet,
@@ -18,8 +25,9 @@ The mobile app contained **17 actual mock-first UI pages**:
 - Player: 12 pages
 - Admin: 5 pages
 
-`/player/chatbot` is an additional compatibility route that redirects to
-`/player/chat`; it is not a separate UI page.
+At the time of this audit, `/player/chatbot` was an additional compatibility
+route to `/player/chat`; it is now the active FYP-scoped Agent screen and is
+documented in [`../agent.md`](../agent.md).
 
 ## Resolved Pages
 
@@ -67,7 +75,9 @@ Verified again on 2026-07-24:
   Web export.
 - Backend passes Ruff, format check, and Mypy. The complete suite ran with the
   real-PostgreSQL concurrency URL enabled and reported 66 passed.
-- Local PostgreSQL is at the single Alembic head `20260723_0024`.
+- Local PostgreSQL was at the single Alembic head `20260723_0024` for this
+  historical run; the current head was `20260902_0044` at the time of the
+  previous review and is now `20260902_0045`.
 - The app has 46 real UI pages: 4 shared authentication pages, 27 customer
   pages, and 15 administrator pages. Redirect-only compatibility routes are not
   counted as pages.
@@ -134,8 +144,10 @@ acceptance business records.
 
 This implementation does not pretend to be an external payment gateway.
 
-- Card, online-banking, and external e-wallet requests are persisted as
-  `pending` until the shop admin verifies the real transfer.
+- At the time of this record, card, online-banking, and external e-wallet
+  requests were persisted as `pending` until the shop admin verified the real
+  transfer. The current runtime accepts only `qr_transfer`, `cash`, and
+  `wallet_balance`.
 - Wallet top-ups remain pending and do not increase balance until admin
   verification.
 - Wallet booking payments complete only when the server confirms sufficient
@@ -150,11 +162,12 @@ selected; it should replace admin verification, not create a second ledger.
 
 ## Deliberate External Boundary
 
-StringSense does not claim to process card, online-banking, or external
-e-wallet transfers. Those methods create a pending ledger request for manual
-shop verification. A payment-provider redirect/webhook requires a selected
-provider and credentials and must replace that manual verification boundary,
-not create a second source of truth.
+At the time of this record, StringSense did not claim to process card,
+online-banking, or external e-wallet transfers; those methods created a pending
+ledger request for manual shop verification. The current payment boundary is
+`qr_transfer`, `cash`, and `wallet_balance`; a future payment-provider
+redirect/webhook must replace manual verification, not create a second source of
+truth.
 
 The password-reset APIs and verification-code rules use the configured OpenWA
 session. Codes are committed before provider I/O, and provider failures retain

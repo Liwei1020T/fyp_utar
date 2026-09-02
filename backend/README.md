@@ -23,7 +23,8 @@ Key variables:
 
 - `DATABASE_URL`: SQLAlchemy database URL for the unified Python backend
 - `JWT_SECRET_KEY`: signing key for bearer tokens
-- `APPROVED_STRINGS_SOURCE_PATH`: approved normalized catalog source; relative paths resolve from the backend root
+- `APPROVED_STRINGS_SOURCE_PATH`: current normalized catalog JSON with canonical
+  `hybrid_derived_scores`; relative paths resolve from the backend root
 - `RECOMMENDATION_MATRIX_SOURCE_PATH`: NLP/review recommendation matrix source file (`.csv` or `.xlsx`); relative paths resolve from the backend root
 - `OPENWA_ENABLED`: uses a self-hosted OpenWA session as the optional remote
   WhatsApp notification channel
@@ -139,6 +140,12 @@ and [docs/database.md](./docs/database.md).
 - Master catalog data now lives in normalized `brands` and `strings` tables.
 - Feedback metrics/tags, official performance, inventory, and recommendation matrix data are separated into their own tables.
 - The default seed source is `backend/data/string_catalog_db_ready.json`.
+- Canonical seed rows carry a checked-in snapshot of precomputed `hybrid_derived`
+  fallback scores; raw catalog provenance is not read at runtime. Update that
+  snapshot together with feedback/gauge source data in a controlled catalog-data
+  change.
+- Selling prices are not inferred from raw catalog provenance. Fresh seed rows
+  remain `price_pending` until the admin configures inventory pricing.
 - The default recommendation matrix source is `../ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`; the protected V9 workbook remains separate.
 - The approved 12-string cohort is seeded with the manually reviewed official performance values from `backend/data/string_catalog_db_ready.json`; non-approved source records remain offline provenance and are not seeded.
 - Recommendation-derived aspect scores now belong in `string_recommendation_matrix`, not in the master catalog table.

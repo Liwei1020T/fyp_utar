@@ -56,8 +56,9 @@ be cited as evidence that the original FYP1 scope included them:
 - Advanced analytics dashboard.
 - Advanced admin settings beyond the limited FYP1 store settings listed above.
 
-Current FYP2 implementation status is recorded in
-`docs/plans/mock-page-remediation.md`.
+Current runtime boundaries are recorded in [the workspace guide](../README.md)
+and [the Agent scope](./agent.md). The mock-page file is a historical remediation
+record, not the current feature inventory.
 
 ## Recommendation Positioning
 

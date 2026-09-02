@@ -354,9 +354,9 @@ def test_matrix_import_fully_replaces_stale_nlp_rows(tmp_path) -> None:
                 (
                     "string_name,brand,attack,comfort,control,durability,"
                     "elasticity,sound,string_movement,tension_retention,"
-                    "value_for_money,beginner_fit_score"
+                    "value_for_money"
                 ),
-                "BG80,Yonex,0.8,0.6,0.7,0.5,0.8,0.9,0.4,0.6,0.7,0.7",
+                "BG80,Yonex,0.8,0.6,0.7,0.5,0.8,0.9,0.4,0.6,0.7",
             ]
         ),
         encoding="utf-8",

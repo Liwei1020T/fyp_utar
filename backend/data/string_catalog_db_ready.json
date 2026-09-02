@@ -6,7 +6,8 @@
     "Database-ready normalized catalog derived from the user's 33-string source dataset.",
     "English names, descriptions, and normalized fields are provided.",
     "Official performance values for the approved 12-string cohort are manually reviewed and stored below; startup filters this 33-item source through the approved cohort and does not seed the other 21 records.",
-    "NLP matrix scores are intentionally excluded from the catalog and should stay in the recommendation pipeline."
+    "NLP matrix scores are intentionally excluded from the catalog and should stay in the recommendation pipeline.",
+    "Hybrid-derived fallback scores are a checked-in snapshot in each normalized row; update them with feedback/gauge source changes in a controlled catalog-data change. Selling prices remain admin-controlled inventory state."
   ],
   "brands": [
     {
@@ -269,7 +270,24 @@
       "original_series": "高弹性",
       "original_material": "侧丝：特殊高分子尼龙纤维编织、线芯： 维克特兰纤维和高分子尼龙复丝",
       "original_color": "多种颜色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "yonex-bg65",
@@ -323,7 +341,24 @@
       "original_series": "耐久性",
       "original_material": "外裹特殊编织结构的侧丝",
       "original_color": "多种颜色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.63,
+        "stability": 0.77,
+        "all_round": 0.7,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "yonex-bg65-titanium",
@@ -381,7 +416,24 @@
       "original_series": "耐久性",
       "original_material": "线芯材料为化学合成多层成树脂，纤维表面采用新型氢钛合金涂覆技术",
       "original_color": "黑、蓝、白、红、粉红 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.63,
+        "stability": 0.77,
+        "all_round": 0.7,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "yonex-bg66-ultimax",
@@ -440,7 +492,24 @@
       "original_series": "高弹性",
       "original_material": "高强度尼龙复丝 外层包裹特殊编织的高聚合尼龙",
       "original_color": "黑、黄、白、霓虹粉、薄荷绿、天蓝色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "yonex-bg80-power",
@@ -495,7 +564,24 @@
       "original_series": "高弹性",
       "original_material": "线芯【高密度尼龙复丝+维克兰特纤维】、侧丝【高聚合尼龙+特殊编织】",
       "original_color": "白色、橙色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "yonex-aerosonic",
@@ -551,7 +637,24 @@
       "original_series": "高弹性",
       "original_material": "线芯-高密度尼龙；侧丝-高聚合尼龙 特殊编织",
       "original_color": "紫、白、亮粉红 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "yonex-bg66-force",
@@ -607,7 +710,24 @@
       "original_series": "高弹性",
       "original_material": "高聚合尼龙 多纤丝 特殊编织",
       "original_color": "白、蓝绿、黄 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "yonex-aerobite",
@@ -663,7 +783,24 @@
       "original_series": "控制性",
       "original_material": "横线：线芯，高强度尼龙复丝；（外层）线衣，高聚合物尼龙编织。 竖线：线芯，高强度尼龙复丝；（外层）线衣，高聚合物尼龙编织；涂层，聚氨酯。",
       "original_color": "白/绿 白/红 白/蓝 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "yonex-aerobite-boost",
@@ -718,7 +855,24 @@
       "original_series": "控制性",
       "original_material": "高密度尼龙 高聚合尼龙、特殊编织",
       "original_color": "黄灰，红灰 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.63,
+        "stability": 0.77,
+        "all_round": 0.7,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "yonex-exbolt-63",
@@ -777,7 +931,24 @@
       "original_series": "高弹性",
       "original_material": "线芯：高强度尼龙复丝 侧丝：锻造纤维、特殊编织",
       "original_color": "黄色、黑色、白色、宝石红、薄荷色、浅粉色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "yonex-exbolt-65",
@@ -836,7 +1007,24 @@
       "original_series": "高弹性",
       "original_material": "线芯-高强度尼龙复丝、侧丝-锻造纤维、特殊编织、涂层-弹力表层",
       "original_color": "白色、黑色、黄色、红色、蓝色、紫色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "yonex-exbolt-68",
@@ -895,7 +1083,24 @@
       "original_series": "耐久性",
       "original_material": "线芯-高强度尼龙复丝、侧丝-椭圆形锻造纤维、特殊编织、涂层-弹力表层",
       "original_color": "黄色、黑色、白色、鲜红、绿松石色、柠檬绿 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "gosen-ryzonic-65",
@@ -953,7 +1158,24 @@
       "original_series": "",
       "original_material": "高强度尼龙+树脂",
       "original_color": "白色、黑色、黄色、粉色、红色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "victor-vbs-66-nano",
@@ -1008,7 +1230,24 @@
       "original_series": "高弹",
       "original_material": "VBS-66N以高强度尼龙复丝为内芯，通过纳米技术充分填充球线的每个交叉处",
       "original_color": "颜色有象牙白、活力粉等11款 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "victor-vbs-69-nano",
@@ -1067,7 +1306,24 @@
       "original_series": "耐久",
       "original_material": "高强度尼龙复丝",
       "original_color": "荧光黄、橘色、黑色、宝石蓝、香槟金、象牙白 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.63,
+        "stability": 0.77,
+        "all_round": 0.7,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "victor-vbs-68",
@@ -1116,7 +1372,24 @@
       "original_series": "控制",
       "original_material": "高韧性Vectran 纤维与特殊扁平纱",
       "original_color": "多彩 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 1.0,
+        "beginner_fit": 0.73,
+        "stability": 0.73,
+        "all_round": 0.75,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "victor-vbs-70",
@@ -1170,7 +1443,24 @@
       "original_series": "耐久",
       "original_material": "复丝尼龙",
       "original_color": "多彩 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.63,
+        "stability": 0.77,
+        "all_round": 0.7,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "victor-vbs-61",
@@ -1230,7 +1520,24 @@
       "original_series": "高弹",
       "original_material": "-",
       "original_color": "白色、黄色、粉色、浅蓝、红粉、薰衣草、翠绿 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "victor-vbs-63",
@@ -1290,7 +1597,24 @@
       "original_series": "高弹",
       "original_material": "尼龙",
       "original_color": "白色、绿色、粉色、蓝色、红色、橙色、黄色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.5,
+        "comfort": 0.5,
+        "control": 0.5,
+        "durability": 0.5,
+        "elasticity": 0.5,
+        "hitting_sound": 0.5,
+        "string_movement": 0.5,
+        "tension_retention": 0.5,
+        "value_for_money": 0.5,
+        "beginner_fit": 0.5,
+        "stability": 0.5,
+        "all_round": 0.5,
+        "attacking_fit": 0.5,
+        "control_fit": 0.5
+      }
     },
     {
       "catalog_id": "victor-vbs-68-power",
@@ -1344,7 +1668,24 @@
       "original_series": "控制",
       "original_material": "复丝尼龙",
       "original_color": "多彩 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "li-ning-no1",
@@ -1398,7 +1739,24 @@
       "original_series": "高反弹",
       "original_material": "耐热高强力尼龙复丝",
       "original_color": "多种颜色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "li-ning-n65",
@@ -1460,7 +1818,24 @@
       "original_series": "高反弹",
       "original_material": "尼龙",
       "original_color": "象牙白、雅黑、活力粉、荧光黄、珊瑚蓝、锆石紫、鲜明橙、荧光酸绿、浅松绿 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "li-ning-n68",
@@ -1519,7 +1894,24 @@
       "original_series": "高反弹",
       "original_material": "尼龙",
       "original_color": "象牙白、活力橙、珊瑚蓝、荧光黄、浅松绿、浅兰紫 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "li-ning-n63",
@@ -1576,7 +1968,24 @@
       "original_series": "高反弹",
       "original_material": "尼龙纤维",
       "original_color": "象牙白、火焰红、荧光黄、青墨绿 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.5,
+        "comfort": 0.5,
+        "control": 0.5,
+        "durability": 0.5,
+        "elasticity": 0.5,
+        "hitting_sound": 0.5,
+        "string_movement": 0.5,
+        "tension_retention": 0.5,
+        "value_for_money": 0.5,
+        "beginner_fit": 0.5,
+        "stability": 0.5,
+        "all_round": 0.5,
+        "attacking_fit": 0.5,
+        "control_fit": 0.5
+      }
     },
     {
       "catalog_id": "li-ning-n61",
@@ -1628,7 +2037,24 @@
       "original_series": "高反弹",
       "original_material": "尼龙",
       "original_color": "- 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.5,
+        "comfort": 0.5,
+        "control": 0.5,
+        "durability": 0.5,
+        "elasticity": 0.5,
+        "hitting_sound": 0.5,
+        "string_movement": 0.5,
+        "tension_retention": 0.5,
+        "value_for_money": 0.5,
+        "beginner_fit": 0.5,
+        "stability": 0.5,
+        "all_round": 0.5,
+        "attacking_fit": 0.5,
+        "control_fit": 0.5
+      }
     },
     {
       "catalog_id": "kizuna-z61",
@@ -1682,7 +2108,24 @@
       "original_series": "",
       "original_material": "高分子尼龙复丝",
       "original_color": "多彩 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "kumpoo-js-63",
@@ -1739,7 +2182,24 @@
       "original_series": "",
       "original_material": "尼龙",
       "original_color": "白色、冰蓝、粉色、荧光黄 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "gosen-ryzonic-69",
@@ -1793,7 +2253,24 @@
       "original_series": "",
       "original_material": "尼龙",
       "original_color": "白 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.63,
+        "stability": 0.77,
+        "all_round": 0.7,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "kumpoo-js-65",
@@ -1850,7 +2327,24 @@
       "original_series": "",
       "original_material": "尼龙",
       "original_color": "白色、浅紫色、浅粉色、荧光黄 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "gosen-ryzonic-58",
@@ -1904,7 +2398,24 @@
       "original_series": "",
       "original_material": "高强度尼龙+树脂",
       "original_color": "白色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.97,
+        "comfort": 0.4,
+        "control": 0.45,
+        "durability": 0.87,
+        "elasticity": 1.0,
+        "hitting_sound": 0.77,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.56,
+        "stability": 0.7,
+        "all_round": 0.71,
+        "attacking_fit": 0.94,
+        "control_fit": 0.54
+      }
     },
     {
       "catalog_id": "kumpoo-js-69",
@@ -1956,7 +2467,24 @@
       "original_series": "",
       "original_material": "尼龙",
       "original_color": "白色、浅紫、冰蓝、荧光黄 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.75,
+        "comfort": 0.53,
+        "control": 0.45,
+        "durability": 1.0,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.77,
+        "value_for_money": 1.0,
+        "beginner_fit": 0.74,
+        "stability": 0.77,
+        "all_round": 0.76,
+        "attacking_fit": 0.78,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "kumpoo-js-67",
@@ -2013,7 +2541,24 @@
       "original_series": "",
       "original_material": "尼龙",
       "original_color": "白色、冰蓝、粉色、荧光黄 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.81,
+        "comfort": 0.45,
+        "control": 0.53,
+        "durability": 0.95,
+        "elasticity": 0.89,
+        "hitting_sound": 0.69,
+        "string_movement": 0.45,
+        "tension_retention": 0.69,
+        "value_for_money": 0.53,
+        "beginner_fit": 0.61,
+        "stability": 0.73,
+        "all_round": 0.69,
+        "attacking_fit": 0.81,
+        "control_fit": 0.61
+      }
     },
     {
       "catalog_id": "li-ning-n69",
@@ -2067,7 +2612,24 @@
       "original_series": "均衡型",
       "original_material": "尼龙复丝",
       "original_color": "多种颜色 来源:badmintoncn.com",
-      "is_active": true
+      "is_active": true,
+      "price_rm": null,
+      "hybrid_derived_scores": {
+        "attack": 0.5,
+        "comfort": 0.5,
+        "control": 0.5,
+        "durability": 0.5,
+        "elasticity": 0.5,
+        "hitting_sound": 0.5,
+        "string_movement": 0.5,
+        "tension_retention": 0.5,
+        "value_for_money": 0.5,
+        "beginner_fit": 0.5,
+        "stability": 0.5,
+        "all_round": 0.5,
+        "attacking_fit": 0.5,
+        "control_fit": 0.5
+      }
     }
   ]
 }

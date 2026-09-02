@@ -3,12 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 
-LEGACY_TO_CANONICAL_FEATURE_KEY = {
-    "beginner_fit_score": "beginner_fit",
-    "stability_score": "stability",
-    "all_round_score": "all_round",
-}
-
 CANONICAL_TO_DOMAIN_FEATURE_KEY = {
     "hitting_sound": "sound",
     "beginner_fit": "beginner_fit_score",
@@ -282,10 +276,5 @@ RECOMMENDATION_FEATURE_DEFINITIONS: list[dict[str, Any]] = [
 ]
 
 
-def canonical_feature_key(feature_key: str) -> str:
-    return LEGACY_TO_CANONICAL_FEATURE_KEY.get(feature_key, feature_key)
-
-
 def domain_feature_key(feature_key: str) -> str:
-    canonical_key = canonical_feature_key(feature_key)
-    return CANONICAL_TO_DOMAIN_FEATURE_KEY.get(canonical_key, canonical_key)
+    return CANONICAL_TO_DOMAIN_FEATURE_KEY.get(feature_key, feature_key)

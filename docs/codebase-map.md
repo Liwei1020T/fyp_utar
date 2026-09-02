@@ -22,10 +22,10 @@ just to find the right ownership boundary.
 | [compose.yaml](../compose.yaml) | Local Postgres 16 service on host port `55432`. | Backend needs local database state. |
 | [docs/README.md](./README.md) | Workspace documentation index. | Finding existing docs. |
 | [docs/fyp1-scope.md](./fyp1-scope.md) | FYP1 included/deferred scope, recommendation positioning, and demo proof. | Changing visible demo scope or deciding whether a feature is FYP1 or FYP2. |
-| [docs/plans/mock-page-remediation.md](./plans/mock-page-remediation.md) | Current mock-data page inventory and external integration boundaries. | Checking whether a route still depends on mock or local business data. |
-| [docs/production-hardening-acceptance-2026-08-24.md](./production-hardening-acceptance-2026-08-24.md) | Production Docker/security hardening, fresh-database runtime proof, and current player/admin acceptance gates. | Preparing or reviewing the controlled Cloudflare Tunnel deployment. |
-| [docs/customer-admin-acceptance-2026-07-24.md](./customer-admin-acceptance-2026-07-24.md) | Current customer and administrator browser acceptance, cross-role persistence proof, and quality gates. | Reviewing which live reads and writes were exercised against PostgreSQL. |
-| [docs/qr-payment-acceptance-2026-08-18.md](./qr-payment-acceptance-2026-08-18.md) | QR-transfer implementation evidence, security boundaries, and unverified device/browser checks. | Reviewing the manual payment-proof flow. |
+| [docs/plans/mock-page-remediation.md](./plans/mock-page-remediation.md) | Historical mock-data remediation record; current runtime boundary is in the workspace and mobile guides. | Checking the original mock-removal evidence. |
+| [docs/production-hardening-acceptance-2026-08-24.md](./production-hardening-acceptance-2026-08-24.md) | Historical production Docker/security hardening and acceptance evidence. | Reviewing the controlled Cloudflare Tunnel deployment boundary. |
+| [docs/customer-admin-acceptance-2026-07-24.md](./customer-admin-acceptance-2026-07-24.md) | Historical customer/admin browser acceptance and cross-role persistence evidence. | Reviewing which live reads and writes were exercised against PostgreSQL. |
+| [docs/qr-payment-acceptance-2026-08-18.md](./qr-payment-acceptance-2026-08-18.md) | Historical QR-transfer implementation evidence and unverified device/browser checks. | Reviewing the manual payment-proof boundary. |
 | [docs/admin-acceptance-2026-07-23.md](./admin-acceptance-2026-07-23.md) | Historical administrator-only browser acceptance and restoration record. | Reviewing the earlier admin-specific acceptance run. |
 | [docs/codebase-map.md](./codebase-map.md) | This low-token source map. | Deciding which source files are worth opening. |
 
@@ -252,9 +252,9 @@ reuse seam.
 | [backend/app/adapters/persistence/sqlalchemy/catalog_seed.py](../backend/app/adapters/persistence/sqlalchemy/catalog_seed.py) | Approved catalog parsing and seed/default derivation. |
 | [backend/app/adapters/persistence/sqlalchemy/seed.py](../backend/app/adapters/persistence/sqlalchemy/seed.py) | Runtime seed users, catalog seed, and store defaults from the checked-in snapshots. |
 | [backend/migrations/env.py](../backend/migrations/env.py) | Alembic migration environment. |
-| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260902_0044`. |
+| [backend/migrations/versions](../backend/migrations/versions) | Schema history from the unified backend through the current single head `20260902_0045`. |
 | [backend/scripts/alembic](../backend/scripts/alembic) | Canonical Alembic wrapper; removes macOS AppleDouble Python sidecars before delegating to Alembic. |
-| [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Preserved raw catalog provenance; runtime seed uses the normalized source and filters it to the approved cohort. |
+| [backend/data/raw/badminton_strings_recommender.jsonl](../backend/data/raw/badminton_strings_recommender.jsonl) | Preserved offline catalog provenance; runtime seed does not read this file. |
 | [backend/data/store_settings_seed.json](../backend/data/store_settings_seed.json) | Rebuildable single-store profile and business-hours snapshot. |
 
 
@@ -303,9 +303,9 @@ public runtime default review source is:
 
 - `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx`
 
-No experiment run promotes itself. Replacing the protected V9 workbook or any
-standalone `AI_*_PATH` compatibility artifact requires a separate comparison and
-explicit human approval.
+No experiment run promotes itself. Replacing the protected V9 workbook or the
+approved MacBERT runtime workbook requires a separate comparison and explicit
+human approval.
 
 ## Common Change Recipes
 
@@ -318,7 +318,7 @@ explicit human approval.
 | Change database schema | `backend/app/adapters/persistence/sqlalchemy/models/*` | Alembic revision, repositories, `backend/docs/database.md`, tests. |
 | Change recommendation behavior | `backend/app/domain/recommendation/scoring.py` | Recommendation use-case tests, runtime-boundary test, NLP artifact contract, and Mobile rationale rendering. |
 | Change mobile/backend field names | `backend/app/dto/*`, `mobile/types/backend.ts`, `mobile/services/backendMappers.ts` | API contract docs and backend/mobile validation. |
-| Regenerate NLP artifacts | `ml/nlp-workbench-latest/scripts/run_experiment.py` | Run twice, inspect manifests/leakage/metrics, then request separate approval before changing backend or compatibility artifacts. |
+| Regenerate NLP artifacts | `ml/nlp-workbench-latest/scripts/run_experiment.py` | Run twice, inspect manifests/leakage/metrics, then request separate approval before changing protected or promoted artifacts. |
 
 ## Validation Shortlist
 

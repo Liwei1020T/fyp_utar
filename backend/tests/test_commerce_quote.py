@@ -26,6 +26,16 @@ def _register(phone_number: str) -> str:
     return response.json()["access_token"]
 
 
+def _configure_price(admin_token: str, string_id: str, price_rm: float = 45) -> dict:
+    response = client.patch(
+        f"/api/admin/inventory/strings/{string_id}",
+        headers=_headers(admin_token),
+        json={"price_rm": price_rm, "pricing_mode": "fixed_price"},
+    )
+    assert response.status_code == 200
+    return response.json()
+
+
 def test_booking_payment_quote_is_owned_and_uses_active_ledger_amount() -> None:
     token = _register("+60125550201")
     other_token = _register("+60125550202")
@@ -39,10 +49,9 @@ def test_booking_payment_quote_is_owned_and_uses_active_ledger_amount() -> None:
         headers=_headers(admin_response.json()["access_token"]),
     )
     assert inventory_response.status_code == 200
-    priced_string = next(
-        item
-        for item in inventory_response.json()["items"]
-        if item["pricing_mode"] == "fixed_price" and item["selling_price"] > 0
+    priced_string = _configure_price(
+        admin_response.json()["access_token"],
+        inventory_response.json()["items"][0]["id"],
     )
 
     booking_response = client.post(
@@ -192,10 +201,10 @@ def test_cash_booking_payment_and_top_up_wait_for_admin_confirmation() -> None:
         "/api/admin/inventory/strings",
         headers=_headers(admin_token),
     )
-    priced_string = next(
-        item
-        for item in inventory_response.json()["items"]
-        if item["pricing_mode"] == "fixed_price" and item["selling_price"] > 0
+    assert inventory_response.status_code == 200
+    priced_string = _configure_price(
+        admin_token,
+        inventory_response.json()["items"][0]["id"],
     )
     booking_response = client.post(
         "/api/bookings",

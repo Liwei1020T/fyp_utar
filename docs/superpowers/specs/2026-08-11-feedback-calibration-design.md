@@ -10,11 +10,11 @@
 
 | Field | Value |
 | --- | --- |
-| Status | V13 weighted-preference scoring active; V11 CF policy retained |
-| Last reviewed | 2026-08-30 |
+| Status | V14 weighted-preference scoring active; V11 CF policy retained |
+| Last reviewed | 2026-09-02 |
 | Scope | Approved 12-string cohort with racket-model context |
 | Baseline recommendation algorithm | `fyp1_similarity_preferences_v9` |
-| Active recommendation algorithm | `fyp1_weighted_preferences_feedback_racket_cf_v13` |
+| Active recommendation algorithm | `fyp1_weighted_preferences_feedback_racket_cf_personal_v14` |
 | Implementation status | Scoring, feedback collection, aggregation, cache, audit, APIs, and dedicated catalog/admin feedback panels implemented |
 | Model policy | New user comments do not enter MacBERT or any other model |
 | Promotion policy | No automatic workbook or candidate-artifact promotion |
@@ -34,7 +34,7 @@ or alternate ranking signals.
 | Fuzzy racket similarity | **Explicit non-goal; not planned** | V11 normalizes case, Unicode, punctuation, and whitespace, then requires the exact `brand:model` key. It never borrows evidence from a merely similar racket model. | None. Cross-model fuzzy inference is outside the FYP scope. |
 | Standard racket identity | **Implemented** | Racket Passport create/edit uses an authenticated six-model backend catalogue. The server validates `model_key`, canonicalizes display values, and maps `Other model` to global-only evidence. | Expand the catalogue only when the FYP cohort intentionally adds a verified model. |
 | Automatic CF weight adjustment | **Implemented** | Each candidate recalculates its CF weight from the current distinct supporting-user count: `0` below three users, otherwise `min(0.20, 0.20 * n / (n + 10))`. The applied weight, confidence, support count, policy version, and fallback reason are stored in recommendation evidence. | Automated tuning of the fixed threshold, shrinkage constant, or maximum weight remains deferred. |
-| Feedback safeguards and governance | **Baseline safeguards implemented; advanced governance is an explicit non-goal** | Existing safeguards require an authenticated booking owner, a completed booking, one feedback row per booking, 1-to-5 validation, delayed durability, approved strings, per-user averaging, bounded influence, and PII-free aggregate output. Owners can update their feedback. | None for FYP. Feedback deletion, reporting, moderation queues, reputation, and anomaly detection are not planned. |
+| Feedback safeguards and governance | **Baseline safeguards implemented; advanced governance is an explicit non-goal** | Existing safeguards require an authenticated booking owner, a completed booking, one feedback row per booking, 1-to-5 validation, approved strings, per-user averaging, bounded influence, and PII-free aggregate output. Owners can update their feedback. | None for FYP. Feedback deletion, reporting, moderation queues, reputation, and anomaly detection are not planned. |
 
 These statuses must not be shortened to “all three are unfinished.” The active
 system already contains dynamic CF weighting and baseline feedback abuse

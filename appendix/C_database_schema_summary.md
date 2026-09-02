@@ -1,7 +1,7 @@
 # Appendix C: Database Schema Summary
 
 The active backend schema is owned by SQLAlchemy models and Alembic migrations.
-At head `20260902_0044`, it contains 32 application tables plus the
+At head `20260902_0045`, it contains 32 application tables plus the
 `alembic_version` migration metadata table. The source JSON may contain 33
 strings for offline provenance, but only the approved 12 are seeded into these
 runtime tables.

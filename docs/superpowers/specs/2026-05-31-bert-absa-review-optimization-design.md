@@ -8,8 +8,9 @@ owner clarified that MacBERT must not be merged into the old V9 workbook.
 Promotion run `bert-macbert-separate-matrix-promotion-20260812-v1` restored V9
 to its original artifact and promoted an independent 12-by-9 MacBERT Matrix.
 Docker/Postgres has recovered and the independent Matrix is imported as 108
-`nlp_review` rows across the approved 12 strings at migration head
-`20260811_0027`.
+`nlp_review` rows across the approved 12 strings. The current schema head is
+`20260902_0045`; the earlier head named in the original promotion evidence is
+historical.
 
 This document supersedes the broader 2026-05-31 proposal. The active scope is a
 small FYP-ready Silver baseline, not the earlier two-stage five-class, mandatory

@@ -40,7 +40,7 @@
   - `config/approved_string_cohort_v1.csv`: the 12-string system catalog boundary shared by backend runtime and BERT preparation
 - Critical paths:
   - player login and recommendation flow: `mobile` -> `backend` -> in-process AI scoring
-  - recommendation learning loop: weighted-preference v13 ranking -> bounded feedback calibration -> gated exact-racket CF inherited from v11, with the calibrated base fallback below three independent supporters
+  - recommendation learning loop: active V14 weighted-preference ranking -> bounded feedback calibration -> gated exact-racket CF using the retained V11 policy, with the calibrated base fallback below three independent supporters
   - FYP-scoped player Agent: four-question guided selection, two-or-three-string comparison, exact-run explanation, verified in-stock alternatives, and live store information -> authenticated `/api/agent/query` -> DeepSeek V4 Flash; V14 remains the only ranking owner
   - admin catalog and booking operations: `mobile` admin screens -> `backend`
   - admin Agent operations: read-only current-operations summary plus booking and inventory searches; write handlers remain preserved but inactive

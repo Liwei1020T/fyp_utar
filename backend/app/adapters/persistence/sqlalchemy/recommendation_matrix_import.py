@@ -22,9 +22,6 @@ from app.adapters.persistence.sqlalchemy.models import StringRecommendationMatri
 from app.domain.catalog.entities import RecommendationMatrixImportReport
 from app.domain.catalog.errors import RecommendationMatrixArtifactError
 from app.domain.catalog.recommendation_features import (
-    LEGACY_TO_CANONICAL_FEATURE_KEY,
-)
-from app.domain.catalog.recommendation_features import (
     RECOMMENDATION_FEATURE_DEFINITIONS,
 )
 
@@ -84,15 +81,6 @@ CSV_FEATURE_SPECS = (
         "value_for_money",
         "value_for_money_review_raw",
     ),
-    CsvFeatureSpec(
-        "stability_score",
-        "stability",
-        "string_movement_review_raw",
-    ),
-    CsvFeatureSpec("all_round_score", "all_round"),
-    CsvFeatureSpec("attacking_fit_score", "attacking_fit"),
-    CsvFeatureSpec("control_fit_score", "control_fit"),
-    CsvFeatureSpec("beginner_fit_score", "beginner_fit"),
 )
 
 MATRIX_METADATA_COLUMNS = {
@@ -142,58 +130,6 @@ def ensure_recommendation_feature_definitions(db: Session) -> None:
     db.flush()
 
 
-def normalize_legacy_feature_keys(db: Session) -> None:
-    legacy_keys = tuple(LEGACY_TO_CANONICAL_FEATURE_KEY)
-    legacy_entries = (
-        db.execute(
-            select(StringRecommendationMatrix).where(
-                StringRecommendationMatrix.feature_key.in_(legacy_keys)
-            )
-        )
-        .scalars()
-        .all()
-    )
-
-    for entry in legacy_entries:
-        canonical_key = LEGACY_TO_CANONICAL_FEATURE_KEY[entry.feature_key]
-        replacement = db.get(
-            StringRecommendationMatrix,
-            (entry.catalog_id, canonical_key, entry.source_layer),
-        )
-        if replacement is None:
-            db.add(
-                StringRecommendationMatrix(
-                    catalog_id=entry.catalog_id,
-                    feature_key=canonical_key,
-                    source_layer=entry.source_layer,
-                    raw_value=entry.raw_value,
-                    normalized_score=entry.normalized_score,
-                    evidence_note=entry.evidence_note,
-                )
-            )
-        elif (
-            replacement.normalized_score is None and entry.normalized_score is not None
-        ):
-            replacement.raw_value = entry.raw_value
-            replacement.normalized_score = entry.normalized_score
-            replacement.evidence_note = entry.evidence_note
-        db.delete(entry)
-
-    legacy_definitions = (
-        db.execute(
-            select(RecommendationFeatureDefinition).where(
-                RecommendationFeatureDefinition.feature_key.in_(legacy_keys)
-            )
-        )
-        .scalars()
-        .all()
-    )
-    for definition in legacy_definitions:
-        db.delete(definition)
-
-    db.flush()
-
-
 def import_recommendation_matrix_csv(
     db: Session,
     csv_path: Path,
@@ -210,7 +146,6 @@ def import_recommendation_matrix_csv(
         )
 
     ensure_recommendation_feature_definitions(db)
-    normalize_legacy_feature_keys(db)
 
     lookup = _build_catalog_lookup(db)
     match_counts: Counter[str] = Counter()

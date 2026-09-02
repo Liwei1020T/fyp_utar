@@ -419,7 +419,7 @@ class GenerateRecommendationUseCase:
             else None,
             catalog_id=item.catalog_id,
             score=item.final_score,
-            price_rm=_cached_price(rationale),
+            price_rm=_float_or_none(rationale.get("price_rm")),
             aspect_scores={
                 key: float(value)
                 for key, value in aspect_scores.items()
@@ -470,15 +470,6 @@ def _cache_payload_with_run_id(
     rationale = dict(raw_rationale) if isinstance(raw_rationale, dict) else {}
     rationale["run_id"] = run_id
     return {**payload, "rationale": rationale}
-
-
-def _cached_price(rationale: dict[str, object]) -> float | None:
-    if "price_rm" in rationale:
-        return _float_or_none(rationale.get("price_rm"))
-    legacy_budget = rationale.get("budget")
-    if isinstance(legacy_budget, dict):
-        return _float_or_none(legacy_budget.get("price_rm"))
-    return None
 
 
 def _result_payload(item: RecommendationResultModel) -> dict[str, object]:

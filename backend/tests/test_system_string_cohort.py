@@ -3,9 +3,11 @@ from __future__ import annotations
 from dataclasses import replace
 
 from fastapi.testclient import TestClient
+import pytest
 from sqlalchemy import func
 from sqlalchemy import select
 
+from app.adapters.persistence.sqlalchemy.catalog_seed import load_catalog_source
 from app.adapters.persistence.sqlalchemy.catalog_seed import seed_catalog_rows
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
 from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
@@ -19,6 +21,7 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_recommendation_
 )
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.config.settings import get_settings
+from app.domain.catalog.recommendation_features import CANONICAL_MATRIX_FEATURE_KEYS
 from app.domain.recommendation.entities import RecommendationCandidateModel
 from app.domain.recommendation.entities import RecommendationRequestModel
 from app.domain.recommendation.scoring import ContentRecommendationScorer
@@ -190,6 +193,18 @@ def test_backend_and_nlp_read_the_same_versioned_cohort() -> None:
     assert cohort_path.is_file()
 
 
+def test_catalog_source_does_not_fallback_from_a_missing_configured_path(
+    tmp_path,
+) -> None:
+    canonical_path = tmp_path / "data" / "string_catalog_db_ready.json"
+    canonical_path.parent.mkdir()
+    canonical_path.write_text('{"strings": []}', encoding="utf-8")
+    missing_path = canonical_path.parent / "nested" / "missing.json"
+
+    with pytest.raises(FileNotFoundError):
+        load_catalog_source(missing_path)
+
+
 def test_all_approved_strings_have_seeded_official_performance() -> None:
     settings = get_settings()
     rows = seed_catalog_rows(settings.approved_strings_path)["items"]
@@ -226,6 +241,31 @@ def test_all_approved_strings_have_seeded_official_performance() -> None:
         "medium": sum(4 < value <= 6.5 for value in feel_values.values()),
         "hard": sum(value > 6.5 for value in feel_values.values()),
     }
+
+
+def test_seed_uses_canonical_fallback_scores_and_pending_prices() -> None:
+    rows = seed_catalog_rows(get_settings().approved_strings_path)["items"]
+    approved_rows = [
+        row for row in rows if row["catalog"]["catalog_id"] in APPROVED_IDS
+    ]
+
+    assert len(approved_rows) == 12
+    assert all(row["inventory"]["selling_price"] is None for row in approved_rows)
+    assert all(
+        {
+            entry["feature_key"]
+            for entry in row["matrix_entries"]
+            if entry["source_layer"] == "hybrid_derived"
+        }
+        == set(CANONICAL_MATRIX_FEATURE_KEYS)
+        for row in approved_rows
+    )
+    assert all(
+        "legacy" not in entry["evidence_note"].lower()
+        for row in approved_rows
+        for entry in row["matrix_entries"]
+        if entry["source_layer"] == "hybrid_derived"
+    )
 
 
 def test_feel_and_gauge_preferences_raise_matching_candidate_scores() -> None:

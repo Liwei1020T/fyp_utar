@@ -15,21 +15,6 @@ from app.domain.catalog.recommendation_features import (
 )
 
 AspectScoreMap = dict[str, float]
-
-TAG_EFFECTS: dict[str, AspectScoreMap] = {
-    "弹性好": {"attack": 0.18, "elasticity": 0.22, "hitting_sound": 0.12},
-    "耐打": {"durability": 0.25, "stability": 0.16, "tension_retention": 0.12},
-    "控球好": {"control": 0.24, "beginner_fit": 0.06},
-    "声音清脆": {"hitting_sound": 0.26, "attack": 0.08},
-    "性价比高": {"value_for_money": 0.28, "beginner_fit": 0.08},
-    "性价比低": {"value_for_money": -0.24},
-    "掉磅快": {"tension_retention": -0.26, "stability": -0.10},
-    "手感好": {"comfort": 0.20, "control": 0.08},
-    "震手": {"comfort": -0.20},
-    "粘手": {"string_movement": 0.14, "control": 0.08},
-}
-
-ASPECT_KEYS = CANONICAL_MATRIX_FEATURE_KEYS
 OFFICIAL_FEEL_BY_CATALOG_ID = {
     "li-ning-n65": 3.0,
     "victor-vbs-68-power": 3.0,
@@ -90,47 +75,17 @@ def normalize_catalog_text(value: str) -> str:
     return re.sub(r"\.{2,}", ".", value.strip())
 
 
-def catalog_source_path(source_path: Path) -> Path:
-    if source_path.exists() and source_path.suffix.lower() == ".json":
-        return source_path
-    candidate = source_path.parent.parent / "string_catalog_db_ready.json"
-    if candidate.exists():
-        return candidate
-    return source_path
-
-
 @lru_cache(maxsize=4)
 def load_catalog_source(source_path: Path) -> dict[str, Any]:
-    resolved = catalog_source_path(source_path)
-    payload = json.loads(resolved.read_text(encoding="utf-8"))
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or not isinstance(payload.get("strings"), list):
-        raise ValueError(f"Unsupported normalized catalog source: {resolved}")
+        raise ValueError(f"Unsupported normalized catalog source: {source_path}")
     return payload
-
-
-@lru_cache(maxsize=1)
-def load_legacy_rows() -> dict[str, dict[str, Any]]:
-    raw_path = (
-        Path(__file__).resolve().parents[4]
-        / "data/raw/badminton_strings_recommender.jsonl"
-    )
-    if not raw_path.exists():
-        return {}
-    mapping: dict[str, dict[str, Any]] = {}
-    for line in raw_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        original_name = as_string(row.get("name"))
-        if original_name:
-            mapping[original_name.lower()] = row
-    return mapping
 
 
 @lru_cache(maxsize=4)
 def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
     payload = load_catalog_source(source_path)
-    legacy_rows = load_legacy_rows()
     official_performance_by_catalog_id = payload.get("official_performance")
     if not isinstance(official_performance_by_catalog_id, dict):
         official_performance_by_catalog_id = {}
@@ -138,7 +93,6 @@ def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
     for row in payload["strings"]:
         item = approved_row_to_values(
             row,
-            legacy_rows.get(str(row.get("original_name", "")).lower()),
             official_performance=official_performance_by_catalog_id.get(
                 str(row.get("catalog_id", ""))
             ),
@@ -149,15 +103,14 @@ def approved_catalog_defaults(source_path: Path) -> dict[str, dict[str, Any]]:
 
 def approved_row_to_values(
     row: dict[str, Any],
-    legacy_row: dict[str, Any] | None,
     *,
     official_performance: Any = None,
 ) -> dict[str, Any]:
     brand_name = str(row["brand_name"]).strip()
     model_name = str(row["model_name"]).strip()
     normalized_name = normalize_catalog_name(brand_name, model_name)
-    scores = derive_scores_from_legacy_row(legacy_row)
-    price_rm = positive_number(legacy_row.get("price")) if legacy_row else None
+    scores = canonical_hybrid_scores(row)
+    price_rm = positive_number(row.get("price_rm"))
     gauge_mm = number_or_none(row.get("gauge_main_mm"))
     tension_min_lbs, tension_max_lbs = derive_tension_range(gauge_mm)
     gauge_score = normalize_gauge(gauge_mm)
@@ -179,7 +132,7 @@ def approved_row_to_values(
             "source_layer": "hybrid_derived",
             "raw_value": score,
             "normalized_score": score,
-            "evidence_note": "Backfilled from legacy gauge and feedback tag heuristics.",
+            "evidence_note": "Precomputed from canonical catalog feedback and gauge metadata.",
         }
         for feature_key, score in scores.items()
     ]
@@ -354,120 +307,24 @@ def derive_tension_range(gauge_mm: float | None) -> tuple[int | None, int | None
     return 23, 28
 
 
-def derive_scores_from_legacy_row(legacy_row: dict[str, Any] | None) -> AspectScoreMap:
-    if legacy_row is None:
-        return {key: 0.5 for key in ASPECT_KEYS}
-    gauge_mm = parse_gauge_mm(as_string(legacy_row.get("gauge")))
-    tags = parse_tag_list(legacy_row.get("top_tags")) + [
-        tag["name"] for tag in parse_structured_tags(legacy_row.get("tags"))
-    ]
-    return derive_aspect_scores(tags, gauge_mm)
-
-
-def derive_aspect_scores(tags: list[str], gauge_mm: float | None) -> AspectScoreMap:
-    scores: AspectScoreMap = {key: 0.45 for key in ASPECT_KEYS}
-    for tag in tags:
-        effect = TAG_EFFECTS.get(tag)
-        if not effect:
-            continue
-        for aspect, delta in effect.items():
-            scores[aspect] = clamp01(scores[aspect] + delta)
-
-    if gauge_mm is not None:
-        if gauge_mm <= 0.65:
-            scores["attack"] = clamp01(scores["attack"] + 0.16)
-            scores["elasticity"] = clamp01(scores["elasticity"] + 0.18)
-            scores["hitting_sound"] = clamp01(scores["hitting_sound"] + 0.08)
-            scores["durability"] = clamp01(scores["durability"] - 0.08)
-            scores["comfort"] = clamp01(scores["comfort"] - 0.05)
-        elif gauge_mm >= 0.69:
-            scores["durability"] = clamp01(scores["durability"] + 0.20)
-            scores["stability"] = clamp01(scores["stability"] + 0.16)
-            scores["tension_retention"] = clamp01(scores["tension_retention"] + 0.08)
-            scores["comfort"] = clamp01(scores["comfort"] + 0.08)
-            scores["attack"] = clamp01(scores["attack"] - 0.06)
-        else:
-            scores["control"] = clamp01(scores["control"] + 0.08)
-            scores["all_round"] = clamp01(scores["all_round"] + 0.12)
-
-    scores["beginner_fit"] = clamp01(
-        (
-            scores["comfort"]
-            + scores["control"]
-            + scores["durability"]
-            + scores["value_for_money"]
+def canonical_hybrid_scores(row: dict[str, Any]) -> AspectScoreMap:
+    values = row.get("hybrid_derived_scores")
+    if not isinstance(values, dict):
+        raise ValueError(
+            f"Catalog row {row.get('catalog_id', '<unknown>')} is missing "
+            "hybrid_derived_scores"
         )
-        / 4
-    )
-    scores["stability"] = clamp01(
-        (
-            scores["durability"]
-            + scores["tension_retention"]
-            + (1 - scores["string_movement"])
-        )
-        / 3
-    )
-    scores["all_round"] = clamp01(
-        (
-            scores["attack"]
-            + scores["comfort"]
-            + scores["control"]
-            + scores["durability"]
-            + scores["elasticity"]
-            + scores["hitting_sound"]
-            + scores["tension_retention"]
-            + scores["value_for_money"]
-        )
-        / 8
-    )
-    scores["attacking_fit"] = clamp01(
-        (
-            (scores["attack"] * 0.5)
-            + (scores["elasticity"] * 0.3)
-            + (scores["hitting_sound"] * 0.2)
-        )
-    )
-    scores["control_fit"] = clamp01(
-        (
-            (scores["control"] * 0.5)
-            + (scores["comfort"] * 0.25)
-            + (scores["durability"] * 0.25)
-        )
-    )
-    return {key: round(value, 2) for key, value in scores.items()}
 
-
-def parse_tag_list(value: Any) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    return [item for item in value if isinstance(item, str) and item.strip()]
-
-
-def parse_structured_tags(value: Any) -> list[dict[str, Any]]:
-    if not isinstance(value, list):
-        return []
-    tags: list[dict[str, Any]] = []
-    for item in value:
-        if isinstance(item, str) and item.strip():
-            tags.append({"name": item.strip(), "votes": 1})
-        elif isinstance(item, dict) and isinstance(item.get("name"), str):
-            tags.append(
-                {
-                    "name": item["name"].strip(),
-                    "votes": int(item.get("votes", 1)),
-                }
+    scores: AspectScoreMap = {}
+    for feature_key in CANONICAL_MATRIX_FEATURE_KEYS:
+        score = number_or_none(values.get(feature_key))
+        if score is None or not 0 <= score <= 1:
+            raise ValueError(
+                f"Catalog row {row.get('catalog_id', '<unknown>')} has an invalid "
+                f"hybrid score for {feature_key}"
             )
-    return tags
-
-
-def parse_gauge_mm(value: str | None) -> float | None:
-    if not value:
-        return None
-    match = re.search(r"([0-9]+(?:\.[0-9]+)?)", value)
-    if not match:
-        return None
-    gauge = float(match.group(1))
-    return gauge / 100 if gauge > 10 else gauge
+        scores[feature_key] = score
+    return scores
 
 
 def normalize_gauge(value: float | None) -> float | None:

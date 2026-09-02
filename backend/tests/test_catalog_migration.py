@@ -214,6 +214,19 @@ def test_catalog_normalization_migration_preserves_existing_booking(
         ).scalar_one()
         assert old_matrix_rows == 0
 
+        old_feature_key_rows = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM string_recommendation_matrix
+                WHERE feature_key IN (
+                    'beginner_fit_score', 'stability_score', 'all_round_score'
+                )
+                """
+            )
+        ).scalar_one()
+        assert old_feature_key_rows == 0
+
 
 def test_booking_drift_repair_migration_restores_missing_booking_columns(
     tmp_path,
@@ -369,7 +382,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260902_0044"
+        assert version_row["version_num"] == "20260902_0045"
 
         store_settings_row = (
             connection.execute(
@@ -441,6 +454,200 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
         assert repaired_row["completion_summary"] is None
 
 
+def test_canonical_recommendation_migration_converges_legacy_rows(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    db_path = tmp_path / "canonical-recommendation-data.sqlite"
+    database_url = f"sqlite+pysqlite:///{db_path}"
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("APP_ENV", "testing")
+    get_settings.cache_clear()
+
+    config = make_alembic_config(database_url)
+    command.upgrade(config, "20260902_0044")
+
+    engine = create_engine(database_url)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO recommendation_feature_definitions (
+                    feature_key, feature_label, feature_group, data_type,
+                    min_value, max_value, description, is_active
+                ) VALUES (
+                    'beginner_fit', 'Beginner Fit', 'derived_aspect', 'score',
+                    0, 1, 'Current canonical definition', 1
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO users (
+                    id, username, phone_number, password_hash, role, auth_provider
+                ) VALUES (
+                    'user-canonical', 'canonical-user', '+60123334445',
+                    'hashed', 'customer', 'local'
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO string_recommendation_matrix (
+                    catalog_id, feature_key, source_layer,
+                    raw_value, normalized_score, evidence_note
+                ) VALUES (
+                    'yonex-bg80', 'beginner_fit_score', 'manual_rule',
+                    0.7, 0.7, 'old row'
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO string_recommendation_matrix (
+                    catalog_id, feature_key, source_layer,
+                    raw_value, normalized_score, evidence_note
+                ) VALUES (
+                    'yonex-bg80', 'beginner_fit', 'manual_rule',
+                    NULL, NULL, 'current row'
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO user_preference_matrix (
+                    user_id, feature_key, source_layer,
+                    raw_score, preference_weight
+                ) VALUES (
+                    'user-canonical', 'beginner_fit_score', 'profile',
+                    7, 0.7
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO user_preference_matrix (
+                    user_id, feature_key, source_layer,
+                    raw_score, preference_weight
+                ) VALUES (
+                    'user-canonical', 'beginner_fit', 'profile',
+                    8, 0.8
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO recommendation_score_cache (
+                    user_id, catalog_id, algorithm_version,
+                    final_score, rank_position, rationale
+                ) VALUES (
+                    'user-canonical', 'yonex-bg80',
+                    'fyp1_weighted_preferences_feedback_racket_cf_v13',
+                    0.7, 1, '{"budget": {"price_rm": 68}}'
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO recommendation_score_cache (
+                    user_id, catalog_id, algorithm_version,
+                    final_score, rank_position, rationale
+                ) VALUES (
+                    'user-canonical', 'yonex-bg80',
+                    'fyp1_weighted_preferences_feedback_racket_cf_personal_v14',
+                    0.8, 1, '{"price_rm": 68}'
+                )
+                """
+            )
+        )
+
+    command.upgrade(config, "head")
+
+    with engine.begin() as connection:
+        old_feature_key_count = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM recommendation_feature_definitions
+                WHERE feature_key IN (
+                    'beginner_fit_score', 'stability_score', 'all_round_score'
+                )
+                """
+            )
+        ).scalar_one()
+        assert old_feature_key_count == 0
+
+        matrix_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT normalized_score
+                    FROM string_recommendation_matrix
+                    WHERE catalog_id = 'yonex-bg80'
+                      AND feature_key = 'beginner_fit'
+                      AND source_layer = 'manual_rule'
+                    """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        assert float(matrix_row["normalized_score"]) == 0.7
+
+        preference_rows = (
+            connection.execute(
+                text(
+                    """
+                SELECT feature_key, raw_score, preference_weight
+                FROM user_preference_matrix
+                WHERE user_id = 'user-canonical'
+                """
+                )
+            )
+            .mappings()
+            .all()
+        )
+        assert preference_rows == [
+            {
+                "feature_key": "beginner_fit",
+                "raw_score": 8,
+                "preference_weight": 0.8,
+            }
+        ]
+
+        cache_versions = (
+            connection.execute(
+                text(
+                    """
+                SELECT algorithm_version
+                FROM recommendation_score_cache
+                WHERE user_id = 'user-canonical'
+                """
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert cache_versions == [
+            "fyp1_weighted_preferences_feedback_racket_cf_personal_v14"
+        ]
+
+
 def test_latest_migrations_adopt_preexisting_schema_drift(
     tmp_path,
     monkeypatch,
@@ -488,7 +695,7 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-        assert version == "20260902_0044"
+        assert version == "20260902_0045"
 
     assert "old_status" not in {
         item["name"] for item in inspector.get_columns("booking_status_history")

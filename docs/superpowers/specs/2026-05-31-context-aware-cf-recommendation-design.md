@@ -1,15 +1,20 @@
 # Racket-Conditioned Collaborative Recommendation Design
 
+> Current-runtime note: this design records the V11 CF policy and its original
+> V13 activation. The active scorer is now V14; see
+> [`backend/docs/recommendation-design.md`](../../../backend/docs/recommendation-design.md)
+> for the current ranking contract.
+
 ## Document Status
 
 | Field | Value |
 | --- | --- |
-| Status | V11 CF policy retained inside active V13 scoring; production evidence remains separate |
-| Last reviewed | 2026-08-30 |
+| Status | V11 CF policy retained inside active V14 scoring; production evidence remains separate |
+| Last reviewed | 2026-09-02 |
 | Runtime cohort | `config/approved_string_cohort_v1.csv` (12 strings) |
 | Baseline algorithm | `fyp1_similarity_preferences_v9` |
 | Historical feedback comparison algorithm | `fyp1_similarity_preferences_feedback_v10` |
-| Active scoring algorithm | `fyp1_weighted_preferences_feedback_racket_cf_v13` |
+| Active scoring algorithm | `fyp1_weighted_preferences_feedback_racket_cf_personal_v14` |
 | Current CF status | Guarded enablement above three exact-model supporting users |
 | Implementation status | Scoring, fallback, audit, cache versioning, and demo evaluation implemented |
 | Racket similarity status | Exact normalized model matching active; fuzzy cross-model similarity is an explicit non-goal |

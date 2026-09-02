@@ -1800,11 +1800,14 @@ def test_notification_preferences_and_verified_wallet_payment_flow():
         headers=headers(admin_token),
     )
     assert inventory_response.status_code == 200
-    priced_string = next(
-        item
-        for item in inventory_response.json()["items"]
-        if item["pricing_mode"] == "fixed_price" and item["selling_price"] > 0
+    priced_string = inventory_response.json()["items"][0]
+    price_update_response = client.patch(
+        f"/api/admin/inventory/strings/{priced_string['id']}",
+        headers=headers(admin_token),
+        json={"price_rm": 45, "pricing_mode": "fixed_price"},
     )
+    assert price_update_response.status_code == 200
+    priced_string = price_update_response.json()
     booking_response = client.post(
         "/api/bookings",
         headers=headers(customer_token),

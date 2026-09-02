@@ -28,7 +28,7 @@ guides above, especially `backend/docs/database.md` and
 - [Low-Token Codebase Map](./codebase-map.md)
 - [FYP-Scoped Player And Admin Agent](./agent.md)
 - [FYP1 Scope](./fyp1-scope.md)
-- [Current Mock-Page Remediation](./plans/mock-page-remediation.md)
+- [Mock-Page Remediation Record (historical evidence)](./plans/mock-page-remediation.md)
 - [Production Hardening and Acceptance Record (2026-08-24)](./production-hardening-acceptance-2026-08-24.md)
 - [Customer and Administrator Acceptance Record (2026-07-24)](./customer-admin-acceptance-2026-07-24.md)
 - [Administrator Acceptance Record (2026-07-23)](./admin-acceptance-2026-07-23.md)
