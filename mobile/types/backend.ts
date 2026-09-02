@@ -701,6 +701,22 @@ export interface BackendAnalyticsWorkloadEntry {
   value: number;
 }
 
+export interface BackendAdminUser {
+  id: string;
+  username: string;
+  role: string;
+  is_active: boolean;
+  created_at: string | null;
+}
+
+export interface BackendAdminUsersOverview {
+  total_users: number;
+  active_users: number;
+  player_count: number;
+  admin_count: number;
+  users: BackendAdminUser[];
+}
+
 export interface BackendAnalyticsSummary {
   weekly_bookings: number;
   today_bookings: number;

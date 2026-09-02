@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePathname } from 'expo-router';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { ScrollView, useWindowDimensions, View, ViewProps } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -51,12 +52,22 @@ export function AppScreen({
   style,
   ...props
 }: AppScreenProps) {
+  const pathname = usePathname();
   const toneBackgrounds = {
     default: appChromeColors.page,
     auth: appChromeColors.pageAuth,
     player: appChromeColors.page,
     admin: appChromeColors.pageAdmin,
   };
+
+  const routeTone = pathname.startsWith('/admin')
+    ? 'admin'
+    : pathname.startsWith('/player')
+      ? 'player'
+      : null;
+  const resolvedTone = tone === 'default' && routeTone ? routeTone : tone;
+  const resolvedHeaderVariant =
+    resolvedTone === 'admin' || resolvedTone === 'player' ? 'flow' : headerVariant;
 
   const bottomContentInset = useBottomContentInset(scrollable ? 8 : 0);
   const { width } = useWindowDimensions();
@@ -70,7 +81,7 @@ export function AppScreen({
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ flex: 1, backgroundColor: toneBackgrounds[tone] }}
+      style={{ flex: 1, backgroundColor: toneBackgrounds[resolvedTone] }}
       edges={['top', 'left', 'right', 'bottom']}
     >
       <View className="flex-1" style={{ flex: 1 }}>
@@ -79,8 +90,8 @@ export function AppScreen({
             title={title}
             subtitle={subtitle}
             headerRight={headerRight}
-            variant={headerVariant}
-            compact={compactHeader || (tone === 'admin' && headerVariant !== 'flow')}
+            variant={resolvedHeaderVariant}
+            compact={compactHeader || (resolvedTone === 'admin' && resolvedHeaderVariant !== 'flow')}
             showBackButton={showBackButton}
             onBackPress={onBackPress}
             backAccessibilityLabel={backAccessibilityLabel}

@@ -12,6 +12,7 @@ from fastapi import File
 from fastapi import Form
 from fastapi import Query
 from fastapi import UploadFile
+from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
@@ -24,6 +25,7 @@ from app.adapters.persistence.sqlalchemy.catalog_seed import (
 )
 from app.adapters.persistence.sqlalchemy.models import CheckInToken
 from app.adapters.persistence.sqlalchemy.models import RecommendationScoreCache
+from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.session import get_db
 from app.config.settings import get_settings
 from app.dto.booking import BookingOut
@@ -31,6 +33,8 @@ from app.dto.booking import BookingSortField
 from app.dto.booking import SortOrder
 from app.dto.booking import UpdateBookingStatusPayload
 from app.dto.booking import booking_to_dto
+from app.dto.auth import AdminUserSummaryOut
+from app.dto.auth import AdminUsersOverviewOut
 from app.dto.catalog import AdminInventoryStringOut
 from app.dto.catalog import InventoryUpdatePayload
 from app.dto.catalog import OfficialPerformanceOut
@@ -274,6 +278,51 @@ def admin_inventory_strings(
         offset=offset,
     )
     return page_to_dict(page, lambda item: inventory_string_to_dto(item).model_dump())
+
+
+@router.get("/users/overview", response_model=AdminUsersOverviewOut)
+def admin_users_overview(
+    limit: int = Query(default=100, ge=1, le=100),
+    _: CurrentUser = Depends(get_current_admin),
+    db: Session = Depends(get_db, scope="function"),
+) -> AdminUsersOverviewOut:
+    total_users = db.scalar(select(func.count(User.id))) or 0
+    active_users = (
+        db.scalar(select(func.count(User.id)).where(User.is_active.is_(True))) or 0
+    )
+    player_count = (
+        db.scalar(select(func.count(User.id)).where(User.role == "customer")) or 0
+    )
+    admin_count = (
+        db.scalar(select(func.count(User.id)).where(User.role == "admin")) or 0
+    )
+    rows = db.execute(
+        select(
+            User.id,
+            User.username,
+            User.role,
+            User.is_active,
+            User.created_at,
+        )
+        .order_by(User.created_at.desc(), User.id.desc())
+        .limit(limit)
+    ).all()
+    return AdminUsersOverviewOut(
+        total_users=total_users,
+        active_users=active_users,
+        player_count=player_count,
+        admin_count=admin_count,
+        users=[
+            AdminUserSummaryOut(
+                id=row.id,
+                username=row.username,
+                role=row.role,
+                is_active=row.is_active,
+                created_at=row.created_at.isoformat() if row.created_at else None,
+            )
+            for row in rows
+        ],
+    )
 
 
 @router.get("/inventory/strings/{string_id}", response_model=AdminInventoryStringOut)

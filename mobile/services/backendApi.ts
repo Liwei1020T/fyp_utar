@@ -4,6 +4,7 @@ import type {
   BackendAdminDeviceToken,
   BackendAdminFeedback,
   BackendAdminNotification,
+  BackendAdminUsersOverview,
   BackendAgentQuery,
   BackendAgentResponse,
   BackendAnalyticsSummary,
@@ -646,6 +647,13 @@ export const backendApi = {
     return requestJson<BackendStoreSettings>('/admin/store-settings', {
       token,
     });
+  },
+  adminFetchUsersOverview(token: string, limit = 100) {
+    const searchParams = new URLSearchParams({ limit: String(limit) });
+    return requestJson<BackendAdminUsersOverview>(
+      `/admin/users/overview?${searchParams.toString()}`,
+      { token },
+    );
   },
   fetchStoreSettings(token: string) {
     return requestJson<BackendStoreSettings>('/store-settings', {

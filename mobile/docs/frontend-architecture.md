@@ -669,6 +669,7 @@ Additional live admin pages:
 - `/admin/analytics`
 - `/admin/payments`
 - `/admin/service-queue`
+- `/admin/users`
 - `/admin/recommendations`
 - `/admin/recommendations/[runId]`
 

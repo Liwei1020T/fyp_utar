@@ -301,6 +301,11 @@ any active payment so checkout never trusts a stale catalog snapshot.
 - `DELETE /api/admin/store-settings/payment-qr`
 - `GET /api/admin/analytics/summary?days=7|30` (defaults to 7 and includes the matching previous-period booking and revenue totals)
 - `GET /api/admin/analytics/popular-strings`
+- `GET /api/admin/users/overview?limit=1..100`
+
+The admin user overview returns live registered-user totals, active-account
+totals, player/admin role counts, and the newest accounts up to the requested
+limit. It is read-only and omits phone numbers, passwords, and token metadata.
 
 Only approved catalog strings from `backend/data/string_catalog_db_ready.json`
 are exposed or updated. Admin catalog, official-performance, and inventory

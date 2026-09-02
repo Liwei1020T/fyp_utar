@@ -22,6 +22,22 @@ class UserOut(BaseModel):
     is_active: bool
 
 
+class AdminUserSummaryOut(BaseModel):
+    id: str
+    username: str
+    role: str
+    is_active: bool
+    created_at: str | None
+
+
+class AdminUsersOverviewOut(BaseModel):
+    total_users: int
+    active_users: int
+    player_count: int
+    admin_count: int
+    users: list[AdminUserSummaryOut]
+
+
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

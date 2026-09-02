@@ -17,6 +17,7 @@ import {
   Settings2,
   TimerReset,
   Undo2,
+  Users,
 } from 'lucide-react-native';
 import { AppCard } from '../../../components/ui/AppCard';
 import { AppChip } from '../../../components/ui/AppChip';
@@ -100,6 +101,12 @@ const PRIMARY_ACTIONS = [
     subtitle: 'Edit store details.',
     route: '/admin/settings',
     icon: Settings2,
+  },
+  {
+    title: 'Users',
+    subtitle: 'See registered users.',
+    route: '/admin/users',
+    icon: Users,
   },
 ];
 
