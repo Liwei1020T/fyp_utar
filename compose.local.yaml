@@ -54,5 +54,25 @@ services:
       backend:
         condition: service_healthy
 
+  bert-demo:
+    build:
+      context: ./stringsense_bert_demo
+      dockerfile: Dockerfile
+      network: host
+    image: stringsense-bert-demo:local
+    init: true
+    ports:
+      - "127.0.0.1:7860:7860"
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./macbert_demo_model:/app/macbert_demo_model:ro
+      - ./config/approved_string_cohort_v1.csv:/app/config/approved_string_cohort_v1.csv:ro
+      - ./ml/nlp-workbench-latest/data/normalization_rules_v8.csv:/app/config/normalization_rules_v8.csv:ro
+
 volumes:
   stringsense_local_uploads:

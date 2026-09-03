@@ -135,12 +135,13 @@ This writes `bert_pseudo_labeled_dataset.csv`, `bert_dataset_report.json`, and
 label, high-confidence flag, manual-review flag, and
 `rule_based_silver_not_human_gold` provenance remain visible on every row.
 
-The current prepared cohort run is
-`bert-prep-system12-high3-20260810-v1`: 130,421 review-aspect rows from 16,184
-reviews and 12 strings, split into 104,045 train, 13,077 validation, and 13,299
-test rows with zero review/text/group partition crossings. Its frozen dataset
-SHA-256 is
-`64ff725a7f38696cb21a178249b3ce642c4f8bb99485a914b8beff80af89754d`.
+The active prepared cohort run is
+`bert-prep-silver-overlap-longest-20260903`: 132,160 review-aspect rows from
+16,184 reviews and 12 strings, split into 105,457 train, 13,220 validation, and
+13,483 test rows with zero review/text/group partition crossings. Its frozen
+dataset SHA-256 is
+`9482b3ac7c1148270b37c981c46e3d5cfaeb6a9ccdbf877d665b56e673857bd2`.
+The previous run remains available as immutable comparison evidence.
 
 The experiment plan uses `google-bert/bert-base-chinese` as the academic
 baseline and `hfl/chinese-macbert-base` as the primary model. After
@@ -200,7 +201,7 @@ Predict one approved string/aspect input without writing runtime data:
 
 ```bash
 .venv/bin/python scripts/infer_bert.py predict \
-  --model-run-id bert-full-system12-high3-macbert-weighted-colab-20260810-v1 \
+  --model-run-id bert-full-system12-longest-macbert-kaggle-20260903-v1 \
   --string "Yonex BG80" \
   --aspect control \
   --review-text "控球稳定，落点清楚" \
@@ -212,8 +213,8 @@ Generate the full run-scoped candidate evidence chain:
 ```bash
 .venv/bin/python scripts/infer_bert.py run \
   --run-id <unique-inference-run-id> \
-  --model-run-id bert-full-system12-high3-macbert-weighted-colab-20260810-v1 \
-  --dataset-run-id bert-prep-system12-high3-20260810-v1
+  --model-run-id bert-full-system12-longest-macbert-kaggle-20260903-v1 \
+  --dataset-run-id bert-prep-silver-overlap-longest-20260903
 ```
 
 The command rechecks the frozen dataset digest, runs all 16,184 cohort reviews
@@ -339,8 +340,8 @@ Experiment runs default to `promotion.status = "not_promoted"`. Comparing and
 promoting an experiment artifact into backend runtime use is a separate task
 that requires explicit human approval. The owner later clarified that MacBERT
 must remain separate from V9. The current promotion is recorded by
-`bert-macbert-separate-matrix-promotion-20260812-v1`; the backend reads the
-independent MacBERT Matrix from:
+`bert-macbert-longest-separate-matrix-promotion-20260903-v1`; the backend reads
+the independent MacBERT Matrix from:
 
 ```text
 output/latest_macbert_review_matrix_system12.xlsx
@@ -348,7 +349,10 @@ output/latest_macbert_review_matrix_system12.xlsx
 
 It contains exactly the approved 12 strings and nine MacBERT aspects and has
 SHA256
-`dd30e792a213a03386101c4c8d6ba5aae07fa0bfc8d3f7439c6df92171424f87`.
+`74ac92d891973fc1e7988d0ed27a4088eba9be0430d15ee8c774aac811d2050f`.
+It was generated from model run
+`bert-full-system12-longest-macbert-kaggle-20260903-v1` with weights SHA256
+`82d95bb86d249850148691b6c8be801867d19354b0310a1c0f058dbb105f9e1f`.
 The old V9 workbook remains unchanged at SHA256
 `382d71cd90e195fcc41550c38175c13e1bb01515615fda572cf22fee90e05209`.
 Runtime database import is complete: PostgreSQL contains 108 `nlp_review` rows
@@ -361,18 +365,18 @@ for the approved 12 strings and reports health status `imported`.
   "strings_count": 33,
   "aspects_count": 9,
   "long_dataset_rows": 200250,
-  "high_confidence_rows": 178219,
+  "high_confidence_rows": 180555,
   "long_label_distribution": {
-    "not_mentioned": 130296,
-    "positive": 38712,
+    "not_mentioned": 130294,
+    "positive": 39132,
     "mentioned": 17441,
-    "negative": 9211,
-    "mixed": 4590
+    "negative": 11129,
+    "mixed": 2254
   },
   "high_label_distribution": {
-    "not_mentioned": 130296,
-    "positive": 38712,
-    "negative": 9211
+    "not_mentioned": 130294,
+    "positive": 39132,
+    "negative": 11129
   }
 }
 ```

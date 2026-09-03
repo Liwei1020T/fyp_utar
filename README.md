@@ -25,6 +25,10 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
   three-class classification: `not_mentioned`, `positive`, and `negative`.
   `mentioned` and `mixed` are excluded from training. No zero-shot NLI or human
   Gold claim is part of this bounded implementation.
+- The active local BERT demo model is
+  `bert-full-system12-longest-macbert-kaggle-20260903-v1`, trained from the
+  overlap-aware Silver dataset; the previous model remains available in its
+  immutable run directory for rollback.
 - MacBERT training remains an offline Silver experiment. Its separately reviewed
   12-by-9 Matrix is promoted into the backend `nlp_review` layer; this promotion
   does not turn Silver validation into Gold, human accuracy, or Kappa evidence.
@@ -48,16 +52,18 @@ StringSence now lives as one integrated workspace that combines the mobile app, 
 
 ### Run the full application with Docker
 
-This starts PostgreSQL, the FastAPI backend, Alembic migration, and Expo Web
-in Docker containers. Keep `backend/.env` configured for local development.
+This starts PostgreSQL, the FastAPI backend, Alembic migration, Expo Web, and
+the local nine-aspect BERT review demo in Docker containers. Keep `backend/.env`
+configured for local development.
 
 ```bash
-DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend
+DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend bert-demo
 docker compose -p stringsence -f compose.yaml -f compose.local.yaml ps
 curl http://127.0.0.1:3001/health
 ```
 
-Open [http://127.0.0.1:8081](http://127.0.0.1:8081) for the frontend. Stop the
+Open [http://127.0.0.1:8081](http://127.0.0.1:8081) for the frontend or
+[http://127.0.0.1:7860](http://127.0.0.1:7860) for the local BERT demo. Stop the
 containers without deleting the database volume with:
 
 ```bash

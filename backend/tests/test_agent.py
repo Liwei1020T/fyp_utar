@@ -51,7 +51,7 @@ class FakeModelClient:
         self.calls: list[dict[str, Any]] = []
 
     def complete(self, **kwargs: Any) -> dict[str, Any]:
-        self.calls.append(kwargs)
+        self.calls.append({**kwargs, "messages": list(kwargs["messages"])})
         return self.responses.pop(0)
 
 
@@ -133,6 +133,22 @@ def test_fyp_agent_scope_exposes_only_active_tools_and_string_action() -> None:
         "find_admin_inventory",
     }
     assert ACTIVE_AGENT_ACTIONS == {"open_string"}
+    what_if = next(
+        spec
+        for spec in AGENT_TOOL_SPECS
+        if spec["name"] == "preview_recommendation_what_if"
+    )
+    parameters = cast(dict[str, Any], what_if["parameters"])
+    assert parameters["required"] == ["changes"]
+    assert set(cast(dict[str, Any], parameters["properties"])) == {"changes"}
+    changes = cast(dict[str, Any], parameters["properties"]["changes"])
+    assert changes["type"] == "object"
+    assert set(cast(dict[str, Any], changes["properties"])) >= {
+        "playing_style",
+        "preferred_feel",
+        "durability",
+        "budget_rm",
+    }
 
 
 def test_admin_inventory_tool_returns_every_matching_string() -> None:
@@ -254,17 +270,132 @@ def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
     assert "user-1" not in client.calls[0]["user_id"]
     assert "Never use Markdown" in client.calls[0]["messages"][0]["content"]
     assert "Example JSON output" in client.calls[0]["messages"][0]["content"]
-    assert any(
-        "Always ask all four questions" in message.get("content", "")
-        and "call compare_strings" in message.get("content", "")
-        and "call get_store_information" in message.get("content", "")
-        and "opening hours" in message.get("content", "")
-        and "store address" in message.get("content", "")
-        and "answer under 70 words" in message.get("content", "")
-        and "Do not repeat the same fact" in message.get("content", "")
-        for message in client.calls[0]["messages"]
-        if isinstance(message.get("content"), str)
+    surface_instruction = client.calls[0]["messages"][1]
+    assert surface_instruction["role"] == "system"
+    assert (
+        "Route the latest player request in this priority order"
+        in surface_instruction["content"]
     )
+    assert "call compare_strings" in surface_instruction["content"]
+    assert "call get_store_information" in surface_instruction["content"]
+    assert "exactly this shape" in surface_instruction["content"]
+    assert "Always ask all four questions" not in surface_instruction["content"]
+    assert client.calls[0]["messages"][-1] == {
+        "role": "user",
+        "content": "Tell me about Yonex BG80.",
+    }
+
+
+@pytest.mark.parametrize(
+    ("user_message", "tool_name", "arguments"),
+    [
+        ("What time does the shop open?", "get_store_information", {}),
+        (
+            "Compare Yonex BG80 and Yonex BG65.",
+            "compare_strings",
+            {"catalog_ids": ["Yonex BG80", "Yonex BG65"]},
+        ),
+        (
+            "Tell me about Yonex BG80.",
+            "get_string_details",
+            {"catalog_id": "yonex-bg80"},
+        ),
+    ],
+)
+def test_chatbot_priority_routes_keep_non_selection_requests_out_of_guided_flow(
+    user_message: str,
+    tool_name: str,
+    arguments: dict[str, object],
+) -> None:
+    class RoutingToolbox:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, dict[str, object]]] = []
+
+        def execute(
+            self,
+            *,
+            name: str,
+            arguments: dict[str, object],
+            user_id: str,
+        ) -> AgentToolResult:
+            assert user_id == "user-1"
+            self.calls.append((name, arguments))
+            return AgentToolResult(data={"verified": True}, sources=[])
+
+    client = FakeModelClient(
+        [
+            _completion(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": "call-route",
+                            "type": "function",
+                            "function": {
+                                "name": tool_name,
+                                "arguments": json.dumps(arguments),
+                            },
+                        }
+                    ],
+                },
+                "tool_calls",
+            ),
+            _completion({"role": "assistant", "content": _answer_content()}, "stop"),
+        ]
+    )
+    toolbox = RoutingToolbox()
+
+    QueryAgentUseCase(
+        toolbox=cast(AgentToolbox, toolbox),
+        model_client=client,
+    ).execute(
+        payload=AgentQueryDto.model_validate(
+            {"message": user_message, "context": {"surface": "chatbot"}}
+        ),
+        user_id="user-1",
+    )
+
+    assert toolbox.calls == [(tool_name, arguments)]
+    assert not any(
+        message.get("role") == "system"
+        and "Conversation-derived guided-selection state" in message.get("content", "")
+        for message in client.calls[0]["messages"]
+    )
+    assert client.calls[0]["messages"][-1] == {
+        "role": "user",
+        "content": user_message,
+    }
+
+
+def test_guided_selection_uses_the_next_unanswered_question() -> None:
+    client = FakeModelClient(
+        [_completion({"role": "assistant", "content": _answer_content()}, "stop")]
+    )
+    payload = AgentQueryDto.model_validate(
+        {
+            "message": "control",
+            "context": {"surface": "chatbot"},
+            "conversation_history": [
+                {"role": "user", "content": "Help me choose a string."},
+                {
+                    "role": "assistant",
+                    "content": "What is your playing style: attacking, balanced, or control?",
+                },
+            ],
+        }
+    )
+
+    response = QueryAgentUseCase(
+        toolbox=cast(AgentToolbox, FakeToolbox()),
+        model_client=client,
+    ).execute(payload=payload, user_id="user-1")
+
+    assert client.calls == []
+    assert "what feel do you prefer" in response.answer.casefold()
+    assert "durability" not in response.answer.casefold()
+    assert "budget" not in response.answer.casefold()
+    assert response.evidence_status == "insufficient_evidence"
 
 
 def test_recommendation_explanation_requests_short_non_technical_copy() -> None:
@@ -323,7 +454,13 @@ def test_recommendation_explanation_requests_short_non_technical_copy() -> None:
     ).execute(payload=payload, user_id="user-1")
 
     messages = client.calls[0]["messages"]
-    instruction = messages[-2]["content"]
+    instruction_message = next(
+        message
+        for message in messages
+        if message.get("content", "").startswith("For this recommendation explanation")
+    )
+    assert instruction_message["role"] == "system"
+    instruction = instruction_message["content"]
     assert "answer under 70 words" in instruction
     assert "Do not repeat the same fact" in instruction
     assert "Do not mention algorithms" in instruction
@@ -374,12 +511,18 @@ def test_catalog_context_requests_grounded_string_introduction() -> None:
     ).execute(payload=payload, user_id="user-1")
 
     assert response.sources[0].source_id == "yonex-bg66-ultimax"
-    instruction = client.calls[0]["messages"][-2]["content"]
-    assert "catalog introductions" in instruction
+    instruction_message = next(
+        message
+        for message in client.calls[0]["messages"]
+        if message.get("content", "").startswith("This player surface")
+    )
+    assert instruction_message["role"] == "system"
+    instruction = instruction_message["content"]
+    assert "exact catalog-string explanations" in instruction
     assert "one practical consideration" in instruction
-    assert "do not ask the guided-selection questions" in instruction
-    assert "A catalog introduction is not a personalized recommendation" in instruction
-    assert "yonex-bg66-ultimax" in client.calls[0]["messages"][-1]["content"]
+    assert "do not ask guided questions" in instruction
+    assert "This is not a personalized recommendation" in instruction
+    assert "yonex-bg66-ultimax" in client.calls[0]["messages"][-2]["content"]
 
 
 def test_agent_drops_action_with_unverified_resource_id() -> None:
@@ -542,6 +685,61 @@ def test_compare_strings_combines_distinct_backend_items() -> None:
     ]
 
 
+def test_string_details_resolves_exact_display_name() -> None:
+    item = SimpleNamespace(
+        id="yonex-bg80",
+        brand="Yonex",
+        display_name="Yonex BG80",
+        model_name="BG80",
+        series_label="High Repulsion",
+        is_hybrid=False,
+        gauge_main_mm=0.68,
+        gauge_cross_mm=None,
+        gauge_label="0.68 mm",
+        category="repulsion",
+        main_trait="Repulsion",
+        tension_min_lbs=20,
+        tension_max_lbs=35,
+        material_summary_en="Nylon and Vectran.",
+        color_options_en=["White"],
+        short_description="A firm offensive string.",
+        full_description="A firm offensive string with crisp response.",
+        aspect_scores={},
+        price_rm=48.0,
+        available_stock=8,
+        inventory=SimpleNamespace(
+            available_stock=8,
+            availability_status="in_stock",
+            pricing_mode="fixed",
+        ),
+        official_performance=None,
+        is_active=True,
+        updated_at=None,
+    )
+
+    class Catalogs:
+        def get_by_id(self, catalog_id: str):
+            assert catalog_id == "Yonex BG80"
+            return None
+
+        def list_active_catalog(self):
+            return [item]
+
+    toolbox = AgentToolbox(
+        catalog_repository=cast(CatalogRepository, Catalogs()),
+        recommendation_run_repository=cast(RecommendationRunRepository, object()),
+        store_repository=cast(StoreRepository, object()),
+        booking_repository=cast(BookingRepository, object()),
+        profile_repository=cast(ProfileRepository, object()),
+        recommendation_repository=cast(RecommendationRepository, object()),
+    )
+
+    result = toolbox.get_string_details("Yonex BG80")
+
+    assert result.data["string"]["id"] == "yonex-bg80"
+    assert result.sources[0]["source_id"] == "yonex-bg80"
+
+
 def test_recommendation_run_tool_hides_another_users_run() -> None:
     run = RecommendationRunRecord(
         id="run-1",
@@ -667,6 +865,7 @@ def test_what_if_tool_maps_changes_without_mutating_saved_profile() -> None:
                 "changes": {
                     "attack": 9,
                     "preferred_tension": 28,
+                    "playing_style": "control",
                     "budget_rm": 40,
                 }
             },
@@ -676,10 +875,12 @@ def test_what_if_tool_maps_changes_without_mutating_saved_profile() -> None:
     request = execute_preview.call_args.kwargs["request"]
     assert request.pref_attack == 9
     assert request.preferred_tension == 28
+    assert request.playing_style == "control_defensive"
     assert request.pref_comfort == 5
     assert request.top_n == 10
     assert profile.pref_attack == 5
     assert result.data["simulation"] is True
+    assert result.data["applied_changes"]["playing_style"] == "control_defensive"
     assert result.data["recommendation"]["run_id"] == "run-preview"
     assert [
         item["catalog_id"] for item in result.data["recommendation"]["results"]
@@ -708,6 +909,7 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
         price: float,
         stock: int,
         score: float,
+        availability_status: str | None = None,
     ) -> SimpleNamespace:
         scores = {feature: score for feature in target_scores}
         return SimpleNamespace(
@@ -717,7 +919,8 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
             price_rm=price,
             available_stock=stock,
             inventory=SimpleNamespace(
-                availability_status="in_stock" if stock else "out_of_stock"
+                availability_status=availability_status
+                or ("in_stock" if stock else "out_of_stock")
             ),
             aspect_score=lambda feature, default=0.5: scores.get(feature, default),
             is_active=True,
@@ -728,6 +931,13 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
     close = item("close", price=45, stock=4, score=0.78)
     far = item("far", price=30, stock=6, score=0.2)
     expensive = item("expensive", price=80, stock=8, score=0.8)
+    stale = item(
+        "stale",
+        price=35,
+        stock=7,
+        score=0.79,
+        availability_status="out_of_stock",
+    )
 
     class Catalogs:
         def get_by_id(self, catalog_id: str):
@@ -740,6 +950,7 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
                 SimpleNamespace(item=far),
                 SimpleNamespace(item=expensive),
                 SimpleNamespace(item=close),
+                SimpleNamespace(item=stale),
             ]
 
     toolbox = AgentToolbox(
@@ -766,6 +977,140 @@ def test_out_of_stock_tool_returns_only_similar_in_budget_candidates() -> None:
         "far",
     ]
     assert all(item["available_stock"] > 0 for item in result.data["alternatives"])
+
+
+def test_out_of_stock_explanation_fetches_verified_alternatives_before_offering_one() -> (
+    None
+):
+    class OutOfStockToolbox(FakeToolbox):
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, dict[str, object]]] = []
+
+        def get_recommendation_run_context(self, **_: Any) -> AgentToolResult:
+            return AgentToolResult(
+                data={"run_id": "run-1", "catalog_id": "target"},
+                sources=[
+                    {
+                        "source_type": "recommendation_run",
+                        "source_id": "run-1",
+                        "label": "Recommendation run",
+                        "version": None,
+                    }
+                ],
+            )
+
+        def get_string_details(self, catalog_id: str) -> AgentToolResult:
+            assert catalog_id == "target"
+            return AgentToolResult(
+                data={
+                    "string": {
+                        "id": "target",
+                        "inventory": {
+                            "available_stock": 0,
+                            "availability_status": "out_of_stock",
+                        },
+                    }
+                },
+                sources=[
+                    {
+                        "source_type": "catalog",
+                        "source_id": "target",
+                        "label": "Target string",
+                        "version": None,
+                    }
+                ],
+            )
+
+        def execute(
+            self,
+            *,
+            name: str,
+            arguments: dict[str, object],
+            user_id: str,
+        ) -> AgentToolResult:
+            assert user_id == "user-1"
+            self.calls.append((name, arguments))
+            assert name == "find_in_stock_alternatives"
+            return AgentToolResult(
+                data={"alternatives": [{"catalog_id": "alternative"}]},
+                sources=[
+                    {
+                        "source_type": "catalog",
+                        "source_id": "alternative",
+                        "label": "Alternative string",
+                        "version": None,
+                    }
+                ],
+            )
+
+    client = FakeModelClient(
+        [
+            _completion(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": "call-alternatives",
+                            "type": "function",
+                            "function": {
+                                "name": "find_in_stock_alternatives",
+                                "arguments": json.dumps(
+                                    {"catalog_id": "target", "budget_rm": 50}
+                                ),
+                            },
+                        }
+                    ],
+                },
+                "tool_calls",
+            ),
+            _completion(
+                {
+                    "role": "assistant",
+                    "content": _answer_content(
+                        suggested_actions=[
+                            {
+                                "action": "open_string",
+                                "label": "Open alternative",
+                                "parameters": {"catalog_id": "alternative"},
+                            }
+                        ]
+                    ),
+                },
+                "stop",
+            ),
+        ]
+    )
+    toolbox = OutOfStockToolbox()
+
+    response = QueryAgentUseCase(
+        toolbox=cast(AgentToolbox, toolbox),
+        model_client=client,
+    ).execute(
+        payload=AgentQueryDto.model_validate(
+            {
+                "message": "This recommendation is out of stock. What else can I buy?",
+                "context": {
+                    "surface": "recommendation_explanation",
+                    "run_id": "run-1",
+                    "catalog_id": "target",
+                },
+            }
+        ),
+        user_id="user-1",
+    )
+
+    assert toolbox.calls == [
+        (
+            "find_in_stock_alternatives",
+            {"catalog_id": "target", "budget_rm": 50},
+        )
+    ]
+    assert response.suggested_actions[0].parameters == {"catalog_id": "alternative"}
+    assert {source.source_id for source in response.sources} >= {
+        "target",
+        "alternative",
+    }
 
 
 def test_latest_recommendation_tool_returns_backend_run_source() -> None:
@@ -890,8 +1235,8 @@ def test_deepseek_client_retries_empty_json_content_once() -> None:
     assert result["choices"][0]["message"]["content"] == "{}"
     assert len(payloads) == 2
     retry_messages = cast(list[dict[str, object]], payloads[1]["messages"])
-    assert retry_messages[-1] == {
-        "role": "user",
+    assert retry_messages[-2] == {
+        "role": "system",
         "content": (
             "Return one non-empty JSON object matching the requested schema. Use this "
             "only as a format example: "
@@ -900,6 +1245,7 @@ def test_deepseek_client_retries_empty_json_content_once() -> None:
             '"suggested_questions":[],"suggested_actions":[],"handoff":null}'
         ),
     }
+    assert retry_messages[-1] == {"role": "user", "content": "hello"}
 
 
 def test_agent_endpoint_requires_auth_and_reports_unconfigured_provider() -> None:
@@ -969,9 +1315,14 @@ def test_agent_retries_an_invalid_final_answer_before_failing() -> None:
     assert len(fake_client.calls) == 2
     assert fake_client.calls[1]["tools"] == []
     assert fake_client.calls[1]["tool_choice"] == "none"
+    assert fake_client.calls[1]["messages"][-2]["role"] == "system"
+    assert fake_client.calls[1]["messages"][-1] == {
+        "role": "user",
+        "content": "How many bookings are there?",
+    }
     assert (
         "Return exactly one JSON object"
-        in fake_client.calls[1]["messages"][-1]["content"]
+        in fake_client.calls[1]["messages"][-2]["content"]
     )
 
 
@@ -1136,6 +1487,8 @@ def test_admin_agent_uses_enabled_read_tools_and_filters_all_actions() -> None:
     assert "booking search" in instruction
     assert "inventory search" in instruction
     assert "no suggested questions or actions" in instruction
+    assert "aggregate payment and unread-support workload counts" in instruction
+    assert "individual payment or support records" in instruction
 
 
 def test_agent_surface_rejects_the_wrong_role() -> None:

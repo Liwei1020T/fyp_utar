@@ -84,6 +84,13 @@ class AgentWhatIfChangesDto(BaseModel):
     budget_rm: float | None = Field(default=None, ge=0, le=1000)
     racket_id: str | None = Field(default=None, min_length=1, max_length=36)
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_playing_style(cls, value: object) -> object:
+        if isinstance(value, dict) and value.get("playing_style") == "control":
+            return {**value, "playing_style": "control_defensive"}
+        return value
+
     @model_validator(mode="after")
     def validate_change(self) -> "AgentWhatIfChangesDto":
         if not self.model_dump(exclude_none=True):

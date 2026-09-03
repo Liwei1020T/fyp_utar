@@ -594,11 +594,10 @@ test('core mobile journeys use progressive disclosure and discoverable tools', a
   assert.doesNotMatch(recommendation, /Saved Priority Weights/);
   assert.match(results, /StringProductImage/);
   assert.match(results, /Why this fits/);
-  assert.match(results, /queryAgent/);
-  assert.match(results, /surface: 'recommendation_explanation'/);
-  assert.match(results, /Generating a tailored explanation/);
-  assert.match(results, /only the evidence marked as used/);
-  assert.match(results, /response\.summary\.trim\(\)/);
+  assert.match(results, /rationale\?\.top_reasons\?\.\[0\]/);
+  assert.match(results, /item\.reasons\[0\]/);
+  assert.doesNotMatch(results, /queryAgent/);
+  assert.doesNotMatch(results, /Generating a tailored explanation/);
   assert.match(results, /Your history/);
   assert.match(results, /Community feedback/);
   assert.match(results, /Similar players/);

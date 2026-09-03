@@ -34,7 +34,7 @@ from app.use_cases.recommendation.generate_recommendation import (
 ALL_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
     {
         "name": "get_string_details",
-        "description": "Get approved catalog, performance, price, and stock facts for one string.",
+        "description": "Get approved catalog, performance, price, and stock facts for one string by catalog ID or exact display name.",
         "parameters": {
             "type": "object",
             "properties": {"catalog_id": {"type": "string"}},
@@ -127,7 +127,7 @@ ALL_AGENT_TOOL_SPECS: tuple[dict[str, object], ...] = (
     },
     {
         "name": "preview_recommendation_what_if",
-        "description": "Run a recommendation simulation with explicit profile changes without updating the saved profile or recommendation cache.",
+        "description": "Run a recommendation simulation without updating the saved profile or recommendation cache. For guided selection, pass playing_style, preferred_feel, durability, and budget_rm inside one changes object; map player-facing control to control_defensive.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -299,10 +299,25 @@ class AgentToolbox:
             )
         raise BadRequestError("Unknown Agent tool")
 
-    def get_string_details(self, catalog_id: str) -> AgentToolResult:
-        item = self.catalog_repository.get_by_id(catalog_id)
+    def _get_active_catalog_item(self, identifier: str) -> StringItem:
+        item = self.catalog_repository.get_by_id(identifier)
+        if item is None:
+            normalized_identifier = identifier.casefold()
+            item = next(
+                (
+                    candidate
+                    for candidate in self.catalog_repository.list_active_catalog()
+                    if candidate.id.casefold() == normalized_identifier
+                    or candidate.display_name.casefold() == normalized_identifier
+                ),
+                None,
+            )
         if item is None or not item.is_active:
             raise NotFoundError("String not found")
+        return item
+
+    def get_string_details(self, catalog_id: str) -> AgentToolResult:
+        item = self._get_active_catalog_item(catalog_id)
         catalog = {
             "id": item.id,
             "brand": item.brand,
@@ -366,13 +381,11 @@ class AgentToolbox:
         catalog_id: str,
         aspects: list[str],
     ) -> AgentToolResult:
-        item = self.catalog_repository.get_by_id(catalog_id)
-        if item is None or not item.is_active:
-            raise NotFoundError("String not found")
-        matrix = self.catalog_repository.get_recommendation_matrix(catalog_id)
+        item = self._get_active_catalog_item(catalog_id)
+        matrix = self.catalog_repository.get_recommendation_matrix(item.id)
         if matrix is None:
             return AgentToolResult(
-                data={"catalog_id": catalog_id, "evidence": []},
+                data={"catalog_id": item.id, "evidence": []},
                 sources=[
                     _source("catalog", item.id, item.display_name, item.updated_at)
                 ],
@@ -391,11 +404,9 @@ class AgentToolbox:
             and (not aspect_filter or entry.feature_key in aspect_filter)
         ]
         return AgentToolResult(
-            data={"catalog_id": catalog_id, "evidence": evidence},
+            data={"catalog_id": item.id, "evidence": evidence},
             sources=[
-                _source(
-                    "nlp_review", catalog_id, f"{item.display_name} review evidence"
-                )
+                _source("nlp_review", item.id, f"{item.display_name} review evidence")
             ],
         )
 
@@ -667,9 +678,7 @@ class AgentToolbox:
         catalog_id: str,
         budget_rm: float | None,
     ) -> AgentToolResult:
-        target = self.catalog_repository.get_by_id(catalog_id)
-        if target is None or not target.is_active:
-            raise NotFoundError("String not found")
+        target = self._get_active_catalog_item(catalog_id)
         target_available = bool(
             target.inventory
             and target.available_stock > 0
@@ -680,6 +689,10 @@ class AgentToolbox:
             for candidate in self.recommendation_repository.list_active_candidates():
                 item = candidate.item
                 if item.id == target.id:
+                    continue
+                if not item.inventory or item.available_stock <= 0:
+                    continue
+                if item.inventory.availability_status not in {"in_stock", "low_stock"}:
                     continue
                 if budget_rm is not None and (
                     item.price_rm is None or item.price_rm > budget_rm

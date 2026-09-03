@@ -41,20 +41,25 @@ class DeepSeekAgentClient:
 
         for attempt in range(2):
             if attempt:
-                payload["messages"] = [
-                    *messages,
-                    {
-                        "role": "user",
-                        "content": (
-                            "Return one non-empty JSON object matching the requested "
-                            "schema. Use this only as a format example: "
-                            '{"answer":"Plain response.","summary":"Short summary.",'
-                            '"evidence":[],"evidence_status":"insufficient_evidence",'
-                            '"suggested_questions":[],"suggested_actions":[],'
-                            '"handoff":null}'
-                        ),
-                    },
-                ]
+                retry_message = {
+                    "role": "system",
+                    "content": (
+                        "Return one non-empty JSON object matching the requested "
+                        "schema. Use this only as a format example: "
+                        '{"answer":"Plain response.","summary":"Short summary.",'
+                        '"evidence":[],"evidence_status":"insufficient_evidence",'
+                        '"suggested_questions":[],"suggested_actions":[],'
+                        '"handoff":null}'
+                    ),
+                }
+                if messages and messages[-1].get("role") == "user":
+                    payload["messages"] = [
+                        *messages[:-1],
+                        retry_message,
+                        messages[-1],
+                    ]
+                else:
+                    payload["messages"] = [retry_message, *messages]
             request = Request(
                 f"{self.base_url.rstrip('/')}/chat/completions",
                 data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),

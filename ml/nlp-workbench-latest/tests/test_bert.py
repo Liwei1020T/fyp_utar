@@ -27,6 +27,7 @@ from stringsense_nlp.bert_inference import choose_pilot_threshold  # noqa: E402
 from stringsense_nlp.bert_inference import load_inference_catalog  # noqa: E402
 from stringsense_nlp.bert_inference import mark_aggregation_status  # noqa: E402
 from stringsense_nlp.bert_inference import minimum_evidence_analysis  # noqa: E402
+from stringsense_nlp.bert_inference import normalize_inference_review  # noqa: E402
 from stringsense_nlp.bert_inference import threshold_analysis  # noqa: E402
 from stringsense_nlp.bert_inference import validate_inference_request  # noqa: E402
 from stringsense_nlp.bert_review import build_cell_stability  # noqa: E402
@@ -198,6 +199,24 @@ def test_inference_reuses_training_input_and_rejects_unknown_scope() -> None:
         validate_inference_request("Yonex Unknown", "control", "控球很稳", catalog)
     with pytest.raises(ValueError, match="Unsupported BERT aspect"):
         validate_inference_request("Yonex BG80", "speed", "控球很稳", catalog)
+
+
+def test_single_review_inference_reuses_silver_normalization_rules() -> None:
+    assert normalize_inference_review(WORKBENCH, "不太弹") == "不弹"
+    assert normalize_inference_review(WORKBENCH, "不容易断") == "不易断"
+    assert normalize_inference_review(WORKBENCH, "不容易掉磅") == "不掉磅"
+
+
+def test_phrase_sanity_fixture_matches_the_active_normalizer() -> None:
+    cases = pd.read_csv(
+        WORKBENCH / "tests/bert_phrase_sanity_cases.csv",
+        keep_default_na=False,
+    )
+    assert len(cases) == 16
+    assert set(cases["expected_label"]) <= set(BERT_LABELS)
+    assert cases["expected_normalized_text"].tolist() == [
+        normalize_inference_review(WORKBENCH, phrase) for phrase in cases["phrase"]
+    ]
 
 
 def test_inference_frame_expands_each_real_review_to_nine_aspects() -> None:

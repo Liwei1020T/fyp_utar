@@ -19,11 +19,11 @@ Canonical source folder:
 | High-confidence ABSA data | `ml/nlp-workbench-latest/data/nlp_absa_high_confidence_latest.csv` | Historical pre-boundary output retained for audit; not the current training input. |
 | Long ABSA dataset | `ml/nlp-workbench-latest/data/nlp_absa_long_dataset_latest.csv` | Historical pre-boundary output retained for audit; not the current training input. |
 | Approved system/BERT cohort | `config/approved_string_cohort_v1.csv` | Defines the 12 active strings shared by runtime filtering and BERT preparation. |
-| BERT preparation run | `ml/nlp-workbench-latest/output/runs/bert-prep-system12-high3-20260810-v1/` | Contains the frozen 130,421-row, high-confidence three-class Silver dataset and provenance. |
+| BERT preparation run | `ml/nlp-workbench-latest/output/runs/bert-prep-silver-overlap-longest-20260903/` | Active 132,160-row, high-confidence three-class Silver dataset generated with overlap-aware longest matching. |
 | BERT training runs | `ml/nlp-workbench-latest/output/runs/<bert-training-run-id>/bert_training/` | Contains run-scoped model, metrics, predictions, and `not_promoted` manifests. |
 | Practical feature matrix CSV | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv` | Preserved historical/compatibility artifact; not imported by the current runtime. |
 | Practical feature matrix XLSX | `ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx` | Preserved legacy V9 artifact; not imported by the current runtime. |
-| Current recommendation matrix | `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` | Current 12-string MacBERT `nlp_review` source imported by the backend. |
+| Current recommendation matrix | `ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx` | Promoted 2026-09-03 from the Kaggle-trained 12-string MacBERT candidate; current backend `nlp_review` source. |
 
 ## Backend Integration
 
@@ -48,12 +48,17 @@ the required core NLP feature set.
 ## Current BERT Boundary
 
 - Model: `hfl/chinese-macbert-base`
+- Active model run: `bert-full-system12-longest-macbert-kaggle-20260903-v1`
+- Model weights SHA-256: `82d95bb86d249850148691b6c8be801867d19354b0310a1c0f058dbb105f9e1f`
+- Training device: Kaggle `Tesla T4` CUDA
 - Input: target string, one requested aspect, and review text
 - Labels: `not_mentioned`, `positive`, `negative`
 - Training source: high-confidence, rule-based Silver only
 - Excluded: `mentioned`, `mixed`, zero-shot NLI, and any human-Gold claim
+- Matrix promotion: `bert-macbert-longest-separate-matrix-promotion-20260903-v1`
+- Current matrix SHA-256: `74ac92d891973fc1e7988d0ed27a4088eba9be0430d15ee8c774aac811d2050f`
 - Scope: 12 approved strings by 9 aspects
-- Runtime state: offline/run-scoped and `not_promoted`
+- Training run state: immutable and `not_promoted`; reviewed matrix is promoted separately
 
 Metrics against the pseudo-labeled validation/test partitions validate pipeline
 behavior only. They do not establish human-ground-truth accuracy.

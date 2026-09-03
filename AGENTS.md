@@ -14,7 +14,7 @@
 ## Validation Commands
 
 - Local Postgres: `docker compose up -d postgres`
-- Full local Docker stack: `DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend`
+- Full local Docker stack: `DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend bert-demo`
 - Mobile setup: `cd mobile && nvm use && npm install`
 - Mobile typecheck: `cd mobile && npx tsc --noEmit`
 - Mobile web smoke: `cd mobile && EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3001/api npm run web`
@@ -79,8 +79,8 @@
 
 ## Quick Start
 
-- Full Docker stack: `DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend`
-- Docker frontend: `http://127.0.0.1:8081`; Docker backend health: `http://127.0.0.1:3001/health`
+- Full Docker stack: `DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -p stringsence -f compose.yaml -f compose.local.yaml up -d --build postgres migrate backend frontend bert-demo`
+- Docker frontend: `http://127.0.0.1:8081`; Docker backend health: `http://127.0.0.1:3001/health`; BERT demo: `http://127.0.0.1:7860`
 
 - Local Postgres:
   - `docker compose up -d postgres`

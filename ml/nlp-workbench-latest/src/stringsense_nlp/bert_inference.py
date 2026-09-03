@@ -27,6 +27,7 @@ from .boundary import utc_now
 from .boundary import write_json_exclusive
 from .foundation import load_string_mappings
 from .foundation import normalize_string_name
+from .labeling import build_normalizer
 
 
 INFERENCE_SCHEMA_VERSION = "stringsense.bert-inference.v1"
@@ -57,6 +58,11 @@ def validate_inference_request(
             f"String is outside the approved 12-string cohort: {canonical_string_name}"
         )
     return format_bert_model_input(canonical_string_name, aspect, review_text)
+
+
+def normalize_inference_review(workbench: Path, review_text: str) -> str:
+    rules = pd.read_csv(workbench / "data/normalization_rules_v8.csv")
+    return build_normalizer(rules)(review_text)
 
 
 def build_inference_frame(
@@ -475,8 +481,9 @@ def predict_one(
     catalog = load_inference_catalog(
         workbench.parents[1] / "config/approved_string_cohort_v1.csv"
     )
+    normalized_review_text = normalize_inference_review(workbench, review_text)
     model_input = validate_inference_request(
-        canonical_string_name, aspect, review_text, catalog
+        canonical_string_name, aspect, normalized_review_text, catalog
     )
     model_dir, _ = _model_paths(workbench, model_run_id)
     probabilities, resolved_device = predict_probabilities(

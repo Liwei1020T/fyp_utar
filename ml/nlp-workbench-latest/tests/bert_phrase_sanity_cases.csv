@@ -1,0 +1,17 @@
+phrase,aspect,expected_label,expected_normalized_text
+耐用,durability,positive,耐用
+不耐用,durability,negative,不耐用
+耐打,durability,positive,耐打
+不耐打,durability,negative,不耐打
+跑线,string_movement,negative,跑线
+不跑线,string_movement,positive,不跑线
+移位,string_movement,negative,移位
+不移位,string_movement,positive,不移位
+震手,comfort,negative,震手
+不震手,comfort,positive,不震手
+弹性好,elasticity,positive,弹性好
+不太弹,elasticity,negative,不弹
+容易断,durability,negative,容易断
+不容易断,durability,positive,不易断
+掉磅快,tension_retention,negative,掉磅快
+不容易掉磅,tension_retention,positive,不掉磅

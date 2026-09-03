@@ -36,6 +36,7 @@ ml/nlp-workbench-latest/output/*
 !ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v8_v6dict.csv
 !ml/nlp-workbench-latest/output/latest_practical_string_feature_matrix_v9_v8dict.xlsx
 !ml/nlp-workbench-latest/output/latest_macbert_review_matrix_system12.xlsx
+/macbert_demo_model/
 
 graphify-out/cache/
 graphify-out/.graphify_*

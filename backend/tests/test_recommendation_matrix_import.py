@@ -181,7 +181,7 @@ def test_admin_can_inspect_and_reimport_recommendation_matrix() -> None:
     assert detail["catalog_id"] == "yonex-bg80"
     assert detail["official_performance"]["status"] == "manual_reviewed"
     assert "nlp_review" in detail["matrix_by_source"]
-    assert detail["effective_scores"]["sound"] == pytest.approx(0.9562, abs=1e-4)
+    assert detail["effective_scores"]["sound"] == pytest.approx(0.9508, abs=1e-4)
 
     nlp_feature_keys = {
         item["feature_key"] for item in detail["matrix_by_source"]["nlp_review"]
@@ -251,9 +251,9 @@ def test_latest_macbert_workbook_import_matches_approved_cohort() -> None:
             ("yonex-bg80", "sound", "nlp_review"),
         )
         assert bg80_sound is not None
-        assert float(bg80_sound.raw_value or 0) == pytest.approx(4.8247, abs=1e-4)
+        assert float(bg80_sound.raw_value or 0) == pytest.approx(4.8030, abs=1e-4)
         assert float(bg80_sound.normalized_score or 0) == pytest.approx(
-            0.9562, abs=1e-4
+            0.9508, abs=1e-4
         )
 
         aerobie_rows = {
