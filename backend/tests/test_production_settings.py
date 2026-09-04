@@ -36,6 +36,7 @@ def test_development_cors_defaults_include_common_expo_web_ports() -> None:
         "http://localhost:8081",
         "http://127.0.0.1:8089",
         "http://localhost:8089",
+        "https://stringsense.li-wei.net",
     ]
 
 

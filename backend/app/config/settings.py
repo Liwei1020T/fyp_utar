@@ -75,6 +75,7 @@ class Settings(BaseSettings):
             "http://localhost:8081",
             "http://127.0.0.1:8089",
             "http://localhost:8089",
+            "https://stringsense.li-wei.net",
         ],
         alias="CORS_ORIGINS",
     )

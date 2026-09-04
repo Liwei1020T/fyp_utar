@@ -1,7 +1,7 @@
 x-backend-environment: &backend-environment
   APP_ENV: development
   DATABASE_URL: postgresql+psycopg://admin:admin@postgres:5432/stringsense
-  CORS_ORIGINS: "${CORS_ORIGINS:-http://127.0.0.1:8081,http://localhost:8081}"
+  CORS_ORIGINS: "${CORS_ORIGINS:-http://127.0.0.1:8081,http://localhost:8081,https://stringsense.li-wei.net}"
   TRUSTED_HOSTS: "${TRUSTED_HOSTS:-*}"
   PORT: "3001"
 
