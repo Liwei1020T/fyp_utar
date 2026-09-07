@@ -52,14 +52,12 @@ class SqlAlchemyUserRepository:
         phone_number: str,
         password_hash: str,
         role: str,
-        auth_provider: str,
     ) -> UserAccount:
         user = User(
             username=username,
             phone_number=phone_number,
             password_hash=password_hash,
             role=role,
-            auth_provider=auth_provider,
         )
         self.db.add(user)
         self.db.flush()

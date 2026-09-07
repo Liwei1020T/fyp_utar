@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.domain.auth.entities import UserAccount
 from app.ports.repositories.user_repository import UserRepository
@@ -26,5 +25,4 @@ class RegisterUserUseCase:
             phone_number=phone_number,
             password_hash=self.password_hasher.hash_password(password),
             role=UserRole.CUSTOMER.value,
-            auth_provider=AuthProvider.LOCAL.value,
         )

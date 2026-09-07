@@ -211,7 +211,6 @@ def approved_row_to_values(
         },
         "inventory": {
             "catalog_id": catalog_id,
-            "sku": build_sku(str(row["brand_code"]), model_name),
             "current_stock": 8,
             "reserved_stock": 0,
             "available_stock": 8,
@@ -361,8 +360,3 @@ def as_string(value: Any) -> str | None:
     if isinstance(value, (int, float)):
         return str(value)
     return None
-
-
-def build_sku(brand_code: str, model_name: str) -> str:
-    compact_model = re.sub(r"[^a-zA-Z0-9]+", "-", model_name.strip().lower()).strip("-")
-    return f"STR-{brand_code.upper()}-{compact_model.upper()}"

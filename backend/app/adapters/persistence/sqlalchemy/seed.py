@@ -32,7 +32,6 @@ from app.adapters.persistence.sqlalchemy.models import RacketModelCatalog
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.services.security.pbkdf2_password_hasher import Pbkdf2PasswordHasher
 from app.config.settings import get_settings
-from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.domain.recommendation.learning_signals import STANDARD_RACKET_MODELS
 from app.shared.errors import ConflictError
@@ -89,7 +88,6 @@ def ensure_seed_user(
                 phone_number=normalized_phone,
                 password_hash=hasher.hash_password(password),
                 role=role,
-                auth_provider=AuthProvider.LOCAL.value,
             )
         )
         db.flush()

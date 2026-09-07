@@ -31,7 +31,6 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_user_repository
 from app.adapters.persistence.sqlalchemy.seed import ensure_catalog_seeded
 from app.adapters.persistence.sqlalchemy.seed import ensure_store_defaults
 from app.adapters.services.system_clock import SystemClock
-from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.shared.errors import ConflictError
 from app.use_cases.booking.create_booking import CreateBookingUseCase
@@ -67,7 +66,6 @@ def test_concurrent_booking_creation_never_exceeds_slot_capacity() -> None:
                 phone_number=f"+6018{uuid4().int % 100_000_000:08d}",
                 password_hash="not-used",
                 role=UserRole.CUSTOMER.value,
-                auth_provider=AuthProvider.LOCAL.value,
             )
             user_id = user.id
             string_id = SqlAlchemyCatalogRepository(db).list_active_catalog()[0].id

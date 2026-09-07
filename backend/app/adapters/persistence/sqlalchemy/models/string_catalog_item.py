@@ -215,7 +215,6 @@ class StringInventoryItem(Base):
         unique=True,
         index=True,
     )
-    sku: Mapped[str | None] = mapped_column(SAString(120), nullable=True, unique=True)
     current_stock: Mapped[int] = mapped_column(Integer, default=0)
     reserved_stock: Mapped[int] = mapped_column(Integer, default=0)
     available_stock: Mapped[int] = mapped_column(Integer, default=0)

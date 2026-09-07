@@ -31,7 +31,6 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_user_repository
     SqlAlchemyUserRepository,
 )
 from app.adapters.persistence.sqlalchemy.seed import ensure_catalog_seeded
-from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.domain.store.policies import hash_check_in_token
 from app.entrypoints.api.dependencies import CurrentUser
@@ -82,7 +81,6 @@ def test_concurrent_reset_and_check_in_requests_keep_one_active_token() -> None:
                 phone_number=phone_number,
                 password_hash="not-used",
                 role=UserRole.CUSTOMER.value,
-                auth_provider=AuthProvider.LOCAL.value,
             )
             user_id = user.id
             string_id = SqlAlchemyCatalogRepository(db).list_active_catalog()[0].id

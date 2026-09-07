@@ -51,6 +51,8 @@ The active migration sequence is:
 - [20260902_0043_remove_unused_recommendation_score_columns.py](../migrations/versions/20260902_0043_remove_unused_recommendation_score_columns.py)
 - [20260902_0044_remove_legacy_preview_runs.py](../migrations/versions/20260902_0044_remove_legacy_preview_runs.py)
 - [20260902_0045_converge_canonical_recommendation_data.py](../migrations/versions/20260902_0045_converge_canonical_recommendation_data.py)
+- [20260907_0046_remove_unused_inventory_sku.py](../migrations/versions/20260907_0046_remove_unused_inventory_sku.py)
+- [20260907_0047_remove_deferred_user_auth_storage.py](../migrations/versions/20260907_0047_remove_deferred_user_auth_storage.py)
 
 Revisions 0019–0025 can adopt complete pre-existing tables while still adding
 missing columns to older databases. This keeps historical local databases
@@ -58,15 +60,20 @@ upgradeable without stamping over real schema gaps; arbitrary partially
 created tables remain unsupported. New runtime schemas are created only by
 Alembic.
 
-At the current head (`20260902_0045`), the runtime contains the 32 application
-tables represented by the SQLAlchemy models, plus Alembic's `alembic_version`
+The repository and retained live migration head is `20260907_0047` after the
+reviewed backup and application gate. At the repository head, the runtime
+contains the 32 application tables represented by the SQLAlchemy models, plus Alembic's `alembic_version`
 metadata table. Every application table has a current model and a live
 repository, route, use case, seed, or audit consumer; removed legacy tables and
-unused recommendation score columns are not part of the active schema.
+unused recommendation score columns are not part of the active schema. The
+Revisions 0046/0047 removed only `inventory_items.sku`,
+`users.auth_provider`, and `users.external_auth_id`.
 
-Live verification on 2026-09-02 matched the ORM table set exactly: 33 public
-tables total, with 12 strings and 12 inventory rows, no inactive or non-approved
-catalog rows, no orphan recommendation rows, and no legacy preview markers.
+Live verification on 2026-09-07 matched the ORM table set exactly: 33 public
+tables total, 32 application tables, 324 application columns, unchanged row
+counts, 12 strings and 12 inventory rows, no inactive or non-approved catalog
+rows, no orphan recommendation rows, and no legacy preview markers. The backup
+used was backend/var/backups/stringsense-pre-0046-0047-20260907.dump.
 `store_settings` and `store_business_hours` were both present.
 
 ## Active Business Tables
@@ -77,7 +84,7 @@ catalog rows, no orphan recommendation rows, and no legacy preview markers.
 - `phone_number` is unique
 - `username` is business-visible profile text
 - `auth_version` invalidates all previously issued JWTs after a password change
-- `auth_provider` and `external_auth_id` keep Firebase-ready seams without making Firebase mandatory
+- `auth_provider` and `external_auth_id` remain response/domain compatibility fields projected as `local`/`None`; their unused database storage is removed by 0047, while Firebase remains deferred
 
 ### `password_reset_codes`
 

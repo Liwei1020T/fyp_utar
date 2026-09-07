@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine
@@ -95,6 +96,15 @@ def test_catalog_normalization_migration_preserves_existing_booking(
     assert "string_catalog_items" not in table_names
     assert "string_catalog_items_legacy" not in table_names
     assert "string_inventory_items" not in table_names
+    assert "sku" not in {
+        column["name"] for column in inspect(engine).get_columns("inventory_items")
+    }
+    assert "auth_provider" not in {
+        column["name"] for column in inspect(engine).get_columns("users")
+    }
+    assert "external_auth_id" not in {
+        column["name"] for column in inspect(engine).get_columns("users")
+    }
     official_performance_columns = {
         column["name"]
         for column in inspector.get_columns("string_official_performance")
@@ -382,7 +392,7 @@ def test_booking_drift_repair_migration_restores_missing_booking_columns(
             .mappings()
             .one()
         )
-        assert version_row["version_num"] == "20260902_0045"
+        assert version_row["version_num"] == "20260907_0047"
 
         store_settings_row = (
             connection.execute(
@@ -695,7 +705,7 @@ def test_latest_migrations_adopt_preexisting_schema_drift(
         version = connection.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-        assert version == "20260902_0045"
+        assert version == "20260907_0047"
 
     assert "old_status" not in {
         item["name"] for item in inspector.get_columns("booking_status_history")
@@ -811,3 +821,53 @@ def test_preview_cleanup_migration_removes_legacy_preview_runs(
             ).scalar_one()
             == 0
         )
+
+
+@pytest.mark.parametrize(
+    ("auth_provider", "external_auth_id", "message"),
+    [
+        ("firebase_future_ready", None, "non-local provider"),
+        ("local", "external-user-1", "external auth ID"),
+    ],
+)
+def test_auth_storage_migration_refuses_external_values(
+    tmp_path,
+    monkeypatch,
+    auth_provider,
+    external_auth_id,
+    message,
+) -> None:
+    db_path = tmp_path / f"auth-guard-{auth_provider}.sqlite"
+    database_url = f"sqlite+pysqlite:///{db_path}"
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("APP_ENV", "testing")
+    get_settings.cache_clear()
+
+    config = make_alembic_config(database_url)
+    command.upgrade(config, "20260902_0045")
+    engine = create_engine(database_url)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO users (
+                    id, username, phone_number, password_hash, role,
+                    auth_provider, external_auth_id
+                ) VALUES (
+                    'auth-guard-user', 'auth-guard-user', '+60123456789',
+                    'hashed', 'customer', :auth_provider, :external_auth_id
+                )
+                """
+            ),
+            {
+                "auth_provider": auth_provider,
+                "external_auth_id": external_auth_id,
+            },
+        )
+
+    with pytest.raises(RuntimeError, match=message):
+        command.upgrade(config, "head")
+
+    columns = {column["name"] for column in inspect(engine).get_columns("users")}
+    assert {"auth_provider", "external_auth_id"}.issubset(columns)

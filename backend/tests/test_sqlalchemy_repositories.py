@@ -15,7 +15,6 @@ from app.adapters.persistence.sqlalchemy.repositories.sqlalchemy_user_repository
     SqlAlchemyUserRepository,
 )
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
-from app.domain.auth.entities import AuthProvider
 from app.domain.auth.entities import UserRole
 from app.domain.booking.enums import BookingStatus
 from app.shared.errors import BadRequestError
@@ -32,8 +31,9 @@ def test_sqlalchemy_booking_repository_creates_history_entries() -> None:
             phone_number="+60135550000",
             password_hash="hashed-password",
             role=UserRole.CUSTOMER.value,
-            auth_provider=AuthProvider.LOCAL.value,
         )
+        assert user.auth_provider == "local"
+        assert user.external_auth_id is None
         string_item = catalog_repository.list_active_catalog()[0]
 
         booking = booking_repository.create_booking(

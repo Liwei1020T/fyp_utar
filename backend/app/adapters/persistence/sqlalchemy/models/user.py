@@ -31,12 +31,6 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(SAString(255))
     auth_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     role: Mapped[str] = mapped_column(SAString(20), default="customer")
-    auth_provider: Mapped[str] = mapped_column(SAString(40), default="local")
-    external_auth_id: Mapped[str | None] = mapped_column(
-        SAString(64),
-        unique=True,
-        nullable=True,
-    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

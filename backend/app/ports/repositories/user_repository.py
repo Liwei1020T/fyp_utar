@@ -24,7 +24,6 @@ class UserRepository(Protocol):
         phone_number: str,
         password_hash: str,
         role: str,
-        auth_provider: str,
     ) -> UserAccount: ...
 
     def update_password(
