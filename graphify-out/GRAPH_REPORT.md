@@ -1,16 +1,16 @@
-# Graph Report - StringSence  (2026-09-04)
+# Graph Report - StringSence  (2026-09-07)
 
 ## Corpus Check
-- 466 files · ~2,150,154 words
+- 467 files · ~2,150,375 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3996 nodes · 9236 edges · 343 communities (257 shown, 86 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 967 edges (avg confidence: 0.73)
+- 3998 nodes · 9173 edges · 340 communities (259 shown, 81 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 967 edges (avg confidence: 0.73)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3f0085d7`
+- Built from commit: `f8b4ab46`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -263,7 +263,6 @@
 - .replace_score_cache
 - Local Development Flow
 - entities.py
-- UpsertMyProfileUseCase
 - Administrator Acceptance Record
 - Proposed approval gates
 - feedback_snapshot_to_dict
@@ -286,22 +285,20 @@
 - DeactivateStringUseCase
 - GetOfficialPerformanceUseCase
 - GetStringUseCase
-- .execute
 - UpdateStringUseCase
-- .execute
 - Path
 
 ## God Nodes (most connected - your core abstractions)
 1. `CurrentUser` - 108 edges
-2. `useAppStore` - 91 edges
-3. `HeroText` - 70 edges
-4. `useCurrentUser()` - 70 edges
-5. `useBackendAccessToken()` - 66 edges
-6. `expo-router` - 65 edges
-7. `backendApi` - 49 edges
-8. `AppCard()` - 49 edges
-9. `AppButton()` - 42 edges
-10. `useStrings()` - 42 edges
+2. `useAppStore` - 89 edges
+3. `HeroText` - 69 edges
+4. `useCurrentUser()` - 68 edges
+5. `expo-router` - 65 edges
+6. `useBackendAccessToken()` - 64 edges
+7. `backendApi` - 48 edges
+8. `AppCard()` - 48 edges
+9. `get_settings()` - 41 edges
+10. `AppButton()` - 41 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `_load_backend_components()` --indirect_call--> `RecommendationFeatureSignalModel`  [INFERRED]
@@ -318,35 +315,35 @@
 ## Import Cycles
 - None detected.
 
-## Communities (343 total, 86 thin omitted)
+## Communities (340 total, 81 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.20
-Nodes (4): CatalogRepository, Protocol, StringItem, StringOfficialPerformance
+Cohesion: 0.10
+Nodes (9): CatalogRepository, Protocol, StringItem, StringOfficialPerformance, CreateStringUseCase, StringItem, UpdateInventoryStringUseCase, UpdateOfficialPerformanceUseCase (+1 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (68): get_settings(), Settings, get_media_file(), build_signed_media_url(), delete_booking_update_photo(), delete_payment_proof(), delete_payment_qr(), delete_string_catalog_image() (+60 more)
+Cohesion: 0.05
+Nodes (73): JwtTokenService, get_settings(), Settings, AuthTokenPayload, get_media_file(), Protocol, TokenService, build_signed_media_url() (+65 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
 Nodes (69): DeepSeekAgentClient, Any, AgentActionDto, AgentContextDto, AgentGeneratedAnswerDto, AgentHandoffDto, AgentMessageDto, AgentQueryDto (+61 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (62): AdminInventoryDetailScreen(), AVAILABILITY_OPTIONS, buildCatalogPayload(), buildInventoryPayload(), buildLocalPatch(), buildOfficialPerformancePayload(), CATALOG_VISIBILITY_OPTIONS, CATEGORY_OPTIONS (+54 more)
+Cohesion: 0.07
+Nodes (59): AdminInventoryDetailScreen(), AVAILABILITY_OPTIONS, buildCatalogPayload(), buildInventoryPayload(), buildLocalPatch(), buildOfficialPerformancePayload(), CATALOG_VISIBILITY_OPTIONS, CATEGORY_OPTIONS (+51 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
-Nodes (65): AdminBookingDetailScreen(), AdminUpdateFeed(), getAllowedNextStatuses(), getPriceStateLabel(), getStatusHeroCopy(), getUpdateMetaLabel(), getWorkflowActionLabel(), getWorkflowOptionHint() (+57 more)
+Nodes (90): AdminAgentScreen(), AdminChatDetailScreen(), hasUnreadPlayerMessages(), AdminCheckInScreen(), CHECKLIST_ITEMS, ChecklistKey, formatDropOffDateTime(), getDropOffConfirmationStatus() (+82 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.08
-Nodes (70): AdminChatDetailScreen(), hasUnreadPlayerMessages(), AdminPaymentsScreen(), PaymentDecision, AdminRecommendationRunsScreen(), getStringLabel(), AdminRecommendationRunDetailScreen(), getStringLabel() (+62 more)
+Cohesion: 0.12
+Nodes (20): CompareStringsScreen(), FEATURE_LABELS, StringDetailScreen(), toAspectLabel(), toSentiment(), AgentAnswerCard(), plainText(), BookingUpdates() (+12 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.05
-Nodes (67): BackendBookingPhotoType, BackendAdminInventoryString, BackendAdminUserBooking, BackendAdminUserProfile, BackendAgentQuery, BackendAgentSource, BackendAgentSurface, BackendAnalyticsWorkloadEntry (+59 more)
+Nodes (67): AdminFeedbackScreen(), formatFeedbackScope(), CATEGORIES, PRIMARY_ACTIONS, BackendBookingPhotoType, buildBookingUpdateForm(), buildImageUploadForm(), buildPaymentForm() (+59 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.25
@@ -357,32 +354,32 @@ Cohesion: 0.23
 Nodes (20): _attacking_request(), _candidate(), _candidate_with_core_scores(), RecommendationCandidateModel, RecommendationRequestModel, StringItem, _score_custom_candidates(), _string_item() (+12 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.09
-Nodes (44): AdminInventoryStringOut, booking_to_dto(), BookingOut, _active_check_in_token(), admin_add_booking_update(), admin_bookings(), admin_check_in_booking(), admin_confirm_secure_check_in() (+36 more)
+Cohesion: 0.08
+Nodes (39): AdminInventoryStringOut, SecureCheckInPayload, _active_check_in_token(), admin_add_booking_update(), admin_bookings(), admin_confirm_secure_check_in(), admin_delete_string_image(), admin_get_official_performance() (+31 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.08
-Nodes (52): AdminAgentScreen(), AdminLayout(), PlayerLayout(), resolveBackendMediaUrl(), advancedPreferencesForPayload(), buildBackendProfilePayload(), deriveAdvancedPreferences(), deriveCategory() (+44 more)
+Cohesion: 0.06
+Nodes (59): advancedPreferencesForPayload(), buildBackendProfilePayload(), deriveAdvancedPreferences(), deriveCategory(), derivedElasticityPreference(), derivedStringMovementPreference(), derivedTensionRetentionPreference(), deriveGaugeBounds() (+51 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.08
-Nodes (23): validate_status_transition(), validate_terminal_status_note(), CheckInLookup, booking_check_in_reference(), add_booking_update(), cancel_booking(), create_check_in_token(), get_booking() (+15 more)
+Cohesion: 0.19
+Nodes (8): validate_status_transition(), validate_terminal_status_note(), ConflictError, datetime, UpdateBookingStatusUseCase, ConfirmCheckInUseCase, test_booking_status_transition_accepts_valid_progression(), test_booking_status_transition_rejects_invalid_progression()
 
 ### Community 12 - "Community 12"
 Cohesion: 0.06
 Nodes (39): _assert_legacy_catalog_rows_are_not_active(), _assert_no_foreign_key_references(), _assert_required_tables(), _drop_feedback_tags(), remove obsolete feedback tags and legacy catalog tables  Revision ID: 20260902_0, _table_names(), upgrade(), _alter_columns() (+31 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.06
-Nodes (48): InventorySort, InventoryStatusFilter, SearchField(), SORT_OPTIONS, STATUS_FILTERS, styles, ToolbarButton(), BookingUpdatesProps (+40 more)
+Cohesion: 0.07
+Nodes (41): AdminSettingsScreen(), normalizeNotificationSettings(), normalizeStorePolicyText(), NOTIFICATION_CATEGORIES, ConversationCard(), ConversationCardProps, RacketPassportCard(), RacketPassportCardProps (+33 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.12
 Nodes (42): BookingFeedback, Base, Racket, RacketModelCatalog, AdminRacketModelOut, CreateFeedbackPayload, CreateRacketModelPayload, CreateRacketPayload (+34 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.18
-Nodes (8): AppError, BadRequestError, ForbiddenError, Any, ServiceUnavailableError, UnauthorizedError, PrepareStringValuesUseCase, Exception
+Cohesion: 0.11
+Nodes (13): AppError, BadRequestError, ForbiddenError, NotFoundError, Any, ServiceUnavailableError, UnauthorizedError, AddBookingUpdateUseCase (+5 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.19
@@ -394,23 +391,23 @@ Nodes (35): AdminUserBookingOut, AdminUserDetailOut, AdminUserProfileOut, AdminU
 
 ### Community 18 - "Community 18"
 Cohesion: 0.09
-Nodes (36): AnalyticsSummary, analytics_summary_to_dto(), AnalyticsSummaryOut, AnalyticsWorkloadEntryOut, BookingSlotOut, business_hours_to_dto(), BusinessHoursDayPayload, CheckInLookupOut (+28 more)
+Nodes (37): AnalyticsSummary, analytics_summary_to_dto(), AnalyticsSummaryOut, AnalyticsWorkloadEntryOut, BookingSlotOut, business_hours_to_dto(), BusinessHoursDayPayload, CheckInLookupOut (+29 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.14
 Nodes (24): HTMLParser, assert_zero_leakage(), deterministic_split(), leakage_report(), Any, review_text_group_id(), build_clean_reviews(), conservative_normalize() (+16 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.21
-Nodes (25): Payment, Base, WalletTransaction, generate_uuid(), PaymentOut, admin_list_payments(), admin_update_payment(), _booking_amount() (+17 more)
+Cohesion: 0.16
+Nodes (30): Payment, Base, WalletTransaction, generate_uuid(), AdminPaymentStatusPayload, BookingPaymentQuoteOut, PaymentOut, BaseModel (+22 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.09
+Cohesion: 0.10
 Nodes (50): acceptance_sample(), aggregate_candidate_cells(), attach_predictions(), build_candidate_matrix(), build_current_comparison(), build_inference_frame(), choose_minimum_evidence(), choose_pilot_threshold() (+42 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.06
-Nodes (49): BOOKING_STEPS, BookingForm, BookingFormInput, bookingSchema, BookingStep, getSlotPeriod(), NewBookingScreen(), SLOT_PERIOD_OPTIONS (+41 more)
+Cohesion: 0.05
+Nodes (57): AdminInventoryScreen(), InventorySort, InventoryStatusFilter, matchesStatusFilter(), SearchField(), SORT_OPTIONS, sortInventory(), STATUS_FILTERS (+49 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.18
@@ -425,16 +422,16 @@ Cohesion: 0.12
 Nodes (39): Any, Reusable implementation behind the canonical StringSense NLP notebooks., build_aspect_lexicon(), build_label_datasets(), build_normalizer(), _classification(), classify_review_aspect(), _extract_tension() (+31 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.16
-Nodes (9): AuthProvider, StrEnum, UserAccount, UserRole, Protocol, UserRepository, GetCurrentUserUseCase, LoginUseCase (+1 more)
+Cohesion: 0.18
+Nodes (6): UserAccount, Protocol, UserRepository, GetCurrentUserUseCase, LoginUseCase, RegisterUserUseCase
 
 ### Community 27 - "Community 27"
 Cohesion: 0.06
 Nodes (34): Active Scope, Agent Scope Simplification Plan, Decisions, Deferred Scope, Errors Encountered, Goal, Phase 10 — Authentication and player page-by-page acceptance, Phase 11 — Admin page-by-page acceptance (+26 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.18
-Nodes (7): StringCatalogItem, OfficialPerformanceRecord, StringItem, StringOfficialPerformance, SqlAlchemyCatalogRepository, test_catalog_editor_rolls_back_every_section_after_validation_failure(), test_sqlalchemy_booking_repository_creates_history_entries()
+Cohesion: 0.20
+Nodes (8): StringCatalogItem, StringCatalogItem, to_string_item(), StringItem, StringOfficialPerformance, SqlAlchemyCatalogRepository, test_catalog_editor_rolls_back_every_section_after_validation_failure(), test_sqlalchemy_booking_repository_creates_history_entries()
 
 ### Community 29 - "Community 29"
 Cohesion: 0.06
@@ -450,7 +447,7 @@ Nodes (42): backgroundColor, foregroundImage, adaptiveIcon, edgeToEdgeEnabled, p
 
 ### Community 32 - "Community 32"
 Cohesion: 0.10
-Nodes (19): UserPreferenceMatrix, _float_or_none(), _matrix_by_source(), CachedRecommendationRecord, FeedbackRow, RacketRecommendationContext, RecommendationCandidateModel, RecommendationFeatureSignalModel (+11 more)
+Nodes (20): RecommendationScoreCache, _float_or_none(), _matrix_by_source(), _profile_preference_vector(), CachedRecommendationRecord, FeedbackRow, RacketRecommendationContext, RecommendationCandidateModel (+12 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.18
@@ -469,8 +466,8 @@ Cohesion: 0.15
 Nodes (14): Base, RecommendationRun, RecommendationRunItem, to_recommendation_run(), to_recommendation_run_item(), _float(), _mapping(), Any (+6 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.12
-Nodes (25): RecommendationMatrixEntryRecord, inventory_availability(), StringItem, AdminInventoryStringOut, CatalogTagOut, inventory_movement_to_dto(), inventory_string_to_dto(), InventoryMovementOut (+17 more)
+Cohesion: 0.16
+Nodes (18): RecommendationMatrixEntryRecord, CatalogTagOut, inventory_movement_to_dto(), InventoryMovementOut, InventoryUpdatePayload, official_performance_to_dto(), OfficialPerformanceOut, OfficialPerformancePayload (+10 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.07
@@ -482,7 +479,7 @@ Nodes (27): AspectScoreMap, approved_catalog_defaults(), approved_catalog_ids(),
 
 ### Community 40 - "Community 40"
 Cohesion: 0.14
-Nodes (32): StringRecommendationMatrix, _build_catalog_lookup(), _build_evidence_note(), _build_matrix_entries(), CatalogLookupEntry, _cell_text(), _clean_text(), _column_index() (+24 more)
+Nodes (33): RecommendationFeatureDefinition, StringRecommendationMatrix, _build_catalog_lookup(), _build_evidence_note(), _build_matrix_entries(), CatalogLookupEntry, _cell_text(), _clean_text() (+25 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.09
@@ -501,8 +498,8 @@ Cohesion: 0.20
 Nodes (4): Backend Docs Index, Current Guides, Scope, Plans, and Evidence, Workspace Docs Index
 
 ### Community 46 - "Community 46"
-Cohesion: 0.21
-Nodes (26): NotificationDelivery, AdminNotificationOut, AdminFeedbackOut, admin_export_feedback(), admin_feedback(), _admin_feedback_dto(), admin_notifications(), admin_resend_notification() (+18 more)
+Cohesion: 0.40
+Nodes (16): NotificationDelivery, AdminNotificationOut, admin_notifications(), admin_resend_notification(), admin_send_notification(), _deliver_notification(), _notification_dto(), _notification_response_for_session() (+8 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.19
@@ -525,8 +522,8 @@ Cohesion: 0.14
 Nodes (14): P1-10 — Legacy AI implementations are eagerly loaded at API startup, P1-11 — Current dependency baseline contains known vulnerabilities, P1-12 — Backend sessions are intentionally lost on app/browser restart, P1-13 — Most catalog prices are incomplete, P1-1 — Clean-environment demo credentials are not reproducible, P1-2 — Recommendation percentage is multiplied twice, P1-3 — Failed live slot loading silently switches to mock booking data, P1-4 — Booking mapper invents payment facts and mutable prices (+6 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.28
-Nodes (3): FastPasswordHasher, FixedClock, datetime
+Cohesion: 0.23
+Nodes (6): AuthProvider, StrEnum, UserRole, FastPasswordHasher, FixedClock, datetime
 
 ### Community 53 - "Community 53"
 Cohesion: 0.21
@@ -537,8 +534,8 @@ Cohesion: 0.11
 Nodes (24): get_booking_repository(), get_catalog_repository(), get_current_admin(), get_current_customer(), get_current_user(), get_password_hasher(), get_password_reset_repository(), get_profile_repository() (+16 more)
 
 ### Community 55 - "Community 55"
-Cohesion: 0.16
-Nodes (20): booking_slot_datetime_utc(), booking_slot_id_for_datetime(), booking_slot_id_for_stored_datetime(), normalize_datetime(), normalize_store_input_datetime(), parse_booking_slot_id(), parse_hhmm(), BookingSlot (+12 more)
+Cohesion: 0.18
+Nodes (19): booking_slot_datetime_utc(), booking_slot_id_for_datetime(), booking_slot_id_for_stored_datetime(), normalize_datetime(), normalize_store_input_datetime(), parse_booking_slot_id(), parse_hhmm(), BookingSlot (+11 more)
 
 ### Community 56 - "Community 56"
 Cohesion: 0.08
@@ -550,7 +547,7 @@ Nodes (5): headers(), login_admin(), test_admin_can_inspect_and_reimport_recomme
 
 ### Community 58 - "Community 58"
 Cohesion: 0.07
-Nodes (17): StoreBusinessHours, StoreSettings, StoreBusinessHoursRecord, StoreSettingsRecord, to_business_hours(), to_store_settings(), Session, SqlAlchemyStoreRepository (+9 more)
+Nodes (18): StoreBusinessHours, StoreSettings, StoreBusinessHoursRecord, StoreSettingsRecord, to_business_hours(), to_store_settings(), Session, SqlAlchemyStoreRepository (+10 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.09
@@ -561,20 +558,20 @@ Cohesion: 0.09
 Nodes (22): 10. Design Summary, 11. FYP2 Architecture Conformance (2026-08-30), 1. Scope, 2. End-to-End Runtime Flow, 3.1 User-side inputs, 3.2 Item-side inputs, 3.3 Feature mapping note, 3.4 Runtime learning signals (+14 more)
 
 ### Community 61 - "Community 61"
-Cohesion: 0.25
-Nodes (11): ensure_catalog_seeded(), ensure_racket_model_catalog_seeded(), ensure_seed_user(), ensure_seed_users(), ensure_store_defaults(), _import_startup_recommendation_matrix(), _load_store_seed(), Session (+3 more)
+Cohesion: 0.19
+Nodes (14): ensure_catalog_seeded(), ensure_racket_model_catalog_seeded(), ensure_seed_user(), ensure_seed_users(), ensure_store_defaults(), _import_startup_recommendation_matrix(), _load_store_seed(), Session (+6 more)
 
 ### Community 62 - "Community 62"
 Cohesion: 0.10
 Nodes (20): 12-by-9 Matrix Generation, Active cohort, Approved promotion record, BERT ABSA Review Optimization Design, Colab full run, Completed full-run evidence, Decision Summary, Done Criteria (+12 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.19
-Nodes (14): _collapsed_aspect_scores(), _normalize_availability_status(), _normalize_pricing_mode(), _normalized_name(), StringCatalogItem, to_official_performance(), to_recommendation_matrix_entry(), to_string_item() (+6 more)
+Cohesion: 0.14
+Nodes (14): StringOfficialPerformance, _collapsed_aspect_scores(), _normalize_availability_status(), _normalize_pricing_mode(), _normalized_name(), to_official_performance(), to_recommendation_matrix_entry(), OfficialPerformanceRecord (+6 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.18
-Nodes (7): Profile, to_profile(), PlayerProfile, Session, SqlAlchemyProfileRepository, _profile_preference_vector(), Profile
+Cohesion: 0.21
+Nodes (5): Profile, to_profile(), PlayerProfile, Session, SqlAlchemyProfileRepository
 
 ### Community 65 - "Community 65"
 Cohesion: 0.26
@@ -585,24 +582,24 @@ Cohesion: 0.11
 Nodes (19): Backend, Backend Config And Runtime, Backend Domains And Use Cases, Backend Layers, Backend Persistence And Migrations, Backend Route Files, Backend Tests, Common Change Recipes (+11 more)
 
 ### Community 67 - "Community 67"
-Cohesion: 0.07
-Nodes (67): RequestCodeForm, requestCodeSchema, ResetPasswordForm, resetPasswordSchema, ARRIVAL_STEPS, notificationCategoryMeta, paymentOptions, FEATURE_LABELS (+59 more)
+Cohesion: 0.11
+Nodes (34): AdminRecommendationRunDetailScreen(), getStringLabel(), ARRIVAL_STEPS, notificationCategoryMeta, paymentOptions, quickPrompts, priorityLabels, amounts (+26 more)
 
 ### Community 68 - "Community 68"
 Cohesion: 0.10
 Nodes (23): Base, SupportConversationMessage, AdminAgentToolbox, _masked_phone(), _optional_choice(), _optional_text(), BookingStatus, StrEnum (+15 more)
 
 ### Community 69 - "Community 69"
-Cohesion: 0.15
-Nodes (10): AnalyticsSummary, AnalyticsWorkloadEntry, BookedSlot, BookingSlot, BusinessHoursDay, PopularString, ServiceQueue, ServiceQueueItem (+2 more)
+Cohesion: 0.11
+Nodes (13): AnalyticsSummary, AnalyticsWorkloadEntry, BookedSlot, BookingSlot, BusinessHoursDay, CheckInLookup, PopularString, ServiceQueue (+5 more)
 
 ### Community 70 - "Community 70"
 Cohesion: 0.26
 Nodes (16): MarkNotificationsReadOut, MarkNotificationsReadPayload, notification_preferences_to_dto(), NotificationOut, NotificationPreferencesPayload, BaseModel, SendNotificationPayload, _derived_notification_events() (+8 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.05
-Nodes (45): AuthLayout(), LoginForm, loginSchema, LoginScreen(), RegisterForm, registerSchema, RegisterScreen(), AuthShell() (+37 more)
+Cohesion: 0.09
+Nodes (27): AdminLayout(), AdminChatQueueScreen(), AuthLayout(), IndexScreen(), PlayerSettingsScreen(), RecommendationInputScreen(), WalletTopUpScreen(), PlayerTool (+19 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.28
@@ -613,8 +610,8 @@ Cohesion: 0.15
 Nodes (17): ContentRecommendationScorer, Rule-enhanced, content-based, and explainable scorer., FakeRecommendationRepository, test_cf_alone_changes_final_score_after_support_gate(), test_enabled_cf_can_change_ranking(), test_feedback_and_enabled_cf_are_bounded(), test_feedback_calibration_alone_changes_feature_and_final_score(), test_fixed_fusion_ignores_review_popularity_and_removed_metadata() (+9 more)
 
 ### Community 74 - "Community 74"
-Cohesion: 0.12
-Nodes (9): Path, InventorySnapshot, RecommendationMatrixImportReport, RecommendationMatrixInspectionRecord, StringOfficialPerformance, StringTag, Path, GetRecommendationMatrixUseCase (+1 more)
+Cohesion: 0.22
+Nodes (5): InventorySnapshot, RecommendationMatrixInspectionRecord, StringOfficialPerformance, StringTag, GetRecommendationMatrixUseCase
 
 ### Community 75 - "Community 75"
 Cohesion: 0.21
@@ -629,8 +626,8 @@ Cohesion: 0.12
 Nodes (16): Acceptance Criteria, Admin Experience, Cache Policy, Current Capability Status, Decisions Applied to V11, Deferred or Partial Work, Document Status, Explicit Non-Goals (+8 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.09
-Nodes (15): Booking, BookingStatusHistory, BookingUpdate, Base, _booking_string_name(), Booking, to_booking_record(), Page (+7 more)
+Cohesion: 0.08
+Nodes (16): Booking, BookingStatusHistory, BookingUpdate, Base, _booking_string_name(), Booking, to_booking_record(), Page (+8 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.12
@@ -641,8 +638,8 @@ Cohesion: 0.12
 Nodes (15): Agent comparison and validation (2026-08-24), Agent Scope Findings, Authentication Pages, Cash payment option (2026-08-18), Current page-review conclusion, Final FYP2 Classification, Follow-up fix evidence — 2026-08-17, Full Page Review (2026-08-17) (+7 more)
 
 ### Community 81 - "Community 81"
-Cohesion: 0.27
-Nodes (11): Brand, InventoryMovement, Base, RecommendationFeatureDefinition, RecommendationScoreCache, StringCatalogMetric, StringCatalogTag, StringInventoryItem (+3 more)
+Cohesion: 0.30
+Nodes (9): Brand, InventoryMovement, Base, StringCatalogMetric, StringCatalogTag, StringInventoryItem, UserPreferenceMatrix, _to_preference_entry() (+1 more)
 
 ### Community 82 - "Community 82"
 Cohesion: 0.13
@@ -665,8 +662,8 @@ Cohesion: 0.27
 Nodes (14): AdminBusinessHoursScreen(), clampClosedDay(), closedDayOptions(), closedMonthOptions(), CURRENT_YEAR, daysInMonth(), formatClosedDate(), minimumClosedDay() (+6 more)
 
 ### Community 87 - "Community 87"
-Cohesion: 0.36
-Nodes (11): BookingStatusHistoryEntry, BookingUpdateEntry, booking_history_to_dto(), booking_update_to_dto(), BookingStatusHistoryOut, BookingUpdateOut, CancelBookingPayload, CheckInTokenOut (+3 more)
+Cohesion: 0.16
+Nodes (27): BookingStatusHistoryEntry, BookingUpdateEntry, hash_check_in_token(), booking_history_to_dto(), booking_to_dto(), booking_update_to_dto(), BookingOut, BookingStatusHistoryOut (+19 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.10
@@ -701,8 +698,8 @@ Cohesion: 0.15
 Nodes (13): 1. Start Postgres, 2. Start the backend, 3. Start the mobile app in a browser, 4. Start the mobile app on Expo Go, 5. Run the NLP workbench when you need fresh recommendation artifacts, Backend and NLP Integration, Current Delivery Boundary, Documentation Map (+5 more)
 
 ### Community 97 - "Community 97"
-Cohesion: 0.14
-Nodes (13): advancedPreferenceKeys, preferredFeelOptions, preferredGaugeOptions, priorityKeys, ProfileEditScreen(), ProfileForm, ProfileFormInput, profileSchema (+5 more)
+Cohesion: 0.11
+Nodes (19): advancedPreferenceKeys, preferredFeelOptions, preferredGaugeOptions, priorityKeys, ProfileEditContent(), ProfileEditScreen(), ProfileForm, ProfileFormInput (+11 more)
 
 ### Community 98 - "Community 98"
 Cohesion: 0.17
@@ -717,8 +714,8 @@ Cohesion: 0.18
 Nodes (11): babel-preset-expo, eslint, eslint-config-expo, devDependencies, babel-preset-expo, eslint, eslint-config-expo, @types/react (+3 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.24
-Nodes (8): DETAIL_API_KEYS, DETAIL_RATINGS, DetailRatingKey, emptyDetailRatings(), FeedbackScreen(), RATING_VALUES, mapBackendFeedbackToBookingFeedback(), BackendUpdateFeedbackPayload
+Cohesion: 0.22
+Nodes (9): DETAIL_API_KEYS, DETAIL_RATINGS, DetailRatingKey, emptyDetailRatings(), FeedbackScreen(), RATING_VALUES, mapBackendFeedbackToBookingFeedback(), BackendUpdateFeedbackPayload (+1 more)
 
 ### Community 102 - "Community 102"
 Cohesion: 0.20
@@ -737,8 +734,8 @@ Cohesion: 0.31
 Nodes (8): _backend_root(), _catalog_payload(), _gauge_score(), _normalize_name(), Path, normalize string catalog  Revision ID: 20260412_0008 Revises: 20260411_0007 Crea, _slug(), upgrade()
 
 ### Community 106 - "Community 106"
-Cohesion: 0.31
-Nodes (8): _candidate_category(), _headers(), _login_admin(), RecommendationCandidateModel, _register_customer(), test_catalog_inventory_and_recommendations_only_expose_the_twelve_strings(), test_feel_and_gauge_preferences_raise_matching_candidate_scores(), test_seed_contains_only_approved_strings()
+Cohesion: 0.27
+Nodes (9): _candidate_category(), _headers(), _login_admin(), RecommendationCandidateModel, _register_customer(), test_catalog_inventory_and_recommendations_only_expose_the_twelve_strings(), test_feel_and_gauge_preferences_raise_matching_candidate_scores(), test_inactive_inventory_is_excluded_from_catalog_lookup() (+1 more)
 
 ### Community 107 - "Community 107"
 Cohesion: 0.20
@@ -841,8 +838,8 @@ Cohesion: 0.17
 Nodes (12): GenerateRecommendationUseCase, FakeProfileRepository, FakeRecommendationRunRepository, FeedbackRow, test_cached_recommendation_detail_returns_rationale(), test_execute_profile_persists_true_profile_snapshot(), test_personal_history_changes_invalidate_cached_results(), test_preview_does_not_persist_and_profile_persists_preference_vector_and_cache() (+4 more)
 
 ### Community 132 - "Community 132"
-Cohesion: 0.13
-Nodes (13): API Layer, Business Logic, Clean Architecture Migration Map, ORM and Repositories, Runtime Entry, Security and Recommendation, Shared / Config, 1. Prepare Environment (+5 more)
+Cohesion: 0.29
+Nodes (7): API Layer, Business Logic, Clean Architecture Migration Map, ORM and Repositories, Runtime Entry, Security and Recommendation, Shared / Config
 
 ### Community 133 - "Community 133"
 Cohesion: 0.48
@@ -865,8 +862,8 @@ Cohesion: 0.29
 Nodes (6): Backend Evidence, Implemented, Mobile Evidence, QR Payment and Proof Acceptance — 2026-08-18, Security Boundaries Verified, Unverified
 
 ### Community 138 - "Community 138"
-Cohesion: 0.16
-Nodes (11): Base, User, UserAccount, to_user_account(), Session, SqlAlchemyUserRepository, hash_check_in_token(), next_weekday() (+3 more)
+Cohesion: 0.23
+Nodes (7): Base, User, UserAccount, to_user_account(), Session, SqlAlchemyUserRepository, test_concurrent_reset_and_check_in_requests_keep_one_active_token()
 
 ### Community 139 - "Community 139"
 Cohesion: 0.29
@@ -905,8 +902,8 @@ Cohesion: 0.17
 Nodes (13): _completed_template(), _mapping_frame(), DataFrame, Path, _sampling_frames(), test_annotation_review_html_is_offline_and_escapes_embedded_script(), test_annotation_validation_merge_agreement_and_gold_gate(), test_cleaning_keeps_duplicates_and_assigns_one_split_group() (+5 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.22
-Nodes (5): JwtTokenService, AuthTokenPayload, Protocol, TokenService, timedelta
+Cohesion: 0.10
+Nodes (31): RequestCodeForm, requestCodeSchema, ResetPasswordForm, resetPasswordSchema, LoginForm, loginSchema, LoginScreen(), RegisterForm (+23 more)
 
 ### Community 150 - "Community 150"
 Cohesion: 0.33
@@ -961,11 +958,11 @@ Cohesion: 0.40
 Nodes (4): config, { getDefaultConfig }, path, { withUniwindConfig }
 
 ### Community 164 - "Community 164"
-Cohesion: 0.26
-Nodes (12): formatDropOffDateTime(), formatTrackingDateTime(), getCurrentStageKey(), getHeroStatusChipClasses(), getHeroStatusLabel(), getLatestUpdate(), getNextStepLabel(), getQuoteStatus() (+4 more)
+Cohesion: 0.17
+Nodes (18): PlayerLayout(), editFieldsFor(), RacketEditFields, RacketPassportDetailScreen(), NewRacketScreen(), RacketForm, RacketFormInput, racketSchema (+10 more)
 
 ### Community 165 - "Community 165"
-Cohesion: 0.40
+Cohesion: 0.38
 Nodes (5): AdminRacketModelsScreen(), sortModels(), RacketModelSelectorProps, BackendAdminRacketModel, BackendRacketModelOption
 
 ### Community 166 - "Community 166"
@@ -1012,13 +1009,17 @@ Nodes (4): Durability flow, Feedback Form Design, Field semantics, Interaction r
 Cohesion: 0.14
 Nodes (18): send_openwa_text(), Pbkdf2PasswordHasher, main(), parse_args(), Namespace, build_bert_pseudo_dataset(), _canonical_name_index(), default_training_config() (+10 more)
 
+### Community 177 - "Community 177"
+Cohesion: 0.18
+Nodes (17): BookingTrackingScreen(), formatDropOffDateTime(), formatTrackingDateTime(), getCurrentStatusLabel(), NEXT_STEP_LABELS, buildTrackingSteps(), formatTrackingDateTime(), getStageBadge() (+9 more)
+
 ### Community 178 - "Community 178"
-Cohesion: 0.33
-Nodes (6): AdminFeedbackScreen(), formatFeedbackScope(), BackendAdminFeedback, BackendAdminFeedbackSummary, BackendFeedback, BackendFeedbackSummary
+Cohesion: 0.16
+Nodes (16): BOOKING_STEPS, BookingForm, BookingFormInput, bookingSchema, BookingStep, getSlotPeriod(), NewBookingContent(), NewBookingScreen() (+8 more)
 
 ### Community 179 - "Community 179"
-Cohesion: 0.40
-Nodes (3): CATEGORIES, BackendAdminNotification, BackendNotificationCategory
+Cohesion: 0.24
+Nodes (11): AdminBookingDetailScreen(), AdminUpdateFeed(), getAllowedNextStatuses(), getPriceStateLabel(), getStatusHeroCopy(), getUpdateMetaLabel(), getWorkflowActionLabel(), getWorkflowOptionHint() (+3 more)
 
 ### Community 180 - "Community 180"
 Cohesion: 0.50
@@ -1037,8 +1038,8 @@ Cohesion: 0.50
 Nodes (3): NOTE: This file is generated by uniwind and it should not be edited manually., uniwind, UniwindConfig
 
 ### Community 184 - "Community 184"
-Cohesion: 0.60
-Nodes (4): AdminSettingsScreen(), normalizeNotificationSettings(), normalizeStorePolicyText(), NOTIFICATION_CATEGORIES
+Cohesion: 0.27
+Nodes (10): AdminFeedbackOut, admin_export_feedback(), admin_feedback(), _admin_feedback_dto(), _feedback_query(), Booking, BookingFeedback, date (+2 more)
 
 ### Community 215 - "expo-constants"
 Cohesion: 0.67
@@ -1060,13 +1061,17 @@ Nodes (3): 10. Navigation UX Structure, Admin Information Architecture, Player i
 Cohesion: 0.67
 Nodes (3): 7.1 Mutable runtime state: `store/appStore.ts`, 7.2 Unified backend bridge, 7. Data Layer Model
 
-### Community 312 - ".replace_score_cache"
-Cohesion: 0.53
-Nodes (5): AdminPaymentStatusPayload, BookingPaymentQuoteOut, BaseModel, WalletOut, WalletTransactionOut
+### Community 305 - "expo"
+Cohesion: 0.25
+Nodes (4): Path, RecommendationMatrixImportReport, Path, ImportRecommendationMatrixUseCase
 
-### Community 315 - "entities.py"
-Cohesion: 0.50
-Nodes (4): buildBookingUpdateForm(), buildImageUploadForm(), buildPaymentForm(), normalizeUploadFile()
+### Community 312 - ".replace_score_cache"
+Cohesion: 0.36
+Nodes (7): inventory_availability(), StringItem, AdminInventoryStringOut, inventory_string_to_dto(), StringItem, string_to_dto(), StringOut
+
+### Community 314 - "Local Development Flow"
+Cohesion: 0.29
+Nodes (6): 1. Prepare Environment, 2. Start the Unified Backend, 3. Validation Commands, 4. Catalog and Recommendation Notes, 5. Commerce Boundary, Local Development Flow
 
 ### Community 317 - "Administrator Acceptance Record"
 Cohesion: 0.33
@@ -1077,24 +1082,24 @@ Cohesion: 0.33
 Nodes (6): Gate 1 — Review and candidate selection (current stop), Gate 2 — Candidate design approval, Gate 3 — Per-candidate implementation, Gate 4 — Complete regression, Gate 5 — FYP2 readiness decision, Proposed approval gates
 
 ## Knowledge Gaps
-- **880 isolated node(s):** `Scope`, `Project Context`, `Validation Commands`, `Architecture Map`, `Change Rules` (+875 more)
+- **882 isolated node(s):** `WORKFLOW_STATUSES`, `WORKFLOW_TRANSITIONS`, `PHOTO_TYPE_OPTIONS`, `mobileRoot`, `Scope` (+877 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **86 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **81 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `to_string_item()` connect `Community 63` to `Community 28`, `Community 13`?**
-  _High betweenness centrality (0.174) - this node is a cross-community bridge._
-- **Why does `StringItem` connect `Community 13` to `Community 67`, `Community 3`, `Community 10`, `Community 22`, `Community 63`?**
-  _High betweenness centrality (0.170) - this node is a cross-community bridge._
-- **Why does `CurrentUser` connect `Community 16` to `Community 9`, `Community 138`, `Community 11`, `Community 14`, `Community 17`, `Community 18`, `Community 20`, `Community 30`, `Community 36`, `Community 166`, `Community 168`, `Community 41`, `Community 46`, `Community 48`, `Community 52`, `Community 54`, `UpsertMyProfileUseCase`, `Community 68`, `Community 70`, `Community 78`?**
-  _High betweenness centrality (0.105) - this node is a cross-community bridge._
+- **Why does `to_string_item()` connect `Community 28` to `Community 3`, `Community 63`?**
+  _High betweenness centrality (0.165) - this node is a cross-community bridge._
+- **Why does `StringItem` connect `Community 3` to `Community 67`, `Community 10`, `Community 13`, `Community 22`, `Community 28`?**
+  _High betweenness centrality (0.163) - this node is a cross-community bridge._
+- **Why does `CurrentUser` connect `Community 16` to `Community 9`, `Community 138`, `Community 14`, `Community 17`, `Community 18`, `Community 20`, `Community 30`, `Community 36`, `Community 166`, `Community 168`, `Community 41`, `Community 46`, `Community 48`, `Community 52`, `Community 54`, `Community 184`, `Community 68`, `Community 70`, `Community 78`, `Community 87`?**
+  _High betweenness centrality (0.087) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `CurrentUser` (e.g. with `SqlAlchemyBookingRepository` and `SqlAlchemyRecommendationRunRepository`) actually correct?**
   _`CurrentUser` has 7 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Scope`, `Project Context`, `Validation Commands` to the rest of the system?**
-  _880 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `WORKFLOW_STATUSES`, `WORKFLOW_TRANSITIONS`, `PHOTO_TYPE_OPTIONS` to the rest of the system?**
+  _882 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Community 0` be split into smaller, more focused modules?**
+  _Cohesion score 0.10461538461538461 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.06386554621848739 - nodes in this community are weakly interconnected._
-- **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.06367695593088721 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.053289473684210525 - nodes in this community are weakly interconnected._
