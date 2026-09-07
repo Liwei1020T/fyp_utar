@@ -52,14 +52,16 @@ const WORKFLOW_STATUSES = [
   'in_progress',
   'ready_for_collection',
   'completed',
+  'cancelled',
+  'rejected',
 ] as const;
 
 const WORKFLOW_TRANSITIONS: Partial<Record<BookingStatus, BookingStatus[]>> = {
   pending: ['awaiting_dropoff'],
   pending_payment: ['awaiting_dropoff'],
   confirmed: ['awaiting_dropoff'],
-  awaiting_dropoff: ['in_progress'],
-  in_progress: ['ready_for_collection'],
+  awaiting_dropoff: ['in_progress', 'cancelled', 'rejected'],
+  in_progress: ['ready_for_collection', 'cancelled'],
   ready_for_collection: ['completed'],
   completed: [],
   cancelled: [],
@@ -100,6 +102,10 @@ function getWorkflowActionLabel(status: BookingStatus) {
       return 'Update to Ready for Collection';
     case 'completed':
       return 'Update to Completed';
+    case 'cancelled':
+      return 'Cancel booking';
+    case 'rejected':
+      return 'Reject booking';
     default:
       return 'Update booking workflow';
   }
@@ -285,6 +291,7 @@ export default function AdminBookingDetailScreen() {
   const upsertLiveBooking = useAppStore((state) => state.upsertLiveBooking);
   const booking = bookings.find((item) => item.id === params.id);
   const [status, setStatus] = useState<BookingStatus>(booking?.status ?? 'confirmed');
+  const [statusNote, setStatusNote] = useState('');
   const [expectedCompletionDate, setExpectedCompletionDate] = useState('');
   const [expectedCompletionTime, setExpectedCompletionTime] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -316,6 +323,10 @@ export default function AdminBookingDetailScreen() {
       );
     }
   }, [booking]);
+
+  useEffect(() => {
+    setStatusNote('');
+  }, [booking?.id]);
 
   useEffect(() => {
     if (!token || user?.role !== 'admin' || !params.id) {
@@ -426,6 +437,8 @@ export default function AdminBookingDetailScreen() {
     expectedCompletionDate !== originalExpectedCompletionDate
     || expectedCompletionTime !== originalExpectedCompletionTime;
   const isBookingCompleted = booking.status === 'completed';
+  const isClosing =
+    (status === 'cancelled' || status === 'rejected') && status !== booking.status;
   const isStatusChangeAllowed = !isWorkflowUnchanged && allowedNextStatuses.includes(status);
   const canSaveWorkflow =
     (!isWorkflowUnchanged && isStatusChangeAllowed) || hasExpectedCompletionChange;
@@ -484,6 +497,7 @@ export default function AdminBookingDetailScreen() {
     try {
       const updated = await backendApi.adminUpdateBookingStatus(token, booking.id, {
         status,
+        note: isClosing ? statusNote.trim() || undefined : undefined,
         expected_completion_datetime: hasExpectedCompletionChange
           ? expectedCompletion.value
           : undefined,
@@ -525,6 +539,15 @@ export default function AdminBookingDetailScreen() {
       return;
     }
 
+    if (isClosing && !statusNote.trim()) {
+      setError(
+        status === 'cancelled'
+          ? 'Add a reason before cancelling this booking.'
+          : 'Add a reason before rejecting this booking.',
+      );
+      return;
+    }
+
     const expectedCompletion = buildExpectedCompletionTimestamp();
     if (expectedCompletion.errorMessage) {
       setError(expectedCompletion.errorMessage);
@@ -534,9 +557,11 @@ export default function AdminBookingDetailScreen() {
     const expectedCompletionLabel = expectedCompletion.value
       ? formatDateTime(expectedCompletion.value)
       : 'Not set';
-    const message = isWorkflowUnchanged
-      ? `Update the expected completion time to ${expectedCompletionLabel}?`
-      : `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)} and set expected completion to ${expectedCompletionLabel}?`;
+    const message = isClosing
+      ? `${status === 'cancelled' ? 'Cancel' : 'Reject'} this booking and save the provided reason?`
+      : isWorkflowUnchanged
+        ? `Update the expected completion time to ${expectedCompletionLabel}?`
+        : `Change this booking from ${formatBookingStatus(booking.status)} to ${formatBookingStatus(status)} and set expected completion to ${expectedCompletionLabel}?`;
 
     if (Platform.OS === 'web') {
       if (typeof globalThis.confirm !== 'function' || globalThis.confirm(message)) {
@@ -761,6 +786,24 @@ export default function AdminBookingDetailScreen() {
             })}
             onChange={(value) => setStatus(value as BookingStatus)}
           />
+
+          {isClosing ? (
+            <AppInput
+              label={status === 'cancelled' ? 'Cancellation reason' : 'Rejection reason'}
+              value={statusNote}
+              onChangeText={setStatusNote}
+              multiline
+              maxLength={500}
+              className="mb-0"
+              inputClassName="min-h-24"
+              helperText="Required and saved to the booking history."
+              placeholder={
+                status === 'cancelled'
+                  ? 'Explain why the shop is cancelling this booking...'
+                  : 'Explain why the shop is rejecting this booking...'
+              }
+            />
+          ) : null}
 
           <View className="rounded-[14px] border border-[#DCE6F7] bg-white px-3 py-3">
             <HeroText className="text-[13px] font-semibold text-neutral-800">
