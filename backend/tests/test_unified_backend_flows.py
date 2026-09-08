@@ -1251,6 +1251,11 @@ def test_password_reset_code_is_committed_before_whatsapp_delivery(monkeypatch):
     monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
     monkeypatch.setattr(settings, "openwa_session_id", "session-1")
     monkeypatch.setattr(settings, "openwa_api_key", SecretStr("openwa-test-key"))
+    monkeypatch.setattr(
+        auth_routes,
+        "get_openwa_session_state",
+        lambda **_: {"status": "ready", "restriction": None},
+    )
     provider_calls: list[dict[str, object]] = []
 
     def fake_send_openwa_text(**kwargs) -> str:
@@ -1292,6 +1297,11 @@ def test_password_reset_stays_generic_when_whatsapp_delivery_fails(monkeypatch):
     register_customer()
     settings = get_settings()
     monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(
+        auth_routes,
+        "get_openwa_session_state",
+        lambda **_: {"status": "ready", "restriction": None},
+    )
 
     def fail_send_openwa_text(**_kwargs) -> str:
         raise OSError("provider unavailable")
@@ -1305,6 +1315,37 @@ def test_password_reset_stays_generic_when_whatsapp_delivery_fails(monkeypatch):
     assert response.status_code == 200
     assert response.json()["message"] == "Verification code sent if the account exists"
     assert response.json()["dev_code_preview"] is not None
+
+
+def test_password_reset_skips_whatsapp_when_session_is_restricted(monkeypatch):
+    enable_password_reset_preview(monkeypatch)
+    register_customer()
+    settings = get_settings()
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(
+        auth_routes,
+        "get_openwa_session_state",
+        lambda **_: {
+            "status": "qr_ready",
+            "restriction": {"kind": "reachout_timelock"},
+        },
+    )
+    provider_calls: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        auth_routes,
+        "send_openwa_text",
+        lambda **kwargs: provider_calls.append(kwargs),
+    )
+
+    response = client.post(
+        "/api/auth/forgot-password/request-code",
+        json={"phone_number": "+60123456789"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Verification code sent if the account exists"
+    assert response.json()["dev_code_preview"] is not None
+    assert provider_calls == []
 
 
 def test_customer_can_reset_password_with_verification_code(monkeypatch):

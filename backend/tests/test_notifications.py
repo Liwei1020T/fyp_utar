@@ -295,6 +295,12 @@ def test_admin_openwa_delivery_uses_player_phone(
         "openwa_api_key",
         SecretStr("openwa-test-key"),
     )
+    monkeypatch.setattr(
+        admin_engagement_routes,
+        "get_openwa_session_state",
+        lambda **_: {"status": "ready", "restriction": None},
+    )
+    provider_calls: list[object] = []
 
     class FakeResponse:
         def __enter__(self):
@@ -307,6 +313,7 @@ def test_admin_openwa_delivery_uses_player_phone(
             return b'{"messageId":"wa-message-1"}'
 
     def fake_urlopen(request, timeout: int):
+        provider_calls.append(request)
         assert request.full_url == (
             "http://openwa.test/api/sessions/session-1/messages/send-text"
         )
@@ -337,6 +344,13 @@ def test_admin_openwa_delivery_uses_player_phone(
     delivery = response.json()
     assert delivery["status"] == "sent"
     assert delivery["provider_message"] == "wa-message-1"
+    resend_response = client.post(
+        f"/api/admin/notifications/{delivery['id']}/resend",
+        headers=_headers(_admin_token()),
+    )
+    assert resend_response.status_code == 200
+    assert resend_response.json()["status"] == "sent"
+    assert len(provider_calls) == 1
 
     in_app_response = client.get(
         "/api/notifications",
@@ -444,6 +458,92 @@ def test_admin_openwa_delivery_skips_provider_when_initial_commit_fails(
     assert provider_calls == []
 
 
+def test_admin_timeout_is_unconfirmed_and_cannot_be_resent(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
+    monkeypatch.setattr(settings, "openwa_session_id", "session-1")
+    monkeypatch.setattr(settings, "openwa_api_key", SecretStr("openwa-test-key"))
+    monkeypatch.setattr(
+        admin_engagement_routes,
+        "get_openwa_session_state",
+        lambda **_: {"status": "ready", "restriction": None},
+    )
+    provider_calls: list[object] = []
+
+    def timeout_send(**kwargs):
+        provider_calls.append(kwargs)
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(admin_engagement_routes, "send_openwa_text", timeout_send)
+    response = client.post(
+        "/api/admin/notifications",
+        headers=_headers(_admin_token()),
+        json={
+            "user_id": notification_activity.owner_id,
+            "category": "service",
+            "title": "Timeout delivery",
+            "body": "Check history before retrying.",
+        },
+    )
+
+    assert response.status_code == 200
+    delivery = response.json()
+    assert delivery["status"] == "unconfirmed"
+    assert delivery["attempts"] == 1
+    retry_response = client.post(
+        f"/api/admin/notifications/{delivery['id']}/resend",
+        headers=_headers(_admin_token()),
+    )
+    assert retry_response.status_code == 200
+    assert retry_response.json()["status"] == "unconfirmed"
+    assert retry_response.json()["attempts"] == 1
+    assert len(provider_calls) == 1
+
+
+def test_admin_pauses_when_openwa_session_is_restricted(
+    monkeypatch,
+    notification_activity: NotificationActivity,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "openwa_enabled", True)
+    monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
+    monkeypatch.setattr(settings, "openwa_session_id", "session-1")
+    monkeypatch.setattr(settings, "openwa_api_key", SecretStr("openwa-test-key"))
+    monkeypatch.setattr(
+        admin_engagement_routes,
+        "get_openwa_session_state",
+        lambda **_: {
+            "status": "qr_ready",
+            "restriction": {"kind": "reachout_timelock"},
+        },
+    )
+    monkeypatch.setattr(
+        admin_engagement_routes,
+        "send_openwa_text",
+        lambda **_: pytest.fail("restricted session must not send"),
+    )
+
+    response = client.post(
+        "/api/admin/notifications",
+        headers=_headers(_admin_token()),
+        json={
+            "user_id": notification_activity.owner_id,
+            "category": "service",
+            "title": "Paused delivery",
+            "body": "This remains in the app.",
+        },
+    )
+
+    assert response.status_code == 200
+    delivery = response.json()
+    assert delivery["status"] == "paused"
+    assert "restricted" in delivery["provider_message"]
+
+
 def test_feedback_followups_send_once_on_day_7_and_day_10_then_stop(
     monkeypatch,
     notification_activity: NotificationActivity,
@@ -505,6 +605,11 @@ def test_feedback_followups_send_once_on_day_7_and_day_10_then_stop(
     monkeypatch.setattr(settings, "openwa_enabled", True)
     monkeypatch.setattr(settings, "openwa_base_url", "http://openwa.test/api")
     monkeypatch.setattr(settings, "openwa_session_id", "session-1")
+    monkeypatch.setattr(
+        admin_engagement_routes,
+        "get_openwa_session_state",
+        lambda **_: {"status": "ready", "restriction": None},
+    )
     provider_calls: list[object] = []
 
     class FakeResponse:

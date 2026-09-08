@@ -12,6 +12,8 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.adapters.services.openwa import get_openwa_session_state
+from app.adapters.services.openwa import openwa_session_pause_reason
 from app.adapters.services.openwa import send_openwa_text
 from app.config.settings import get_settings
 from app.dto.auth import AuthResponse
@@ -72,11 +74,18 @@ def _build_auth_response(user, token_service) -> AuthResponse:
 def _send_password_reset_whatsapp(
     *,
     endpoint: str,
+    session_endpoint: str,
     api_key: str | None,
     chat_id: str,
     text: str,
 ) -> None:
     try:
+        session_state = get_openwa_session_state(
+            endpoint=session_endpoint,
+            api_key=api_key,
+        )
+        if openwa_session_pause_reason(session_state):
+            return
         send_openwa_text(
             endpoint=endpoint,
             api_key=api_key,
@@ -187,6 +196,10 @@ def request_forgot_password_code(
             endpoint=(
                 f"{settings.openwa_base_url.rstrip('/')}"
                 f"/sessions/{settings.openwa_session_id}/messages/send-text"
+            ),
+            session_endpoint=(
+                f"{settings.openwa_base_url.rstrip('/')}"
+                f"/sessions/{settings.openwa_session_id}"
             ),
             api_key=(
                 settings.openwa_api_key.get_secret_value()

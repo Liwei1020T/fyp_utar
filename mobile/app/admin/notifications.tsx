@@ -29,6 +29,12 @@ const CATEGORIES: BackendNotificationCategory[] = [
   'system',
 ];
 
+function deliveryStatusLabel(status: string) {
+  if (status === 'unconfirmed') return 'Delivery unconfirmed';
+  if (status === 'paused') return 'Delivery paused';
+  return status;
+}
+
 export default function AdminNotificationsScreen() {
   const router = useRouter();
   const user = useCurrentUser();
@@ -100,7 +106,11 @@ export default function AdminNotificationsScreen() {
       setNotifications((current) => [created, ...current]);
       setTitle('');
       setBody('');
-      setMessage(`In-app saved. Remote delivery status: ${created.status}.`);
+      setMessage(
+        `In-app saved. Remote delivery status: ${deliveryStatusLabel(
+          created.status,
+        )}.`,
+      );
     } catch (error) {
       setMessage(
         error instanceof BackendApiError
@@ -123,7 +133,11 @@ export default function AdminNotificationsScreen() {
       setNotifications((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
       );
-      setMessage(`In-app retained. Remote delivery status: ${updated.status}.`);
+      setMessage(
+        `In-app retained. Remote delivery status: ${deliveryStatusLabel(
+          updated.status,
+        )}.`,
+      );
     } catch (error) {
       setMessage(
         error instanceof BackendApiError
@@ -204,7 +218,7 @@ export default function AdminNotificationsScreen() {
                   </HeroText>
                 </View>
                 <AppChip
-                  label={item.status}
+                  label={deliveryStatusLabel(item.status)}
                   variant={item.status === 'sent' ? 'success' : 'warning'}
                 />
               </View>
@@ -216,7 +230,7 @@ export default function AdminNotificationsScreen() {
                   {item.provider_message}
                 </HeroText>
               ) : null}
-              {item.status !== 'sent' ? (
+              {item.status === 'failed' || item.status === 'paused' ? (
                 <AppButton
                   label="Retry delivery"
                   variant="outline"

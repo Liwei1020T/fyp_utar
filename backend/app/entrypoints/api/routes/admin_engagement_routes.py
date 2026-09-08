@@ -29,6 +29,8 @@ from app.adapters.persistence.sqlalchemy.models import StringCatalogItem
 from app.adapters.persistence.sqlalchemy.models import User
 from app.adapters.persistence.sqlalchemy.session import SessionLocal
 from app.adapters.persistence.sqlalchemy.session import get_db
+from app.adapters.services.openwa import get_openwa_session_state
+from app.adapters.services.openwa import openwa_session_pause_reason
 from app.adapters.services.openwa import send_openwa_text
 from app.config.settings import get_settings
 from app.domain.booking.policies import booking_order_code
@@ -79,6 +81,7 @@ class _NotificationDeliveryTarget:
     title: str
     body: str
     endpoint: str
+    session_endpoint: str
     access_token: str | None
 
 
@@ -196,6 +199,18 @@ def _send_notification_to_provider(
     target: _NotificationDeliveryTarget,
 ) -> tuple[str, str | None]:
     try:
+        pause_reason = openwa_session_pause_reason(
+            get_openwa_session_state(
+                endpoint=target.session_endpoint,
+                api_key=target.access_token,
+            )
+        )
+    except (OSError, TypeError, ValueError) as exc:
+        return "paused", f"OpenWA session state unavailable; delivery paused: {exc}"
+    if pause_reason:
+        return "paused", pause_reason
+
+    try:
         return (
             "sent",
             send_openwa_text(
@@ -206,6 +221,26 @@ def _send_notification_to_provider(
             ),
         )
     except (OSError, TypeError, ValueError) as exc:
+        if isinstance(exc, TimeoutError) or "timed out" in str(exc).lower():
+            return (
+                "unconfirmed",
+                "OpenWA request timed out; delivery may have succeeded. "
+                "Check WhatsApp history before retrying.",
+            )
+        try:
+            pause_reason = openwa_session_pause_reason(
+                get_openwa_session_state(
+                    endpoint=target.session_endpoint,
+                    api_key=target.access_token,
+                )
+            )
+        except (OSError, TypeError, ValueError) as state_error:
+            return (
+                "paused",
+                f"OpenWA session state unavailable; delivery paused: {state_error}",
+            )
+        if pause_reason:
+            return "paused", pause_reason
         return "failed", str(exc)[:500]
 
 
@@ -267,6 +302,10 @@ def _deliver_notification(notification_id: str) -> AdminNotificationOut:
                     endpoint=(
                         f"{settings.openwa_base_url.rstrip('/')}"
                         f"/sessions/{settings.openwa_session_id}/messages/send-text"
+                    ),
+                    session_endpoint=(
+                        f"{settings.openwa_base_url.rstrip('/')}"
+                        f"/sessions/{settings.openwa_session_id}"
                     ),
                     access_token=(
                         settings.openwa_api_key.get_secret_value()
@@ -478,9 +517,15 @@ def admin_resend_notification(
     _: CurrentUser = Depends(get_current_admin),
     db: Session = Depends(get_db, scope="function"),
 ) -> AdminNotificationOut:
-    notification = db.get(NotificationDelivery, notification_id)
+    notification = db.scalar(
+        select(NotificationDelivery)
+        .where(NotificationDelivery.id == notification_id)
+        .with_for_update()
+    )
     if notification is None:
         raise NotFoundError("Notification not found")
+    if notification.status in {"sent", "pending", "unconfirmed"}:
+        return _notification_response_for_session(db, notification)
     user = db.get(User, notification.user_id)
     assert user is not None
     should_deliver = _prepare_notification_delivery(db, notification)
