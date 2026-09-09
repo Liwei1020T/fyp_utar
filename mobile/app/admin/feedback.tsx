@@ -338,7 +338,7 @@ export default function AdminFeedbackScreen() {
       <AppSection
         eyebrow="Responses"
         title="Feedback records"
-        subtitle="Tap a record to open the linked booking and review the full context."
+        subtitle="Tap a record to open the player's full evaluation."
         rightAction={<AppChip label={shownCountLabel} variant="neutral" />}
       >
         <View className="gap-3">
@@ -354,9 +354,9 @@ export default function AdminFeedbackScreen() {
               key={item.id}
               variant={item.rating <= 2 ? 'highlighted' : 'elevated'}
               padding="md"
-              onPress={() => router.push(`/admin/bookings/${item.booking_id}`)}
+              onPress={() => router.push(`/admin/feedback/${item.booking_id}`)}
               accessibilityLabel={`${item.string_name} feedback from ${item.customer_username}, ${item.rating} out of 5`}
-              accessibilityHint="Open the related booking"
+              accessibilityHint="Open the full feedback detail"
             >
               <View className="flex-row items-start justify-between gap-3">
                 <View className="min-w-0 flex-1">

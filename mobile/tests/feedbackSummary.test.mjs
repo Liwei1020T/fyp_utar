@@ -68,3 +68,23 @@ test('player and admin screens expose recoverable feedback-summary states', asyn
   assert.doesNotMatch(adminFeedback, /Read-only evidence used by V11/);
   assert.doesNotMatch(adminFeedback, /Policy .*snapshot|showing one string/);
 });
+
+test('admin feedback entries open the full feedback detail page', async () => {
+  const [adminFeedback, feedbackDetail] = await Promise.all([
+    readFile(new URL('../app/admin/feedback.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/admin/feedback/[bookingId].tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(
+    adminFeedback,
+    /router\.push\(`\/admin\/feedback\/\$\{item\.booking_id\}`\)/,
+  );
+  assert.doesNotMatch(
+    adminFeedback,
+    /router\.push\(`\/admin\/bookings\/\$\{item\.booking_id\}`\)/,
+  );
+  assert.match(feedbackDetail, /adminListFeedback\(token/);
+  assert.match(feedbackDetail, /booking_id: bookingId/);
+  assert.match(feedbackDetail, /Recommendation relevance/);
+  assert.match(feedbackDetail, /Service experience/);
+});
