@@ -345,6 +345,8 @@ test('reduced Agent cards hide evidence status labels', async () => {
   assert.match(chatbot, /label="Contact human support"/);
   assert.match(chatbot, /router\.push\('\/player\/chat'\)/);
   assert.match(chatbot, /Where is the shop located\?/);
+  assert.match(chatbot, /Which string best suits my saved profile\?/);
+  assert.match(chatbot, /Explain my latest recommendation\./);
   assert.match(chatbot, /store hours, address, or contact/);
   assert.match(adminAssistant, /label="Generate daily briefing"/);
   assert.match(adminAssistant, /DAILY_BRIEFING_PROMPT/);

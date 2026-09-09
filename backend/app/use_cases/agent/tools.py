@@ -236,7 +236,7 @@ ACTIVE_AGENT_TOOL_NAMES = {
     "get_store_information",
     # "get_my_bookings",
     # "get_my_string_preferences",
-    # "get_my_recommendations",
+    "get_my_recommendations",
     "preview_recommendation_what_if",
     "find_in_stock_alternatives",
 }

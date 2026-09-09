@@ -124,6 +124,7 @@ def test_fyp_agent_scope_exposes_only_active_tools_and_string_action() -> None:
         "get_string_details",
         "compare_strings",
         "get_store_information",
+        "get_my_recommendations",
         "preview_recommendation_what_if",
         "find_in_stock_alternatives",
     }
@@ -278,6 +279,7 @@ def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
     )
     assert "call compare_strings" in surface_instruction["content"]
     assert "call get_store_information" in surface_instruction["content"]
+    assert "call get_my_recommendations" in surface_instruction["content"]
     assert "exactly this shape" in surface_instruction["content"]
     assert "Always ask all four questions" not in surface_instruction["content"]
     assert client.calls[0]["messages"][-1] == {
@@ -299,6 +301,11 @@ def test_agent_executes_bounded_tool_and_returns_server_sources() -> None:
             "Tell me about Yonex BG80.",
             "get_string_details",
             {"catalog_id": "yonex-bg80"},
+        ),
+        (
+            "Which string best suits my saved profile?",
+            "get_my_recommendations",
+            {},
         ),
     ],
 )

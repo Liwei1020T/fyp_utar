@@ -9,8 +9,9 @@ admin operations surface:
   preferred feel, durability importance, and maximum RM budget, then returns up
   to three recommendation-preview results. It compares two or three approved
   strings, introduces an exact catalog string when the detail page supplies its
-  verified context, answers live customer-facing store information, and provides
-  a direct user-owned entry to the existing human support screen.
+  verified context, retrieves the latest saved recommendation when requested,
+  answers live customer-facing store information, and provides a direct
+  user-owned entry to the existing human support screen.
 - `/player/results`: renders one short Agent-generated fit summary for each
   shortlisted string when its exact recommendation run is available.
 - `/player/recommend/explain/[id]`: explains the exact owned recommendation run
@@ -31,6 +32,7 @@ Player model-call tools:
 - `get_string_details`
 - `compare_strings`
 - `get_store_information`
+- `get_my_recommendations`
 - `preview_recommendation_what_if`
 - `find_in_stock_alternatives`
 
@@ -55,8 +57,8 @@ are hidden in the reduced mobile UI.
 The completed implementations remain in the repository and are not deleted.
 They are excluded from the active allowlists or hidden at the UI exposure point:
 
-- Player review Q&A, owned-booking lookup, saved-preference lookup,
-  latest-recommendation lookup, and Agent-created human handoff.
+- Player review Q&A, owned-booking lookup, saved-preference lookup, and
+  Agent-created human handoff.
 - Admin payment and support searches.
 - Admin booking-status, stock-count, and support-reply proposals and their
   confirmation handlers.

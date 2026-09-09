@@ -26,9 +26,8 @@ const starterQuestions = [
   'What are the store opening hours?',
   'Where is the shop located?',
   'Compare Yonex BG80 and Yonex BG65.',
-  // Deferred FYP scope; uncomment with the matching backend tools.
-  // 'Which string best suits my saved profile?',
-  // 'Explain my latest recommendation.',
+  'Which string best suits my saved profile?',
+  'Explain my latest recommendation.',
 ] as const;
 
 type ConversationEntry =
@@ -140,7 +139,7 @@ export default function PlayerAgentScreen() {
     <AppScreen
       headerVariant="secondary"
       title="StringSense AI"
-      subtitle="Guided selection, comparisons, live stock, and store information."
+      subtitle="Saved recommendations, guided selection, comparisons, live stock, and store information."
       showBackButton
       onBackPress={() => router.back()}
       footer={
